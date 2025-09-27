@@ -17,31 +17,25 @@
   </div>
   <div class="timestamp" aria-label="Current football season">Season 2025 / 26</div>
 </header>
-
-<div class="container" role="main">
+<main class="container" role="main">
   <section class="card" aria-labelledby="league-filter-title">
     <div class="section-title" id="league-filter-title">Leagues (filter)</div>
-    <div id="chips" class="chips" role="group" aria-label="League filters"></div>
-
+    <fieldset id="chips" class="chips" aria-label="League filters"></fieldset>
     <div class="section-title">Show on wheel</div>
-    <div class="showopts" role="group" aria-label="Show options">
+    <fieldset class="showopts" aria-label="Show options">
       <label class="chip"><input type="checkbox" id="optName" checked aria-checked="true"> Name</label>
       <label class="chip"><input type="checkbox" id="optLogo" checked aria-checked="true"> Logo</label>
       <label class="chip"><input type="checkbox" id="optStadium" aria-checked="false"> Stadium</label>
-    </div>
-
+    </fieldset>
     <button id="spinBtn" aria-label="Spin the wheel">SPIN</button>
     <button id="resetHistoryBtn" aria-label="Reset history">Reset History</button>
-
     <div class="result" aria-live="polite">
       <img id="currentLogo" alt="Club logo" aria-hidden="true">
       <div class="current-name" id="currentText">No selection yet</div>
     </div>
-
     <div class="history-title">History</div>
     <div class="history" id="history"></div>
   </section>
-
   <section class="card" aria-labelledby="wheel-title">
     <div class="section-title" id="wheel-title">Club Wheel</div>
     <div class="wheel-wrap">
@@ -54,8 +48,7 @@
       <input type="range" id="wheelSize" min="400" max="900" value="640" step="10" aria-label="Wheel size">
     </div>
   </section>
-</div>
-
+</main>
 <!-- Modal -->
 <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mHead">
   <div id="modal" class="modal">
@@ -77,7 +70,6 @@
     <div class="m-actions"><button id="mClose" class="chip-btn">Close</button></div>
   </div>
 </div>
-
 <script type="module" src="app.js"></script>
 </body>
 </html>
