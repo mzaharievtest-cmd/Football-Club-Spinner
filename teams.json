@@ -1,6 +1,5 @@
 [
   { "league_code": "EPL", "team_name": "Arsenal", "primary_color": "#EF0107", "logo_url": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg", "stadium": "Emirates Stadium" },
-  { "league_code": "EPL", "team_name": "Aston Villa", "primary_color": "#670E36", "logo_url": "https://upload.wikimedia.org/wikipedia/en/f/f9/Aston_Villa_FC_crest_%282016%29.svg", "stadium": "Villa Park" },
   { "league_code": "EPL", "team_name": "Chelsea", "primary_color": "#034694", "logo_url": "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg", "stadium": "Stamford Bridge" },
   { "league_code": "LLA", "team_name": "Barcelona", "primary_color": "#A50044", "logo_url": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg", "stadium": "Spotify Camp Nou" },
   { "league_code": "LLA", "team_name": "Real Madrid", "primary_color": "#FEBE10", "logo_url": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg", "stadium": "Santiago Bernabéu" },
