@@ -303,7 +303,7 @@ canvas#wheel {
   margin-right: 8px;
 }
 
-/* Modal Styles - Improved */
+/* Modal Styles - Highly Improved */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -328,6 +328,8 @@ canvas#wheel {
   transform: translateY(12px) scale(0.98);
   padding: 0;
   overflow: visible;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal.show {
@@ -336,13 +338,13 @@ canvas#wheel {
 }
 
 .m-head {
-  padding: 18px 24px 0 24px;
+  padding: 20px 24px 10px 24px;
   font-weight: 800;
-  font-size: 22px;
-  background: none;
-  border-bottom: none;
+  font-size: 24px;
   color: #fff;
   letter-spacing: 0.01em;
+  background: none;
+  border-bottom: 1px solid #1b2740;
 }
 
 .m-body {
@@ -350,32 +352,35 @@ canvas#wheel {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 8px;
 }
 
 .m-logo {
-  width: 150px;
+  width: 120px;
   max-width: 60vw;
   height: auto;
   object-fit: contain;
-  border-radius: 16px;
-  margin: 16px 0 20px 0;
+  border-radius: 12px;
+  margin: 16px 0 12px 0;
   background: #0b1220;
   border: 1px solid #5aa1ff;
-  box-shadow: 0 4px 16px rgba(34,211,238,.08);
+  box-shadow: 0 2px 8px rgba(34,211,238,0.14);
 }
 
 .m-sub {
-  font-size: 15px;
+  font-size: 16px;
   color: #a3b8e7;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
+  text-align: center;
 }
 
 .m-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-top: 0;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-size: 15px;
 }
 
 .swatch {
@@ -383,21 +388,21 @@ canvas#wheel {
   height: 20px;
   border-radius: 8px;
   border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(90,161,255,.18);
+  box-shadow: 0 2px 8px rgba(90,161,255,0.18);
   margin-right: 6px;
 }
 
 .m-body strong {
   font-weight: 700;
   color: #fff;
-  margin-right: 8px;
+  margin-right: 6px;
   font-size: 15px;
 }
 
 .m-actions {
   padding: 18px 24px;
   background: #101628;
-  border-top: 1px solid #5aa1ff;
+  border-top: 1px solid #1b2740;
   display: flex;
   justify-content: flex-end;
 }
@@ -412,8 +417,9 @@ canvas#wheel {
   font-weight: 600;
   font-size: 16px;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
   letter-spacing: 0.08em;
+  margin-top: 0;
+  transition: border-color 0.2s, background 0.2s;
 }
 .chip-btn:hover, .chip-btn:focus {
   border-color: #22d3ee;
@@ -424,5 +430,5 @@ canvas#wheel {
 @media (max-width: 600px) {
   .modal {max-width:95vw;border-radius:14px;padding:0;}
   .m-head, .m-body, .m-actions {padding-left:12px;padding-right:12px;}
-  .m-logo {width:100px;}
+  .m-logo {width:80px;}
 }
