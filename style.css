@@ -323,10 +323,7 @@ canvas#wheel {
   background: #111a2c;
   box-shadow: 0 24px 80px rgba(18,30,52,0.42);
   border: 1px solid #5aa1ff;
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  padding: 0;
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -396,16 +393,17 @@ canvas#wheel {
 }
 
 .m-actions {
-  padding: 18px 24px;
+  padding: 16px 24px;
   background: #111a2c;
   border-top: 1px solid #234080;
   display: flex;
   justify-content: flex-end;
+  box-sizing: border-box;
 }
 
 .chip-btn {
   width: 100%;
-  border: 1.5px solid #5aa1ff;
+  border: 2px solid #5aa1ff;
   background: #192849;
   color: #fff;
   border-radius: 12px;
@@ -414,7 +412,8 @@ canvas#wheel {
   font-size: 16px;
   cursor: pointer;
   letter-spacing: 0.08em;
-  margin-top: 0;
+  margin: 0;
+  box-sizing: border-box;
   transition: border-color 0.2s, background 0.2s;
   box-shadow: 0 1px 8px rgba(34,211,238,0.07);
 }
