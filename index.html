@@ -204,6 +204,7 @@ const TEAMS = [
   {league_code:"L1", team_name:"Paris Saint-Germain", primary_color:"#004170", logo_url:"https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg", stadium:"Parc des Princes"},
   {league_code:"L1", team_name:"Marseille", primary_color:"#0093D0", logo_url:"https://upload.wikimedia.org/wikipedia/commons/7/70/Olympique_Marseille_logo.svg", stadium:"Orange Vélodrome"},
 ];
+const teams = TEAMS.slice();
 
 let spinning=false,currentAngle=0,targetAngle=0,selectedIdx=-1;
 const wheel=document.getElementById('wheel'), ctx=wheel.getContext('2d');
