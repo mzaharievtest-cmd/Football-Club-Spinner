@@ -1,5 +1,4 @@
-import TEAMS from './teams.json' assert {type: 'json'};
-
+let TEAMS = [];
 const chips = document.getElementById('chips');
 const spinBtn = document.getElementById('spinBtn');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -117,8 +116,8 @@ function drawWheel(){
     ctx.fillStyle = t.primary_color || '#4f8cff';
     ctx.fill();
 
-    // Draw team name
-    if(optName.checked){
+    // Team name
+    if(optName.checked && t.team_name) {
       ctx.save();
       ctx.rotate(i*slice + slice/2);
       ctx.textAlign = 'center';
@@ -131,7 +130,7 @@ function drawWheel(){
       ctx.fillText(t.team_name, radius*0.65, 0);
       ctx.restore();
     }
-    // Draw logo
+    // Team logo
     if(optLogo.checked && t.logo_url){
       let img = new window.Image();
       img.src = t.logo_url;
@@ -225,8 +224,11 @@ wheelSizeInput.addEventListener('input', (e) => {
   drawWheel();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  renderChips();
-  renderHistory();
-  drawWheel();
-});
+fetch('./teams.json')
+  .then(res => res.json())
+  .then(data => {
+    TEAMS = data;
+    renderChips();
+    renderHistory();
+    drawWheel();
+  });
