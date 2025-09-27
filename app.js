@@ -1,4 +1,9 @@
 let TEAMS = [];
+let currentAngle = 0;
+let spinning = false;
+let selectedIdx = -1;
+let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
+
 const chips = document.getElementById('chips');
 const spinBtn = document.getElementById('spinBtn');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -13,11 +18,6 @@ const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
 const wheelSizeInput = document.getElementById('wheelSize');
 const mClose = document.getElementById('mClose');
-
-let currentAngle = 0;
-let spinning = false;
-let selectedIdx = -1;
-let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 
 function renderChips() {
   const leagues = [...new Set(TEAMS.map(t => t.league_code))];
@@ -44,8 +44,6 @@ function resetHistory() {
   saveHistory();
   renderHistory();
 }
-
-resetHistoryBtn.addEventListener('click', resetHistory);
 
 function renderHistory() {
   historyEl.innerHTML = '';
@@ -81,9 +79,6 @@ function closeModal(){
   document.getElementById('modal').classList.remove('show');
   setTimeout(()=> backdrop.style.display='none', 150);
 }
-mClose.onclick = closeModal;
-backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
-window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
 
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
@@ -94,6 +89,7 @@ function textColorFor(hex){
 }
 
 const TAU = Math.PI * 2;
+
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
@@ -202,28 +198,36 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
-chips.addEventListener('change', () => {
-  selectedIdx = -1;
-  drawWheel();
-  if (getFiltered().length === 0) {
-    currentText.textContent = 'Please select at least one league.';
-    spinBtn.disabled = true;
-  } else {
-    currentText.textContent = 'No selection yet';
-    spinBtn.disabled = false;
-  }
-});
-optName.onchange = optLogo.onchange = optStadium.onchange = () => drawWheel();
-spinBtn.onclick = spin;
-wheelSizeInput.addEventListener('input', (e) => {
-  const size = e.target.value;
-  wheel.width = size;
-  wheel.height = size;
-  fx.width = size;
-  fx.height = size;
-  drawWheel();
-});
+// Event listeners that depend on DOM and teams data
+function setupEventListeners() {
+  chips.addEventListener('change', () => {
+    selectedIdx = -1;
+    drawWheel();
+    if (getFiltered().length === 0) {
+      currentText.textContent = 'Please select at least one league.';
+      spinBtn.disabled = true;
+    } else {
+      currentText.textContent = 'No selection yet';
+      spinBtn.disabled = false;
+    }
+  });
+  optName.onchange = optLogo.onchange = optStadium.onchange = () => drawWheel();
+  spinBtn.onclick = spin;
+  wheelSizeInput.addEventListener('input', (e) => {
+    const size = e.target.value;
+    wheel.width = size;
+    wheel.height = size;
+    fx.width = size;
+    fx.height = size;
+    drawWheel();
+  });
+  resetHistoryBtn.addEventListener('click', resetHistory);
+  mClose.onclick = closeModal;
+  backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
+  window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
+}
 
+// Load teams.json and initialize app
 fetch('./teams.json')
   .then(res => res.json())
   .then(data => {
@@ -231,4 +235,5 @@ fetch('./teams.json')
     renderChips();
     renderHistory();
     drawWheel();
+    setupEventListeners(); // Only after teams are loaded!
   });
