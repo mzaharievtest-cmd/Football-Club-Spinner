@@ -307,8 +307,8 @@ canvas#wheel {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(4,10,24,0.80);
-  backdrop-filter: blur(8px);
+  background: rgba(4,10,24,0.85);
+  backdrop-filter: blur(12px);
   display: none;
   align-items: center;
   justify-content: center;
@@ -317,54 +317,50 @@ canvas#wheel {
 }
 
 .modal {
-  border-radius: 18px;
-  max-width: 400px;
-  width: 96vw;
-  background: #101628;
+  border-radius: 22px;
+  max-width: 360px;
+  width: 95vw;
+  background: #111a2c;
   box-shadow: 0 24px 80px rgba(18,30,52,0.42);
   border: 1px solid #5aa1ff;
-  transition: opacity 0.2s, transform 0.2s;
-  opacity: 0;
-  transform: translateY(12px) scale(0.98);
+  opacity: 1;
+  transform: translateY(0) scale(1);
   padding: 0;
   overflow: visible;
   display: flex;
   flex-direction: column;
 }
 
-.modal.show {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
 .m-head {
-  padding: 20px 24px 10px 24px;
+  padding: 24px 28px 0 28px;
   font-weight: 800;
   font-size: 24px;
-  color: #fff;
-  letter-spacing: 0.01em;
+  color: #f4f7ff;
   background: none;
-  border-bottom: 1px solid #1b2740;
+  border-bottom: none;
+  letter-spacing: .01em;
+  text-align: center;
 }
 
 .m-body {
-  padding: 0 24px 10px 24px;
+  padding: 0 28px 0 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .m-logo {
-  width: 120px;
+  width: 110px;
+  height: 110px;
   max-width: 60vw;
-  height: auto;
   object-fit: contain;
-  border-radius: 12px;
-  margin: 16px 0 12px 0;
+  border-radius: 14px;
+  margin: 18px 0 10px 0;
   background: #0b1220;
   border: 1px solid #5aa1ff;
   box-shadow: 0 2px 8px rgba(34,211,238,0.14);
+  display: block;
 }
 
 .m-sub {
@@ -378,9 +374,9 @@ canvas#wheel {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 0;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   font-size: 15px;
+  justify-content: center;
 }
 
 .swatch {
@@ -401,25 +397,26 @@ canvas#wheel {
 
 .m-actions {
   padding: 18px 24px;
-  background: #101628;
-  border-top: 1px solid #1b2740;
+  background: #111a2c;
+  border-top: 1px solid #234080;
   display: flex;
   justify-content: flex-end;
 }
 
 .chip-btn {
   width: 100%;
-  border: 1px solid #5aa1ff;
-  background: #12253c;
+  border: 1.5px solid #5aa1ff;
+  background: #192849;
   color: #fff;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px 0;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
   cursor: pointer;
   letter-spacing: 0.08em;
   margin-top: 0;
   transition: border-color 0.2s, background 0.2s;
+  box-shadow: 0 1px 8px rgba(34,211,238,0.07);
 }
 .chip-btn:hover, .chip-btn:focus {
   border-color: #22d3ee;
@@ -428,7 +425,7 @@ canvas#wheel {
 
 /* Responsive modal for mobile */
 @media (max-width: 600px) {
-  .modal {max-width:95vw;border-radius:14px;padding:0;}
-  .m-head, .m-body, .m-actions {padding-left:12px;padding-right:12px;}
-  .m-logo {width:80px;}
+  .modal {max-width:95vw;border-radius:14px;}
+  .m-head, .m-body, .m-actions {padding-left:14px;padding-right:14px;}
+  .m-logo {width:70px;height:70px;}
 }
