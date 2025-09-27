@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header role="banner">
+<header>
   <div class="brand">
     <div class="brand-icon" aria-hidden="true">🎡</div>
     <div>
@@ -15,41 +15,40 @@
       <div class="season-tag">Top 5 Leagues · 2025/26</div>
     </div>
   </div>
-  <div class="timestamp" aria-label="Current football season">Season 2025 / 26</div>
+  <div class="timestamp">Season 2025 / 26</div>
 </header>
-<main class="container" role="main">
-  <section class="card" aria-labelledby="league-filter-title">
-    <div class="section-title" id="league-filter-title">Leagues (filter)</div>
-    <fieldset id="chips" class="chips" aria-label="League filters"></fieldset>
+<main class="container">
+  <section class="card">
+    <div class="section-title">Leagues (filter)</div>
+    <div id="chips" class="chips"></div>
     <div class="section-title">Show on wheel</div>
-    <fieldset class="showopts" aria-label="Show options">
-      <label class="chip"><input type="checkbox" id="optName" checked aria-checked="true"> Name</label>
-      <label class="chip"><input type="checkbox" id="optLogo" checked aria-checked="true"> Logo</label>
-      <label class="chip"><input type="checkbox" id="optStadium" aria-checked="false"> Stadium</label>
-    </fieldset>
-    <button id="spinBtn" aria-label="Spin the wheel">SPIN</button>
-    <button id="resetHistoryBtn" aria-label="Reset history">Reset History</button>
-    <div class="result" aria-live="polite">
+    <div class="showopts">
+      <label class="chip"><input type="checkbox" id="optName" checked> Name</label>
+      <label class="chip"><input type="checkbox" id="optLogo" checked> Logo</label>
+      <label class="chip"><input type="checkbox" id="optStadium"> Stadium</label>
+    </div>
+    <button id="spinBtn">SPIN</button>
+    <button id="resetHistoryBtn">Reset History</button>
+    <div class="result">
       <img id="currentLogo" alt="Club logo" aria-hidden="true">
       <div class="current-name" id="currentText">No selection yet</div>
     </div>
     <div class="history-title">History</div>
     <div class="history" id="history"></div>
   </section>
-  <section class="card" aria-labelledby="wheel-title">
-    <div class="section-title" id="wheel-title">Club Wheel</div>
+  <section class="card">
+    <div class="section-title">Club Wheel</div>
     <div class="wheel-wrap">
-      <div class="pointer" aria-label="Wheel pointer"></div>
+      <div class="pointer"></div>
       <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
       <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
     </div>
     <div class="customization">
       <label for="wheelSize">Wheel Size:</label>
-      <input type="range" id="wheelSize" min="400" max="900" value="640" step="10" aria-label="Wheel size">
+      <input type="range" id="wheelSize" min="400" max="900" value="640" step="10">
     </div>
   </section>
 </main>
-<!-- Modal -->
 <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mHead">
   <div id="modal" class="modal">
     <div id="mHead" class="m-head">Team</div>
@@ -70,6 +69,7 @@
     <div class="m-actions"><button id="mClose" class="chip-btn">Close</button></div>
   </div>
 </div>
-<script type="module" src="app.js"></script>
+<!-- Use regular script loading, not type="module" -->
+<script src="app.js"></script>
 </body>
 </html>
