@@ -198,7 +198,6 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
-// Event listeners that depend on DOM and teams data
 function setupEventListeners() {
   chips.addEventListener('change', () => {
     selectedIdx = -1;
@@ -235,5 +234,5 @@ fetch('./teams.json')
     renderChips();
     renderHistory();
     drawWheel();
-    setupEventListeners(); // Only after teams are loaded!
+    setupEventListeners();
   });
