@@ -116,8 +116,33 @@ function drawWheel(){
     ctx.closePath();
     ctx.fillStyle = t.primary_color || '#4f8cff';
     ctx.fill();
+
+    // Draw team name
+    if(optName.checked){
+      ctx.save();
+      ctx.rotate(i*slice + slice/2);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 16px Inter,Arial,sans-serif';
+      ctx.fillStyle = textColorFor(t.primary_color);
+      ctx.strokeStyle = '#222b3e';
+      ctx.lineWidth = 2;
+      ctx.strokeText(t.team_name, radius*0.65, 0);
+      ctx.fillText(t.team_name, radius*0.65, 0);
+      ctx.restore();
+    }
+    // Draw logo
+    if(optLogo.checked && t.logo_url){
+      let img = new window.Image();
+      img.src = t.logo_url;
+      img.onload = () => {
+        ctx.save();
+        ctx.rotate(i*slice + slice/2);
+        ctx.drawImage(img, radius*0.6-18, -18, 36, 36);
+        ctx.restore();
+      };
+    }
   }
-  // Labels
   ctx.restore();
 }
 
