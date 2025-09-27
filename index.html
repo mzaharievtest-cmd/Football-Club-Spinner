@@ -1,129 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Football Club Spinner — Top 5 Leagues (2025/26)</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-<style>
-  :root{
-    --bg:#05070f; --card:#0e1526; --card-top:#121c34; --line:#1b2740;
-    --muted:#9fb0c6; --accent:#5aa1ff; --pointer:#22d3ee; --radius:20px;
-    color-scheme:dark;
-  }
-  *,*::before,*::after{box-sizing:border-box}
-  body{
-    margin:0; min-height:100vh; font-family:"Inter",system-ui,Segoe UI,Roboto,Arial,sans-serif; color:#e7eef7;
-    background:
-      radial-gradient(1400px 840px at 30% -20%, rgba(90,161,255,.35) 0, transparent 50%),
-      radial-gradient(1100px 880px at 90% -10%, rgba(34,211,238,.22) 0, transparent 45%),
-      linear-gradient(180deg,#05070f,#060914 28%,#08101e 100%);
-  }
-  header{
-    padding:20px clamp(18px,3vw,36px); display:flex; align-items:center; justify-content:space-between; gap:24px;
-    position:sticky; top:0; background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(11,18,31,.78));
-    border-bottom:1px solid rgba(95,141,255,.18); backdrop-filter:blur(14px); z-index:20;
-  }
-  .brand{display:flex; align-items:center; gap:14px}
-  .brand-icon{
-    width:44px;height:44px;border-radius:16px;display:grid;place-items:center;font-size:24px;
-    background:linear-gradient(135deg,rgba(90,161,255,.2),rgba(35,53,95,.8)); border:1px solid rgba(112,161,255,.35);
-  }
-  header h1{margin:0;font-size:clamp(18px,2.6vw,26px);font-weight:700}
-  .season-tag{margin-top:2px;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:rgba(197,212,235,.76)}
-  .timestamp{border:1px solid rgba(90,161,255,.35);border-radius:999px;background:rgba(10,16,30,.9);
-    padding:8px 16px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
-  .container{max-width:1200px;margin:24px auto 60px;padding:0 clamp(16px,4vw,36px);display:grid;gap:24px}
-  @media(min-width:980px){.container{grid-template-columns:380px 1fr}}
-  .card{
-    position:relative;background:linear-gradient(180deg,var(--card-top),var(--card));border-radius:var(--radius);
-    padding:22px clamp(18px,3vw,26px); border:1px solid rgba(111,148,255,.16); box-shadow:0 30px 60px rgba(0,0,0,.45);
-  }
-  .section-title{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
-  .chips,.showopts{display:flex;gap:10px;flex-wrap:wrap}
-  .chips{margin:8px 0 18px}
-  .chip{
-    position:relative;display:inline-flex;align-items:center;gap:12px;padding:10px 18px 10px 46px;border-radius:999px;
-    border:1px solid rgba(90,161,255,.18); background:linear-gradient(135deg,rgba(13,22,40,.95),rgba(9,15,28,.85));
-    font-size:13px;font-weight:600;cursor:pointer;transition:.2s ease;
-  }
-  .chip input{
-    appearance:none;position:absolute;left:16px;width:18px;height:18px;border-radius:6px;border:1px solid rgba(120,150,220,.45);
-    background:rgba(4,9,19,.8);display:grid;place-items:center;transition:.18s;
-  }
-  .chip input::after{content:"";width:9px;height:9px;border-radius:4px;background:var(--accent);transform:scale(.2);opacity:0;transition:.18s}
-  .chip input:checked{border-color:var(--accent);background:rgba(90,161,255,.18)}
-  .chip input:checked::after{transform:scale(1);opacity:1}
-  button{
-    width:100%;margin-top:6px;padding:14px 18px;border-radius:14px;border:1px solid rgba(90,161,255,.38);
-    background:linear-gradient(180deg,rgba(18,30,52,.95),rgba(10,16,30,.92));
-    color:#f4f7ff;font-weight:800;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:.18s;
-  }
-  button:disabled{opacity:.6;cursor:wait}
-  .result{margin-top:16px;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;
-    border:1px solid rgba(90,161,255,.16);background:linear-gradient(135deg,rgba(13,22,40,.9),rgba(7,12,24,.85))}
-  .result img{width:38px;height:38px;border-radius:12px;object-fit:contain;background:#0b1220;border:1px solid rgba(90,161,255,.18)}
-  .current-name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .history-title{margin:22px 0 12px;color:var(--muted);font-size:12px;letter-spacing:.32em;text-transform:uppercase}
-  .history{max-height:260px;overflow:auto;display:grid;gap:10px}
-  .item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(17,28,48,.85);border:1px solid rgba(90,161,255,.12)}
-  .item img{width:26px;height:26px;border-radius:8px;object-fit:contain;background:#0b1220;border:1px solid rgba(90,161,255,.16)}
-  .wheel-wrap{position:relative;display:flex;justify-content:center;align-items:center;padding:18px}
-  canvas#wheel{max-width:760px;width:100%;aspect-ratio:1/1;filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));border-radius:50%}
-  #fx{position:absolute;inset:0;pointer-events:none}
-  .pointer{position:absolute;top:-6px;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:26px solid var(--pointer)}
-  /* Modal */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(4,10,24,.72);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:1000;padding:24px}
-  .modal{border-radius:26px;max-width:520px;width:min(520px,100%);overflow:hidden;transform:translateY(12px) scale(.95);opacity:0;transition:.25s ease-out;border:1px solid rgba(90,161,255,.22);background:linear-gradient(180deg,#121e36,#0d1527 48%,#0a1222 100%)}
-  .modal.show{transform:translateY(0) scale(1);opacity:1}
-  .m-head{padding:18px 22px;font-weight:800;font-size:22px;background:linear-gradient(135deg,rgba(90,161,255,.28),rgba(17,24,40,.8));border-bottom:1px solid rgba(90,161,255,.18)}
-  .m-body{padding:20px 22px 10px;display:grid;gap:14px}
-  .m-sub{opacity:.85;letter-spacing:.04em}
-  .m-row{display:flex;align-items:center;gap:14px;margin-top:8px}
-  .m-logo{width:64px;height:64px;object-fit:contain;border-radius:16px;background:#0b1220;border:1px solid rgba(90,161,255,.2)}
-  .swatch{width:20px;height:20px;border-radius:8px;border:1px solid rgba(255,255,255,.18)}
-  .m-actions{padding:16px 22px;background:rgba(6,12,24,.85);border-top:1px solid rgba(90,161,255,.16);display:flex;justify-content:flex-end}
-  .chip-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(90,161,255,.32);background:linear-gradient(135deg,rgba(13,24,42,.95),rgba(9,17,32,.9));padding:12px 18px;border-radius:12px;cursor:pointer}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Football Club Spinner — Top 5 Leagues (2025/26)</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
+<header role="banner">
   <div class="brand">
-    <div class="brand-icon">🎡</div>
+    <div class="brand-icon" aria-hidden="true">🎡</div>
     <div>
-      <h1>Football Club Spinner</h1>
+      <h1 id="main-title">Football Club Spinner</h1>
       <div class="season-tag">Top 5 Leagues · 2025/26</div>
     </div>
   </div>
-  <div class="timestamp">Season 2025 / 26</div>
+  <div class="timestamp" aria-label="Current football season">Season 2025 / 26</div>
 </header>
 
-<div class="container">
-  <section class="card">
-    <div class="section-title">Leagues (filter)</div>
-    <div id="chips" class="chips">
-      <label class="chip"><input type="checkbox" value="EPL" checked> EPL</label>
-      <label class="chip"><input type="checkbox" value="LLA" checked> LLA</label>
-      <label class="chip"><input type="checkbox" value="SA"  checked> SA</label>
-      <label class="chip"><input type="checkbox" value="BUN" checked> BUN</label>
-      <label class="chip"><input type="checkbox" value="L1"  checked> L1</label>
-    </div>
+<div class="container" role="main">
+  <section class="card" aria-labelledby="league-filter-title">
+    <div class="section-title" id="league-filter-title">Leagues (filter)</div>
+    <div id="chips" class="chips" role="group" aria-label="League filters"></div>
 
     <div class="section-title">Show on wheel</div>
-    <div class="showopts">
-      <label class="chip"><input type="checkbox" id="optName" checked> Name</label>
-      <label class="chip"><input type="checkbox" id="optLogo" checked> Logo</label>
-      <label class="chip"><input type="checkbox" id="optStadium"> Stadium</label>
+    <div class="showopts" role="group" aria-label="Show options">
+      <label class="chip"><input type="checkbox" id="optName" checked aria-checked="true"> Name</label>
+      <label class="chip"><input type="checkbox" id="optLogo" checked aria-checked="true"> Logo</label>
+      <label class="chip"><input type="checkbox" id="optStadium" aria-checked="false"> Stadium</label>
     </div>
 
-    <button id="spinBtn">SPIN</button>
+    <button id="spinBtn" aria-label="Spin the wheel">SPIN</button>
+    <button id="resetHistoryBtn" aria-label="Reset history">Reset History</button>
 
-    <div class="result">
-      <img id="currentLogo" alt="">
+    <div class="result" aria-live="polite">
+      <img id="currentLogo" alt="Club logo" aria-hidden="true">
       <div class="current-name" id="currentText">No selection yet</div>
     </div>
 
@@ -131,17 +42,22 @@
     <div class="history" id="history"></div>
   </section>
 
-  <section class="card">
+  <section class="card" aria-labelledby="wheel-title">
+    <div class="section-title" id="wheel-title">Club Wheel</div>
     <div class="wheel-wrap">
-      <div class="pointer"></div>
-      <canvas id="wheel" width="640" height="640"></canvas>
-      <canvas id="fx" width="640" height="640"></canvas>
+      <div class="pointer" aria-label="Wheel pointer"></div>
+      <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
+      <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
+    </div>
+    <div class="customization">
+      <label for="wheelSize">Wheel Size:</label>
+      <input type="range" id="wheelSize" min="400" max="900" value="640" step="10" aria-label="Wheel size">
     </div>
   </section>
 </div>
 
 <!-- Modal -->
-<div id="backdrop" class="modal-backdrop">
+<div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mHead">
   <div id="modal" class="modal">
     <div id="mHead" class="m-head">Team</div>
     <div class="m-body">
@@ -162,384 +78,6 @@
   </div>
 </div>
 
-<script>
-"use strict";
-
-/* ======= DATA ======= */
-const TEAMS = [
-  // Premier League
-  {league_code:"EPL", team_name:"Arsenal", primary_color:"#EF0107", logo_url:"https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg", stadium:"Emirates Stadium"},
-  {league_code:"EPL", team_name:"Aston Villa", primary_color:"#670E36", logo_url:"https://upload.wikimedia.org/wikipedia/en/f/f9/Aston_Villa_FC_crest_%282016%29.svg", stadium:"Villa Park"},
-  {league_code:"EPL", team_name:"AFC Bournemouth", primary_color:"#DA291C", logo_url:"https://upload.wikimedia.org/wikipedia/en/e/e5/AFC_Bournemouth_%282013%29.svg", stadium:"Vitality Stadium"},
-  {league_code:"EPL", team_name:"Brentford", primary_color:"#E30613", logo_url:"https://upload.wikimedia.org/wikipedia/en/1/12/Brentford_FC_crest.svg", stadium:"Gtech Community Stadium"},
-  {league_code:"EPL", team_name:"Brighton & Hove Albion", primary_color:"#0057B8", logo_url:"https://upload.wikimedia.org/wikipedia/en/f/fd/Brighton_%26_Hove_Albion_logo.svg", stadium:"Amex Stadium"},
-  {league_code:"EPL", team_name:"Burnley", primary_color:"#6C1D45", logo_url:"https://upload.wikimedia.org/wikipedia/en/6/62/Burnley_FC_Logo.svg", stadium:"Turf Moor"},
-  {league_code:"EPL", team_name:"Chelsea", primary_color:"#034694", logo_url:"https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg", stadium:"Stamford Bridge"},
-  {league_code:"EPL", team_name:"Crystal Palace", primary_color:"#1B458F", logo_url:"https://upload.wikimedia.org/wikipedia/en/0/0c/Crystal_Palace_FC_logo.svg", stadium:"Selhurst Park"},
-  {league_code:"EPL", team_name:"Everton", primary_color:"#003399", logo_url:"https://upload.wikimedia.org/wikipedia/en/7/7c/Everton_FC_logo.svg", stadium:"Goodison Park"},
-  {league_code:"EPL", team_name:"Fulham", primary_color:"#000000", logo_url:"https://upload.wikimedia.org/wikipedia/en/3/3e/Fulham_FC_%28shield%29.svg", stadium:"Craven Cottage"},
-  {league_code:"EPL", team_name:"Leeds United", primary_color:"#1D428A", logo_url:"https://upload.wikimedia.org/wikipedia/en/2/2f/Leeds_United_F.C._logo.svg", stadium:"Elland Road"},
-  {league_code:"EPL", team_name:"Liverpool", primary_color:"#C8102E", logo_url:"https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg", stadium:"Anfield"},
-  {league_code:"EPL", team_name:"Manchester City", primary_color:"#6CABDD", logo_url:"https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg", stadium:"Etihad Stadium"},
-  {league_code:"EPL", team_name:"Manchester United", primary_color:"#DA291C", logo_url:"https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg", stadium:"Old Trafford"},
-  {league_code:"EPL", team_name:"Newcastle United", primary_color:"#241F20", logo_url:"https://upload.wikimedia.org/wikipedia/en/5/56/Newcastle_United_Logo_2023.svg", stadium:"St James' Park"},
-  {league_code:"EPL", team_name:"Nottingham Forest", primary_color:"#DD0000", logo_url:"https://upload.wikimedia.org/wikipedia/en/6/6a/Nottingham_Forest_F.C._logo.svg", stadium:"City Ground"},
-  {league_code:"EPL", team_name:"Sunderland", primary_color:"#E2231A", logo_url:"https://upload.wikimedia.org/wikipedia/en/7/77/Sunderland_A.F.C._crest.svg", stadium:"Stadium of Light"},
-  {league_code:"EPL", team_name:"Tottenham Hotspur", primary_color:"#132257", logo_url:"https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg", stadium:"Tottenham Hotspur Stadium"},
-  {league_code:"EPL", team_name:"West Ham United", primary_color:"#7A263A", logo_url:"https://upload.wikimedia.org/wikipedia/en/c/c2/West_Ham_United_FC_logo.svg", stadium:"London Stadium"},
-  {league_code:"EPL", team_name:"Wolverhampton Wanderers", primary_color:"#FDB913", logo_url:"https://upload.wikimedia.org/wikipedia/en/f/fc/Wolverhampton_Wanderers.svg", stadium:"Molineux Stadium"},
-
-  // La Liga
-  {league_code:"LLA", team_name:"Barcelona", primary_color:"#A50044", logo_url:"https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg", stadium:"Spotify Camp Nou"},
-  {league_code:"LLA", team_name:"Real Madrid", primary_color:"#FEBE10", logo_url:"https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg", stadium:"Santiago Bernabéu"},
-  {league_code:"LLA", team_name:"Atlético Madrid", primary_color:"#CB3524", logo_url:"https://upload.wikimedia.org/wikipedia/en/f/f4/Atletico_Madrid_2017_logo.svg", stadium:"Civitas Metropolitano"},
-  {league_code:"LLA", team_name:"Real Sociedad", primary_color:"#00529F", logo_url:"https://upload.wikimedia.org/wikipedia/en/f/f1/Real_Sociedad_logo.svg", stadium:"Reale Arena"},
-  {league_code:"LLA", team_name:"Villarreal", primary_color:"#FDE100", logo_url:"https://upload.wikimedia.org/wikipedia/en/7/70/Villarreal_CF_logo.svg", stadium:"Estadio de la Cerámica"},
-
-  // Serie A
-  {league_code:"SA", team_name:"Inter", primary_color:"#0091FF", logo_url:"https://upload.wikimedia.org/wikipedia/en/0/05/FC_Internazionale_Milano_2021.svg", stadium:"San Siro"},
-  {league_code:"SA", team_name:"Milan", primary_color:"#FB090B", logo_url:"https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg", stadium:"San Siro"},
-  {league_code:"SA", team_name:"Juventus", primary_color:"#000000", logo_url:"https://upload.wikimedia.org/wikipedia/commons/1/15/Juventus_FC_2017_logo.svg", stadium:"Allianz Stadium"},
-  {league_code:"SA", team_name:"Napoli", primary_color:"#00ADEF", logo_url:"https://upload.wikimedia.org/wikipedia/commons/2/2d/SSC_Napoli.svg", stadium:"Diego Armando Maradona"},
-
-  // Bundesliga
-  {league_code:"BUN", team_name:"Bayern Munich", primary_color:"#DC052D", logo_url:"https://upload.wikimedia.org/wikipedia/en/1/1f/FC_Bayern_Munich_logo_%282017%29.svg", stadium:"Allianz Arena"},
-  {league_code:"BUN", team_name:"Borussia Dortmund", primary_color:"#FDE100", logo_url:"https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg", stadium:"Signal Iduna Park"},
-
-  // Ligue 1
-  {league_code:"L1", team_name:"Paris Saint-Germain", primary_color:"#004170", logo_url:"https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg", stadium:"Parc des Princes"},
-  {league_code:"L1", team_name:"Marseille", primary_color:"#0093D0", logo_url:"https://upload.wikimedia.org/wikipedia/commons/7/70/Olympique_Marseille_logo.svg", stadium:"Orange Vélodrome"},
-];
-
-const TAU = Math.PI * 2;
-
-/* ======= STATE & ELEMENTS ======= */
-let currentAngle = 0;     // total rotation (we'll normalize when drawing)
-let spinning     = false;
-let selectedIdx  = -1;
-
-const teams = TEAMS.slice();
-
-const wheel   = document.getElementById('wheel');
-const ctx     = wheel.getContext('2d');
-const fx      = document.getElementById('fx');
-const fxc     = fx.getContext('2d');
-
-const chips       = document.getElementById('chips');
-const spinBtn     = document.getElementById('spinBtn');
-const optName     = document.getElementById('optName');
-const optLogo     = document.getElementById('optLogo');
-const optStadium  = document.getElementById('optStadium');
-
-const currentText = document.getElementById('currentText');
-const currentLogo = document.getElementById('currentLogo');
-const historyEl   = document.getElementById('history');
-const backdrop    = document.getElementById('backdrop');
-
-/* ======= IMAGE CACHE ======= */
-const imgCache = new Map();
-function loadImage(src, cb){
-  if (!src) { cb(null); return; }
-  if (imgCache.has(src)) { cb(imgCache.get(src)); return; }
-  const im = new Image(); im.crossOrigin = "anonymous";
-  im.onload = () => { imgCache.set(src, im); cb(im); };
-  im.onerror = () => cb(null);
-  im.src = src;
-}
-
-/* ======= HELPERS ======= */
-const norm = a => ((a % TAU) + TAU) % TAU;
-
-function getFiltered(){
-  const active = Array.from(chips.querySelectorAll('input:checked')).map(i => i.value);
-  return teams.filter(t => active.includes(t.league_code));
-}
-function wrap(ctx, text, maxW){
-  if(!text) return ['—'];
-  const words = String(text).split(' ');
-  const out=[]; let line='';
-  for(const w of words){
-    const t = line ? line + ' ' + w : w;
-    if (ctx.measureText(t).width <= maxW) line = t;
-    else { if(line) out.push(line); line = w; }
-  }
-  if(line) out.push(line);
-  return out.length ? out : ['—'];
-}
-function textColorFor(hex){
-  if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
-  hex = hex.replace('#','');
-  const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
-  const L = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
-  return L > 0.35 ? '#0b0f17' : '#fff';
-}
-function crowdMode(n){
-  if(n>=28) return {nameScale:0.62, logoScale:0.55, showStadium:false, maxLines:1};
-  if(n>=22) return {nameScale:0.75, logoScale:0.70, showStadium:false, maxLines:1};
-  if(n>=16) return {nameScale:0.85, logoScale:0.80, showStadium:true,  maxLines:2};
-  return            {nameScale:1.00, logoScale:0.95, showStadium:true,  maxLines:2};
-}
-
-/* ======= DRAW ======= */
-function drawWheel(){
-  const data = getFiltered();
-  const N = data.length || 1;
-  const W = wheel.width, H = wheel.height;
-
-  ctx.clearRect(0,0,W,H);
-  ctx.save();
-  ctx.translate(W/2, H/2);
-
-  // normalize the rotation we use for drawing
-  const angleDraw = norm(currentAngle);
-  ctx.rotate(angleDraw);
-
-  const radius = Math.min(W,H) * 0.48;
-  const slice  = TAU / N;
-
-  // slices
-  for(let i=0;i<N;i++){
-    const t = data[i] || {};
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.arc(0,0, radius, i*slice, (i+1)*slice);
-    ctx.closePath();
-    ctx.fillStyle = t.primary_color || '#4f8cff';
-    ctx.fill();
-  }
-
-  // labels & logos
-  const dens  = crowdMode(N);
-  const inner = radius * 0.46;
-
-  for(let i=0;i<N;i++){
-    const t = data[i]; if(!t) continue;
-    const mid = i*slice + slice/2;
-
-    ctx.save();
-    ctx.rotate(mid);
-
-    // flip text for the left half (accounting for the overall rotation)
-    const onLeftHalf = Math.cos(angleDraw + mid) < 0;
-    if (onLeftHalf) ctx.rotate(Math.PI);
-
-    ctx.translate(inner, 0);
-
-    const color = textColorFor(t.primary_color || '#4f8cff');
-    const base  = 18 * dens.nameScale;
-    const sub   = base * 0.8;
-    const maxW  = radius * (dens.maxLines === 1 ? 0.28 : 0.36);
-
-    // logo
-    if (optLogo.checked && t.logo_url){
-      const s = Math.min(42, radius*0.16) * dens.logoScale;
-      const draw = im => { if(!im) return; ctx.save(); ctx.translate(-s*0.9,0); ctx.drawImage(im, -s/2, -s/2, s, s); ctx.restore(); };
-      const c = imgCache.get(t.logo_url);
-      if (c) draw(c); else loadImage(t.logo_url, (im)=>{ if(im) requestAnimationFrame(drawWheel); });
-    }
-
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(0,0,0,.35)';
-    ctx.fillStyle = color;
-
-    // name
-    if (optName.checked){
-      ctx.font = `800 ${base}px Inter,system-ui,sans-serif`;
-      let lines = wrap(ctx, t.team_name, maxW);
-      if (lines.length > dens.maxLines) lines = lines.slice(0, dens.maxLines);
-      const total = (lines.length-1) * base * 1.05;
-      lines.forEach((ln, j) => {
-        const y = -total/2 + j*base*1.05;
-        ctx.strokeText(ln, 4, y);
-        ctx.fillText(ln, 4, y);
-      });
-    }
-    // stadium
-    if (optStadium.checked && dens.showStadium){
-      ctx.font = `700 ${sub}px Inter,system-ui,sans-serif`;
-      const y0 = optName.checked ? base*0.95 : 0;
-      const sLines = wrap(ctx, t.stadium, maxW);
-      sLines.forEach((ln, j) => {
-        const y = y0 + j*sub*1.02;
-        ctx.strokeText(ln, 4, y);
-        ctx.fillText(ln, 4, y);
-      });
-    }
-
-    ctx.restore();
-  }
-
-  // highlight selected slice
-  if (selectedIdx >= 0 && selectedIdx < N){
-    const start = selectedIdx * slice, end = (selectedIdx+1)*slice;
-    ctx.save();
-    ctx.shadowColor = 'rgba(255,255,255,.55)';
-    ctx.shadowBlur  = 24;
-    ctx.beginPath();
-    ctx.arc(0,0, radius*0.995, start+0.006, end-0.006);
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(0,0, radius*0.70, start+0.01, end-0.01);
-    ctx.lineWidth   = 4;
-    ctx.strokeStyle = 'rgba(255,255,255,.35)';
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  ctx.restore();
-}
-
-/* ======= MODAL ======= */
-function openModal(team){
-  document.getElementById('mHead').textContent = team.team_name;
-  document.getElementById('mSub').textContent  = team.league_code;
-  document.getElementById('mLogo').src         = team.logo_url || "";
-  document.getElementById('mColor').style.background = team.primary_color || '#4f8cff';
-  document.getElementById('mColorHex').textContent   = team.primary_color || '#4f8cff';
-  document.getElementById('mStadium').textContent    = team.stadium || '—';
-  backdrop.style.display = 'flex';
-  requestAnimationFrame(()=> document.getElementById('modal').classList.add('show'));
-}
-function closeModal(){
-  document.getElementById('modal').classList.remove('show');
-  setTimeout(()=> backdrop.style.display='none', 150);
-}
-document.getElementById('mClose').onclick = closeModal;
-backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
-window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
-
-/* ======= RESULT & EFFECTS ======= */
-function setResult(idx){
-  const data = getFiltered();
-  const t = data[idx];
-
-  selectedIdx = idx;
-  drawWheel();
-
-  currentText.textContent = `${t.team_name} · ${t.league_code}`;
-  currentLogo.src         = t.logo_url || "";
-
-  const item = document.createElement('div');
-  item.className = 'item';
-  const i = document.createElement('img'); i.src = t.logo_url || "";
-  const s = document.createElement('span'); s.textContent = `${t.team_name} (${t.league_code})`;
-  item.append(i, s);
-  historyEl.prepend(item);
-
-  openModal(t);
-  ping();
-  confettiBurst(t.primary_color || '#4f8cff');
-}
-
-/* ======= SPIN ======= */
-function spin(){
-  if (spinning) return;
-  const data = getFiltered();
-  if (!data.length) return;
-
-  spinning = true;
-  spinBtn.disabled = true;
-  selectedIdx = -1;
-
-  const N = data.length;
-  const slice = TAU / N;
-
-  const extraTurns  = 6 + Math.floor(Math.random()*2);
-  const finalOffset = Math.random()*TAU;
-  const targetAngle = TAU*extraTurns + finalOffset;
-
-  const start    = performance.now();
-  const duration = 3000;
-  const easeOutCubic = x => 1 - Math.pow(1-x, 3);
-
-  function anim(t){
-    const p = Math.min(1, (t - start) / duration);
-    currentAngle = targetAngle * easeOutCubic(p);
-    drawWheel();
-
-    if (p < 1){
-      requestAnimationFrame(anim);
-    } else {
-      // Normalize for final math
-      const theta = norm(currentAngle);
-      const POINTER_ANGLE = norm(-Math.PI / 2);
-      let idx = Math.round(norm(POINTER_ANGLE - theta - slice/2) / slice) % N;
-
-      // Snap so center is exactly under pointer
-      const centerAngle = norm(theta + idx*slice + slice/2);
-      const delta = norm(POINTER_ANGLE - centerAngle);
-      currentAngle = norm(currentAngle + delta);
-
-      spinning = false;
-      spinBtn.disabled = false;
-      selectedIdx = idx;
-      drawWheel();
-      setResult(idx);
-    }
-  }
-  requestAnimationFrame(anim);
-}
-
-/* ======= SOUND & CONFETTI ======= */
-let audioCtx;
-function ping(){
-  try{
-    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.type='sine'; o.frequency.value=880;
-    o.connect(g); g.connect(audioCtx.destination);
-    const t0 = audioCtx.currentTime;
-    g.gain.setValueAtTime(0.001, t0);
-    g.gain.exponentialRampToValueAtTime(0.2, t0+0.01);
-    g.gain.exponentialRampToValueAtTime(0.001, t0+0.25);
-    o.start(t0); o.stop(t0+0.26);
-  }catch{}
-}
-let confetti=[], until=0;
-function confettiBurst(color){
-  const now=performance.now(); until=now+900;
-  const w=window.innerWidth, h=window.innerHeight; confetti.length=0;
-  for(let i=0;i<140;i++){
-    confetti.push({
-      x:w/2+(Math.random()-0.5)*120,
-      y:h*0.25+(Math.random()-0.5)*60,
-      vx:(Math.random()-0.5)*6,
-      vy:Math.random()*-4-2,
-      r:Math.random()*6+3,
-      a:Math.random()*TAU,
-      s:(Math.random()<0.5?1:-1)*(Math.random()*0.15+0.03),
-      c:i%5===0?'#ffffff':color
-    });
-  }
-  animateConfetti();
-}
-function animateConfetti(){
-  const w = fx.width = window.innerWidth;
-  const h = fx.height = window.innerHeight;
-  fxc.clearRect(0,0,w,h);
-  for(const p of confetti){
-    p.vy += 0.12; p.x += p.vx; p.y += p.vy; p.a += p.s;
-    fxc.save(); fxc.translate(p.x,p.y); fxc.rotate(p.a);
-    fxc.fillStyle = p.c; fxc.fillRect(-p.r,-p.r,p.r*2,p.r*2);
-    fxc.restore();
-  }
-  if (performance.now() < until) requestAnimationFrame(animateConfetti);
-  else fxc.clearRect(0,0,w,h);
-}
-
-/* ======= WIRE-UP ======= */
-chips.onchange = ()=>{ selectedIdx = -1; drawWheel(); };
-optName.onchange = optLogo.onchange = optStadium.onchange = ()=> drawWheel();
-spinBtn.onclick = spin;
-drawWheel();
-</script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
