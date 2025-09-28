@@ -132,7 +132,7 @@ function drawWheel(){
   }
   ctx.restore();
 
-  // Draw all logos (if enabled), ensuring every logo appears
+  // Draw all logos (if enabled), ensuring every logo appears and is upright
   if(optLogo.checked) {
     for(let i=0;i<N;i++){
       const t = data[i] || {};
@@ -146,11 +146,11 @@ function drawWheel(){
             ctx2.translate(W/2, H/2);
             ctx2.rotate(angleDraw);
             ctx2.rotate(ii*slice + slice/2);
-            ctx2.drawImage(this, radius*0.6-18, -18, 36, 36);
+            ctx2.rotate(-ii*slice - slice/2); // keep logo upright!
+            ctx2.drawImage(this, radius*0.76-18, -18, 36, 36);
             ctx2.restore();
           }
         })(i);
-        // If image is cached, draw immediately
         if(img.complete) img.onload();
       }
     }
@@ -199,7 +199,6 @@ function spin(){
     if (p < 1){
       requestAnimationFrame(anim);
     } else {
-      // Normalize
       const theta = ((currentAngle % TAU) + TAU) % TAU;
       const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
       let idx = Math.round(((POINTER_ANGLE - theta - slice/2 + TAU) % TAU) / slice) % N;
