@@ -90,21 +90,25 @@ function textColorFor(hex){
 
 const TAU = Math.PI * 2;
 
-// Draw wheel: all segments, then draw elements vertically if enabled
+// Draw wheel with stacked elements per slice based on checkboxes
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
   const W = wheel.width, H = wheel.height;
   const ctx = wheel.getContext('2d');
   ctx.clearRect(0,0,W,H);
-  ctx.save();
-  ctx.translate(W/2, H/2);
-  const angleDraw = ((currentAngle % TAU) + TAU) % TAU;
-  ctx.rotate(angleDraw);
 
   const radius = Math.min(W,H) * 0.48;
   const slice  = TAU / N;
 
+  ctx.save();
+  ctx.translate(W/2, H/2);
+
+  // Rotate whole wheel by currentAngle
+  const angleDraw = ((currentAngle % TAU) + TAU) % TAU;
+  ctx.rotate(angleDraw);
+
+  // 1) Draw background slices
   for(let i=0;i<N;i++){
     const t = data[i] || {};
     ctx.beginPath();
@@ -113,61 +117,62 @@ function drawWheel(){
     ctx.closePath();
     ctx.fillStyle = t.primary_color || '#4f8cff';
     ctx.fill();
+  }
 
-    // Draw stacked elements
+  // 2) Draw content in each slice (stacked vertically)
+  for (let i=0;i<N;i++){
+    const t = data[i] || {};
+
+    // Build stack (logo -> name -> stadium) depending on toggles
+    const items = [];
+    if (optLogo.checked && t.logo_url) items.push({type:'logo', h:36});
+    if (optName.checked && t.team_name) items.push({type:'name', h:20});
+    if (optStadium.checked && t.stadium) items.push({type:'stadium', h:16});
+
+    if (items.length === 0) continue;
+
+    // Positioning:
+    // Rotate into slice so +x points along slice bisector; draw along that axis.
     ctx.save();
     ctx.rotate(i*slice + slice/2);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Calculate vertical stacking
-    let y = 0;
-    let stack = [];
-    if(optLogo.checked && t.logo_url) stack.push('logo');
-    if(optName.checked && t.team_name) stack.push('name');
-    if(optStadium.checked && t.stadium) stack.push('stadium');
+    const rStack = radius * 0.62; // keep safely inside the wheel
+    const gap = 6;
+    const totalH = items.reduce((s,it)=> s+it.h, 0) + gap*(items.length-1);
+    let yCursor = -totalH/2;
 
-    let totalHeight = stack.length * 38;
-    let startY = -totalHeight/2 + 19; // center stack vertically
+    for (const it of items) {
+      const yCenter = yCursor + it.h/2;
 
-    for (let j = 0; j < stack.length; ++j) {
-      let currY = startY + j*38;
-      if(stack[j]==='logo'){
-        let img = new window.Image();
+      if (it.type === 'logo') {
+        const img = new window.Image();
         img.src = t.logo_url;
-        // Draw upright
-        img.onload = function(){
-          ctx.save();
-          ctx.rotate(-i*slice - slice/2); // keep logo upright
-          ctx.drawImage(img, radius*0.7-19, currY-19, 38, 38);
-          ctx.restore();
-        }
-        if(img.complete) {
-          ctx.save();
-          ctx.rotate(-i*slice - slice/2);
-          ctx.drawImage(img, radius*0.7-19, currY-19, 38, 38);
-          ctx.restore();
-        }
-      }
-      if(stack[j]==='name'){
+        const drawImg = () => ctx.drawImage(img, rStack - 18, yCenter - 18, 36, 36);
+        img.onload = drawImg;
+        if (img.complete) drawImg();
+      } else if (it.type === 'name') {
         ctx.font = 'bold 16px Inter,Arial,sans-serif';
         ctx.fillStyle = textColorFor(t.primary_color);
         ctx.strokeStyle = '#222b3e';
         ctx.lineWidth = 2;
-        ctx.strokeText(t.team_name, radius*0.7, currY);
-        ctx.fillText(t.team_name, radius*0.7, currY);
-      }
-      if(stack[j]==='stadium'){
-        ctx.font = '13px Inter,Arial,sans-serif';
+        ctx.strokeText(t.team_name, rStack, yCenter);
+        ctx.fillText(t.team_name, rStack, yCenter);
+      } else if (it.type === 'stadium') {
+        ctx.font = '12px Inter,Arial,sans-serif';
         ctx.fillStyle = '#C9E6FF';
         ctx.strokeStyle = '#222b3e';
         ctx.lineWidth = 2;
-        ctx.strokeText(t.stadium, radius*0.7, currY);
-        ctx.fillText(t.stadium, radius*0.7, currY);
+        ctx.strokeText(t.stadium, rStack, yCenter);
+        ctx.fillText(t.stadium, rStack, yCenter);
       }
+
+      yCursor += it.h + gap;
     }
     ctx.restore();
   }
+
   ctx.restore();
 }
 
@@ -213,9 +218,11 @@ function spin(){
     if (p < 1){
       requestAnimationFrame(anim);
     } else {
+      // Normalize and compute selected index under the pointer (top)
       const theta = ((currentAngle % TAU) + TAU) % TAU;
-      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
+      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // top
       let idx = Math.round(((POINTER_ANGLE - theta - slice/2 + TAU) % TAU) / slice) % N;
+
       currentAngle = ((currentAngle + ((POINTER_ANGLE - ((theta + idx*slice + slice/2) % TAU) + TAU) % TAU)) % TAU);
       spinning = false;
       spinBtn.disabled = false;
@@ -255,6 +262,7 @@ function setupEventListeners() {
   window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
 }
 
+// Load teams.json and initialize app
 fetch('./teams.json')
   .then(res => res.json())
   .then(data => {
