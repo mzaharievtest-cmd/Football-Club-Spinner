@@ -1,9 +1,14 @@
+// Football Club Spinner — app.js
+// Updated: stacked per-slice content (Logo -> Name -> Stadium), upright,
+// with a subtle drop shadow on the logo. Works with or without the Stadium toggle.
+
 let TEAMS = [];
 let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 
+// DOM
 const chips = document.getElementById('chips');
 const spinBtn = document.getElementById('spinBtn');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -16,7 +21,6 @@ const historyEl = document.getElementById('history');
 const backdrop = document.getElementById('backdrop');
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
-const wheelSizeInput = document.getElementById('wheelSize');
 const mClose = document.getElementById('mClose');
 
 function renderChips() {
@@ -75,6 +79,7 @@ function openModal(team){
   backdrop.style.display = 'flex';
   requestAnimationFrame(()=> document.getElementById('modal').classList.add('show'));
 }
+
 function closeModal(){
   document.getElementById('modal').classList.remove('show');
   setTimeout(()=> backdrop.style.display='none', 150);
@@ -90,23 +95,27 @@ function textColorFor(hex){
 
 const TAU = Math.PI * 2;
 
-// Draw wheel: all segments, then names, then logos (if enabled)
+// Draw wheel with solid color slices.
+// Then for each slice, stack: Logo (with drop shadow) -> Name -> Stadium.
+// All elements are kept upright and centered along the slice bisector.
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
   const W = wheel.width, H = wheel.height;
   const ctx = wheel.getContext('2d');
+
   ctx.clearRect(0,0,W,H);
   ctx.save();
   ctx.translate(W/2, H/2);
+
   const angleDraw = ((currentAngle % TAU) + TAU) % TAU;
   ctx.rotate(angleDraw);
 
   const radius = Math.min(W,H) * 0.48;
   const slice  = TAU / N;
 
-  // Draw slices and team names
-  for(let i=0;i<N;i++){
+  // 1) Background slices
+  for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     ctx.beginPath();
     ctx.moveTo(0,0);
@@ -114,54 +123,81 @@ function drawWheel(){
     ctx.closePath();
     ctx.fillStyle = t.primary_color || '#4f8cff';
     ctx.fill();
+  }
 
-    // Team name
-    if(optName.checked && t.team_name) {
+  // 2) Per-slice stacked content (Logo -> Name -> Stadium), kept upright
+  for (let i = 0; i < N; i++) {
+    const t = data[i] || {};
+    const items = [];
+    if (optLogo.checked && t.logo_url) items.push('logo');
+    if (optName.checked && t.team_name) items.push('name');
+    if (optStadium.checked && t.stadium) items.push('stadium');
+    if (!items.length) continue;
+
+    const angle = i*slice + slice/2;
+
+    // Work in the slice's direction for positioning
+    ctx.save();
+    ctx.rotate(angle);
+
+    // Where to place the stack, along the slice bisector
+    const rStack = radius * 0.68; // move closer/farther from center if needed
+    const gap = 6;
+    const heights = { logo: 36, name: 18, stadium: 14 };
+    const totalH = items.reduce((sum, k) => sum + heights[k], 0) + gap * (items.length - 1);
+    let yCursor = -totalH / 2;
+
+    for (const k of items) {
+      const h = heights[k];
+      const yCenter = yCursor + h/2;
+
+      // Translate outward along slice axis, then unrotate so content is upright
       ctx.save();
-      ctx.rotate(i*slice + slice/2);
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = 'bold 16px Inter,Arial,sans-serif';
-      ctx.fillStyle = textColorFor(t.primary_color);
-      ctx.strokeStyle = '#222b3e';
-      ctx.lineWidth = 2;
-      ctx.strokeText(t.team_name, radius*0.65, 0);
-      ctx.fillText(t.team_name, radius*0.65, 0);
-      ctx.restore();
-    }
-  }
-  ctx.restore();
+      ctx.translate(rStack, yCenter);
+      ctx.rotate(-angle);
 
-  // Draw all logos (if enabled), each with a dark drop shadow
-  if(optLogo.checked) {
-    for(let i=0;i<N;i++){
-      const t = data[i] || {};
-      if(t.logo_url){
-        const img = new window.Image();
+      if (k === 'logo') {
+        const img = new Image();
         img.src = t.logo_url;
-        img.onload = (function(ii){
-          return function(){
-            const ctx2 = wheel.getContext('2d');
-            ctx2.save();
-            ctx2.translate(W/2, H/2);
-            ctx2.rotate(angleDraw);
-            ctx2.rotate(ii*slice + slice/2);
-
-            // Drop shadow (cheap and effective)
-            ctx2.shadowColor = "rgba(0,0,0,0.7)";
-            ctx2.shadowBlur = 6;
-            ctx2.shadowOffsetX = 0;
-            ctx2.shadowOffsetY = 2;
-
-            ctx2.drawImage(this, Math.min(W,H)*0.48*0.6-18, -18, 36, 36);
-            ctx2.restore();
-          }
-        })(i);
-        // If image is cached, draw immediately
-        if(img.complete) img.onload();
+        const drawImg = () => {
+          ctx.save();
+          // Dark drop shadow (cheap and effective)
+          ctx.shadowColor = "rgba(0,0,0,0.7)";
+          ctx.shadowBlur = 6;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 2;
+          ctx.drawImage(img, -18, -18, 36, 36);
+          ctx.restore();
+        };
+        if (img.complete) drawImg(); else img.onload = drawImg;
+      } else if (k === 'name') {
+        ctx.font = 'bold 16px Inter,Arial,sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = textColorFor(t.primary_color);
+        ctx.strokeStyle = '#222b3e';
+        ctx.lineWidth = 2;
+        ctx.strokeText(t.team_name, 0, 0);
+        ctx.fillText(t.team_name, 0, 0);
+      } else if (k === 'stadium') {
+        ctx.font = '13px Inter,Arial,sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#C9E6FF';
+        ctx.strokeStyle = '#222b3e';
+        ctx.lineWidth = 2;
+        ctx.strokeText(t.stadium, 0, 0);
+        ctx.fillText(t.stadium, 0, 0);
       }
+
+      ctx.restore();
+      yCursor += h + gap;
     }
+
+    ctx.restore();
   }
+
+  ctx.restore();
 }
 
 function setResult(idx){
@@ -206,10 +242,11 @@ function spin(){
     if (p < 1){
       requestAnimationFrame(anim);
     } else {
-      // Normalize
+      // Normalize and compute selected index under the pointer (top)
       const theta = ((currentAngle % TAU) + TAU) % TAU;
-      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
+      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // top
       let idx = Math.round(((POINTER_ANGLE - theta - slice/2 + TAU) % TAU) / slice) % N;
+
       currentAngle = ((currentAngle + ((POINTER_ANGLE - ((theta + idx*slice + slice/2) % TAU) + TAU) % TAU)) % TAU);
       spinning = false;
       spinBtn.disabled = false;
@@ -233,28 +270,17 @@ function setupEventListeners() {
       spinBtn.disabled = false;
     }
   });
+
   optName.onchange = optLogo.onchange = optStadium.onchange = () => drawWheel();
   spinBtn.onclick = spin;
-
-  // Wheel size control (present in your original UI)
-  if (wheelSizeInput) {
-    wheelSizeInput.addEventListener('input', (e) => {
-      const size = e.target.value;
-      wheel.width = size;
-      wheel.height = size;
-      fx.width = size;
-      fx.height = size;
-      drawWheel();
-    });
-  }
-
   resetHistoryBtn.addEventListener('click', resetHistory);
+
   mClose.onclick = closeModal;
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
 }
 
-// Load teams.json and initialize app
+// Boot
 fetch('./teams.json')
   .then(res => res.json())
   .then(data => {
