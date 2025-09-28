@@ -1,7 +1,8 @@
-// Football Club Spinner — Responsive app.js
-// - Responsive, crisp wheel (HiDPI aware)
+// Football Club Spinner — Responsive + Fit-to-slice app.js
+// - Canvas auto-sizes to container, HiDPI crisp via devicePixelRatio
 // - Per-slice stacked content: Logo -> Name -> Stadium (upright, honors checkboxes)
-// - Adaptive sizing by radius; logo shadow for clarity
+// - Dynamically fits fonts and logo to the slice's available width
+// - Redraws on resize for all resolutions (including mobile)
 
 let TEAMS = [];
 let currentAngle = 0;
@@ -21,7 +22,7 @@ const currentLogo = document.getElementById('currentLogo');
 const historyEl = document.getElementById('history');
 const backdrop = document.getElementById('backdrop');
 const wheel = document.getElementById('wheel');
-const fx = document.getElementById('fx'); // kept for future effects
+const fx = document.getElementById('fx'); // reserved for effects
 const mClose = document.getElementById('mClose');
 
 // HiDPI + responsive sizing
@@ -145,7 +146,18 @@ function textColorFor(hex){
 
 const TAU = Math.PI * 2;
 
-// Main draw (responsive + HiDPI)
+// Fit helpers
+function fitFontSize(ctx, text, targetPx, minPx, maxWidth, weight = 700) {
+  let size = targetPx;
+  while (size >= minPx) {
+    ctx.font = `${weight} ${size}px Inter,Arial,sans-serif`;
+    if (ctx.measureText(text).width <= maxWidth) return size;
+    size -= 1;
+  }
+  return minPx;
+}
+
+// Main draw (responsive + HiDPI + fit-to-slice)
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
@@ -169,14 +181,19 @@ function drawWheel(){
   const radius = Math.min(W,H) * 0.48;
   const slice  = TAU / N;
 
-  // Adaptive sizes based on radius
-  const logoSize = Math.round(clamp(22, radius * 0.12, 56)); // px
-  const nameFontPx = Math.round(clamp(12, radius * 0.06, 22));
-  const stadiumFontPx = Math.round(clamp(10, radius * 0.045, 16));
-  const gap = Math.round(clamp(4, radius * 0.02, 12));
-  const rStack = radius * 0.66; // radial distance where stack is centered
+  // Available width at a radial distance r (straight chord width for the slice)
+  const availWidthAt = (r) => Math.max(24, 2 * r * Math.tan(slice / 2) - 10);
 
-  // 1) Background slices (solid club color)
+  // Adaptive base sizes (will be fitted per-slice)
+  const baseLogoSize = clamp(22, Math.round(radius * 0.12), 56);
+  const baseNamePx = clamp(12, Math.round(radius * 0.06), 22);
+  const baseStadiumPx = clamp(10, Math.round(radius * 0.045), 16);
+  const baseGap = clamp(4, Math.round(radius * 0.02), 12);
+
+  // Where stack is placed along the slice bisector
+  const rStackBase = radius * 0.66;
+
+  // 1) Background slices (solid)
   for(let i=0;i<N;i++){
     const t = data[i] || {};
     ctx.beginPath();
@@ -187,14 +204,14 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // 2) Per-slice stacked content (Logo -> Name -> Stadium), upright
+  // 2) Content (Logo -> Name -> Stadium), upright, fitted to slice width
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
-    const items = [];
-    if (optLogo.checked && t.logo_url) items.push({type:'logo', h:logoSize});
-    if (optName.checked && t.team_name) items.push({type:'name', h:Math.round(nameFontPx*1.1)});
-    if (optStadium.checked && t.stadium) items.push({type:'stadium', h:Math.round(stadiumFontPx*1.0)});
-    if (!items.length) continue;
+    const wantLogo = optLogo.checked && t.logo_url;
+    const wantName = optName.checked && t.team_name;
+    const wantStad = optStadium.checked && t.stadium;
+
+    if (!wantLogo && !wantName && !wantStad) continue;
 
     const angle = i*slice + slice/2;
 
@@ -209,8 +226,38 @@ function drawWheel(){
     // Align to slice direction
     ctx.rotate(angle);
 
+    // Compute available width at the stack radius
+    const rStack = rStackBase;
+    const maxW = availWidthAt(rStack);
+
+    // Fit sizes per content
+    // Logo
+    const logoSize = wantLogo ? Math.min(baseLogoSize, Math.max(18, Math.floor(maxW - 8))) : 0;
+
+    // Name font (fit to width)
+    let namePx = 0;
+    if (wantName) {
+      namePx = fitFontSize(ctx, t.team_name, baseNamePx, 10, maxW, 800);
+    }
+
+    // Stadium font (fit to width)
+    let stadPx = 0;
+    if (wantStad) {
+      stadPx = fitFontSize(ctx, t.stadium, baseStadiumPx, 9, maxW, 700);
+    }
+
+    const gap = baseGap;
+
+    // Heights for stacking (approx line boxes)
+    const items = [];
+    if (wantLogo)   items.push({type:'logo',   h: logoSize});
+    if (wantName)   items.push({type:'name',   h: Math.round(namePx * 1.15), px: namePx});
+    if (wantStad)   items.push({type:'stadium',h: Math.round(stadPx * 1.10), px: stadPx});
     const totalH = items.reduce((s,it)=> s + it.h, 0) + gap * (items.length - 1);
     let yCursor = -totalH / 2;
+
+    // Colors
+    const fg = textColorFor(t.primary_color);
 
     for (const it of items) {
       const yCenter = Math.round(yCursor + it.h/2);
@@ -223,29 +270,31 @@ function drawWheel(){
       if (it.type === 'logo') {
         withImage(t.logo_url, (img) => {
           ctx.save();
+          // Drop shadow: cheap and effective clarity
           ctx.shadowColor = "rgba(0,0,0,0.7)";
           ctx.shadowBlur = 8;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 2;
-          ctx.drawImage(img, -logoSize/2, -logoSize/2, logoSize, logoSize);
+          const s = logoSize;
+          ctx.drawImage(img, -s/2, -s/2, s, s);
           ctx.restore();
         });
       } else if (it.type === 'name') {
-        ctx.font = `700 ${nameFontPx}px Inter,Arial,sans-serif`;
+        ctx.font = `800 ${it.px}px Inter,Arial,sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = textColorFor(t.primary_color);
-        ctx.strokeStyle = 'rgba(20,28,46,0.8)';
-        ctx.lineWidth = Math.max(1, Math.round(nameFontPx/9));
+        ctx.fillStyle = fg;
+        ctx.strokeStyle = 'rgba(20,28,46,0.85)';
+        ctx.lineWidth = Math.max(1, Math.round(it.px/9));
         ctx.strokeText(t.team_name, 0, 0);
         ctx.fillText(t.team_name, 0, 0);
       } else if (it.type === 'stadium') {
-        ctx.font = `600 ${stadiumFontPx}px Inter,Arial,sans-serif`;
+        ctx.font = `700 ${it.px}px Inter,Arial,sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#D7E8FF';
-        ctx.strokeStyle = 'rgba(20,28,46,0.7)';
-        ctx.lineWidth = Math.max(1, Math.round(stadiumFontPx/9));
+        ctx.strokeStyle = 'rgba(20,28,46,0.75)';
+        ctx.lineWidth = Math.max(1, Math.round(it.px/9));
         ctx.strokeText(t.stadium, 0, 0);
         ctx.fillText(t.stadium, 0, 0);
       }
