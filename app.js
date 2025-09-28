@@ -90,6 +90,7 @@ function textColorFor(hex){
 
 const TAU = Math.PI * 2;
 
+// Draw wheel: all segments, then all logos (if enabled)
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
@@ -103,6 +104,8 @@ function drawWheel(){
 
   const radius = Math.min(W,H) * 0.48;
   const slice  = TAU / N;
+
+  // Draw slices and team names
   for(let i=0;i<N;i++){
     const t = data[i] || {};
     ctx.beginPath();
@@ -126,19 +129,32 @@ function drawWheel(){
       ctx.fillText(t.team_name, radius*0.65, 0);
       ctx.restore();
     }
-    // Team logo
-    if(optLogo.checked && t.logo_url){
-      let img = new window.Image();
-      img.src = t.logo_url;
-      img.onload = () => {
-        ctx.save();
-        ctx.rotate(i*slice + slice/2);
-        ctx.drawImage(img, radius*0.6-18, -18, 36, 36);
-        ctx.restore();
-      };
-    }
   }
   ctx.restore();
+
+  // Draw all logos (if enabled), ensuring every logo appears
+  if(optLogo.checked) {
+    for(let i=0;i<N;i++){
+      const t = data[i] || {};
+      if(t.logo_url){
+        const img = new window.Image();
+        img.src = t.logo_url;
+        img.onload = (function(ii){
+          return function(){
+            const ctx2 = wheel.getContext('2d');
+            ctx2.save();
+            ctx2.translate(W/2, H/2);
+            ctx2.rotate(angleDraw);
+            ctx2.rotate(ii*slice + slice/2);
+            ctx2.drawImage(this, radius*0.6-18, -18, 36, 36);
+            ctx2.restore();
+          }
+        })(i);
+        // If image is cached, draw immediately
+        if(img.complete) img.onload();
+      }
+    }
+  }
 }
 
 function setResult(idx){
