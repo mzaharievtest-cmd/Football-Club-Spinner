@@ -4,7 +4,6 @@ let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 
-// DOM
 const chips = document.getElementById('chips');
 const spinBtn = document.getElementById('spinBtn');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -17,50 +16,8 @@ const historyEl = document.getElementById('history');
 const backdrop = document.getElementById('backdrop');
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
+const wheelSizeInput = document.getElementById('wheelSize');
 const mClose = document.getElementById('mClose');
-
-// High-DPI support
-let DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-let CSS_SIZE = 640; // canvas size in CSS pixels for layout/drawing math
-
-function sizeCanvas() {
-  const rect = wheel.getBoundingClientRect();
-  const size = Math.max(320, Math.round(rect.width || 640));
-  CSS_SIZE = size;
-
-  wheel.width = Math.round(size * DPR);
-  wheel.height = Math.round(size * DPR);
-  fx.width = wheel.width;
-  fx.height = wheel.height;
-
-  wheel.style.width = size + 'px';
-  wheel.style.height = size + 'px';
-  fx.style.width = size + 'px';
-  fx.style.height = size + 'px';
-}
-
-window.addEventListener('resize', () => {
-  DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-  sizeCanvas();
-  drawWheel();
-});
-
-// Image cache for logos
-const IMG_CACHE = new Map();
-function withImage(url, cb) {
-  if (!url) return;
-  if (IMG_CACHE.has(url)) {
-    const img = IMG_CACHE.get(url);
-    if (img.complete) cb(img);
-    else img.addEventListener('load', () => cb(img), { once: true });
-    return;
-  }
-  const img = new Image();
-  img.src = url;
-  IMG_CACHE.set(url, img);
-  if (img.complete) cb(img);
-  else img.addEventListener('load', () => cb(img), { once: true });
-}
 
 function renderChips() {
   const leagues = [...new Set(TEAMS.map(t => t.league_code))];
@@ -131,147 +88,80 @@ function textColorFor(hex){
   return L > 0.35 ? '#0b0f17' : '#fff';
 }
 
-// Color helpers for gradient shading
-function hexToRgb(hex) {
-  if(!hex) return {r:79,g:140,b:255};
-  hex = hex.replace('#','').trim();
-  if (hex.length !== 6) return {r:79,g:140,b:255};
-  return {
-    r: parseInt(hex.slice(0,2),16),
-    g: parseInt(hex.slice(2,4),16),
-    b: parseInt(hex.slice(4,6),16)
-  };
-}
-function rgbToStr({r,g,b}, a=1) {
-  return `rgba(${Math.max(0,Math.min(255,r))},${Math.max(0,Math.min(255,g))},${Math.max(0,Math.min(255,b))},${a})`;
-}
-function tint(hex, p) {
-  // p in [-1, 1]; positive makes lighter, negative darker
-  const {r,g,b} = hexToRgb(hex);
-  const t = p >= 0 ? 255 : 0;
-  const f = Math.abs(p);
-  return rgbToStr({
-    r: Math.round(r + (t - r) * f),
-    g: Math.round(g + (t - g) * f),
-    b: Math.round(b + (t - b) * f)
-  }, 1);
-}
-
 const TAU = Math.PI * 2;
 
-// Draw wheel with radial "club gradient rays" and stacked content
+// Draw wheel: all segments, then names, then logos (if enabled)
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
-
-  const ctx = wheel.getContext('2d', { alpha: true });
-  // Map device pixels back to CSS pixels so our math is in CSS units
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-
-  const W = CSS_SIZE;
-  const H = CSS_SIZE;
-
-  ctx.clearRect(0, 0, W, H);
+  const W = wheel.width, H = wheel.height;
+  const ctx = wheel.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.translate(W/2, H/2);
+  const angleDraw = ((currentAngle % TAU) + TAU) % TAU;
+  ctx.rotate(angleDraw);
 
   const radius = Math.min(W,H) * 0.48;
   const slice  = TAU / N;
 
-  ctx.save();
-  ctx.translate(Math.round(W/2), Math.round(H/2));
-
-  // Rotate whole wheel by currentAngle
-  const angleDraw = ((currentAngle % TAU) + TAU) % TAU;
-  ctx.rotate(angleDraw);
-
-  // 1) Background slices with radial gradient (center -> edge)
+  // Draw slices and team names
   for(let i=0;i<N;i++){
     const t = data[i] || {};
-    const base = t.primary_color || '#4f8cff';
-
-    const g = ctx.createRadialGradient(0, 0, radius*0.06, 0, 0, radius);
-    g.addColorStop(0.00, tint(base, +0.22)); // lighter near center
-    g.addColorStop(0.55, tint(base,  0.00)); // base mid
-    g.addColorStop(1.00, tint(base, -0.35)); // darker at edge
-
     ctx.beginPath();
     ctx.moveTo(0,0);
     ctx.arc(0,0, radius, i*slice, (i+1)*slice);
     ctx.closePath();
-    ctx.fillStyle = g;
+    ctx.fillStyle = t.primary_color || '#4f8cff';
     ctx.fill();
 
-    // Subtle seam line to avoid antialias bleed between slices
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(0,0,0,0.22)';
-    ctx.stroke();
-  }
-
-  // Optional depth overlay: inner glow + outer vignette
-  ctx.save();
-  const overlay = ctx.createRadialGradient(0,0, radius*0.05, 0,0, radius);
-  overlay.addColorStop(0.00, 'rgba(255,255,255,0.06)');
-  overlay.addColorStop(0.75, 'rgba(0,0,0,0.00)');
-  overlay.addColorStop(1.00, 'rgba(0,0,0,0.22)');
-  ctx.beginPath();
-  ctx.arc(0,0, radius, 0, TAU);
-  ctx.closePath();
-  ctx.fillStyle = overlay;
-  ctx.fill();
-  ctx.restore();
-
-  // 2) Draw content in each slice (stacked vertically per toggles)
-  for (let i=0;i<N;i++){
-    const t = data[i] || {};
-
-    // Build stack (logo -> name -> stadium) depending on toggles
-    const items = [];
-    if (optLogo.checked && t.logo_url) items.push({type:'logo', h:40});
-    if (optName.checked && t.team_name) items.push({type:'name', h:22});
-    if (optStadium.checked && t.stadium) items.push({type:'stadium', h:18});
-
-    if (items.length === 0) continue;
-
-    ctx.save();
-    ctx.rotate(i*slice + slice/2);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    const rStack = radius * 0.64; // content radius
-    const gap = 6;
-    const totalH = items.reduce((s,it)=> s+it.h, 0) + gap*(items.length-1);
-    let yCursor = -totalH/2;
-
-    for (const it of items) {
-      const yCenter = Math.round(yCursor + it.h/2);
-
-      if (it.type === 'logo') {
-        withImage(t.logo_url, (img) => {
-          ctx.drawImage(img, Math.round(rStack - 20), Math.round(yCenter - 20), 40, 40);
-        });
-      } else if (it.type === 'name') {
-        ctx.font = '800 18px Inter,Arial,sans-serif';
-        ctx.fillStyle = textColorFor(t.primary_color);
-        ctx.strokeStyle = 'rgba(12,16,28,0.85)';
-        ctx.lineWidth = 2;
-        ctx.strokeText(t.team_name, Math.round(rStack), yCenter);
-        ctx.fillText(t.team_name, Math.round(rStack), yCenter);
-      } else if (it.type === 'stadium') {
-        ctx.font = '600 13px Inter,Arial,sans-serif';
-        ctx.fillStyle = '#D7E8FF';
-        ctx.strokeStyle = 'rgba(12,16,28,0.75)';
-        ctx.lineWidth = 2;
-        ctx.strokeText(t.stadium, Math.round(rStack), yCenter);
-        ctx.fillText(t.stadium, Math.round(rStack), yCenter);
-      }
-
-      yCursor += it.h + gap;
+    // Team name
+    if(optName.checked && t.team_name) {
+      ctx.save();
+      ctx.rotate(i*slice + slice/2);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 16px Inter,Arial,sans-serif';
+      ctx.fillStyle = textColorFor(t.primary_color);
+      ctx.strokeStyle = '#222b3e';
+      ctx.lineWidth = 2;
+      ctx.strokeText(t.team_name, radius*0.65, 0);
+      ctx.fillText(t.team_name, radius*0.65, 0);
+      ctx.restore();
     }
-    ctx.restore();
   }
-
   ctx.restore();
+
+  // Draw all logos (if enabled), each with a dark drop shadow
+  if(optLogo.checked) {
+    for(let i=0;i<N;i++){
+      const t = data[i] || {};
+      if(t.logo_url){
+        const img = new window.Image();
+        img.src = t.logo_url;
+        img.onload = (function(ii){
+          return function(){
+            const ctx2 = wheel.getContext('2d');
+            ctx2.save();
+            ctx2.translate(W/2, H/2);
+            ctx2.rotate(angleDraw);
+            ctx2.rotate(ii*slice + slice/2);
+
+            // Drop shadow (cheap and effective)
+            ctx2.shadowColor = "rgba(0,0,0,0.7)";
+            ctx2.shadowBlur = 6;
+            ctx2.shadowOffsetX = 0;
+            ctx2.shadowOffsetY = 2;
+
+            ctx2.drawImage(this, Math.min(W,H)*0.48*0.6-18, -18, 36, 36);
+            ctx2.restore();
+          }
+        })(i);
+        // If image is cached, draw immediately
+        if(img.complete) img.onload();
+      }
+    }
+  }
 }
 
 function setResult(idx){
@@ -316,11 +206,10 @@ function spin(){
     if (p < 1){
       requestAnimationFrame(anim);
     } else {
-      // Normalize and compute selected index under the pointer (top)
+      // Normalize
       const theta = ((currentAngle % TAU) + TAU) % TAU;
-      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // top
+      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
       let idx = Math.round(((POINTER_ANGLE - theta - slice/2 + TAU) % TAU) / slice) % N;
-
       currentAngle = ((currentAngle + ((POINTER_ANGLE - ((theta + idx*slice + slice/2) % TAU) + TAU) % TAU)) % TAU);
       spinning = false;
       spinBtn.disabled = false;
@@ -346,6 +235,19 @@ function setupEventListeners() {
   });
   optName.onchange = optLogo.onchange = optStadium.onchange = () => drawWheel();
   spinBtn.onclick = spin;
+
+  // Wheel size control (present in your original UI)
+  if (wheelSizeInput) {
+    wheelSizeInput.addEventListener('input', (e) => {
+      const size = e.target.value;
+      wheel.width = size;
+      wheel.height = size;
+      fx.width = size;
+      fx.height = size;
+      drawWheel();
+    });
+  }
+
   resetHistoryBtn.addEventListener('click', resetHistory);
   mClose.onclick = closeModal;
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
@@ -359,7 +261,6 @@ fetch('./teams.json')
     TEAMS = data;
     renderChips();
     renderHistory();
-    sizeCanvas();     // HiDPI setup
-    drawWheel();      // initial render
+    drawWheel();
     setupEventListeners();
   });
