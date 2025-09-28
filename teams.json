@@ -3,16 +3,14 @@
     "league_code": "EPL",
     "team_name": "Arsenal",
     "primary_color": "#EF0107",
-    "logo_svg": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
-    "logo_png": "https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Arsenal_FC.svg/128px-Arsenal_FC.svg.png",
+    "logo_url": "logos/arsenal.png",
     "stadium": "Emirates Stadium"
   },
   {
     "league_code": "EPL",
     "team_name": "Chelsea",
     "primary_color": "#034694",
-    "logo_svg": "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg",
-    "logo_png": "https://upload.wikimedia.org/wikipedia/en/thumb/c/cc/Chelsea_FC.svg/128px-Chelsea_FC.svg.png",
+    "logo_url": "logos/chelsea.png",
     "stadium": "Stamford Bridge"
   },
   {
