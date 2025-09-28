@@ -1,6 +1,7 @@
 // Football Club Spinner — app.js
 // Vertically aligned (radial) stack per slice: Logo -> Name -> Stadium.
-// Guaranteed to fit inside its triangle (slice), no overlap, responsive, HiDPI crisp.
+// Guaranteed not to overlap and fully contained within each triangle (slice).
+// Responsive (auto-resizes), HiDPI crisp, and safe fallbacks (scaling + ellipsis).
 
 let TEAMS = [];
 let currentAngle = 0;
@@ -27,6 +28,7 @@ const mClose = document.getElementById('mClose');
 let DPR = Math.max(1, window.devicePixelRatio || 1);
 let CSS_SIZE = 640; // canvas CSS px used for math
 
+// Utils
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 
 // Image cache to avoid repeated loads
@@ -40,13 +42,14 @@ function withImage(url, cb) {
     return;
   }
   const img = new Image();
+  img.crossOrigin = 'anonymous';
   img.src = url;
   IMG_CACHE.set(url, img);
   if (img.complete) cb(img);
   else img.addEventListener('load', () => cb(img), { once: true });
 }
 
-// Responsive canvas sizing to container
+// Size canvas to container (responsive)
 function sizeCanvas() {
   const container = wheel.parentElement || wheel;
   const rect = container.getBoundingClientRect();
@@ -76,21 +79,14 @@ function renderChips() {
     chips.appendChild(label);
   });
 }
-
 function getFiltered() {
   const active = Array.from(chips.querySelectorAll('input:checked')).map(i => i.value);
   return TEAMS.filter(t => active.includes(t.league_code));
 }
 
-function saveHistory() {
-  localStorage.setItem('clubHistory', JSON.stringify(history));
-}
-function resetHistory() {
-  history = [];
-  saveHistory();
-  renderHistory();
-}
-
+// History
+function saveHistory() { localStorage.setItem('clubHistory', JSON.stringify(history)); }
+function resetHistory() { history = []; saveHistory(); renderHistory(); }
 function renderHistory() {
   historyEl.innerHTML = '';
   if (history.length === 0) {
@@ -127,7 +123,7 @@ function closeModal(){
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
-// Contrast helper: returns dark text for light colors and white for dark colors
+// Contrast helper
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
   hex = hex.replace('#','');
@@ -148,7 +144,21 @@ function fitFontSize(ctx, text, targetPx, minPx, maxWidth, weight = 700) {
   }
   return minPx;
 }
+function truncateToWidth(ctx, text, maxWidth) {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  const ell = '…';
+  let lo = 0, hi = text.length;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const s = text.slice(0, mid) + ell;
+    if (ctx.measureText(s).width <= maxWidth) lo = mid + 1;
+    else hi = mid;
+  }
+  const cut = Math.max(0, lo - 1);
+  return text.slice(0, cut) + ell;
+}
 
+// Main draw (vertical aligned, no overlap, inside slice)
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
@@ -172,11 +182,11 @@ function drawWheel(){
   const slice  = TAU / N;
   const tanHalf = Math.tan(slice/2);
 
-  // Chord width available at distance r
-  const chordWidth = (r) => Math.max(20, 2 * r * tanHalf - 10);
+  // chord width at radius r (minus a small padding)
+  const chordWidth = (r) => Math.max(16, 2 * r * tanHalf - 10);
 
   // 1) Background slices
-  for(let i=0;i<N;i++){
+  for (let i=0;i<N;i++){
     const t = data[i] || {};
     ctx.beginPath();
     ctx.moveTo(0,0);
@@ -186,144 +196,155 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // 2) Content per slice (radial stack), clipped to slice
-  for (let i = 0; i < N; i++) {
+  // 2) Content per slice
+  for (let i=0;i<N;i++){
     const t = data[i] || {};
-    const showLogo = !!(optLogo.checked && t.logo_url);
-    const showName = !!(optName.checked && t.team_name);
-    const showStad = !!(optStadium.checked && t.stadium);
-    if (!showLogo && !showName && !showStad) continue;
+    const wantLogo = !!(optLogo.checked && t.logo_url);
+    const wantName = !!(optName.checked && t.team_name);
+    const wantStad = !!(optStadium.checked && t.stadium);
+    if (!wantLogo && !wantName && !wantStad) continue;
 
     const angle = i*slice + slice/2;
 
+    // Clip to the wedge so nothing can spill out of the triangle or the circle
     ctx.save();
-    // Clip wedge
     ctx.beginPath();
     ctx.moveTo(0,0);
     ctx.arc(0,0, radius-2, i*slice, (i+1)*slice);
     ctx.closePath();
     ctx.clip();
 
-    // Rotate into the slice's bisector. x-axis = radial, y-axis = across-chord.
+    // Rotate so +x is along the slice bisector (radial line we stack on)
     ctx.rotate(angle);
 
-    // Base sizes from radius
-    let logoSize = showLogo ? clamp(20, Math.round(radius * 0.12), 60) : 0;
-    let namePx   = showName ? clamp(11, Math.round(radius * 0.06), 22) : 0;
-    let stadPx   = showStad ? clamp(9,  Math.round(radius * 0.045), 16) : 0;
+    // Base sizes as function of radius
+    let logoSize = wantLogo ? clamp(18, Math.round(radius * 0.12), 56) : 0;
+    let namePx   = wantName ? clamp(11, Math.round(radius * 0.06), 22) : 0;
+    let stadPx   = wantStad ? clamp(9,  Math.round(radius * 0.045), 16) : 0;
 
-    // Radial spacing (gap between items along radial axis)
+    const rimPad = clamp(6, Math.round(radius*0.015), 10); // keep off the rim
+    const rInner = radius * 0.30; // stay away from apex (narrow)
+    const rOuter = radius - rimPad;
+
+    // Radial spacing between items (no overlap along radial axis)
     const rGap   = clamp(6, Math.round(radius * 0.03), 18);
 
-    // Radial bounds to keep stack inside triangle nicely
-    const rInner = radius * 0.28; // away from apex (narrow)
-    const rOuter = radius * 0.86; // away from rim
-
-    // We stack OUTWARDS along radial axis: logo (nearer center) -> name -> stadium.
-    // For each item, pick the minimal r where its width fits the chord.
-    // Also ensure radial separation (no overlapping) using item "heights".
-
+    // Prepare item models in the drawing order (center -> edge)
+    // We align everything on y=0 so they’re “vertically” (tangent-wise) centered.
     const items = [];
-    if (showLogo) items.push({ type: 'logo',    size: logoSize, h: logoSize, w: logoSize, weight: 0 });
-    if (showName) items.push({ type: 'name',    size: namePx,   h: Math.round(namePx*1.1), w: 0, weight: 800, text: t.team_name });
-    if (showStad) items.push({ type: 'stadium', size: stadPx,   h: Math.round(stadPx*1.05), w: 0, weight: 700, text: t.stadium   });
+    if (wantLogo) items.push({ kind: 'logo',    size: logoSize, weight: 0,   text: '',                minSize: 16 });
+    if (wantName) items.push({ kind: 'name',    size: namePx,   weight: 800, text: t.team_name,      minSize: 10 });
+    if (wantStad) items.push({ kind: 'stadium', size: stadPx,   weight: 700, text: t.stadium || '',  minSize: 9  });
 
-    // Pre-fit text widths at a generous chord (rOuter) so we have initial sizes
+    // Measure widths at a generous radius
     const generousWidth = chordWidth(rOuter);
     for (const it of items) {
-      if (it.type === 'name') {
-        it.size = fitFontSize(ctx, it.text, it.size, 10, generousWidth, it.weight);
+      if (it.kind === 'logo') {
+        it.w = it.size; // square
+        it.h = it.size;
+      } else {
+        // Fit font to generous width
+        it.size = fitFontSize(ctx, it.text, it.size, it.minSize, generousWidth, it.weight);
         ctx.font = `${it.weight} ${it.size}px Inter,Arial,sans-serif`;
         it.w = ctx.measureText(it.text).width;
-      } else if (it.type === 'stadium') {
-        it.size = fitFontSize(ctx, it.text, it.size, 9, generousWidth, it.weight);
-        ctx.font = `${it.weight} ${it.size}px Inter,Arial,sans-serif`;
-        it.w = ctx.measureText(it.text).width;
-      } else if (it.type === 'logo') {
-        it.w = it.size;
+        it.h = Math.round(it.size * (it.kind === 'name' ? 1.10 : 1.05));
       }
     }
 
-    const positions = [];
-    let rCursor = rInner;
+    // Compute radial positions ensuring: width fits chord, no overlap, inside rim
+    const rPos = [];
+    let lastCenter = rInner - rGap; // so first item can start at rInner
 
     for (let k = 0; k < items.length; k++) {
       const it = items[k];
 
-      // Minimal radius to fit width
+      // Minimal r to fit width
       const neededRForWidth = (it.w + 8) / (2 * tanHalf);
-      let rNeeded = Math.max(rInner, neededRForWidth);
+      // Minimal r to avoid overlapping previous (center distance):
+      const neededRForSep = lastCenter + (k === 0 ? 0 : (items[k-1].h/2 + it.h/2 + rGap));
 
-      // Radial separation from previous item
-      if (k > 0) {
-        const prev = items[k-1];
-        // Half heights + gap along radial line
-        const sep = (prev.h/2) + (it.h/2) + rGap;
-        rNeeded = Math.max(rNeeded, positions[k-1] + sep);
-      }
+      let rNeeded = Math.max(rInner + it.h/2, neededRForWidth, neededRForSep);
 
-      // Clamp within outer bound
-      if (rNeeded > rOuter) {
-        // Too wide/large; scale it to fit at rOuter
-        const maxW = chordWidth(rOuter) - 8;
-        if (it.type === 'logo') {
-          const scale = Math.max(0.6, maxW / it.w);
-          it.size = Math.max(16, Math.floor(it.size * scale));
-          it.h = it.size; it.w = it.size;
+      // If beyond rim, scale down to fit and clamp to rim
+      if (rNeeded + it.h/2 > rOuter) {
+        const maxCenter = rOuter - it.h/2;
+        // scale for height (radial constraint)
+        const space = Math.max(6, rOuter - (k === 0 ? rInner : (lastCenter + items[k-1].h/2 + rGap)));
+        let sH = space / it.h; // <=1
+        sH = clamp(0.5, sH, 1);
+
+        // scale for width at the maxCenter chord
+        const maxW = chordWidth(maxCenter) - 8;
+        let sW = 1;
+        if (it.w > maxW) sW = clamp(0.5, maxW / it.w, 1);
+
+        const s = Math.min(sH, sW, 1);
+
+        // Apply scaling (respect minSize)
+        if (it.kind === 'logo') {
+          it.size = Math.max(it.minSize, Math.floor(it.size * s));
+          it.w = it.size; it.h = it.size;
         } else {
-          const scale = Math.max(0.6, maxW / it.w);
-          it.size = Math.max(it.type === 'name' ? 10 : 9, Math.floor(it.size * scale));
+          it.size = Math.max(it.minSize, Math.floor(it.size * s));
           ctx.font = `${it.weight} ${it.size}px Inter,Arial,sans-serif`;
           it.w = ctx.measureText(it.text).width;
-          it.h = Math.round(it.size * (it.type === 'name' ? 1.1 : 1.05));
+          it.h = Math.round(it.size * (it.kind === 'name' ? 1.10 : 1.05));
         }
-        rNeeded = rOuter; // place at the outer limit after scaling
+        // Recompute position after scaling
+        const neededRForWidth2 = (it.w + 8) / (2 * tanHalf);
+        const neededRForSep2 = lastCenter + (k === 0 ? 0 : (items[k-1].h/2 + it.h/2 + rGap));
+        rNeeded = Math.max(rInner + it.h/2, neededRForWidth2, neededRForSep2);
+        rNeeded = Math.min(rNeeded, rOuter - it.h/2);
       }
 
-      positions.push(rNeeded);
-      rCursor = rNeeded;
+      // Final clamp inside rim
+      rNeeded = Math.min(rNeeded, rOuter - it.h/2);
+      rPos.push(rNeeded);
+      lastCenter = rNeeded;
     }
 
+    // Colors
     const fg = textColorFor(t.primary_color);
 
-    // Draw items at computed radii, centered on y=0 (vertical alignment)
+    // Draw items centered at y=0 (vertical alignment), rotated upright
     for (let k = 0; k < items.length; k++) {
       const it = items[k];
-      const rPos = positions[k];
+      const centerR = rPos[k];
 
       ctx.save();
-      ctx.translate(rPos, 0); // along radial axis
-      ctx.rotate(-angle);     // keep content upright
+      ctx.translate(centerR, 0);
+      ctx.rotate(-angle); // keep upright
 
-      if (it.type === 'logo') {
+      if (it.kind === 'logo') {
         withImage(t.logo_url, (img) => {
           ctx.save();
           ctx.shadowColor = "rgba(0,0,0,0.7)";
           ctx.shadowBlur = 8;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 2;
-          const s = it.size;
-          ctx.drawImage(img, -s/2, -s/2, s, s);
+          ctx.drawImage(img, -it.size/2, -it.size/2, it.size, it.size);
           ctx.restore();
         });
-      } else if (it.type === 'name') {
-        ctx.font = `800 ${it.size}px Inter,Arial,sans-serif`;
+      } else {
+        // If text still too wide at this center, truncate to width
+        const maxW = chordWidth(centerR) - 8;
+        ctx.font = `${it.weight} ${it.size}px Inter,Arial,sans-serif`;
+        let text = it.text;
+        if (ctx.measureText(text).width > maxW) {
+          text = truncateToWidth(ctx, text, maxW);
+        }
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = fg;
-        ctx.strokeStyle = 'rgba(20,28,46,0.85)';
-        ctx.lineWidth = Math.max(1, Math.round(it.size/9));
-        ctx.strokeText(it.text, 0, 0);
-        ctx.fillText(it.text, 0, 0);
-      } else if (it.type === 'stadium') {
-        ctx.font = `700 ${it.size}px Inter,Arial,sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#D7E8FF';
-        ctx.strokeStyle = 'rgba(20,28,46,0.75)';
-        ctx.lineWidth = Math.max(1, Math.round(it.size/9));
-        ctx.strokeText(it.text, 0, 0);
-        ctx.fillText(it.text, 0, 0);
+        if (it.kind === 'name') {
+          ctx.fillStyle = fg;
+          ctx.strokeStyle = 'rgba(20,28,46,0.85)';
+        } else {
+          ctx.fillStyle = '#D7E8FF';
+          ctx.strokeStyle = 'rgba(20,28,46,0.75)';
+        }
+        ctx.lineWidth = Math.max(1, Math.round(it.size / 9));
+        ctx.strokeText(text, 0, 0);
+        ctx.fillText(text, 0, 0);
       }
 
       ctx.restore();
@@ -335,7 +356,7 @@ function drawWheel(){
   ctx.restore();
 }
 
-// Result and spin
+// Result + spin
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -379,7 +400,7 @@ function spin(){
       requestAnimationFrame(anim);
     } else {
       const theta = ((currentAngle % TAU) + TAU) % TAU;
-      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
+      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // top
       let idx = Math.round(((POINTER_ANGLE - theta - slice/2 + TAU) % TAU) / slice) % N;
 
       currentAngle = ((currentAngle + ((POINTER_ANGLE - ((theta + idx*slice + slice/2) % TAU) + TAU) % TAU)) % TAU);
@@ -393,6 +414,7 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
+// Events
 function setupEventListeners() {
   chips.addEventListener('change', () => {
     selectedIdx = -1;
