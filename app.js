@@ -1,4 +1,4 @@
-u8ii89// Football Club Spinner — app.js
+// Football Club Spinner — app.js
 // Vertically aligned stack per slice (Logo -> Name -> Stadium), clipped to slice,
 // responsive (auto-resizes), HiDPI crisp, and fit-to-slice so content always
 // stays inside its triangle without overlapping neighbors.
@@ -213,47 +213,42 @@ function drawWheel(){
     let stadPx   = showStad ? clamp(9,  Math.round(radius * 0.045), 16) : 0;
     const gap    = clamp(4, Math.round(radius * 0.02), 12);
 
-    // Initial stack radius candidate
-    const rMin   = radius * 0.48; // prevent too close to center (narrow width)
-    const rMax   = radius * 0.86; // keep away from rim
+    // Initial stack radius candidate and width there
+    const rMin   = radius * 0.48;
+    const rMax   = radius * 0.86;
     let   rStack = radius * 0.66;
+    let   maxW   = availWidthAt(rStack);
 
-    // Compute max allowed width at rStack
-    let maxW = availWidthAt(rStack);
-
-    // Measure widths; fit fonts to maxW
+    // Fit text to width at current rStack
     if (showName) namePx = fitFontSize(ctx, t.team_name, namePx, 10, maxW, 800);
     if (showStad) stadPx = fitFontSize(ctx, t.stadium,  stadPx, 9,  maxW, 700);
 
-    // Re-measure with decided sizes
+    // Widths after fitting
     let nameW = 0, stadW = 0;
     if (showName) { ctx.font = `800 ${namePx}px Inter,Arial,sans-serif`; nameW = ctx.measureText(t.team_name).width; }
     if (showStad) { ctx.font = `700 ${stadPx}px Inter,Arial,sans-serif`; stadW = ctx.measureText(t.stadium).width; }
     const logoW = showLogo ? logoSize : 0;
     const widest = Math.max(logoW, nameW, stadW);
 
-    // If widest exceeds current maxW, try moving outward (wider chord).
+    // If still wider than chord, try pushing outward (wider chord)
     if (widest > maxW) {
-      const neededR = (widest + 8) / (2 * tanHalf); // r >= (width+pad)/(2*tanHalf)
+      const neededR = (widest + 8) / (2 * tanHalf);
       rStack = clamp(rMin, neededR, rMax);
       maxW = availWidthAt(rStack);
 
-      // Still too wide? Scale items uniformly to fit.
+      // If still wider, scale everything down uniformly
       if (widest > maxW) {
         const scale = maxW / widest;
         if (showLogo) logoSize = Math.max(16, Math.floor(logoSize * scale));
-        if (showName) namePx   = Math.max(10, Math.floor(namePx * scale));
-        if (showStad) stadPx   = Math.max(9,  Math.floor(stadPx * scale));
-        // Update widths after scaling
-        if (showName) { ctx.font = `800 ${namePx}px Inter,Arial,sans-serif`; nameW = ctx.measureText(t.team_name).width; }
-        if (showStad) { ctx.font = `700 ${stadPx}px Inter,Arial,sans-serif`; stadW = ctx.measureText(t.stadium).width; }
+        if (showName) namePx   = Math.max(10, Math.floor(namePx   * scale));
+        if (showStad) stadPx   = Math.max(9,  Math.floor(stadPx   * scale));
       }
     }
 
-    // Compute vertical layout
+    // Compute vertical stack
     const items = [];
     if (showLogo) items.push({ type:'logo',    h: logoSize });
-    if (showName) items.push({ type:'name',    h: Math.round(namePx * 1.1), px: namePx });
+    if (showName) items.push({ type:'name',    h: Math.round(namePx * 1.1),  px: namePx });
     if (showStad) items.push({ type:'stadium', h: Math.round(stadPx * 1.05), px: stadPx });
 
     const totalH = items.reduce((s,it)=> s + it.h, 0) + gap * (items.length - 1);
@@ -272,7 +267,6 @@ function drawWheel(){
       if (it.type === 'logo') {
         withImage(t.logo_url, (img) => {
           ctx.save();
-          // Subtle shadow to separate from bright slices
           ctx.shadowColor = "rgba(0,0,0,0.7)";
           ctx.shadowBlur = 8;
           ctx.shadowOffsetX = 0;
