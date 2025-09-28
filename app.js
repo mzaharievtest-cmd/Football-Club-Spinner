@@ -16,7 +16,6 @@ const historyEl = document.getElementById('history');
 const backdrop = document.getElementById('backdrop');
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
-const wheelSizeInput = document.getElementById('wheelSize');
 const mClose = document.getElementById('mClose');
 
 function renderChips() {
@@ -90,25 +89,22 @@ function textColorFor(hex){
 
 const TAU = Math.PI * 2;
 
-// Draw wheel with stacked elements per slice based on checkboxes
+// Draw wheel: all segments, then all logos (if enabled)
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
   const W = wheel.width, H = wheel.height;
   const ctx = wheel.getContext('2d');
   ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.translate(W/2, H/2);
+  const angleDraw = ((currentAngle % TAU) + TAU) % TAU;
+  ctx.rotate(angleDraw);
 
   const radius = Math.min(W,H) * 0.48;
   const slice  = TAU / N;
 
-  ctx.save();
-  ctx.translate(W/2, H/2);
-
-  // Rotate whole wheel by currentAngle
-  const angleDraw = ((currentAngle % TAU) + TAU) % TAU;
-  ctx.rotate(angleDraw);
-
-  // 1) Draw background slices
+  // Draw slices and team names
   for(let i=0;i<N;i++){
     const t = data[i] || {};
     ctx.beginPath();
@@ -117,63 +113,49 @@ function drawWheel(){
     ctx.closePath();
     ctx.fillStyle = t.primary_color || '#4f8cff';
     ctx.fill();
+
+    // Team name
+    if(optName.checked && t.team_name) {
+      ctx.save();
+      ctx.rotate(i*slice + slice/2);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 16px Inter,Arial,sans-serif';
+      ctx.fillStyle = textColorFor(t.primary_color);
+      ctx.strokeStyle = '#222b3e';
+      ctx.lineWidth = 2;
+      ctx.strokeText(t.team_name, radius*0.65, 0);
+      ctx.fillText(t.team_name, radius*0.65, 0);
+      ctx.restore();
+    }
   }
+  ctx.restore();
 
-  // 2) Draw content in each slice (stacked vertically)
-  for (let i=0;i<N;i++){
-    const t = data[i] || {};
-
-    // Build stack (logo -> name -> stadium) depending on toggles
-    const items = [];
-    if (optLogo.checked && t.logo_url) items.push({type:'logo', h:36});
-    if (optName.checked && t.team_name) items.push({type:'name', h:20});
-    if (optStadium.checked && t.stadium) items.push({type:'stadium', h:16});
-
-    if (items.length === 0) continue;
-
-    // Positioning:
-    // Rotate into slice so +x points along slice bisector; draw along that axis.
-    ctx.save();
-    ctx.rotate(i*slice + slice/2);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    const rStack = radius * 0.62; // keep safely inside the wheel
-    const gap = 6;
-    const totalH = items.reduce((s,it)=> s+it.h, 0) + gap*(items.length-1);
-    let yCursor = -totalH/2;
-
-    for (const it of items) {
-      const yCenter = yCursor + it.h/2;
-
-      if (it.type === 'logo') {
+  // Draw all logos (if enabled), ensuring every logo appears
+  if(optLogo.checked) {
+    const data2 = getFiltered();
+    const N2 = data2.length || 1;
+    const slice2 = TAU / N2;
+    for(let i=0;i<N2;i++){
+      const t = data2[i] || {};
+      if(t.logo_url){
         const img = new window.Image();
         img.src = t.logo_url;
-        const drawImg = () => ctx.drawImage(img, rStack - 18, yCenter - 18, 36, 36);
-        img.onload = drawImg;
-        if (img.complete) drawImg();
-      } else if (it.type === 'name') {
-        ctx.font = 'bold 16px Inter,Arial,sans-serif';
-        ctx.fillStyle = textColorFor(t.primary_color);
-        ctx.strokeStyle = '#222b3e';
-        ctx.lineWidth = 2;
-        ctx.strokeText(t.team_name, rStack, yCenter);
-        ctx.fillText(t.team_name, rStack, yCenter);
-      } else if (it.type === 'stadium') {
-        ctx.font = '12px Inter,Arial,sans-serif';
-        ctx.fillStyle = '#C9E6FF';
-        ctx.strokeStyle = '#222b3e';
-        ctx.lineWidth = 2;
-        ctx.strokeText(t.stadium, rStack, yCenter);
-        ctx.fillText(t.stadium, rStack, yCenter);
+        img.onload = (function(ii){
+          return function(){
+            const ctx2 = wheel.getContext('2d');
+            ctx2.save();
+            ctx2.translate(W/2, H/2);
+            ctx2.rotate(angleDraw);
+            ctx2.rotate(ii*slice2 + slice2/2);
+            ctx2.drawImage(this, Math.min(W,H)*0.48*0.6-18, -18, 36, 36);
+            ctx2.restore();
+          }
+        })(i);
+        if(img.complete) img.onload();
       }
-
-      yCursor += it.h + gap;
     }
-    ctx.restore();
   }
-
-  ctx.restore();
 }
 
 function setResult(idx){
@@ -218,11 +200,10 @@ function spin(){
     if (p < 1){
       requestAnimationFrame(anim);
     } else {
-      // Normalize and compute selected index under the pointer (top)
+      // Normalize
       const theta = ((currentAngle % TAU) + TAU) % TAU;
-      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // top
+      const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
       let idx = Math.round(((POINTER_ANGLE - theta - slice/2 + TAU) % TAU) / slice) % N;
-
       currentAngle = ((currentAngle + ((POINTER_ANGLE - ((theta + idx*slice + slice/2) % TAU) + TAU) % TAU)) % TAU);
       spinning = false;
       spinBtn.disabled = false;
@@ -248,14 +229,6 @@ function setupEventListeners() {
   });
   optName.onchange = optLogo.onchange = optStadium.onchange = () => drawWheel();
   spinBtn.onclick = spin;
-  wheelSizeInput.addEventListener('input', (e) => {
-    const size = e.target.value;
-    wheel.width = size;
-    wheel.height = size;
-    fx.width = size;
-    fx.height = size;
-    drawWheel();
-  });
   resetHistoryBtn.addEventListener('click', resetHistory);
   mClose.onclick = closeModal;
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
