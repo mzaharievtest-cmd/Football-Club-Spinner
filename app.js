@@ -1,6 +1,7 @@
-// Football Club Spinner — app.js
-// Updated: stacked per-slice content (Logo -> Name -> Stadium), upright,
-// with a subtle drop shadow on the logo. Works with or without the Stadium toggle.
+// Football Club Spinner — Responsive app.js
+// - Responsive, crisp wheel (HiDPI aware)
+// - Per-slice stacked content: Logo -> Name -> Stadium (upright, honors checkboxes)
+// - Adaptive sizing by radius; logo shadow for clarity
 
 let TEAMS = [];
 let currentAngle = 0;
@@ -20,9 +21,57 @@ const currentLogo = document.getElementById('currentLogo');
 const historyEl = document.getElementById('history');
 const backdrop = document.getElementById('backdrop');
 const wheel = document.getElementById('wheel');
-const fx = document.getElementById('fx');
+const fx = document.getElementById('fx'); // kept for future effects
 const mClose = document.getElementById('mClose');
 
+// HiDPI + responsive sizing
+let DPR = Math.max(1, window.devicePixelRatio || 1);
+let CSS_SIZE = 640; // canvas size in CSS pixels (used for layout math)
+
+// Utility
+const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
+
+// Cache images so we don't reload logos every draw
+const IMG_CACHE = new Map();
+function withImage(url, cb) {
+  if (!url) return;
+  if (IMG_CACHE.has(url)) {
+    const img = IMG_CACHE.get(url);
+    if (img.complete) cb(img);
+    else img.addEventListener('load', () => cb(img), { once: true });
+    return;
+  }
+  const img = new Image();
+  img.src = url;
+  IMG_CACHE.set(url, img);
+  if (img.complete) cb(img);
+  else img.addEventListener('load', () => cb(img), { once: true });
+}
+
+// Size canvas to container (responsive)
+function sizeCanvas() {
+  // Use the .wheel-wrap container width to determine size
+  const container = wheel.parentElement || wheel;
+  const rect = container.getBoundingClientRect();
+
+  // Pick the largest square that fits the container's width, with sensible bounds
+  const size = clamp(280, Math.round(rect.width || 640), 1000);
+
+  CSS_SIZE = size;
+  DPR = Math.max(1, window.devicePixelRatio || 1);
+
+  wheel.width = Math.round(size * DPR);
+  wheel.height = Math.round(size * DPR);
+  fx.width = wheel.width;
+  fx.height = wheel.height;
+
+  wheel.style.width = size + 'px';
+  wheel.style.height = size + 'px';
+  fx.style.width = size + 'px';
+  fx.style.height = size + 'px';
+}
+
+// Build league chips
 function renderChips() {
   const leagues = [...new Set(TEAMS.map(t => t.league_code))];
   chips.innerHTML = '';
@@ -34,21 +83,21 @@ function renderChips() {
   });
 }
 
+// Filtering
 function getFiltered() {
   const active = Array.from(chips.querySelectorAll('input:checked')).map(i => i.value);
   return TEAMS.filter(t => active.includes(t.league_code));
 }
 
+// History helpers
 function saveHistory() {
   localStorage.setItem('clubHistory', JSON.stringify(history));
 }
-
 function resetHistory() {
   history = [];
   saveHistory();
   renderHistory();
 }
-
 function renderHistory() {
   historyEl.innerHTML = '';
   if (history.length === 0) {
@@ -69,6 +118,7 @@ function renderHistory() {
   });
 }
 
+// Modal
 function openModal(team){
   document.getElementById('mHead').textContent = team.team_name;
   document.getElementById('mSub').textContent  = team.league_code;
@@ -79,12 +129,12 @@ function openModal(team){
   backdrop.style.display = 'flex';
   requestAnimationFrame(()=> document.getElementById('modal').classList.add('show'));
 }
-
 function closeModal(){
   document.getElementById('modal').classList.remove('show');
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
+// Contrast helper for text against slice color
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
   hex = hex.replace('#','');
@@ -95,14 +145,19 @@ function textColorFor(hex){
 
 const TAU = Math.PI * 2;
 
-// Draw wheel with solid color slices.
-// Then for each slice, stack: Logo (with drop shadow) -> Name -> Stadium.
-// All elements are kept upright and centered along the slice bisector.
+// Main draw (responsive + HiDPI)
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
-  const W = wheel.width, H = wheel.height;
+
   const ctx = wheel.getContext('2d');
+  // Map device pixels to CSS pixels so our math uses CSS units
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  const W = CSS_SIZE;
+  const H = CSS_SIZE;
 
   ctx.clearRect(0,0,W,H);
   ctx.save();
@@ -114,8 +169,15 @@ function drawWheel(){
   const radius = Math.min(W,H) * 0.48;
   const slice  = TAU / N;
 
-  // 1) Background slices
-  for (let i = 0; i < N; i++) {
+  // Adaptive sizes based on radius
+  const logoSize = Math.round(clamp(22, radius * 0.12, 56)); // px
+  const nameFontPx = Math.round(clamp(12, radius * 0.06, 22));
+  const stadiumFontPx = Math.round(clamp(10, radius * 0.045, 16));
+  const gap = Math.round(clamp(4, radius * 0.02, 12));
+  const rStack = radius * 0.66; // radial distance where stack is centered
+
+  // 1) Background slices (solid club color)
+  for(let i=0;i<N;i++){
     const t = data[i] || {};
     ctx.beginPath();
     ctx.moveTo(0,0);
@@ -125,81 +187,80 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // 2) Per-slice stacked content (Logo -> Name -> Stadium), kept upright
+  // 2) Per-slice stacked content (Logo -> Name -> Stadium), upright
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const items = [];
-    if (optLogo.checked && t.logo_url) items.push('logo');
-    if (optName.checked && t.team_name) items.push('name');
-    if (optStadium.checked && t.stadium) items.push('stadium');
+    if (optLogo.checked && t.logo_url) items.push({type:'logo', h:logoSize});
+    if (optName.checked && t.team_name) items.push({type:'name', h:Math.round(nameFontPx*1.1)});
+    if (optStadium.checked && t.stadium) items.push({type:'stadium', h:Math.round(stadiumFontPx*1.0)});
     if (!items.length) continue;
 
     const angle = i*slice + slice/2;
 
-    // Work in the slice's direction for positioning
+    // Clip to slice to avoid spill
     ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.arc(0,0, radius-2, i*slice, (i+1)*slice);
+    ctx.closePath();
+    ctx.clip();
+
+    // Align to slice direction
     ctx.rotate(angle);
 
-    // Where to place the stack, along the slice bisector
-    const rStack = radius * 0.68; // move closer/farther from center if needed
-    const gap = 6;
-    const heights = { logo: 36, name: 18, stadium: 14 };
-    const totalH = items.reduce((sum, k) => sum + heights[k], 0) + gap * (items.length - 1);
+    const totalH = items.reduce((s,it)=> s + it.h, 0) + gap * (items.length - 1);
     let yCursor = -totalH / 2;
 
-    for (const k of items) {
-      const h = heights[k];
-      const yCenter = yCursor + h/2;
+    for (const it of items) {
+      const yCenter = Math.round(yCursor + it.h/2);
 
-      // Translate outward along slice axis, then unrotate so content is upright
+      // Place along the bisector, then unrotate so content stays upright
       ctx.save();
       ctx.translate(rStack, yCenter);
       ctx.rotate(-angle);
 
-      if (k === 'logo') {
-        const img = new Image();
-        img.src = t.logo_url;
-        const drawImg = () => {
+      if (it.type === 'logo') {
+        withImage(t.logo_url, (img) => {
           ctx.save();
-          // Dark drop shadow (cheap and effective)
           ctx.shadowColor = "rgba(0,0,0,0.7)";
-          ctx.shadowBlur = 6;
+          ctx.shadowBlur = 8;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 2;
-          ctx.drawImage(img, -18, -18, 36, 36);
+          ctx.drawImage(img, -logoSize/2, -logoSize/2, logoSize, logoSize);
           ctx.restore();
-        };
-        if (img.complete) drawImg(); else img.onload = drawImg;
-      } else if (k === 'name') {
-        ctx.font = 'bold 16px Inter,Arial,sans-serif';
+        });
+      } else if (it.type === 'name') {
+        ctx.font = `700 ${nameFontPx}px Inter,Arial,sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = textColorFor(t.primary_color);
-        ctx.strokeStyle = '#222b3e';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(20,28,46,0.8)';
+        ctx.lineWidth = Math.max(1, Math.round(nameFontPx/9));
         ctx.strokeText(t.team_name, 0, 0);
         ctx.fillText(t.team_name, 0, 0);
-      } else if (k === 'stadium') {
-        ctx.font = '13px Inter,Arial,sans-serif';
+      } else if (it.type === 'stadium') {
+        ctx.font = `600 ${stadiumFontPx}px Inter,Arial,sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#C9E6FF';
-        ctx.strokeStyle = '#222b3e';
-        ctx.lineWidth = 2;
+        ctx.fillStyle = '#D7E8FF';
+        ctx.strokeStyle = 'rgba(20,28,46,0.7)';
+        ctx.lineWidth = Math.max(1, Math.round(stadiumFontPx/9));
         ctx.strokeText(t.stadium, 0, 0);
         ctx.fillText(t.stadium, 0, 0);
       }
 
       ctx.restore();
-      yCursor += h + gap;
+      yCursor += it.h + gap;
     }
 
-    ctx.restore();
+    ctx.restore(); // slice clip + rotation
   }
 
   ctx.restore();
 }
 
+// Result
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -214,6 +275,7 @@ function setResult(idx){
   openModal(t);
 }
 
+// Spin
 function spin(){
   if (spinning) return;
   const data = getFiltered();
@@ -242,7 +304,6 @@ function spin(){
     if (p < 1){
       requestAnimationFrame(anim);
     } else {
-      // Normalize and compute selected index under the pointer (top)
       const theta = ((currentAngle % TAU) + TAU) % TAU;
       const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // top
       let idx = Math.round(((POINTER_ANGLE - theta - slice/2 + TAU) % TAU) / slice) % N;
@@ -258,6 +319,7 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
+// Events
 function setupEventListeners() {
   chips.addEventListener('change', () => {
     selectedIdx = -1;
@@ -270,14 +332,22 @@ function setupEventListeners() {
       spinBtn.disabled = false;
     }
   });
-
   optName.onchange = optLogo.onchange = optStadium.onchange = () => drawWheel();
   spinBtn.onclick = spin;
   resetHistoryBtn.addEventListener('click', resetHistory);
-
   mClose.onclick = closeModal;
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
+
+  // Responsive: redraw on resize (with debounce)
+  let resizeTO = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTO);
+    resizeTO = setTimeout(() => {
+      sizeCanvas();
+      drawWheel();
+    }, 120);
+  }, { passive: true });
 }
 
 // Boot
@@ -287,6 +357,7 @@ fetch('./teams.json')
     TEAMS = data;
     renderChips();
     renderHistory();
-    drawWheel();
+    sizeCanvas();     // responsive + HiDPI setup
+    drawWheel();      // initial render
     setupEventListeners();
   });
