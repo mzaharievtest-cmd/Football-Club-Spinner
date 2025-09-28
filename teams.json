@@ -1,11 +1,74 @@
 [
-  { "league_code": "EPL", "team_name": "Arsenal", "primary_color": "#EF0107", "logo_url": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg", "stadium": "Emirates Stadium" },
-  { "league_code": "EPL", "team_name": "Chelsea", "primary_color": "#034694", "logo_url": "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg", "stadium": "Stamford Bridge" },
-  { "league_code": "LLA", "team_name": "Barcelona", "primary_color": "#A50044", "logo_url": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg", "stadium": "Spotify Camp Nou" },
-  { "league_code": "LLA", "team_name": "Real Madrid", "primary_color": "#FEBE10", "logo_url": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg", "stadium": "Santiago Bernabéu" },
-  { "league_code": "SA", "team_name": "Inter", "primary_color": "#0091FF", "logo_url": "https://upload.wikimedia.org/wikipedia/en/0/05/FC_Internazionale_Milano_2021.svg", "stadium": "San Siro" },
-  { "league_code": "SA", "team_name": "Juventus", "primary_color": "#000000", "logo_url": "https://upload.wikimedia.org/wikipedia/commons/1/15/Juventus_FC_2017_logo.svg", "stadium": "Allianz Stadium" },
-  { "league_code": "BUN", "team_name": "Bayern Munich", "primary_color": "#DC052D", "logo_url": "https://upload.wikimedia.org/wikipedia/en/1/1f/FC_Bayern_Munich_logo_%282017%29.svg", "stadium": "Allianz Arena" },
-  { "league_code": "BUN", "team_name": "Borussia Dortmund", "primary_color": "#FDE100", "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg", "stadium": "Signal Iduna Park" },
-  { "league_code": "L1", "team_name": "Paris Saint-Germain", "primary_color": "#004170", "logo_url": "https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg", "stadium": "Parc des Princes" }
+  {
+    "league_code": "EPL",
+    "team_name": "Arsenal",
+    "primary_color": "#EF0107",
+    "logo_svg": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+    "logo_png": "https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Arsenal_FC.svg/128px-Arsenal_FC.svg.png",
+    "stadium": "Emirates Stadium"
+  },
+  {
+    "league_code": "EPL",
+    "team_name": "Chelsea",
+    "primary_color": "#034694",
+    "logo_svg": "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg",
+    "logo_png": "https://upload.wikimedia.org/wikipedia/en/thumb/c/cc/Chelsea_FC.svg/128px-Chelsea_FC.svg.png",
+    "stadium": "Stamford Bridge"
+  },
+  {
+    "league_code": "LLA",
+    "team_name": "Barcelona",
+    "primary_color": "#A50044",
+    "logo_svg": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg",
+    "logo_png": "https://upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/128px-FC_Barcelona_%28crest%29.svg.png",
+    "stadium": "Spotify Camp Nou"
+  },
+  {
+    "league_code": "LLA",
+    "team_name": "Real Madrid",
+    "primary_color": "#FEBE10",
+    "logo_svg": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
+    "logo_png": "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/128px-Real_Madrid_CF.svg.png",
+    "stadium": "Santiago Bernabéu"
+  },
+  {
+    "league_code": "SA",
+    "team_name": "Inter",
+    "primary_color": "#0091FF",
+    "logo_svg": "https://upload.wikimedia.org/wikipedia/en/0/05/FC_Internazionale_Milano_2021.svg",
+    "logo_png": "https://upload.wikimedia.org/wikipedia/en/thumb/0/05/FC_Internazionale_Milano_2021.svg/128px-FC_Internazionale_Milano_2021.svg.png",
+    "stadium": "San Siro"
+  },
+  {
+    "league_code": "SA",
+    "team_name": "Juventus",
+    "primary_color": "#000000",
+    "logo_svg": "https://upload.wikimedia.org/wikipedia/commons/1/15/Juventus_FC_2017_logo.svg",
+    "logo_png": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Juventus_FC_2017_logo.svg/128px-Juventus_FC_2017_logo.svg.png",
+    "stadium": "Allianz Stadium"
+  },
+  {
+    "league_code": "BUN",
+    "team_name": "Bayern Munich",
+    "primary_color": "#DC052D",
+    "logo_svg": "https://upload.wikimedia.org/wikipedia/en/1/1f/FC_Bayern_Munich_logo_%282017%29.svg",
+    "logo_png": "https://upload.wikimedia.org/wikipedia/en/thumb/1/1f/FC_Bayern_Munich_logo_%282017%29.svg/128px-FC_Bayern_Munich_logo_%282017%29.svg.png",
+    "stadium": "Allianz Arena"
+  },
+  {
+    "league_code": "BUN",
+    "team_name": "Borussia Dortmund",
+    "primary_color": "#FDE100",
+    "logo_svg": "https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg",
+    "logo_png": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Borussia_Dortmund_logo.svg/128px-Borussia_Dortmund_logo.svg.png",
+    "stadium": "Signal Iduna Park"
+  },
+  {
+    "league_code": "L1",
+    "team_name": "Paris Saint-Germain",
+    "primary_color": "#004170",
+    "logo_svg": "https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg",
+    "logo_png": "https://upload.wikimedia.org/wikipedia/en/thumb/a/a7/Paris_Saint-Germain_F.C..svg/128px-Paris_Saint-Germain_F.C..svg.png",
+    "stadium": "Parc des Princes"
+  }
 ]
