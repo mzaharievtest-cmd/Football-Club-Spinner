@@ -90,7 +90,7 @@ function textColorFor(hex){
 
 const TAU = Math.PI * 2;
 
-// Draw wheel: all segments, then all logos (if enabled)
+// Draw wheel: all segments, then draw elements vertically if enabled
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
@@ -105,7 +105,6 @@ function drawWheel(){
   const radius = Math.min(W,H) * 0.48;
   const slice  = TAU / N;
 
-  // Draw slices and team names
   for(let i=0;i<N;i++){
     const t = data[i] || {};
     ctx.beginPath();
@@ -115,46 +114,61 @@ function drawWheel(){
     ctx.fillStyle = t.primary_color || '#4f8cff';
     ctx.fill();
 
-    // Team name
-    if(optName.checked && t.team_name) {
-      ctx.save();
-      ctx.rotate(i*slice + slice/2);
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = 'bold 16px Inter,Arial,sans-serif';
-      ctx.fillStyle = textColorFor(t.primary_color);
-      ctx.strokeStyle = '#222b3e';
-      ctx.lineWidth = 2;
-      ctx.strokeText(t.team_name, radius*0.65, 0);
-      ctx.fillText(t.team_name, radius*0.65, 0);
-      ctx.restore();
-    }
-  }
-  ctx.restore();
+    // Draw stacked elements
+    ctx.save();
+    ctx.rotate(i*slice + slice/2);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
-  // Draw all logos (if enabled), ensuring every logo appears and is upright
-  if(optLogo.checked) {
-    for(let i=0;i<N;i++){
-      const t = data[i] || {};
-      if(t.logo_url){
-        const img = new window.Image();
+    // Calculate vertical stacking
+    let y = 0;
+    let stack = [];
+    if(optLogo.checked && t.logo_url) stack.push('logo');
+    if(optName.checked && t.team_name) stack.push('name');
+    if(optStadium.checked && t.stadium) stack.push('stadium');
+
+    let totalHeight = stack.length * 38;
+    let startY = -totalHeight/2 + 19; // center stack vertically
+
+    for (let j = 0; j < stack.length; ++j) {
+      let currY = startY + j*38;
+      if(stack[j]==='logo'){
+        let img = new window.Image();
         img.src = t.logo_url;
-        img.onload = (function(ii){
-          return function(){
-            const ctx2 = wheel.getContext('2d');
-            ctx2.save();
-            ctx2.translate(W/2, H/2);
-            ctx2.rotate(angleDraw);
-            ctx2.rotate(ii*slice + slice/2);
-            ctx2.rotate(-ii*slice - slice/2); // keep logo upright!
-            ctx2.drawImage(this, radius*0.76-18, -18, 36, 36);
-            ctx2.restore();
-          }
-        })(i);
-        if(img.complete) img.onload();
+        // Draw upright
+        img.onload = function(){
+          ctx.save();
+          ctx.rotate(-i*slice - slice/2); // keep logo upright
+          ctx.drawImage(img, radius*0.7-19, currY-19, 38, 38);
+          ctx.restore();
+        }
+        if(img.complete) {
+          ctx.save();
+          ctx.rotate(-i*slice - slice/2);
+          ctx.drawImage(img, radius*0.7-19, currY-19, 38, 38);
+          ctx.restore();
+        }
+      }
+      if(stack[j]==='name'){
+        ctx.font = 'bold 16px Inter,Arial,sans-serif';
+        ctx.fillStyle = textColorFor(t.primary_color);
+        ctx.strokeStyle = '#222b3e';
+        ctx.lineWidth = 2;
+        ctx.strokeText(t.team_name, radius*0.7, currY);
+        ctx.fillText(t.team_name, radius*0.7, currY);
+      }
+      if(stack[j]==='stadium'){
+        ctx.font = '13px Inter,Arial,sans-serif';
+        ctx.fillStyle = '#C9E6FF';
+        ctx.strokeStyle = '#222b3e';
+        ctx.lineWidth = 2;
+        ctx.strokeText(t.stadium, radius*0.7, currY);
+        ctx.fillText(t.stadium, radius*0.7, currY);
       }
     }
+    ctx.restore();
   }
+  ctx.restore();
 }
 
 function setResult(idx){
@@ -241,7 +255,6 @@ function setupEventListeners() {
   window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
 }
 
-// Load teams.json and initialize app
 fetch('./teams.json')
   .then(res => res.json())
   .then(data => {
