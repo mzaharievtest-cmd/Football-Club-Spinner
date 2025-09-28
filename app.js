@@ -21,21 +21,18 @@ const mClose = document.getElementById('mClose');
 
 // High-DPI support
 let DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-let CSS_SIZE = 640; // current CSS pixel size used for drawing calculations
+let CSS_SIZE = 640; // canvas size in CSS pixels for layout/drawing math
 
 function sizeCanvas() {
-  // Use the rendered width of the canvas (CSS pixels) as our base
   const rect = wheel.getBoundingClientRect();
-  const size = Math.max(320, Math.round(rect.width || 640)); // min 320 for safety
+  const size = Math.max(320, Math.round(rect.width || 640));
   CSS_SIZE = size;
 
-  // Set backing store size in device pixels
   wheel.width = Math.round(size * DPR);
   wheel.height = Math.round(size * DPR);
   fx.width = wheel.width;
   fx.height = wheel.height;
 
-  // Ensure CSS size matches the measured size
   wheel.style.width = size + 'px';
   wheel.style.height = size + 'px';
   fx.style.width = size + 'px';
@@ -48,7 +45,7 @@ window.addEventListener('resize', () => {
   drawWheel();
 });
 
-// Image cache for logos to avoid reloading each draw
+// Image cache for logos
 const IMG_CACHE = new Map();
 function withImage(url, cb) {
   if (!url) return;
@@ -134,9 +131,35 @@ function textColorFor(hex){
   return L > 0.35 ? '#0b0f17' : '#fff';
 }
 
+// Color helpers for gradient shading
+function hexToRgb(hex) {
+  if(!hex) return {r:79,g:140,b:255};
+  hex = hex.replace('#','').trim();
+  if (hex.length !== 6) return {r:79,g:140,b:255};
+  return {
+    r: parseInt(hex.slice(0,2),16),
+    g: parseInt(hex.slice(2,4),16),
+    b: parseInt(hex.slice(4,6),16)
+  };
+}
+function rgbToStr({r,g,b}, a=1) {
+  return `rgba(${Math.max(0,Math.min(255,r))},${Math.max(0,Math.min(255,g))},${Math.max(0,Math.min(255,b))},${a})`;
+}
+function tint(hex, p) {
+  // p in [-1, 1]; positive makes lighter, negative darker
+  const {r,g,b} = hexToRgb(hex);
+  const t = p >= 0 ? 255 : 0;
+  const f = Math.abs(p);
+  return rgbToStr({
+    r: Math.round(r + (t - r) * f),
+    g: Math.round(g + (t - g) * f),
+    b: Math.round(b + (t - b) * f)
+  }, 1);
+}
+
 const TAU = Math.PI * 2;
 
-// Draw wheel with stacked elements per slice based on checkboxes; crisp on high-DPI
+// Draw wheel with radial "club gradient rays" and stacked content
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
@@ -162,18 +185,43 @@ function drawWheel(){
   const angleDraw = ((currentAngle % TAU) + TAU) % TAU;
   ctx.rotate(angleDraw);
 
-  // 1) Draw background slices
+  // 1) Background slices with radial gradient (center -> edge)
   for(let i=0;i<N;i++){
     const t = data[i] || {};
+    const base = t.primary_color || '#4f8cff';
+
+    const g = ctx.createRadialGradient(0, 0, radius*0.06, 0, 0, radius);
+    g.addColorStop(0.00, tint(base, +0.22)); // lighter near center
+    g.addColorStop(0.55, tint(base,  0.00)); // base mid
+    g.addColorStop(1.00, tint(base, -0.35)); // darker at edge
+
     ctx.beginPath();
     ctx.moveTo(0,0);
     ctx.arc(0,0, radius, i*slice, (i+1)*slice);
     ctx.closePath();
-    ctx.fillStyle = t.primary_color || '#4f8cff';
+    ctx.fillStyle = g;
     ctx.fill();
+
+    // Subtle seam line to avoid antialias bleed between slices
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+    ctx.stroke();
   }
 
-  // 2) Draw content in each slice (stacked vertically)
+  // Optional depth overlay: inner glow + outer vignette
+  ctx.save();
+  const overlay = ctx.createRadialGradient(0,0, radius*0.05, 0,0, radius);
+  overlay.addColorStop(0.00, 'rgba(255,255,255,0.06)');
+  overlay.addColorStop(0.75, 'rgba(0,0,0,0.00)');
+  overlay.addColorStop(1.00, 'rgba(0,0,0,0.22)');
+  ctx.beginPath();
+  ctx.arc(0,0, radius, 0, TAU);
+  ctx.closePath();
+  ctx.fillStyle = overlay;
+  ctx.fill();
+  ctx.restore();
+
+  // 2) Draw content in each slice (stacked vertically per toggles)
   for (let i=0;i<N;i++){
     const t = data[i] || {};
 
@@ -185,13 +233,12 @@ function drawWheel(){
 
     if (items.length === 0) continue;
 
-    // Rotate into slice so +x points along slice bisector; draw along that axis.
     ctx.save();
     ctx.rotate(i*slice + slice/2);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const rStack = radius * 0.64; // keep safely inside the wheel
+    const rStack = radius * 0.64; // content radius
     const gap = 6;
     const totalH = items.reduce((s,it)=> s+it.h, 0) + gap*(items.length-1);
     let yCursor = -totalH/2;
@@ -201,11 +248,10 @@ function drawWheel(){
 
       if (it.type === 'logo') {
         withImage(t.logo_url, (img) => {
-          // drawImage expects top-left and size; keep 40x40 for clarity
           ctx.drawImage(img, Math.round(rStack - 20), Math.round(yCenter - 20), 40, 40);
         });
       } else if (it.type === 'name') {
-        ctx.font = '700 18px Inter,Arial,sans-serif';
+        ctx.font = '800 18px Inter,Arial,sans-serif';
         ctx.fillStyle = textColorFor(t.primary_color);
         ctx.strokeStyle = 'rgba(12,16,28,0.85)';
         ctx.lineWidth = 2;
@@ -313,7 +359,7 @@ fetch('./teams.json')
     TEAMS = data;
     renderChips();
     renderHistory();
-    sizeCanvas();     // set high-DPI sizes
+    sizeCanvas();     // HiDPI setup
     drawWheel();      // initial render
     setupEventListeners();
   });
