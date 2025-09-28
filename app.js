@@ -1,8 +1,7 @@
-// Football Club Spinner — Responsive + Fit-to-slice app.js
-// - Canvas auto-sizes to container, HiDPI crisp via devicePixelRatio
-// - Per-slice stacked content: Logo -> Name -> Stadium (upright, honors checkboxes)
-// - Dynamically fits fonts and logo to the slice's available width
-// - Redraws on resize for all resolutions (including mobile)
+// Football Club Spinner — app.js
+// Vertically aligned stack per slice (Logo -> Name -> Stadium), clipped to slice,
+// responsive (auto-resizes), HiDPI crisp, and fit-to-slice so content always
+// stays inside its triangle without overlapping neighbors.
 
 let TEAMS = [];
 let currentAngle = 0;
@@ -22,17 +21,16 @@ const currentLogo = document.getElementById('currentLogo');
 const historyEl = document.getElementById('history');
 const backdrop = document.getElementById('backdrop');
 const wheel = document.getElementById('wheel');
-const fx = document.getElementById('fx'); // reserved for effects
+const fx = document.getElementById('fx'); // reserved (not used)
 const mClose = document.getElementById('mClose');
 
 // HiDPI + responsive sizing
 let DPR = Math.max(1, window.devicePixelRatio || 1);
-let CSS_SIZE = 640; // canvas size in CSS pixels (used for layout math)
+let CSS_SIZE = 640; // canvas CSS px used for math
 
-// Utility
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 
-// Cache images so we don't reload logos every draw
+// Image cache to avoid repeated loads
 const IMG_CACHE = new Map();
 function withImage(url, cb) {
   if (!url) return;
@@ -49,15 +47,11 @@ function withImage(url, cb) {
   else img.addEventListener('load', () => cb(img), { once: true });
 }
 
-// Size canvas to container (responsive)
+// Responsive canvas sizing to container
 function sizeCanvas() {
-  // Use the .wheel-wrap container width to determine size
   const container = wheel.parentElement || wheel;
   const rect = container.getBoundingClientRect();
-
-  // Pick the largest square that fits the container's width, with sensible bounds
-  const size = clamp(280, Math.round(rect.width || 640), 1000);
-
+  const size = clamp(280, Math.round(rect.width || 640), 1100);
   CSS_SIZE = size;
   DPR = Math.max(1, window.devicePixelRatio || 1);
 
@@ -72,7 +66,6 @@ function sizeCanvas() {
   fx.style.height = size + 'px';
 }
 
-// Build league chips
 function renderChips() {
   const leagues = [...new Set(TEAMS.map(t => t.league_code))];
   chips.innerHTML = '';
@@ -84,13 +77,11 @@ function renderChips() {
   });
 }
 
-// Filtering
 function getFiltered() {
   const active = Array.from(chips.querySelectorAll('input:checked')).map(i => i.value);
   return TEAMS.filter(t => active.includes(t.league_code));
 }
 
-// History helpers
 function saveHistory() {
   localStorage.setItem('clubHistory', JSON.stringify(history));
 }
@@ -99,6 +90,7 @@ function resetHistory() {
   saveHistory();
   renderHistory();
 }
+
 function renderHistory() {
   historyEl.innerHTML = '';
   if (history.length === 0) {
@@ -119,7 +111,6 @@ function renderHistory() {
   });
 }
 
-// Modal
 function openModal(team){
   document.getElementById('mHead').textContent = team.team_name;
   document.getElementById('mSub').textContent  = team.league_code;
@@ -135,7 +126,7 @@ function closeModal(){
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
-// Contrast helper for text against slice color
+// Contrast helper: returns dark text for light colors and white for dark colors
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
   hex = hex.replace('#','');
@@ -148,7 +139,7 @@ const TAU = Math.PI * 2;
 
 // Fit helpers
 function fitFontSize(ctx, text, targetPx, minPx, maxWidth, weight = 700) {
-  let size = targetPx;
+  let size = Math.round(targetPx);
   while (size >= minPx) {
     ctx.font = `${weight} ${size}px Inter,Arial,sans-serif`;
     if (ctx.measureText(text).width <= maxWidth) return size;
@@ -157,14 +148,12 @@ function fitFontSize(ctx, text, targetPx, minPx, maxWidth, weight = 700) {
   return minPx;
 }
 
-// Main draw (responsive + HiDPI + fit-to-slice)
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
 
   const ctx = wheel.getContext('2d');
-  // Map device pixels to CSS pixels so our math uses CSS units
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); // draw using CSS px
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
@@ -180,18 +169,10 @@ function drawWheel(){
 
   const radius = Math.min(W,H) * 0.48;
   const slice  = TAU / N;
+  const tanHalf = Math.tan(slice/2);
 
-  // Available width at a radial distance r (straight chord width for the slice)
-  const availWidthAt = (r) => Math.max(24, 2 * r * Math.tan(slice / 2) - 10);
-
-  // Adaptive base sizes (will be fitted per-slice)
-  const baseLogoSize = clamp(22, Math.round(radius * 0.12), 56);
-  const baseNamePx = clamp(12, Math.round(radius * 0.06), 22);
-  const baseStadiumPx = clamp(10, Math.round(radius * 0.045), 16);
-  const baseGap = clamp(4, Math.round(radius * 0.02), 12);
-
-  // Where stack is placed along the slice bisector
-  const rStackBase = radius * 0.66;
+  // Function: available width across the slice at distance r from center
+  const availWidthAt = (r) => Math.max(20, 2 * r * tanHalf - 8);
 
   // 1) Background slices (solid)
   for(let i=0;i<N;i++){
@@ -204,18 +185,18 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // 2) Content (Logo -> Name -> Stadium), upright, fitted to slice width
+  // 2) Content per slice (stacked along bisector, upright), clipped to slice
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
-    const wantLogo = optLogo.checked && t.logo_url;
-    const wantName = optName.checked && t.team_name;
-    const wantStad = optStadium.checked && t.stadium;
+    const showLogo = !!(optLogo.checked && t.logo_url);
+    const showName = !!(optName.checked && t.team_name);
+    const showStad = !!(optStadium.checked && t.stadium);
 
-    if (!wantLogo && !wantName && !wantStad) continue;
+    if (!showLogo && !showName && !showStad) continue;
 
     const angle = i*slice + slice/2;
 
-    // Clip to slice to avoid spill
+    // Clip to slice so no bleeding across triangles
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(0,0);
@@ -223,46 +204,67 @@ function drawWheel(){
     ctx.closePath();
     ctx.clip();
 
-    // Align to slice direction
+    // Rotate into slice direction (bisector)
     ctx.rotate(angle);
 
-    // Compute available width at the stack radius
-    const rStack = rStackBase;
-    const maxW = availWidthAt(rStack);
+    // Base sizes from radius
+    let logoSize = showLogo ? clamp(20, Math.round(radius * 0.12), 60) : 0;
+    let namePx   = showName ? clamp(11, Math.round(radius * 0.06), 22) : 0;
+    let stadPx   = showStad ? clamp(9,  Math.round(radius * 0.045), 16) : 0;
+    const gap    = clamp(4, Math.round(radius * 0.02), 12);
 
-    // Fit sizes per content
-    // Logo
-    const logoSize = wantLogo ? Math.min(baseLogoSize, Math.max(18, Math.floor(maxW - 8))) : 0;
+    // Initial stack radius candidate
+    const rMin   = radius * 0.48; // prevent too close to center (narrow width)
+    const rMax   = radius * 0.86; // keep away from rim
+    let   rStack = radius * 0.66;
 
-    // Name font (fit to width)
-    let namePx = 0;
-    if (wantName) {
-      namePx = fitFontSize(ctx, t.team_name, baseNamePx, 10, maxW, 800);
+    // Compute max allowed width at rStack
+    let maxW = availWidthAt(rStack);
+
+    // Measure widths; fit fonts to maxW
+    if (showName) namePx = fitFontSize(ctx, t.team_name, namePx, 10, maxW, 800);
+    if (showStad) stadPx = fitFontSize(ctx, t.stadium,  stadPx, 9,  maxW, 700);
+
+    // Re-measure with decided sizes
+    let nameW = 0, stadW = 0;
+    if (showName) { ctx.font = `800 ${namePx}px Inter,Arial,sans-serif`; nameW = ctx.measureText(t.team_name).width; }
+    if (showStad) { ctx.font = `700 ${stadPx}px Inter,Arial,sans-serif`; stadW = ctx.measureText(t.stadium).width; }
+    const logoW = showLogo ? logoSize : 0;
+    const widest = Math.max(logoW, nameW, stadW);
+
+    // If widest exceeds current maxW, try moving outward (wider chord).
+    if (widest > maxW) {
+      const neededR = (widest + 8) / (2 * tanHalf); // r >= (width+pad)/(2*tanHalf)
+      rStack = clamp(rMin, neededR, rMax);
+      maxW = availWidthAt(rStack);
+
+      // Still too wide? Scale items uniformly to fit.
+      if (widest > maxW) {
+        const scale = maxW / widest;
+        if (showLogo) logoSize = Math.max(16, Math.floor(logoSize * scale));
+        if (showName) namePx   = Math.max(10, Math.floor(namePx * scale));
+        if (showStad) stadPx   = Math.max(9,  Math.floor(stadPx * scale));
+        // Update widths after scaling
+        if (showName) { ctx.font = `800 ${namePx}px Inter,Arial,sans-serif`; nameW = ctx.measureText(t.team_name).width; }
+        if (showStad) { ctx.font = `700 ${stadPx}px Inter,Arial,sans-serif`; stadW = ctx.measureText(t.stadium).width; }
+      }
     }
 
-    // Stadium font (fit to width)
-    let stadPx = 0;
-    if (wantStad) {
-      stadPx = fitFontSize(ctx, t.stadium, baseStadiumPx, 9, maxW, 700);
-    }
-
-    const gap = baseGap;
-
-    // Heights for stacking (approx line boxes)
+    // Compute vertical layout
     const items = [];
-    if (wantLogo)   items.push({type:'logo',   h: logoSize});
-    if (wantName)   items.push({type:'name',   h: Math.round(namePx * 1.15), px: namePx});
-    if (wantStad)   items.push({type:'stadium',h: Math.round(stadPx * 1.10), px: stadPx});
-    const totalH = items.reduce((s,it)=> s + it.h, 0) + gap * (items.length - 1);
-    let yCursor = -totalH / 2;
+    if (showLogo) items.push({ type:'logo',    h: logoSize });
+    if (showName) items.push({ type:'name',    h: Math.round(namePx * 1.1), px: namePx });
+    if (showStad) items.push({ type:'stadium', h: Math.round(stadPx * 1.05), px: stadPx });
 
-    // Colors
+    const totalH = items.reduce((s,it)=> s + it.h, 0) + gap * (items.length - 1);
+    let yCursor = -Math.round(totalH / 2);
+
     const fg = textColorFor(t.primary_color);
 
+    // Draw each item centered on bisector, then unrotate to keep upright
     for (const it of items) {
-      const yCenter = Math.round(yCursor + it.h/2);
+      const yCenter = yCursor + Math.round(it.h/2);
 
-      // Place along the bisector, then unrotate so content stays upright
       ctx.save();
       ctx.translate(rStack, yCenter);
       ctx.rotate(-angle);
@@ -270,7 +272,7 @@ function drawWheel(){
       if (it.type === 'logo') {
         withImage(t.logo_url, (img) => {
           ctx.save();
-          // Drop shadow: cheap and effective clarity
+          // Subtle shadow to separate from bright slices
           ctx.shadowColor = "rgba(0,0,0,0.7)";
           ctx.shadowBlur = 8;
           ctx.shadowOffsetX = 0;
@@ -303,13 +305,12 @@ function drawWheel(){
       yCursor += it.h + gap;
     }
 
-    ctx.restore(); // slice clip + rotation
+    ctx.restore(); // clip + rotation
   }
 
   ctx.restore();
 }
 
-// Result
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -324,7 +325,6 @@ function setResult(idx){
   openModal(t);
 }
 
-// Spin
 function spin(){
   if (spinning) return;
   const data = getFiltered();
@@ -353,11 +353,16 @@ function spin(){
     if (p < 1){
       requestAnimationFrame(anim);
     } else {
+      // Determine index under the pointer (top)
       const theta = ((currentAngle % TAU) + TAU) % TAU;
       const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // top
+      const N = getFiltered().length || 1;
+      const slice = TAU / N;
       let idx = Math.round(((POINTER_ANGLE - theta - slice/2 + TAU) % TAU) / slice) % N;
 
+      // Snap angle so the chosen slice is exactly under the pointer
       currentAngle = ((currentAngle + ((POINTER_ANGLE - ((theta + idx*slice + slice/2) % TAU) + TAU) % TAU)) % TAU);
+
       spinning = false;
       spinBtn.disabled = false;
       selectedIdx = idx;
@@ -368,7 +373,6 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
-// Events
 function setupEventListeners() {
   chips.addEventListener('change', () => {
     selectedIdx = -1;
@@ -388,8 +392,8 @@ function setupEventListeners() {
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
 
-  // Responsive: redraw on resize (with debounce)
-  let resizeTO = null;
+  // Responsive redraw on resize (debounced)
+  let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
     resizeTO = setTimeout(() => {
@@ -406,7 +410,7 @@ fetch('./teams.json')
     TEAMS = data;
     renderChips();
     renderHistory();
-    sizeCanvas();     // responsive + HiDPI setup
-    drawWheel();      // initial render
+    sizeCanvas(); // responsive + HiDPI setup
+    drawWheel();  // initial render
     setupEventListeners();
   });
