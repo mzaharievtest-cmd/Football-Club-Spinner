@@ -1,4 +1,4 @@
-// Football Club Spinner — app.js
+u8ii89// Football Club Spinner — app.js
 // Vertically aligned stack per slice (Logo -> Name -> Stadium), clipped to slice,
 // responsive (auto-resizes), HiDPI crisp, and fit-to-slice so content always
 // stays inside its triangle without overlapping neighbors.
