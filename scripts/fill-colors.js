@@ -5,7 +5,7 @@ const path = require('path');
 
 const ROOT = process.cwd();
 const TEAMS_PATH = path.resolve(ROOT, 'teams.json');
-x
+
 // Merge in this order (later overrides earlier):
 // 1) data/colors.json           — manual curated values
 // 2) data/colors-extra.json     — optional overrides
