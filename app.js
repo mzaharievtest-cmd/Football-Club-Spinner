@@ -1,8 +1,5 @@
 // Football Club Spinner — app.js
-// Upright, adaptive wheel; crisp HiDPI; no overlap; precise pointer snap.
-// Modal reveal/blur per toggle with robust inline blur + overlay fallback.
-// League filter chips show full league names (labels only) while keeping values as codes.
-// Modal also shows full league names. "Current selection" row removed safely.
+// Optimized: performance-aware rendering, EPL-only default, quick picks, and full league labels.
 
 let TEAMS = [];
 let currentAngle = 0; // radians
@@ -23,7 +20,7 @@ const optName = document.getElementById('optName');
 const optLogo = document.getElementById('optLogo');
 const optStadium = document.getElementById('optStadium');
 
-// These may not exist anymore if result block was removed; guard all uses.
+// Optional current selection (we removed the block; guard all uses)
 const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
 
@@ -36,10 +33,14 @@ const mClose = document.getElementById('mClose');
 const mHead = document.getElementById('mHead');
 const mSub = document.getElementById('mSub');
 const mLogo = document.getElementById('mLogo');
-// Optional (may be absent now)
-const mColor = document.getElementById('mColor');
-const mColorHex = document.getElementById('mColorHex');
 const mStadium = document.getElementById('mStadium');
+
+// Quick picks and performance tip
+const qpAll = document.getElementById('qpAll');
+const qpNone = document.getElementById('qpNone');
+const qpEPL = document.getElementById('qpEPL');
+const qpTop5 = document.getElementById('qpTop5');
+const perfTip = document.getElementById('perfTip');
 
 // Canvases
 const wheel = document.getElementById('wheel');
@@ -53,6 +54,14 @@ const DEBUG = false;
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 const mod = (x, m) => ((x % m) + m) % m;
 const isModalOpen = () => backdrop && backdrop.style.display === 'flex';
+
+// Performance thresholds (tuned for smoothness)
+const PERF = {
+  hideLogosThreshold: 80,   // when N >=, skip logos (big boost)
+  hideTextThreshold: 140,   // when N >=, skip all text
+  minTextWidth: 44,         // px; if slice text box narrower, skip that text
+  minLogoBox: 28            // px; if logo circle smaller than this, skip logo
+};
 
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
@@ -68,13 +77,33 @@ function luminance(hex){
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
 
-// -------------------- League label mapping (labels only) --------------------
+// -------------------- League label mapping (25 leagues) --------------------
 const LEAGUE_LABELS = {
-  EPL: 'English Premier League',
-  LLA: 'La Liga',
-  SA:  'Serie A',
-  BUN: 'Bundesliga',
-  L1:  'Ligue 1',
+  AUT: "Austrian Bundesliga",
+  BEL: "Jupiler Pro League",
+  BUL: "efbet Liga",
+  CRO: "SuperSport HNL",
+  CZE: "Fortuna Liga",
+  DEN: "Superliga",
+  EPL: "Premier League",
+  L1:  "Ligue 1",
+  BUN: "Bundesliga",
+  GRE: "Super League 1",
+  ISR: "Ligat ha'Al",
+  SA:  "Serie A",
+  NED: "Eredivisie",
+  NOR: "Eliteserien",
+  POL: "PKO BP Ekstraklasa",
+  POR: "Liga Portugal",
+  ROU: "SuperLiga",
+  RUS: "Premier Liga",
+  SCO: "Scottish Premiership",
+  SRB: "Super liga Srbije",
+  LLA: "LaLiga",
+  SWE: "Allsvenskan",
+  SUI: "Super League",
+  TUR: "Süper Lig",
+  UKR: "Ukrainian Premier League"
 };
 
 // -------------------- Image cache for wheel (modal uses <img> directly) --------------------
@@ -134,13 +163,26 @@ function renderChips() {
     const full = LEAGUE_LABELS[code] || code;
     const label = document.createElement('label');
     label.className = 'chip';
-    // Keep the input value as the short code; only the visible label is the full name
+    // Default: only EPL checked
+    const checked = (code === 'EPL');
     label.innerHTML = `
-      <input type="checkbox" value="${code}" checked aria-checked="true" aria-label="${full}">
+      <input type="checkbox" value="${code}" ${checked ? 'checked aria-checked="true"' : ''} aria-label="${full}">
       <span class="chip-text" title="${full}">${full}</span>
     `;
     chips.appendChild(label);
   });
+}
+function setCheckedCodes(codes = []) {
+  const set = new Set(codes);
+  chips.querySelectorAll('input[type="checkbox"]').forEach(i => {
+    i.checked = set.has(i.value);
+    i.setAttribute('aria-checked', i.checked ? 'true' : 'false');
+  });
+  selectedIdx = -1;
+  drawWheel();
+  const hasAny = getFiltered().length > 0;
+  spinBtn.disabled = !hasAny;
+  if (!hasAny && currentText) currentText.textContent = 'Please select at least one league.';
 }
 function getFiltered() {
   const active = Array.from(chips.querySelectorAll('input:checked')).map(i => i.value);
@@ -162,7 +204,8 @@ function renderHistory() {
     i.alt = `${item.team_name} logo`;
     i.onerror = () => { i.src = ''; i.alt = 'No image'; };
     const s = document.createElement('span');
-    s.textContent = `${item.team_name} (${item.league_code})`;
+    const full = LEAGUE_LABELS[item.league_code] || item.league_code;
+    s.textContent = `${item.team_name} (${full})`;
     div.append(i, s);
     historyEl.append(div);
   });
@@ -197,98 +240,25 @@ function ensureRevealStyles() {
   document.head.appendChild(s);
 }
 
-function removeExistingRevealBtn(id) {
-  const old = document.getElementById(id);
-  if (old) old.remove();
-}
-function ensureWrapped(el) {
-  if (!el || !el.parentElement) return null;
-  if (el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
-  const wrap = document.createElement('span');
-  wrap.className = 'reveal-wrap';
-  const cs = getComputedStyle(el);
-  if (cs.borderRadius) wrap.style.borderRadius = cs.borderRadius;
-  el.parentElement.insertBefore(wrap, el);
-  wrap.appendChild(el);
-  return wrap;
-}
-function addOverlay(el) {
-  const wrap = ensureWrapped(el);
-  if (!wrap) return;
-  if (!wrap.querySelector('.reveal-overlay')) {
-    const ov = document.createElement('span');
-    ov.className = 'reveal-overlay';
-    wrap.appendChild(ov);
-  }
-}
-function removeOverlay(el) {
-  if (!el || !el.parentElement) return;
-  const wrap = el.parentElement;
-  if (wrap.classList.contains('reveal-wrap')) {
-    const ov = wrap.querySelector('.reveal-overlay');
-    if (ov) ov.remove();
-  }
-}
-function blurElement(el) {
-  if (!el) return;
-  // Real blur on pixels; no color block
-  el.style.setProperty('filter', 'blur(14px) saturate(0.9)', 'important');
-  el.style.setProperty('-webkit-filter', 'blur(14px) saturate(0.9)', 'important');
-  el.style.transform = 'translateZ(0)';
-  el.style.pointerEvents = 'none';
-  el.setAttribute('aria-hidden', 'true');
+// ... blur/unblur helpers omitted for brevity (unchanged from your current file) ...
+function removeExistingRevealBtn(id){ const old=document.getElementById(id); if(old) old.remove(); }
+function ensureWrapped(el){ if(!el||!el.parentElement) return null; if(el.parentElement.classList.contains('reveal-wrap')) return el.parentElement; const w=document.createElement('span'); w.className='reveal-wrap'; const cs=getComputedStyle(el); if(cs.borderRadius) w.style.borderRadius=cs.borderRadius; el.parentElement.insertBefore(w,el); w.appendChild(el); return w; }
+function addOverlay(el){ const w=ensureWrapped(el); if(!w) return; if(!w.querySelector('.reveal-overlay')){ const ov=document.createElement('span'); ov.className='reveal-overlay'; w.appendChild(ov); } }
+function removeOverlay(el){ if(!el||!el.parentElement) return; const w=el.parentElement; if(w.classList.contains('reveal-wrap')){ const ov=w.querySelector('.reveal-overlay'); if(ov) ov.remove(); } }
+function blurElement(el){ if(!el) return; el.style.setProperty('filter','blur(14px) saturate(0.9)','important'); el.style.setProperty('-webkit-filter','blur(14px) saturate(0.9)','important'); el.style.transform='translateZ(0)'; el.style.pointerEvents='none'; el.setAttribute('aria-hidden','true'); requestAnimationFrame(()=>{ const cs=getComputedStyle(el); const f=(cs.filter||cs.webkitFilter||'').trim(); if(!f||f==='none') addOverlay(el); }); }
+function unblurElement(el){ if(!el) return; el.style.removeProperty('filter'); el.style.removeProperty('-webkit-filter'); el.style.transform=''; el.style.pointerEvents=''; el.setAttribute('aria-hidden','false'); removeOverlay(el); }
+function placeButtonAfter(el,btn){ const host=el?.parentElement?.classList.contains('reveal-wrap')?el.parentElement:el; if(host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn); else el?.parentElement?.appendChild(btn); }
 
-  // Fallback overlay in case external CSS cancels filters
-  requestAnimationFrame(() => {
-    const cs = getComputedStyle(el);
-    const f = (cs.filter || cs.webkitFilter || '').trim();
-    if (!f || f === 'none') addOverlay(el);
-  });
-}
-function unblurElement(el) {
-  if (!el) return;
-  el.style.removeProperty('filter');
-  el.style.removeProperty('-webkit-filter');
-  el.style.transform = '';
-  el.style.pointerEvents = '';
-  el.setAttribute('aria-hidden', 'false');
-  removeOverlay(el);
-}
-function placeButtonAfter(el, btn) {
-  const host = el?.parentElement?.classList.contains('reveal-wrap') ? el.parentElement : el;
-  if (host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn);
-  else el?.parentElement?.appendChild(btn);
-}
-
-// IMPORTANT: explicit per-field state so multiple buttons work independently
 function applyRevealByKey(key, el, enabled, btnId, labelText) {
   if (!el) return;
   removeExistingRevealBtn(btnId);
-
   const revealed = !!modalRevealState[key];
-
-  if (enabled || revealed) {
-    unblurElement(el);
-    return;
-  }
-
-  // Blur and add button
+  if (enabled || revealed) { unblurElement(el); return; }
   blurElement(el);
-
   const btn = document.createElement('button');
-  btn.id = btnId;
-  btn.type = 'button';
-  btn.className = 'reveal-btn';
+  btn.id = btnId; btn.type = 'button'; btn.className = 'reveal-btn';
   btn.textContent = `Show ${labelText}`;
-  // Keep clicks reliable even if several fields are blurred
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    modalRevealState[key] = true;   // remember for session
-    unblurElement(el);              // reveal this field
-    btn.remove();                   // remove only this button
-  }, { passive: false });
-
+  btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); modalRevealState[key] = true; unblurElement(el); btn.remove(); }, { passive: false });
   placeButtonAfter(el, btn);
 }
 
@@ -305,40 +275,52 @@ function openModal(team){
   lastModalTeam = team;
   modalRevealState = { logo: false, name: false, stadium: false };
 
-  // League label (full name like in filters)
   const leagueLabel = LEAGUE_LABELS[team.league_code] || team.league_code;
 
-  // Populate content
   if (mHead)   mHead.textContent = team.team_name || '—';
-  if (mSub)    mSub.textContent = leagueLabel; // full league name in modal
+  if (mSub)    mSub.textContent = leagueLabel;
   if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
-  // Color swatch/hex are optional now; only set if present
-  if (mColor)  mColor.style.background = team.primary_color || '#4f8cff';
-  if (mColorHex) mColorHex.textContent = team.primary_color || '#4f8cff';
   if (mStadium) mStadium.textContent = team.stadium || '—';
 
   backdrop.style.display = 'flex';
   requestAnimationFrame(() => {
     modalEl.classList.add('show');
-    // Apply reveal based on current toggles
     updateModalRevealFromToggles();
   });
 }
-function closeModal(){
-  modalEl.classList.remove('show');
-  setTimeout(()=> backdrop.style.display='none', 150);
+function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=> backdrop.style.display='none', 150); }
+
+// -------------------- Wheel drawing (performance-aware) --------------------
+function updatePerfBanner({ hideText, hideLogos, N }) {
+  if (!perfTip) return;
+  if (!hideText && !hideLogos) { perfTip.hidden = true; perfTip.textContent = ''; return; }
+  let msg = 'Performance mode: ';
+  const bits = [];
+  if (hideText) bits.push('text hidden');
+  if (hideLogos) bits.push('logos hidden');
+  bits.push(`(${N} teams)`);
+  msg += bits.join(' · ');
+  perfTip.hidden = false;
+  perfTip.textContent = msg;
 }
 
-// -------------------- Wheel drawing (upright, adaptive, single-line) --------------------
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
 
+  // Auto performance toggles
+  const hideLogos = N >= PERF.hideLogosThreshold;
+  const hideText = N >= PERF.hideTextThreshold;
+
+  updatePerfBanner({ hideText, hideLogos, N });
+
   const ctx = wheel.getContext('2d');
   const DPR = Math.max(1, window.devicePixelRatio || 1);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+
+  // Slightly lower smoothing if extremely dense to boost perf
+  ctx.imageSmoothingEnabled = !hideText;
+  ctx.imageSmoothingQuality = hideText ? 'low' : 'high';
 
   const W = wheel.width / DPR;
   const H = wheel.height / DPR;
@@ -367,8 +349,8 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // Selected rim stroke
-  if (selectedIdx >= 0 && selectedIdx < N) {
+  // Selected rim stroke (turn off heavy strokes in dense mode)
+  if (!hideText && selectedIdx >= 0 && selectedIdx < N) {
     const a0 = selectedIdx * sliceAngle;
     const a1 = (selectedIdx + 1) * sliceAngle;
     ctx.save();
@@ -380,140 +362,143 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // Content
-  for (let i = 0; i < N; i++) {
-    const t = data[i] || {};
-    const showLogo    = !!(optLogo?.checked && t.logo_url);
-    const showName    = !!(optName?.checked && t.team_name);
-    const showStadium = !!(optStadium?.checked && t.stadium);
-    if (!showLogo && !showName && !showStadium) continue;
+  // Content (logos/text) skipped entirely in hideText mode
+  if (!hideText || !hideLogos) {
+    for (let i = 0; i < N; i++) {
+      const t = data[i] || {};
 
-    const a0 = i * sliceAngle;
-    const a1 = (i + 1) * sliceAngle;
-    const aMid = (a0 + a1) / 2;
-    const sliceArc = radius * (a1 - a0);
+      const a0 = i * sliceAngle;
+      const a1 = (i + 1) * sliceAngle;
+      const aMid = (a0 + a1) / 2;
+      const sliceArc = radius * (a1 - a0);
 
-    const nameTargetPx    = clamp(11, 0.18 * sliceArc, 20);
-    const stadiumTargetPx = clamp(10, 0.15 * sliceArc, 16);
-    let   logoSize        = clamp(22, 0.32 * sliceArc, 52);
-    const logoHalf = logoSize / 2;
-    const pad = 10;
+      // Derived sizes
+      const nameTargetPx    = clamp(11, 0.18 * sliceArc, 20);
+      const stadiumTargetPx = clamp(10, 0.15 * sliceArc, 16);
+      let   logoSize        = clamp(22, 0.32 * sliceArc, 52);
+      const logoHalf = logoSize / 2;
+      const pad = 10;
 
-    const fg = textColorFor(t.primary_color);
-    const lum = luminance(t.primary_color);
+      const fg = textColorFor(t.primary_color);
+      const lum = luminance(t.primary_color);
 
-    ctx.save();
-    // Clip to wedge
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.arc(0,0, radius - 1, a0, a1);
-    ctx.closePath();
-    ctx.clip();
-
-    // Rotate to bisector and keep upright
-    ctx.rotate(aMid);
-    const needFlip = Math.cos(aMid) < 0;
-    if (needFlip) ctx.rotate(Math.PI);
-    const sign = needFlip ? -1 : 1;
-
-    // Geometry: text box then logo
-    const xLogo = sign * (radius * 0.74);
-    const xText = sign * (radius * 0.42);
-    const logoInner = showLogo ? (xLogo - sign * (logoHalf + pad)) : sign * (radius * 0.86);
-    const xBoxLeft = Math.min(xText, logoInner);
-    const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
-
-    // Text
-    if (showName || showStadium) {
       ctx.save();
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-
-      let namePx = nameTargetPx;
-      let yName = 0;
-
-      if (showName) {
-        const heavy = (lum >= 0.35 && lum <= 0.45);
-        const fitted = fitSingleLine(ctx, t.team_name || '', {
-          maxWidth: maxTextWidth, targetPx: nameTargetPx, minPx: 9, maxPx: 22,
-          weight: heavy ? 900 : 800
-        });
-        namePx = fitted.fontPx;
-
-        const gap = showStadium ? 4 : 0;
-        const totalH = showStadium ? (namePx + gap + stadiumTargetPx) : namePx;
-        yName = -totalH/2 + namePx/2;
-
-        ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
-        ctx.strokeStyle = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.85)';
-        ctx.lineWidth = Math.max(1, Math.round(namePx/9));
-        ctx.fillStyle = fg;
-        ctx.strokeText(fitted.text, xBoxLeft, yName);
-        ctx.fillText(fitted.text, xBoxLeft, yName);
-
-        if (DEBUG && fitted.truncated) {
-          console.log({ team: t.team_name, truncated: true, fontPx: namePx, maxTextWidth });
-        }
-      }
-
-      if (showStadium) {
-        const stadFit = fitSingleLine(ctx, t.stadium || '', {
-          maxWidth: maxTextWidth, targetPx: stadiumTargetPx, minPx: 8, maxPx: 18, weight: 700
-        });
-        const yStad = showName ? (yName + namePx/2 + 4 + stadFit.fontPx/2) : 0;
-
-        ctx.font = `700 ${stadFit.fontPx}px Inter, system-ui, sans-serif`;
-        ctx.strokeStyle = 'rgba(12,16,28,0.75)';
-        ctx.lineWidth = Math.max(1, Math.round(stadFit.fontPx/9));
-        ctx.fillStyle = '#D7E8FF';
-        ctx.strokeText(stadFit.text, xBoxLeft, yStad);
-        ctx.fillText(stadFit.text, xBoxLeft, yStad);
-      }
-
-      ctx.restore();
-    }
-
-    // Logo
-    if (showLogo) {
-      ctx.save();
-      ctx.translate(xLogo, 0);
-
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur = 6;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 2;
-
+      // Clip to wedge
       ctx.beginPath();
-      ctx.arc(0, 0, logoHalf, 0, TAU);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(255,255,255,0.07)';
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-      ctx.stroke();
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(0, 0, logoHalf - 1, 0, TAU);
+      ctx.moveTo(0,0);
+      ctx.arc(0,0, radius - 1, a0, a1);
       ctx.closePath();
       ctx.clip();
 
-      const img = getLogo(t.logo_url, () => requestAnimationFrame(drawWheel));
-      if (img && img.complete) {
-        const box = Math.max(4, 2 * (logoHalf - 1));
-        const iw = img.naturalWidth || box, ih = img.naturalHeight || box;
-        const s = Math.min(box / iw, box / ih);
-        ctx.drawImage(img, -iw*s/2, -ih*s/2, iw*s, ih*s);
-      } else {
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        const ph = (logoHalf - 3) * 2;
-        ctx.fillRect(-ph/2, -ph/2, ph, ph);
-      }
-      ctx.restore();
-      ctx.restore();
-    }
+      // Rotate to bisector and keep upright
+      ctx.rotate(aMid);
+      const needFlip = Math.cos(aMid) < 0;
+      if (needFlip) ctx.rotate(Math.PI);
+      const sign = needFlip ? -1 : 1;
 
-    ctx.restore(); // clip + rotations
+      // Geometry: text box then logo
+      const xLogo = sign * (radius * 0.74);
+      const xText = sign * (radius * 0.42);
+      const logoInner = xLogo - sign * (logoHalf + pad);
+      const xBoxLeft = Math.min(xText, logoInner);
+      const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
+
+      // Decide what to render this slice
+      const canShowName    = !hideText && optName?.checked && t.team_name && maxTextWidth >= PERF.minTextWidth;
+      const canShowStadium = !hideText && optStadium?.checked && t.stadium && maxTextWidth >= PERF.minTextWidth;
+      const canShowLogo    = !hideLogos && optLogo?.checked && t.logo_url && (logoHalf * 2) >= PERF.minLogoBox;
+
+      // Text
+      if (canShowName || canShowStadium) {
+        ctx.save();
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
+        let namePx = nameTargetPx;
+        let yName = 0;
+
+        if (canShowName) {
+          const heavy = (lum >= 0.35 && lum <= 0.45);
+          const fitted = fitSingleLine(ctx, t.team_name || '', {
+            maxWidth: maxTextWidth, targetPx: nameTargetPx, minPx: 9, maxPx: 22,
+            weight: heavy ? 900 : 800
+          });
+          namePx = fitted.fontPx;
+
+          const gap = canShowStadium ? 4 : 0;
+          const totalH = canShowStadium ? (namePx + gap + stadiumTargetPx) : namePx;
+          yName = -totalH/2 + namePx/2;
+
+          ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
+          ctx.strokeStyle = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.65)'; // lighter stroke in perf mode
+          ctx.lineWidth = Math.max(1, Math.round(namePx/10));
+          ctx.fillStyle = fg;
+          ctx.strokeText(fitted.text, xBoxLeft, yName);
+          ctx.fillText(fitted.text, xBoxLeft, yName);
+        }
+
+        if (canShowStadium) {
+          const stadFit = fitSingleLine(ctx, t.stadium || '', {
+            maxWidth: maxTextWidth, targetPx: stadiumTargetPx, minPx: 8, maxPx: 18, weight: 700
+          });
+          const yStad = canShowName ? (yName + namePx/2 + 4 + stadFit.fontPx/2) : 0;
+
+          ctx.font = `700 ${stadFit.fontPx}px Inter, system-ui, sans-serif`;
+          ctx.strokeStyle = 'rgba(12,16,28,0.45)';
+          ctx.lineWidth = Math.max(1, Math.round(stadFit.fontPx/10));
+          ctx.fillStyle = '#D7E8FF';
+          ctx.strokeText(stadFit.text, xBoxLeft, yStad);
+          ctx.fillText(stadFit.text, xBoxLeft, yStad);
+        }
+
+        ctx.restore();
+      }
+
+      // Logo
+      if (canShowLogo) {
+        ctx.save();
+        ctx.translate(xLogo, 0);
+
+        // Cheaper shadow for perf
+        if (N < PERF.hideLogosThreshold) {
+          ctx.shadowColor = 'rgba(0,0,0,0.5)';
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 2;
+        }
+
+        ctx.beginPath();
+        ctx.arc(0, 0, logoHalf, 0, TAU);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255,255,255,0.07)';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.stroke();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, logoHalf - 1, 0, TAU);
+        ctx.closePath();
+        ctx.clip();
+
+        const img = getLogo(t.logo_url, () => requestAnimationFrame(drawWheel));
+        if (img && img.complete) {
+          const box = Math.max(4, 2 * (logoHalf - 1));
+          const iw = img.naturalWidth || box, ih = img.naturalHeight || box;
+          const s = Math.min(box / iw, box / ih);
+          ctx.drawImage(img, -iw*s/2, -ih*s/2, iw*s, ih*s);
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          const ph = (logoHalf - 3) * 2;
+          ctx.fillRect(-ph/2, -ph/2, ph, ph);
+        }
+        ctx.restore();
+        ctx.restore();
+      }
+
+      ctx.restore(); // clip + rotations
+    }
   }
 
   ctx.restore();
@@ -601,6 +586,12 @@ function setupEventListeners() {
     }
   });
 
+  // Quick picks
+  qpAll.onclick  = () => setCheckedCodes([...new Set(TEAMS.map(t=>t.league_code))]);
+  qpNone.onclick = () => setCheckedCodes([]);
+  qpEPL.onclick  = () => setCheckedCodes(['EPL']);
+  qpTop5.onclick = () => setCheckedCodes(['EPL','LLA','SA','BUN','L1']);
+
   // Redraw wheel + refresh modal reveal when toggles change
   optName.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
   optLogo.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
@@ -624,14 +615,19 @@ function setupEventListeners() {
   }, { passive: true });
 }
 
-fetch('./teams.json')
+// Use a cache-buster so browsers don't hold on to stale teams.json
+fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
   .then(data => {
     TEAMS = data;
     ensureRevealStyles();
-    renderChips();
+    renderChips();             // will default to EPL only
     renderHistory();
     sizeCanvas();
     drawWheel();
     setupEventListeners();
+  })
+  .catch(err => {
+    console.error('Failed to load teams.json', err);
+    if (currentText) currentText.textContent = 'Failed to load teams.';
   });
