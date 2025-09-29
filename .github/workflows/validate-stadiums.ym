@@ -1,19 +1,15 @@
-name: Validate stadium data
+name: Validate stadium coverage
 
 on:
   pull_request:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  validate:
+  check-stadiums:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - name: Install (no deps needed)
-        run: echo "No install step required."
-      - name: Check stadiums
-        run: node scripts/fill-stadiums.js --check --fail-on-missing
+          node-version: 20
+      - run: node scripts/fill-stadiums.js --check --fail-on-missing
