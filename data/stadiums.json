@@ -6,8 +6,7 @@
   "EPL:manchester united": "Old Trafford",
 
   "BUN:bayern munich": "Allianz Arena",
-  "BUN:borussia dortmund": "Signal Iduna Park",
+  "BUN:borussia dortmund": "Signal Iduna Park"
 
-  "team:real madrid": "Santiago Bernabéu",
-  "team:barcelona": "Estadi Olímpic Lluís Companys"
+  // Add more... (Serie A, LaLiga, Ligue 1, etc.)
 }
