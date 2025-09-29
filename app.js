@@ -1,13 +1,15 @@
 // Football Club Spinner — app.js
-// Polished HiDPI wheel drawing: upright labels, adaptive fit, no overlap, precise snap.
+// Upright labels, crisp HiDPI, adaptive single-line names, stadium shown when toggled,
+// no overlap with logos, precise pointer snap, wedge clipping to avoid bleed.
 
+// --------------------------- App State ---------------------------
 let TEAMS = [];
 let currentAngle = 0; // radians
 let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 
-// DOM
+// --------------------------- DOM ---------------------------
 const chips = document.getElementById('chips');
 const spinBtn = document.getElementById('spinBtn');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -26,10 +28,10 @@ const mClose = document.getElementById('mClose');
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx'); // reserved
 
-// Constants / helpers
+// --------------------------- Constants & Helpers ---------------------------
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
-const DEBUG = false;
+const DEBUG = false; // set true to see text boxes/rulers in console+canvas
 
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 const mod = (x, m) => ((x % m) + m) % m;
@@ -62,185 +64,33 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// ---------------- Wrapping / fitting ----------------
-function tokenize(text) {
-  const norm = (text || '').replace(/\s+/g, ' ').trim();
-  if (!norm) return [];
-  const out = [];
-  norm.split(' ').forEach(word => {
-    const pieces = word.split(/([\-\/·])/g).filter(Boolean);
-    for (let i=0;i<pieces.length;i++){
-      const p = pieces[i];
-      if (/[\-\/·]/.test(p)) {
-        if (out.length) out[out.length-1] += p; else out.push(p);
-      } else {
-        out.push(p);
-      }
-    }
-    out.push(' ');
-  });
-  if (out[out.length-1] === ' ') out.pop();
-  return out;
-}
-function measureWrapped(ctx, text, maxWidth) {
-  const tokens = tokenize(text);
-  const lines = [];
-  let line = '';
-  for (let i=0;i<tokens.length;i++){
-    const t = tokens[i];
-    const candidate = line ? line + t : t;
-    if (ctx.measureText(candidate).width <= maxWidth) {
-      line = candidate;
-    } else {
-      if (line) {
-        lines.push(line.trim());
-        line = '';
-        i--;
-      } else {
-        let s = t;
-        while (s && ctx.measureText(s).width > maxWidth) s = s.slice(0,-1);
-        if (s) lines.push(s);
-        const rest = t.slice(s.length);
-        if (rest) tokens.splice(i+1, 0, rest);
-      }
-    }
-  }
-  if (line) lines.push(line.trim());
-  return lines;
-}
-function fitTextIntoBox(ctx, text, opts) {
-  const {
-    maxWidth,
-    maxLines = 2,
-    fontFamily = 'Inter, system-ui, sans-serif',
-    targetPx,
-    minPx = 10,
-    maxPx = 26,
-    lineHeight = 1.05,
-    allowTighten = true,
-    weight = 800,
-  } = opts;
+// --------------------------- Single-line fitting helpers ---------------------------
 
+// Fit a single line by reducing font px; only ellipsize at minPx.
+function fitSingleLine(ctx, text, {
+  maxWidth,
+  targetPx,
+  minPx = 9,
+  maxPx = 28,
+  weight = 800,
+  fontFamily = 'Inter, system-ui, sans-serif'
+}) {
   let px = clamp(minPx, Math.round(targetPx), maxPx);
-  let lines = [];
+  ctx.font = `${weight} ${px}px ${fontFamily}`;
+  if (ctx.measureText(text).width <= maxWidth) return { text, fontPx: px, truncated: false };
 
-  while (px >= minPx) {
+  while (px > minPx) {
+    px -= 1;
     ctx.font = `${weight} ${px}px ${fontFamily}`;
-    lines = measureWrapped(ctx, text, maxWidth);
-    if (lines.length <= maxLines) {
-      return { lines, fontPx: px, truncated: false };
-    }
-    px -= allowTighten ? 1 : 2;
+    if (ctx.measureText(text).width <= maxWidth) return { text, fontPx: px, truncated: false };
   }
-
-  ctx.font = `${weight} ${minPx}px ${fontFamily}`;
-  const full = measureWrapped(ctx, text, maxWidth);
-  const used = full.slice(0, Math.max(0, maxLines - 1));
-  let last = full.slice(maxLines - 1).join(' ');
-  while (last && ctx.measureText(last + '…').width > maxWidth) last = last.slice(0,-1);
-  if (last) used.push(last + '…');
-  else if (!used.length && text) used.push(text[0] + '…');
-  return { lines: used, fontPx: minPx, truncated: true };
-}
-// cfg: { ctx, x, y, maxWidth, name, stadium, basePxName, basePxStadium, maxLinesName, color, backgroundLum, forceOneLine }
-function drawLabelBlock(cfg) {
-  const {
-    ctx, x, y, maxWidth,
-    name, stadium,
-    basePxName, basePxStadium,
-    maxLinesName = 2,
-    color,
-    backgroundLum,
-    forceOneLine = false
-  } = cfg;
-
-  const nameMaxLines = forceOneLine ? 1 : maxLinesName;
-  const lhName = forceOneLine ? 1.03 : 1.06;
-  const lhStad = forceOneLine ? 1.03 : 1.05;
-  const heavy = (backgroundLum >= 0.35 && backgroundLum <= 0.45);
-  const weightName = heavy ? 900 : 800;
-
-  const nameFit = fitTextIntoBox(ctx, name || '', {
-    maxWidth,
-    maxLines: nameMaxLines,
-    fontFamily: 'Inter, system-ui, sans-serif',
-    targetPx: basePxName,
-    minPx: 10,
-    maxPx: 26,
-    lineHeight: lhName,
-    allowTighten: true,
-    weight: weightName
-  });
-
-  let stadFit = null;
-  if (stadium && optStadium?.checked && maxWidth >= 80) {
-    stadFit = fitTextIntoBox(ctx, stadium || '', {
-      maxWidth,
-      maxLines: 1,
-      fontFamily: 'Inter, system-ui, sans-serif',
-      targetPx: basePxStadium,
-      minPx: 9,
-      maxPx: 22,
-      lineHeight: lhStad,
-      allowTighten: true,
-      weight: 700
-    });
-    if (stadFit.fontPx < 0.85 * basePxStadium) stadFit = null;
-  }
-
-  const nameLineH = nameFit.fontPx * (forceOneLine ? 1.03 : 1.06);
-  const gap = stadFit ? 6 : 0;
-  const stadH = stadFit ? stadFit.fontPx * (forceOneLine ? 1.03 : 1.05) : 0;
-  const totalH = nameFit.lines.length * nameLineH + (stadFit ? (gap + stadH) : 0);
-  let yCursor = y - totalH/2;
-
-  if (DEBUG) {
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,255,255,0.12)';
-    ctx.fillRect(x, yCursor, maxWidth, totalH);
-    ctx.restore();
-  }
-
-  // Name
-  ctx.save();
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  ctx.strokeStyle = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.85)';
-  for (const line of nameFit.lines) {
-    const baseY = yCursor + nameLineH;
-    ctx.font = `${weightName} ${nameFit.fontPx}px Inter, system-ui, sans-serif`;
-    ctx.lineWidth = Math.max(1, Math.round(nameFit.fontPx/9));
-    ctx.fillStyle = color;
-    ctx.strokeText(line, x, baseY);
-    ctx.fillText(line, x, baseY);
-    yCursor += nameLineH;
-  }
-  ctx.restore();
-
-  if (stadFit) yCursor += gap;
-
-  // Stadium
-  if (stadFit) {
-    ctx.save();
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    const baseY = yCursor + stadFit.fontPx * (forceOneLine ? 1.03 : 1.05);
-    ctx.font = `700 ${stadFit.fontPx}px Inter, system-ui, sans-serif`;
-    ctx.strokeStyle = 'rgba(12,16,28,0.75)';
-    ctx.lineWidth = Math.max(1, Math.round(stadFit.fontPx/9));
-    ctx.fillStyle = '#D7E8FF';
-    const text = stadFit.lines.join(' ').trim();
-    ctx.strokeText(text, x, baseY);
-    ctx.fillText(text, x, baseY);
-    ctx.restore();
-  }
-
-  if (DEBUG && nameFit.truncated) {
-    console.log({ team: name, truncated: true, fontPx: nameFit.fontPx, lines: nameFit.lines });
-  }
+  // Ellipsize at character granularity
+  let s = text;
+  while (s && ctx.measureText(s + '…').width > maxWidth) s = s.slice(0, -1);
+  return { text: (s || '').trim() + '…', fontPx: minPx, truncated: true };
 }
 
-// ---------------- HiDPI sizing ----------------
+// --------------------------- Responsive HiDPI sizing ---------------------------
 function sizeCanvas() {
   const rect = (wheel.parentElement || wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width || 640), 1200);
@@ -257,7 +107,7 @@ function sizeCanvas() {
   fx.style.height = cssSize + 'px';
 }
 
-// ---------------- UI helpers ----------------
+// --------------------------- Chips / History / Modal ---------------------------
 function renderChips() {
   const leagues = [...new Set(TEAMS.map(t => t.league_code))].sort();
   chips.innerHTML = '';
@@ -308,14 +158,14 @@ function closeModal(){
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
-// ---------------- WHEEL DRAWING ----------------
+// --------------------------- WHEEL DRAWING ---------------------------
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
 
   const ctx = wheel.getContext('2d');
   const DPR = Math.max(1, window.devicePixelRatio || 1);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); // draw using CSS px
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
@@ -332,8 +182,8 @@ function drawWheel(){
   const radius = Math.min(W, H) * 0.48;
   const sliceAngle = TAU / N;
 
-  // 1) Wedges
-  for (let i=0;i<N;i++){
+  // 1) Draw wedges
+  for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const startAngle = i * sliceAngle;
     const endAngle   = (i + 1) * sliceAngle;
@@ -359,8 +209,8 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // 3) Slice content
-  for (let i=0;i<N;i++){
+  // 3) Slice content (single-line name, optional stadium, logo on outer side)
+  for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const wantLogo    = !!(optLogo?.checked && t.logo_url);
     const wantName    = !!(optName?.checked && t.team_name);
@@ -373,10 +223,10 @@ function drawWheel(){
     const midAngle   = (startAngle + endAngle) / 2;
     const sliceArc   = radius * (endAngle - startAngle);
 
-    // Adaptive targets
-    const nameTargetPx    = clamp(14, 0.23 * sliceArc, 24);
-    const stadiumTargetPx = clamp(12, 0.18 * sliceArc, 18);
-    let   logoSize        = clamp(24, 0.34 * sliceArc, 56);
+    // Adaptive targets (slightly smaller to keep names 1 row)
+    const nameTargetPx    = clamp(11, 0.18 * sliceArc, 20);
+    const stadiumTargetPx = clamp(10, 0.15 * sliceArc, 16);
+    let   logoSize        = clamp(22, 0.32 * sliceArc, 52);
     const logoHalf = logoSize / 2;
     const pad = 10;
 
@@ -392,43 +242,97 @@ function drawWheel(){
     ctx.closePath();
     ctx.clip();
 
-    // Rotate to bisector and upright-flip if needed
+    // Rotate to slice frame (+x radial)
     ctx.rotate(midAngle);
+
+    // Upright text rule
     const needFlip = Math.cos(midAngle) < 0;
     if (needFlip) ctx.rotate(Math.PI);
     const sign = needFlip ? -1 : 1;
 
-    // Geometry along +x: text block then logo
+    // Geometry: text block from xText to just before logo; logo on the rim side
     const xLogo = sign * (radius * 0.74);
     const xText = sign * (radius * 0.42);
-    const logoInnerEdge = wantLogo ? (xLogo - sign * (logoHalf + pad)) : sign * (radius * 0.86);
+    const logoInner = wantLogo ? (xLogo - sign * (logoHalf + pad)) : sign * (radius * 0.86);
+    const xBoxLeft = Math.min(xText, logoInner);
+    const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
-    const xBoxLeft = Math.min(xText, logoInnerEdge);
-    const maxTextWidth = Math.max(60, Math.abs(logoInnerEdge - xText));
-
-    const forceOneLine = sliceArc < 90;
-
-    // Draw labels if name or stadium requested
+    // Draw text (name single line, stadium single line below if toggled)
     if (wantName || wantStadium) {
-      ctx.save();
-      // Keep text upright (we are already upright via flip), draw in current frame
-      ctx.textAlign = 'left';
-      drawLabelBlock({
-        ctx,
-        x: xBoxLeft,
-        y: 0,
-        maxWidth: maxTextWidth,
-        name: wantName ? t.team_name : '',
-        stadium: wantStadium ? (t.stadium || '') : '',
-        basePxName: nameTargetPx,
-        basePxStadium: stadiumTargetPx,
-        maxLinesName: 2,
-        color: fg,
-        backgroundLum: lum,
-        forceOneLine
-      });
-      ctx.restore();
+      // Name first (single line, shrink first then ellipsis)
+      let nameLine = null;
+      let namePx = nameTargetPx;
 
+      if (wantName) {
+        const heavy = (lum >= 0.35 && lum <= 0.45);
+        const fit = fitSingleLine(ctx, t.team_name || '', {
+          maxWidth: maxTextWidth,
+          targetPx: nameTargetPx,
+          minPx: 9,
+          maxPx: 22,
+          weight: heavy ? 900 : 800
+        });
+        nameLine = fit;
+        namePx = fit.fontPx;
+
+        // Draw name
+        ctx.save();
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
+        // Center the text block vertically: name on center if no stadium; otherwise slightly above
+        const lineGap = wantStadium ? 4 : 0;
+        const totalH = wantStadium ? (namePx + lineGap + stadiumTargetPx) : namePx;
+        let yBase = -totalH/2 + namePx/2;
+
+        // stroke + fill for contrast
+        ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
+        ctx.strokeStyle = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.85)';
+        ctx.lineWidth = Math.max(1, Math.round(namePx/9));
+        ctx.fillStyle = fg;
+        ctx.strokeText(nameLine.text, xBoxLeft, yBase);
+        ctx.fillText(nameLine.text, xBoxLeft, yBase);
+        ctx.restore();
+
+        if (DEBUG && nameLine.truncated) {
+          console.log({ team: t.team_name, trunc: true, fontPx: namePx, width: maxTextWidth });
+        }
+      }
+
+      // Stadium (always attempt to show if toggled)
+      if (wantStadium) {
+        // fit single line
+        const stadFit = fitSingleLine(ctx, t.stadium || '', {
+          maxWidth: maxTextWidth,
+          targetPx: stadiumTargetPx,
+          minPx: 8,
+          maxPx: 18,
+          weight: 700
+        });
+
+        // Draw below name (or centered if no name)
+        ctx.save();
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const lineGap = 4;
+        let yBase;
+        if (wantName) {
+          const totalH = (namePx + lineGap + stadFit.fontPx);
+          yBase = -totalH/2 + namePx + lineGap + stadFit.fontPx/2;
+        } else {
+          yBase = 0; // center stadium if no name shown
+        }
+
+        ctx.font = `700 ${stadFit.fontPx}px Inter, system-ui, sans-serif`;
+        ctx.strokeStyle = 'rgba(12,16,28,0.75)';
+        ctx.lineWidth = Math.max(1, Math.round(stadFit.fontPx/9));
+        ctx.fillStyle = '#D7E8FF';
+        ctx.strokeText(stadFit.text, xBoxLeft, yBase);
+        ctx.fillText(stadFit.text, xBoxLeft, yBase);
+        ctx.restore();
+      }
+
+      // Debug ruler
       if (DEBUG) {
         ctx.save();
         ctx.strokeStyle = 'rgba(0,255,255,0.6)';
@@ -443,7 +347,7 @@ function drawWheel(){
       }
     }
 
-    // Draw logo badge
+    // Draw logo badge (upright)
     if (wantLogo) {
       ctx.save();
       ctx.translate(xLogo, 0);
@@ -459,12 +363,11 @@ function drawWheel(){
       ctx.closePath();
       ctx.fillStyle = 'rgba(255,255,255,0.07)';
       ctx.fill();
-
       ctx.lineWidth = 2;
       ctx.strokeStyle = 'rgba(255,255,255,0.9)';
       ctx.stroke();
 
-      // clip and draw image (contain)
+      // clip + image (contain)
       ctx.save();
       ctx.beginPath();
       ctx.arc(0, 0, logoHalf - 1, 0, TAU);
@@ -486,13 +389,13 @@ function drawWheel(){
       ctx.restore();
     }
 
-    ctx.restore(); // slice clip + rotation
+    ctx.restore(); // clip + rotations
   }
 
   ctx.restore();
 }
 
-// ---------------- Spin / Result (unchanged) ----------------
+// --------------------------- Result + Spin (unchanged) ---------------------------
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -557,7 +460,7 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
-// ---------------- Events / Boot ----------------
+// --------------------------- Events / Boot ---------------------------
 function setupEventListeners() {
   chips.addEventListener('change', () => {
     selectedIdx = -1;
@@ -579,6 +482,7 @@ function setupEventListeners() {
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
 
+  // Redraw on resize (debounced)
   let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
@@ -588,42 +492,7 @@ function setupEventListeners() {
     }, 120);
   }, { passive: true });
 }
-function renderHistory() {
-  historyEl.innerHTML = '';
-  if (history.length === 0) {
-    historyEl.setAttribute('aria-live', 'polite');
-    historyEl.innerHTML = '<div class="item">Spin the wheel to start your club journey</div>';
-  }
-  history.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    const i = document.createElement('img');
-    i.src = item.logo_url;
-    i.alt = `${item.team_name} logo`;
-    i.onerror = () => { i.src = ''; i.alt = 'No image'; };
-    const s = document.createElement('span');
-    s.textContent = `${item.team_name} (${item.league_code})`;
-    div.append(i, s);
-    historyEl.append(div);
-  });
-}
-function openModal(team){
-  document.getElementById('mHead').textContent = team.team_name;
-  document.getElementById('mSub').textContent  = team.league_code;
-  document.getElementById('mLogo').src         = team.logo_url || "";
-  document.getElementById('mColor').style.background = team.primary_color || '#4f8cff';
-  document.getElementById('mColorHex').textContent   = team.primary_color || '#4f8cff';
-  document.getElementById('mStadium').textContent    = team.stadium || '—';
-  backdrop.style.display = 'flex';
-  requestAnimationFrame(()=> document.getElementById('modal').classList.add('show'));
-}
-function closeModal(){
-  document.getElementById('modal').classList.remove('show');
-  setTimeout(()=> backdrop.style.display='none', 150);
-}
-function saveHistory() { localStorage.setItem('clubHistory', JSON.stringify(history)); }
 
-// Boot
 fetch('./teams.json')
   .then(res => res.json())
   .then(data => {
