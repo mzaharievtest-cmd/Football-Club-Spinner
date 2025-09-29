@@ -1,21 +1,20 @@
 // Football Club Spinner — app.js
 // Upright, adaptive wheel; crisp HiDPI; no overlap; precise pointer snap.
-// Modal reveal/blur per toggle with robust inline blur + overlay fallback and working “Show …” buttons.
-//
-// Behavior:
-// - If Logo/Name/Stadium toggle is OFF, the modal blurs that field and shows a “Show …” button.
-// - Clicking “Show …” reveals that field (for the current modal session only).
-// - Wheel labels: single-line team name, optional stadium below; logo on the outer side;
-//   all upright and clipped to slice; adaptive sizes by slice arc length.
+// Modal reveal/blur per toggle with robust inline blur + overlay fallback.
+// FIX: When 2–3 fields are blurred, each “Show …” button now works reliably via explicit per-field state.
 
+// -------------------- App State --------------------
 let TEAMS = [];
 let currentAngle = 0; // radians
 let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
-let lastModalTeam = null; // current team shown in modal
 
-// -------- DOM --------
+// Modal state for current session (prevents race/observer issues)
+let lastModalTeam = null;
+let modalRevealState = { logo: false, name: false, stadium: false }; // set true when user clicks Show
+
+// -------------------- DOM --------------------
 const chips = document.getElementById('chips');
 const spinBtn = document.getElementById('spinBtn');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -43,7 +42,7 @@ const mStadium = document.getElementById('mStadium'); // stadium name
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx'); // reserved
 
-// -------- Constants / helpers --------
+// -------------------- Utils --------------------
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
 const DEBUG = false;
@@ -66,7 +65,7 @@ function luminance(hex){
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
 
-// -------- Image cache for wheel (modal uses <img> directly) --------
+// Image cache for wheel (modal uses <img> directly)
 const IMG_CACHE = new Map();
 function getLogo(url, onLoad) {
   if (!url) return null;
@@ -80,7 +79,7 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// -------- Single-line fitting helper (shrink before ellipsis) --------
+// -------- Single-line fitting helper --------
 function fitSingleLine(ctx, text, {
   maxWidth, targetPx, minPx = 9, maxPx = 28, weight = 800,
   fontFamily = 'Inter, system-ui, sans-serif'
@@ -98,7 +97,7 @@ function fitSingleLine(ctx, text, {
   return { text: (s || '') + '…', fontPx: minPx, truncated: true };
 }
 
-// -------- HiDPI sizing --------
+// -------------------- HiDPI sizing --------------------
 function sizeCanvas() {
   const rect = (wheel.parentElement || wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width || 640), 1200);
@@ -115,7 +114,7 @@ function sizeCanvas() {
   fx.style.height = cssSize + 'px';
 }
 
-// -------- Chips / History --------
+// -------------------- Chips / History --------------------
 function renderChips() {
   const leagues = [...new Set(TEAMS.map(t => t.league_code))].sort();
   chips.innerHTML = '';
@@ -152,7 +151,7 @@ function renderHistory() {
   });
 }
 
-// -------- Modal blur/reveal (robust: inline filter + overlay fallback) --------
+// -------------------- Modal blur/reveal (robust) --------------------
 function ensureRevealStyles() {
   if (document.getElementById('reveal-style')) return;
   const s = document.createElement('style');
@@ -164,20 +163,23 @@ function ensureRevealStyles() {
       border-radius: 10px; border: 1px solid rgba(90,161,255,.6);
       background: #152036; color: #fff; font-weight: 700; letter-spacing: .03em;
       cursor: pointer; user-select: none;
+      z-index: 5; position: relative;
     }
     #mHead + .reveal-btn { display: inline-block; margin-left: 0; }
-    .reveal-wrap { position: relative; display: inline-block; }
+    .reveal-wrap { position: relative; display: inline-block; z-index: 0; }
     .reveal-overlay {
       position: absolute; inset: 0;
       border-radius: inherit;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      background: transparent; /* no tint */
+      background: transparent;
       pointer-events: none;
+      z-index: 2;
     }
   `;
   document.head.appendChild(s);
 }
+
 function removeExistingRevealBtn(id) {
   const old = document.getElementById(id);
   if (old) old.remove();
@@ -212,14 +214,13 @@ function removeOverlay(el) {
 }
 function blurElement(el) {
   if (!el) return;
-  // Strong inline blur (applies to actual pixels). This hides the logo/image — not just tint.
+  // Real blur on pixels (not tint)
   el.style.setProperty('filter', 'blur(14px) saturate(0.9)', 'important');
   el.style.setProperty('-webkit-filter', 'blur(14px) saturate(0.9)', 'important');
-  el.style.transform = 'translateZ(0)'; // prevent edge bleed
+  el.style.transform = 'translateZ(0)';
   el.style.pointerEvents = 'none';
   el.setAttribute('aria-hidden', 'true');
-
-  // Fallback overlay (in case some CSS still cancels filters)
+  // Overlay fallback if filter is neutralized by external CSS
   requestAnimationFrame(() => {
     const cs = getComputedStyle(el);
     const f = (cs.filter || cs.webkitFilter || '').trim();
@@ -236,18 +237,19 @@ function unblurElement(el) {
   removeOverlay(el);
 }
 function placeButtonAfter(el, btn) {
-  // Put the button after the wrapping host to keep it clickable (overlay has pointer-events:none)
   const host = el?.parentElement?.classList.contains('reveal-wrap') ? el.parentElement : el;
   if (host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn);
   else el?.parentElement?.appendChild(btn);
 }
-function applyReveal(el, enabled, btnId, labelText) {
+
+// Use explicit per-field state keys so multiple blurred elements behave correctly
+function applyRevealByKey(key, el, enabled, btnId, labelText) {
   if (!el) return;
   removeExistingRevealBtn(btnId);
-  // Persist reveal within the current modal session
-  const wasRevealed = el.dataset.revealed === 'true';
 
-  if (enabled || wasRevealed) {
+  const revealed = !!modalRevealState[key];
+
+  if (enabled || revealed) {
     unblurElement(el);
     return;
   }
@@ -259,12 +261,15 @@ function applyReveal(el, enabled, btnId, labelText) {
   btn.type = 'button';
   btn.className = 'reveal-btn';
   btn.textContent = `Show ${labelText}`;
-  btn.addEventListener('click', () => {
-    // Reveal this one field (do not change the sidebar toggle)
-    el.dataset.revealed = 'true';
+  // NOTE: stopPropagation prevents outer listeners from interfering in some UIs
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    modalRevealState[key] = true; // persist for this modal session
     unblurElement(el);
     btn.remove();
-  });
+  }, { passive: false });
+
   placeButtonAfter(el, btn);
 }
 
@@ -281,23 +286,24 @@ function stopModalObserver() {
 }
 function updateModalRevealFromToggles() {
   if (!isModalOpen() || !lastModalTeam) return;
-  applyReveal(mLogo,   !!optLogo?.checked,   'revealLogoBtn',   'logo');
-  applyReveal(mHead,   !!optName?.checked,   'revealNameBtn',   'name');
-  applyReveal(mStadium,!!optStadium?.checked,'revealStadiumBtn','stadium');
+  applyRevealByKey('logo',    mLogo,    !!optLogo?.checked,    'revealLogoBtn',    'logo');
+  applyRevealByKey('name',    mHead,    !!optName?.checked,    'revealNameBtn',    'name');
+  applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
 }
 
-// -------- Modal open/close --------
+// -------------------- Modal open/close --------------------
 function openModal(team){
   ensureRevealStyles();
   lastModalTeam = team;
+  modalRevealState = { logo: false, name: false, stadium: false };
 
-  // Populate + reset per-session reveal flags
-  if (mHead)   { mHead.textContent = team.team_name || '—'; mHead.dataset.revealed = 'false'; }
+  // Populate content
+  if (mHead)   mHead.textContent = team.team_name || '—';
   if (mSub)    mSub.textContent = team.league_code || '';
-  if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; mLogo.dataset.revealed = 'false'; }
+  if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
   if (mColor)  mColor.style.background = team.primary_color || '#4f8cff';
   if (mColorHex) mColorHex.textContent = team.primary_color || '#4f8cff';
-  if (mStadium) { mStadium.textContent = team.stadium || '—'; mStadium.dataset.revealed = 'false'; }
+  if (mStadium) mStadium.textContent = team.stadium || '—';
 
   backdrop.style.display = 'flex';
   requestAnimationFrame(() => {
@@ -312,14 +318,14 @@ function closeModal(){
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
-// -------- Wheel drawing (upright single-line names, optional stadium, logo; no overlap) --------
+// -------------------- Wheel drawing --------------------
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
 
   const ctx = wheel.getContext('2d');
   const DPR = Math.max(1, window.devicePixelRatio || 1);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); // draw in CSS px
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
@@ -336,21 +342,20 @@ function drawWheel(){
   const radius = Math.min(W, H) * 0.48;
   const sliceAngle = TAU / N;
 
-  // 1) Wedges
-  for (let i = 0; i < N; i++) {
+  // Wedges
+  for (let i=0;i<N;i++){
     const t = data[i] || {};
-    const startAngle = i * sliceAngle;
-    const endAngle   = (i + 1) * sliceAngle;
-
+    const a0 = i * sliceAngle;
+    const a1 = (i + 1) * sliceAngle;
     ctx.beginPath();
     ctx.moveTo(0,0);
-    ctx.arc(0,0, radius, startAngle, endAngle);
+    ctx.arc(0,0, radius, a0, a1);
     ctx.closePath();
     ctx.fillStyle = t.primary_color || '#4f8cff';
     ctx.fill();
   }
 
-  // 2) Selected rim stroke
+  // Selected rim stroke
   if (selectedIdx >= 0 && selectedIdx < N) {
     const a0 = selectedIdx * sliceAngle;
     const a1 = (selectedIdx + 1) * sliceAngle;
@@ -363,20 +368,19 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // 3) Content
-  for (let i = 0; i < N; i++) {
+  // Content
+  for (let i=0;i<N;i++){
     const t = data[i] || {};
-    const wantLogo    = !!(optLogo?.checked && t.logo_url);
-    const wantName    = !!(optName?.checked && t.team_name);
-    const wantStadium = !!(optStadium?.checked && t.stadium);
-    if (!wantLogo && !wantName && !wantStadium) continue;
+    const showLogo    = !!(optLogo?.checked && t.logo_url);
+    const showName    = !!(optName?.checked && t.team_name);
+    const showStadium = !!(optStadium?.checked && t.stadium);
+    if (!showLogo && !showName && !showStadium) continue;
 
-    const startAngle = i * sliceAngle;
-    const endAngle   = (i + 1) * sliceAngle;
-    const midAngle   = (startAngle + endAngle) / 2;
-    const sliceArc   = radius * (endAngle - startAngle);
+    const a0 = i * sliceAngle;
+    const a1 = (i + 1) * sliceAngle;
+    const aMid = (a0 + a1) / 2;
+    const sliceArc = radius * (a1 - a0);
 
-    // Adaptive targets — keep names single-line
     const nameTargetPx    = clamp(11, 0.18 * sliceArc, 20);
     const stadiumTargetPx = clamp(10, 0.15 * sliceArc, 16);
     let   logoSize        = clamp(22, 0.32 * sliceArc, 52);
@@ -390,25 +394,25 @@ function drawWheel(){
     // Clip to wedge
     ctx.beginPath();
     ctx.moveTo(0,0);
-    ctx.arc(0,0, radius - 1, startAngle, endAngle);
+    ctx.arc(0,0, radius - 1, a0, a1);
     ctx.closePath();
     ctx.clip();
 
-    // Rotate to bisector and keep upright (flip left side)
-    ctx.rotate(midAngle);
-    const needFlip = Math.cos(midAngle) < 0;
+    // Rotate to bisector and keep upright
+    ctx.rotate(aMid);
+    const needFlip = Math.cos(aMid) < 0;
     if (needFlip) ctx.rotate(Math.PI);
     const sign = needFlip ? -1 : 1;
 
-    // Geometry: text from xText to just before logo; logo on rim side
+    // Geometry: text box then logo
     const xLogo = sign * (radius * 0.74);
     const xText = sign * (radius * 0.42);
-    const logoInner = wantLogo ? (xLogo - sign * (logoHalf + pad)) : sign * (radius * 0.86);
+    const logoInner = showLogo ? (xLogo - sign * (logoHalf + pad)) : sign * (radius * 0.86);
     const xBoxLeft = Math.min(xText, logoInner);
     const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
     // Text
-    if (wantName || wantStadium) {
+    if (showName || showStadium) {
       ctx.save();
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
@@ -416,7 +420,7 @@ function drawWheel(){
       let namePx = nameTargetPx;
       let yName = 0;
 
-      if (wantName) {
+      if (showName) {
         const heavy = (lum >= 0.35 && lum <= 0.45);
         const fitted = fitSingleLine(ctx, t.team_name || '', {
           maxWidth: maxTextWidth, targetPx: nameTargetPx, minPx: 9, maxPx: 22,
@@ -424,8 +428,8 @@ function drawWheel(){
         });
         namePx = fitted.fontPx;
 
-        const gap = wantStadium ? 4 : 0;
-        const totalH = wantStadium ? (namePx + gap + stadiumTargetPx) : namePx;
+        const gap = showStadium ? 4 : 0;
+        const totalH = showStadium ? (namePx + gap + stadiumTargetPx) : namePx;
         yName = -totalH/2 + namePx/2;
 
         ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
@@ -440,11 +444,11 @@ function drawWheel(){
         }
       }
 
-      if (wantStadium) {
+      if (showStadium) {
         const stadFit = fitSingleLine(ctx, t.stadium || '', {
           maxWidth: maxTextWidth, targetPx: stadiumTargetPx, minPx: 8, maxPx: 18, weight: 700
         });
-        const yStad = wantName ? (yName + namePx/2 + 4 + stadFit.fontPx/2) : 0;
+        const yStad = showName ? (yName + namePx/2 + 4 + stadFit.fontPx/2) : 0;
 
         ctx.font = `700 ${stadFit.fontPx}px Inter, system-ui, sans-serif`;
         ctx.strokeStyle = 'rgba(12,16,28,0.75)';
@@ -471,7 +475,7 @@ function drawWheel(){
     }
 
     // Logo
-    if (wantLogo) {
+    if (showLogo) {
       ctx.save();
       ctx.translate(xLogo, 0);
 
@@ -516,7 +520,7 @@ function drawWheel(){
   ctx.restore();
 }
 
-// -------- Result + Spin (precise pointer snap) --------
+// -------------------- Result + Spin (precise pointer snap) --------------------
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -567,7 +571,6 @@ function spin(){
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
 
-      // Snap center of chosen slice under pointer
       const centerAngle = idx * slice + slice/2;
       const snapDelta = mod(centerAngle - offset, TAU);
       currentAngle = mod(currentAngle + snapDelta, TAU);
@@ -582,7 +585,7 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
-// -------- Events / Boot --------
+// -------------------- Events / Boot --------------------
 function setupEventListeners() {
   chips.addEventListener('change', () => {
     selectedIdx = -1;
