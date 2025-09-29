@@ -1,21 +1,15 @@
-name: Fill stadiums into teams.json
+name: Fetch and fill stadiums into teams.json
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "data/stadiums.json"
-      - "data/stadiums-extra.json"
-      - "teams.json"
-      - "scripts/fill-stadiums.js"
-      - ".github/workflows/fill-stadiums.yml"
 
 permissions:
   contents: write
 
 jobs:
-  fill-stadiums:
+  fetch-and-fill-stadiums:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -25,19 +19,32 @@ jobs:
         with:
           node-version: 20
 
-      - name: Fill stadium values into teams.json
+      - name: Fetch stadiums from Wikidata (generate mapping)
+        run: node scripts/fetch-stadiums-wikidata.js
+
+      - name: Fill stadium values into teams.json (merge maps)
         run: node scripts/fill-stadiums.js --write
 
-      - name: Commit teams.json if updated
+      - name: Commit teams.json and generated mapping (if changed)
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet -- teams.json; then
-            echo "No stadium updates in teams.json."
-            exit 0
+          CHANGED=0
+          if ! git diff --quiet -- teams.json; then
+            git add teams.json
+            CHANGED=1
           fi
 
-          git add teams.json
-          git commit -m "chore: fill stadium values into teams.json"
-          git push
+          if [ -f data/stadiums.generated.json ] && ! git diff --quiet -- data/stadiums.generated.json; then
+            git add data/stadiums.generated.json
+            CHANGED=1
+          fi
+
+          if [ "$CHANGED" -eq 1 ]; then
+            git commit -m "chore: fetch and fill stadiums into teams.json"
+            git push
+          else
+            echo "No changes to commit."
+          fi
