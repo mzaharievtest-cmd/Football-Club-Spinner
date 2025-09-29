@@ -144,7 +144,7 @@
     "team_name": "RAAL La Louvière",
     "primary_color": "#3CA465",
     "logo_url": "logos1/vendor/Belgium - Jupiler Pro League/RAAL La Louvière.png",
-    "stadium": ""
+    "stadium": "Stade du Tivoli"
   },
   {
     "league_code": "BEL",
@@ -284,7 +284,7 @@
     "team_name": "Montana",
     "primary_color": "#EC4C34",
     "logo_url": "logos1/vendor/Bulgaria - efbet Liga/Montana.png",
-    "stadium": ""
+    "stadium": "Ogosta Stadium"
   },
   {
     "league_code": "BUL",
@@ -312,7 +312,7 @@
     "team_name": "1.FC Heidenheim 1846",
     "primary_color": "#E4041C",
     "logo_url": "logos1/vendor/Germany - Bundesliga/1.FC Heidenheim 1846.png",
-    "stadium": ""
+    "stadium": "Voith-Arena"
   },
   {
     "league_code": "BUN",
@@ -326,7 +326,7 @@
     "team_name": "1.FC Union Berlin",
     "primary_color": "#F3B114",
     "logo_url": "logos1/vendor/Germany - Bundesliga/1.FC Union Berlin.png",
-    "stadium": ""
+    "stadium": "Stadion An der Alten Försterei"
   },
   {
     "league_code": "BUN",
@@ -466,7 +466,7 @@
     "team_name": "HNK Vukovar 1991",
     "primary_color": "#04B4F3",
     "logo_url": "logos1/vendor/Croatia - SuperSport HNL/HNK Vukovar 1991.png",
-    "stadium": ""
+    "stadium": "Stadion u Borovu Naselju"
   },
   {
     "league_code": "CRO",
@@ -844,7 +844,7 @@
     "team_name": "AE Kifisias",
     "primary_color": "#2C3C7C",
     "logo_url": "logos1/vendor/Greece - Super League 1/AE Kifisias.png",
-    "stadium": ""
+    "stadium": "Georgios Kamaras Stadium"
   },
   {
     "league_code": "GRE",
@@ -858,7 +858,7 @@
     "team_name": "AEK Athens",
     "primary_color": "#FCD40C",
     "logo_url": "logos1/vendor/Greece - Super League 1/AEK Athens.png",
-    "stadium": ""
+    "stadium": "OPAP Arena"
   },
   {
     "league_code": "GRE",
@@ -872,14 +872,14 @@
     "team_name": "Aris Thessaloniki",
     "primary_color": "#FBD014",
     "logo_url": "logos1/vendor/Greece - Super League 1/Aris Thessaloniki.png",
-    "stadium": ""
+    "stadium": "Kleanthis Vikelidis Stadium"
   },
   {
     "league_code": "GRE",
     "team_name": "Asteras Aktor",
     "primary_color": "#F6D806",
     "logo_url": "logos1/vendor/Greece - Super League 1/Asteras Aktor.png",
-    "stadium": ""
+    "stadium": "Theodoros Kolokotronis Stadium"
   },
   {
     "league_code": "GRE",
@@ -893,14 +893,14 @@
     "team_name": "OFI Crete FC",
     "primary_color": "#7F7F80",
     "logo_url": "logos1/vendor/Greece - Super League 1/OFI Crete FC.png",
-    "stadium": ""
+    "stadium": "Theodoros Vardinogiannis Stadium"
   },
   {
     "league_code": "GRE",
     "team_name": "Olympiacos Piraeus",
     "primary_color": "#E42C32",
     "logo_url": "logos1/vendor/Greece - Super League 1/Olympiacos Piraeus.png",
-    "stadium": ""
+    "stadium": "Georgios Karaiskakis Stadium"
   },
   {
     "league_code": "GRE",
@@ -921,14 +921,14 @@
     "team_name": "Panserraikos",
     "primary_color": "#D40F17",
     "logo_url": "logos1/vendor/Greece - Super League 1/Panserraikos.png",
-    "stadium": ""
+    "stadium": "Serres Municipal Stadium"
   },
   {
     "league_code": "GRE",
     "team_name": "PAOK Thessaloniki",
     "primary_color": "#997C44",
     "logo_url": "logos1/vendor/Greece - Super League 1/PAOK Thessaloniki.png",
-    "stadium": ""
+    "stadium": "Toumba Stadium"
   },
   {
     "league_code": "GRE",
@@ -1012,7 +1012,7 @@
     "team_name": "Maccabi Bnei Reineh",
     "primary_color": "#1190D4",
     "logo_url": "logos1/vendor/Israel - Ligat ha'Al/Maccabi Bnei Reineh.png",
-    "stadium": ""
+    "stadium": "Green Stadium"
   },
   {
     "league_code": "ISR",
@@ -1208,7 +1208,7 @@
     "team_name": "FC Barcelona",
     "primary_color": "#E4BC04",
     "logo_url": "logos1/vendor/Spain - LaLiga/FC Barcelona.png",
-    "stadium": ""
+    "stadium": "Estadi Olímpic Lluís Companys"
   },
   {
     "league_code": "LLA",
@@ -1243,7 +1243,7 @@
     "team_name": "RCD Espanyol Barcelona",
     "primary_color": "#FC141C",
     "logo_url": "logos1/vendor/Spain - LaLiga/RCD Espanyol Barcelona.png",
-    "stadium": ""
+    "stadium": "Stage Front Stadium"
   },
   {
     "league_code": "LLA",
@@ -1425,7 +1425,7 @@
     "team_name": "Twente Enschede FC",
     "primary_color": "#E4051D",
     "logo_url": "logos1/vendor/Netherlands - Eredivisie/Twente Enschede FC.png",
-    "stadium": ""
+    "stadium": "De Grolsch Veste"
   },
   {
     "league_code": "NOR",
@@ -1488,7 +1488,7 @@
     "team_name": "Rosenborg BK",
     "primary_color": "#808080",
     "logo_url": "logos1/vendor/Norway - Eliteserien/Rosenborg BK.png",
-    "stadium": ""
+    "stadium": "Lerkendal Stadion"
   },
   {
     "league_code": "NOR",
@@ -1530,7 +1530,7 @@
     "team_name": "Vålerenga Fotball Elite",
     "primary_color": "#F45850",
     "logo_url": "logos1/vendor/Norway - Eliteserien/Vålerenga Fotball Elite.png",
-    "stadium": ""
+    "stadium": "Intility Arena"
   },
   {
     "league_code": "NOR",
@@ -1558,7 +1558,7 @@
     "team_name": "Cracovia",
     "primary_color": "#CC0E2E",
     "logo_url": "logos1/vendor/Poland - PKO BP Ekstraklasa/Cracovia.png",
-    "stadium": ""
+    "stadium": "Marshal Józef Piłsudski Stadium"
   },
   {
     "league_code": "POL",
@@ -1607,7 +1607,7 @@
     "team_name": "Legia Warszawa",
     "primary_color": "#EC2229",
     "logo_url": "logos1/vendor/Poland - PKO BP Ekstraklasa/Legia Warszawa.png",
-    "stadium": ""
+    "stadium": "Polish Army Stadium"
   },
   {
     "league_code": "POL",
@@ -1670,14 +1670,14 @@
     "team_name": "Avs Futebol",
     "primary_color": "#FCAB33",
     "logo_url": "logos1/vendor/Portugal - Liga Portugal/Avs Futebol.png",
-    "stadium": ""
+    "stadium": "Estádio do CD Aves"
   },
   {
     "league_code": "POR",
     "team_name": "Casa Pia AC",
     "primary_color": "#D8222A",
     "logo_url": "logos1/vendor/Portugal - Liga Portugal/Casa Pia AC.png",
-    "stadium": ""
+    "stadium": "Estádio Nacional (Jamor)"
   },
   {
     "league_code": "POR",
@@ -1712,7 +1712,7 @@
     "team_name": "FC Alverca",
     "primary_color": "#D63827",
     "logo_url": "logos1/vendor/Portugal - Liga Portugal/FC Alverca.png",
-    "stadium": ""
+    "stadium": "Estádio do Alverca"
   },
   {
     "league_code": "POR",
@@ -1796,7 +1796,7 @@
     "team_name": "ACSC FC Arges",
     "primary_color": "#85659A",
     "logo_url": "logos1/vendor/Romania - SuperLiga/ACSC FC Arges.png",
-    "stadium": ""
+    "stadium": "Stadionul Nicolae Dobrin"
   },
   {
     "league_code": "ROU",
@@ -1810,7 +1810,7 @@
     "team_name": "AFK Csikszereda Miercurea Ciuc",
     "primary_color": "#E40514",
     "logo_url": "logos1/vendor/Romania - SuperLiga/AFK Csikszereda Miercurea Ciuc.png",
-    "stadium": ""
+    "stadium": "Stadionul Municipal Miercurea Ciuc"
   },
   {
     "league_code": "ROU",
@@ -1852,7 +1852,7 @@
     "team_name": "FC Metaloglobus Bucharest",
     "primary_color": "#8CDC04",
     "logo_url": "logos1/vendor/Romania - SuperLiga/FC Metaloglobus Bucharest.png",
-    "stadium": ""
+    "stadium": "Stadionul Metaloglobus"
   },
   {
     "league_code": "ROU",
@@ -1929,21 +1929,21 @@
     "team_name": "CSKA Moscow",
     "primary_color": "#D8041C",
     "logo_url": "logos1/vendor/Russia - Premier Liga/CSKA Moscow.png",
-    "stadium": ""
+    "stadium": "VEB Arena"
   },
   {
     "league_code": "RUS",
     "team_name": "Dinamo Makhachkala",
     "primary_color": "#3C64F4",
     "logo_url": "logos1/vendor/Russia - Premier Liga/Dinamo Makhachkala.png",
-    "stadium": ""
+    "stadium": "Dynamo Stadium (Makhachkala)"
   },
   {
     "league_code": "RUS",
     "team_name": "Dynamo Moscow",
     "primary_color": "#0C5391",
     "logo_url": "logos1/vendor/Russia - Premier Liga/Dynamo Moscow.png",
-    "stadium": ""
+    "stadium": "VTB Arena"
   },
   {
     "league_code": "RUS",
@@ -2251,7 +2251,7 @@
     "team_name": "FK IMT Belgrad",
     "primary_color": "#F03030",
     "logo_url": "logos1/vendor/Serbia - Super liga Srbije/FK IMT Belgrad.png",
-    "stadium": ""
+    "stadium": "Stadion FK IMT"
   },
   {
     "league_code": "SRB",
@@ -2321,7 +2321,7 @@
     "team_name": "FK TSC Backa Topola",
     "primary_color": "#0674AB",
     "logo_url": "logos1/vendor/Serbia - Super liga Srbije/FK TSC Backa Topola.png",
-    "stadium": ""
+    "stadium": "TSC Arena"
   },
   {
     "league_code": "SRB",
@@ -2349,7 +2349,7 @@
     "team_name": "Zeleznicar Pancevo",
     "primary_color": "#B44C1C",
     "logo_url": "logos1/vendor/Serbia - Super liga Srbije/Zeleznicar Pancevo.png",
-    "stadium": ""
+    "stadium": "SC Mladost Stadium"
   },
   {
     "league_code": "SUI",
@@ -2475,7 +2475,7 @@
     "team_name": "Halmstads BK",
     "primary_color": "#F4CD12",
     "logo_url": "logos1/vendor/Sweden - Allsvenskan/Halmstads BK.png",
-    "stadium": ""
+    "stadium": "Örjans Vall"
   },
   {
     "league_code": "SWE",
@@ -2531,7 +2531,7 @@
     "team_name": "Malmö FF",
     "primary_color": "#048CCC",
     "logo_url": "logos1/vendor/Sweden - Allsvenskan/Malmö FF.png",
-    "stadium": ""
+    "stadium": "Eleda Stadion"
   },
   {
     "league_code": "SWE",
@@ -2545,7 +2545,7 @@
     "team_name": "Östers IF",
     "primary_color": "#0474AB",
     "logo_url": "logos1/vendor/Sweden - Allsvenskan/Östers IF.png",
-    "stadium": ""
+    "stadium": "Visma Arena"
   },
   {
     "league_code": "TUR",
@@ -2587,7 +2587,7 @@
     "team_name": "Eyüpspor",
     "primary_color": "#F5D005",
     "logo_url": "logos1/vendor/Türkiye - Süper Lig/Eyüpspor.png",
-    "stadium": ""
+    "stadium": "Eyüp Stadium"
   },
   {
     "league_code": "TUR",
@@ -2629,7 +2629,7 @@
     "team_name": "Göztepe",
     "primary_color": "#FCC804",
     "logo_url": "logos1/vendor/Türkiye - Süper Lig/Göztepe.png",
-    "stadium": ""
+    "stadium": "Gürsel Aksel Stadium"
   },
   {
     "league_code": "TUR",
@@ -2685,14 +2685,14 @@
     "team_name": "Epicentr Kamyanets Podilskyi",
     "primary_color": "#2C547C",
     "logo_url": "logos1/vendor/Ukraine - Premier Liga/Epicentr Kamyanets-Podilskyi.png",
-    "stadium": ""
+    "stadium": "Podillya Stadium"
   },
   {
     "league_code": "UKR",
     "team_name": "FC Kudrivka",
     "primary_color": "#1C4FA4",
     "logo_url": "logos1/vendor/Ukraine - Premier Liga/FC Kudrivka.png",
-    "stadium": ""
+    "stadium": "Yunist Stadium (Chernihiv Oblast)"
   },
   {
     "league_code": "UKR",
@@ -2727,7 +2727,7 @@
     "team_name": "LNZ Cherkasy",
     "primary_color": "#30B5E7",
     "logo_url": "logos1/vendor/Ukraine - Premier Liga/LNZ Cherkasy.png",
-    "stadium": ""
+    "stadium": "Cherkasy Arena"
   },
   {
     "league_code": "UKR",
@@ -2748,7 +2748,7 @@
     "team_name": "Obolon Kyiv",
     "primary_color": "#E43237",
     "logo_url": "logos1/vendor/Ukraine - Premier Liga/Obolon Kyiv.png",
-    "stadium": ""
+    "stadium": "Obolon Arena"
   },
   {
     "league_code": "UKR",
@@ -2769,7 +2769,7 @@
     "team_name": "SC Poltava",
     "primary_color": "#CC042C",
     "logo_url": "logos1/vendor/Ukraine - Premier Liga/SC Poltava.png",
-    "stadium": ""
+    "stadium": "Lokomotyv Stadium (Poltava)"
   },
   {
     "league_code": "UKR",
