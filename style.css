@@ -34,7 +34,7 @@ body {
     radial-gradient(1400px 840px at 30% -20%, rgba(90,161,255,.35) 0, transparent 50%),
     radial-gradient(1100px 880px at 90% -10%, rgba(34,211,238,.22) 0, transparent 45%),
     linear-gradient(180deg, #05070f, #060914 28%, #08101e 100%);
-  background-attachment: fixed;
+  background-attachment: fixed; /* seamless */
   overflow-x: hidden;
 }
 
@@ -364,6 +364,32 @@ canvas#wheel {
     border-top-width: 20px;
   }
 }
+
+/* Center SPIN! button over the wheel */
+.spin-fab {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(84px, 14vw, 130px);
+  height: clamp(84px, 14vw, 130px);
+  border-radius: 999px;
+  border: 2px solid rgba(120, 200, 255, 0.55);
+  background: radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
+  color: #f4f7ff;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 0 30px rgba(90,161,255,.15);
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+  pointer-events: auto;
+}
+.spin-fab:hover { transform: translate(-50%, -50%) scale(1.03); border-color: #22d3ee; }
+.spin-fab:active { transform: translate(-50%, -50%) scale(0.98); }
+.spin-fab:disabled { opacity: .7; cursor: wait; }
 
 /* =========================
    Modal
