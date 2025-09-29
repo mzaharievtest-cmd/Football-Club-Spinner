@@ -347,14 +347,14 @@
     "team_name": "Bayern Munich",
     "primary_color": "#EC0A3F",
     "logo_url": "logos1/vendor/Germany - Bundesliga/Bayern Munich.png",
-    "stadium": ""
+    "stadium": "Allianz Arena"
   },
   {
     "league_code": "BUN",
     "team_name": "Borussia Dortmund",
     "primary_color": "#F9E004",
     "logo_url": "logos1/vendor/Germany - Bundesliga/Borussia Dortmund.png",
-    "stadium": ""
+    "stadium": "Signal Iduna Park"
   },
   {
     "league_code": "BUN",
@@ -711,7 +711,7 @@
     "team_name": "Arsenal FC",
     "primary_color": "#EC0506",
     "logo_url": "logos1/vendor/England - Premier League/Arsenal FC.png",
-    "stadium": ""
+    "stadium": "Emirates Stadium"
   },
   {
     "league_code": "EPL",
@@ -746,7 +746,7 @@
     "team_name": "Chelsea FC",
     "primary_color": "#FC4444",
     "logo_url": "logos1/vendor/England - Premier League/Chelsea FC.png",
-    "stadium": ""
+    "stadium": "Stamford Bridge"
   },
   {
     "league_code": "EPL",
@@ -781,21 +781,21 @@
     "team_name": "Liverpool FC",
     "primary_color": "#E41C24",
     "logo_url": "logos1/vendor/England - Premier League/Liverpool FC.png",
-    "stadium": ""
+    "stadium": "Anfield"
   },
   {
     "league_code": "EPL",
     "team_name": "Manchester City",
     "primary_color": "#EEC854",
     "logo_url": "logos1/vendor/England - Premier League/Manchester City.png",
-    "stadium": ""
+    "stadium": "Etihad Stadium"
   },
   {
     "league_code": "EPL",
     "team_name": "Manchester United",
     "primary_color": "#F3A604",
     "logo_url": "logos1/vendor/England - Premier League/Manchester United.png",
-    "stadium": ""
+    "stadium": "Old Trafford"
   },
   {
     "league_code": "EPL",
@@ -1264,7 +1264,7 @@
     "team_name": "Real Madrid",
     "primary_color": "#F8BC04",
     "logo_url": "logos1/vendor/Spain - LaLiga/Real Madrid.png",
-    "stadium": ""
+    "stadium": "Santiago Bernabéu"
   },
   {
     "league_code": "LLA",
