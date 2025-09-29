@@ -1,5 +1,5 @@
 // Football Club Spinner — app.js
-// Optimized: performance-aware rendering, EPL-only default, quick picks, and full league labels.
+// Perf-aware, EPL default, always show selected count, Top-5 first + Show more.
 
 let TEAMS = [];
 let currentAngle = 0; // radians
@@ -12,7 +12,11 @@ let lastModalTeam = null;
 let modalRevealState = { logo: false, name: false, stadium: false };
 
 // -------------------- DOM --------------------
-const chips = document.getElementById('chips');
+const chipsWrap = document.getElementById('chips');
+const chipsTop = document.getElementById('chipsTop');
+const chipsMore = document.getElementById('chipsMore');
+const toggleMore = document.getElementById('toggleMore');
+
 const spinBtn = document.getElementById('spinBtn');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 
@@ -20,7 +24,6 @@ const optName = document.getElementById('optName');
 const optLogo = document.getElementById('optLogo');
 const optStadium = document.getElementById('optStadium');
 
-// Optional current selection (we removed the block; guard all uses)
 const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
 
@@ -35,49 +38,32 @@ const mSub = document.getElementById('mSub');
 const mLogo = document.getElementById('mLogo');
 const mStadium = document.getElementById('mStadium');
 
-// Quick picks and performance tip
-const qpAll = document.getElementById('qpAll');
+// Quick picks and tip
+const qpAll  = document.getElementById('qpAll');
 const qpNone = document.getElementById('qpNone');
-const qpEPL = document.getElementById('qpEPL');
+const qpEPL  = document.getElementById('qpEPL');
 const qpTop5 = document.getElementById('qpTop5');
 const perfTip = document.getElementById('perfTip');
 
 // Canvases
 const wheel = document.getElementById('wheel');
-const fx = document.getElementById('fx'); // reserved
+const fx = document.getElementById('fx');
 
-// -------------------- Utils --------------------
 const TAU = Math.PI * 2;
-const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
-const DEBUG = false;
-
+const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 const mod = (x, m) => ((x % m) + m) % m;
 const isModalOpen = () => backdrop && backdrop.style.display === 'flex';
 
-// Performance thresholds (tuned for smoothness)
+// Performance thresholds
 const PERF = {
-  hideLogosThreshold: 80,   // when N >=, skip logos (big boost)
-  hideTextThreshold: 140,   // when N >=, skip all text
-  minTextWidth: 44,         // px; if slice text box narrower, skip that text
-  minLogoBox: 28            // px; if logo circle smaller than this, skip logo
+  hideLogosThreshold: 80,
+  hideTextThreshold: 140,
+  minTextWidth: 44,
+  minLogoBox: 28
 };
 
-function textColorFor(hex){
-  if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
-  hex = hex.replace('#','');
-  const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
-  const L = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
-  return L > 0.35 ? '#0b0f17' : '#fff';
-}
-function luminance(hex){
-  if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return 0;
-  hex = hex.replace('#','');
-  const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
-  return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
-}
-
-// -------------------- League label mapping (25 leagues) --------------------
+// League labels (25)
 const LEAGUE_LABELS = {
   AUT: "Austrian Bundesliga",
   BEL: "Jupiler Pro League",
@@ -106,7 +92,6 @@ const LEAGUE_LABELS = {
   UKR: "Ukrainian Premier League"
 };
 
-// -------------------- Image cache for wheel (modal uses <img> directly) --------------------
 const IMG_CACHE = new Map();
 function getLogo(url, onLoad) {
   if (!url) return null;
@@ -120,11 +105,22 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// -------- Single-line fitting helper --------
-function fitSingleLine(ctx, text, {
-  maxWidth, targetPx, minPx = 9, maxPx = 28, weight = 800,
-  fontFamily = 'Inter, system-ui, sans-serif'
-}) {
+function textColorFor(hex){
+  if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
+  hex = hex.replace('#','');
+  const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
+  const L = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
+  return L > 0.35 ? '#0b0f17' : '#fff';
+}
+function luminance(hex){
+  if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return 0;
+  hex = hex.replace('#','');
+  const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
+  return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
+}
+
+// -------- Single-line fitting --------
+function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx = 9, maxPx = 28, weight = 800, fontFamily = 'Inter, system-ui, sans-serif' }) {
   let px = clamp(minPx, Math.round(targetPx), maxPx);
   ctx.font = `${weight} ${px}px ${fontFamily}`;
   if (ctx.measureText(text).width <= maxWidth) return { text, fontPx: px, truncated: false };
@@ -138,7 +134,7 @@ function fitSingleLine(ctx, text, {
   return { text: (s || '') + '…', fontPx: minPx, truncated: true };
 }
 
-// -------------------- HiDPI sizing --------------------
+// -------------------- Sizing --------------------
 function sizeCanvas() {
   const rect = (wheel.parentElement || wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width || 640), 1200);
@@ -156,25 +152,35 @@ function sizeCanvas() {
 }
 
 // -------------------- Chips / History --------------------
-function renderChips() {
-  const leagues = [...new Set(TEAMS.map(t => t.league_code))].sort();
-  chips.innerHTML = '';
-  leagues.forEach(code => {
-    const full = LEAGUE_LABELS[code] || code;
-    const label = document.createElement('label');
-    label.className = 'chip';
-    // Default: only EPL checked
-    const checked = (code === 'EPL');
-    label.innerHTML = `
-      <input type="checkbox" value="${code}" ${checked ? 'checked aria-checked="true"' : ''} aria-label="${full}">
-      <span class="chip-text" title="${full}">${full}</span>
-    `;
-    chips.appendChild(label);
-  });
+const TOP5 = ['EPL','SA','BUN','L1','LLA']; // Order as requested
+
+function makeChip(code, checked) {
+  const full = LEAGUE_LABELS[code] || code;
+  const label = document.createElement('label');
+  label.className = 'chip';
+  label.innerHTML = `
+    <input type="checkbox" value="${code}" ${checked ? 'checked aria-checked="true"' : ''} aria-label="${full}">
+    <span class="chip-text" title="${full}">${full}</span>
+  `;
+  return label;
 }
+
+function renderChips() {
+  const allCodes = [...new Set(TEAMS.map(t => t.league_code))];
+
+  const topCodes = TOP5.filter(c => allCodes.includes(c));
+  const moreCodes = allCodes.filter(c => !topCodes.includes(c)).sort();
+
+  chipsTop.innerHTML = '';
+  chipsMore.innerHTML = '';
+
+  topCodes.forEach(code => chipsTop.appendChild(makeChip(code, code === 'EPL')));
+  moreCodes.forEach(code => chipsMore.appendChild(makeChip(code, false)));
+}
+
 function setCheckedCodes(codes = []) {
   const set = new Set(codes);
-  chips.querySelectorAll('input[type="checkbox"]').forEach(i => {
+  chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => {
     i.checked = set.has(i.value);
     i.setAttribute('aria-checked', i.checked ? 'true' : 'false');
   });
@@ -183,9 +189,11 @@ function setCheckedCodes(codes = []) {
   const hasAny = getFiltered().length > 0;
   spinBtn.disabled = !hasAny;
   if (!hasAny && currentText) currentText.textContent = 'Please select at least one league.';
+  updateSelectionBanner();
 }
+
 function getFiltered() {
-  const active = Array.from(chips.querySelectorAll('input:checked')).map(i => i.value);
+  const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
   return TEAMS.filter(t => active.includes(t.league_code));
 }
 function saveHistory() { localStorage.setItem('clubHistory', JSON.stringify(history)); }
@@ -211,44 +219,26 @@ function renderHistory() {
   });
 }
 
-// -------------------- Modal blur/reveal (robust) --------------------
+// -------------------- Modal blur/reveal --------------------
 function ensureRevealStyles() {
   if (document.getElementById('reveal-style')) return;
   const s = document.createElement('style');
   s.id = 'reveal-style';
   s.textContent = `
-    .reveal-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      margin-top: 8px; margin-left: 10px; padding: 8px 12px;
-      border-radius: 10px; border: 1px solid rgba(90,161,255,.6);
-      background: #152036; color: #fff; font-weight: 700; letter-spacing: .03em;
-      cursor: pointer; user-select: none;
-      z-index: 999; position: relative;
-    }
-    #mHead + .reveal-btn { display: inline-block; margin-left: 0; }
-    .reveal-wrap { position: relative; display: inline-block; z-index: 0; }
-    .reveal-overlay {
-      position: absolute; inset: 0;
-      border-radius: inherit;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      background: transparent;
-      pointer-events: none;
-      z-index: 2;
-    }
+    .reveal-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:700;letter-spacing:.03em;cursor:pointer;user-select:none;z-index:999;position:relative}
+    #mHead + .reveal-btn{display:inline-block;margin-left:0}
+    .reveal-wrap{position:relative;display:inline-block;z-index:0}
+    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none;z-index:2}
   `;
   document.head.appendChild(s);
 }
-
-// ... blur/unblur helpers omitted for brevity (unchanged from your current file) ...
 function removeExistingRevealBtn(id){ const old=document.getElementById(id); if(old) old.remove(); }
-function ensureWrapped(el){ if(!el||!el.parentElement) return null; if(el.parentElement.classList.contains('reveal-wrap')) return el.parentElement; const w=document.createElement('span'); w.className='reveal-wrap'; const cs=getComputedStyle(el); if(cs.borderRadius) w.style.borderRadius=cs.borderRadius; el.parentElement.insertBefore(w,el); w.appendChild(el); return w; }
-function addOverlay(el){ const w=ensureWrapped(el); if(!w) return; if(!w.querySelector('.reveal-overlay')){ const ov=document.createElement('span'); ov.className='reveal-overlay'; w.appendChild(ov); } }
-function removeOverlay(el){ if(!el||!el.parentElement) return; const w=el.parentElement; if(w.classList.contains('reveal-wrap')){ const ov=w.querySelector('.reveal-overlay'); if(ov) ov.remove(); } }
+function ensureWrapped(el){ if(!el||!el.parentElement) return null; if(el.parentElement.classList.contains('reveal-wrap')) return el.parentElement; const wrap=document.createElement('span'); wrap.className='reveal-wrap'; const cs=getComputedStyle(el); if(cs.borderRadius) wrap.style.borderRadius=cs.borderRadius; el.parentElement.insertBefore(wrap,el); wrap.appendChild(el); return wrap; }
+function addOverlay(el){ const wrap=ensureWrapped(el); if(!wrap) return; if(!wrap.querySelector('.reveal-overlay')){ const ov=document.createElement('span'); ov.className='reveal-overlay'; wrap.appendChild(ov); } }
+function removeOverlay(el){ if(!el||!el.parentElement) return; const wrap=el.parentElement; if(wrap.classList.contains('reveal-wrap')){ const ov=wrap.querySelector('.reveal-overlay'); if(ov) ov.remove(); } }
 function blurElement(el){ if(!el) return; el.style.setProperty('filter','blur(14px) saturate(0.9)','important'); el.style.setProperty('-webkit-filter','blur(14px) saturate(0.9)','important'); el.style.transform='translateZ(0)'; el.style.pointerEvents='none'; el.setAttribute('aria-hidden','true'); requestAnimationFrame(()=>{ const cs=getComputedStyle(el); const f=(cs.filter||cs.webkitFilter||'').trim(); if(!f||f==='none') addOverlay(el); }); }
 function unblurElement(el){ if(!el) return; el.style.removeProperty('filter'); el.style.removeProperty('-webkit-filter'); el.style.transform=''; el.style.pointerEvents=''; el.setAttribute('aria-hidden','false'); removeOverlay(el); }
-function placeButtonAfter(el,btn){ const host=el?.parentElement?.classList.contains('reveal-wrap')?el.parentElement:el; if(host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn); else el?.parentElement?.appendChild(btn); }
-
+function placeButtonAfter(el,btn){ const host=el?.parentElement?.classList.contains('reveal-wrap') ? el.parentElement : el; if (host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn); else el?.parentElement?.appendChild(btn); }
 function applyRevealByKey(key, el, enabled, btnId, labelText) {
   if (!el) return;
   removeExistingRevealBtn(btnId);
@@ -261,7 +251,6 @@ function applyRevealByKey(key, el, enabled, btnId, labelText) {
   btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); modalRevealState[key] = true; unblurElement(el); btn.remove(); }, { passive: false });
   placeButtonAfter(el, btn);
 }
-
 function updateModalRevealFromToggles() {
   if (!isModalOpen() || !lastModalTeam) return;
   applyRevealByKey('logo',    mLogo,    !!optLogo?.checked,    'revealLogoBtn',    'logo');
@@ -290,40 +279,73 @@ function openModal(team){
 }
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=> backdrop.style.display='none', 150); }
 
-// -------------------- Wheel drawing (performance-aware) --------------------
-function updatePerfBanner({ hideText, hideLogos, N }) {
-  if (!perfTip) return;
-  if (!hideText && !hideLogos) { perfTip.hidden = true; perfTip.textContent = ''; return; }
-  let msg = 'Performance mode: ';
-  const bits = [];
-  if (hideText) bits.push('text hidden');
-  if (hideLogos) bits.push('logos hidden');
-  bits.push(`(${N} teams)`);
-  msg += bits.join(' · ');
-  perfTip.hidden = false;
-  perfTip.textContent = msg;
+// -------------------- Selection banner --------------------
+function updateSelectionBanner(extra = {}) {
+  const N = getFiltered().length;
+  const parts = [`${N} teams selected`];
+  if (extra.hideText) parts.push('text hidden for speed');
+  if (extra.hideLogos) parts.push('logos hidden for speed');
+  perfTip.textContent = parts.join(' · ');
+}
+
+// -------------------- Drawing --------------------
+function drawGradientIdle(ctx, W, H) {
+  const DPR = Math.max(1, window.devicePixelRatio || 1);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0,0,W,H);
+
+  ctx.save();
+  ctx.translate(W/2, H/2);
+
+  const radius = Math.min(W, H) * 0.48;
+
+  // Radial gradient ring
+  const g = ctx.createRadialGradient(0,0, radius*0.1, 0,0, radius);
+  g.addColorStop(0.00, '#1A2C5A');
+  g.addColorStop(0.35, '#21386F');
+  g.addColorStop(0.65, '#0E2A57');
+  g.addColorStop(1.00, '#0B1B38');
+
+  ctx.beginPath();
+  ctx.arc(0,0, radius, 0, TAU);
+  ctx.closePath();
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  // Subtle concentric lines
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  for (let i=1;i<=5;i++){
+    ctx.beginPath();
+    ctx.arc(0,0, radius*(i/5), 0, TAU);
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 function drawWheel(){
   const data = getFiltered();
-  const N = data.length || 1;
-
-  // Auto performance toggles
-  const hideLogos = N >= PERF.hideLogosThreshold;
-  const hideText = N >= PERF.hideTextThreshold;
-
-  updatePerfBanner({ hideText, hideLogos, N });
+  const N = data.length;
 
   const ctx = wheel.getContext('2d');
   const DPR = Math.max(1, window.devicePixelRatio || 1);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-  // Slightly lower smoothing if extremely dense to boost perf
-  ctx.imageSmoothingEnabled = !hideText;
-  ctx.imageSmoothingQuality = hideText ? 'low' : 'high';
-
   const W = wheel.width / DPR;
   const H = wheel.height / DPR;
+
+  if (N === 0) {
+    drawGradientIdle(ctx, W, H);
+    updateSelectionBanner();
+    return;
+  }
+
+  const hideLogos = N >= PERF.hideLogosThreshold;
+  const hideText = N >= PERF.hideTextThreshold;
+  updateSelectionBanner({ hideText, hideLogos });
+
+  ctx.imageSmoothingEnabled = !hideText;
+  ctx.imageSmoothingQuality = hideText ? 'low' : 'high';
 
   ctx.clearRect(0,0,W,H);
   ctx.save();
@@ -349,7 +371,7 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // Selected rim stroke (turn off heavy strokes in dense mode)
+  // Selected rim stroke (skip if ultra dense)
   if (!hideText && selectedIdx >= 0 && selectedIdx < N) {
     const a0 = selectedIdx * sliceAngle;
     const a1 = (selectedIdx + 1) * sliceAngle;
@@ -362,7 +384,7 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // Content (logos/text) skipped entirely in hideText mode
+  // Content
   if (!hideText || !hideLogos) {
     for (let i = 0; i < N; i++) {
       const t = data[i] || {};
@@ -372,7 +394,6 @@ function drawWheel(){
       const aMid = (a0 + a1) / 2;
       const sliceArc = radius * (a1 - a0);
 
-      // Derived sizes
       const nameTargetPx    = clamp(11, 0.18 * sliceArc, 20);
       const stadiumTargetPx = clamp(10, 0.15 * sliceArc, 16);
       let   logoSize        = clamp(22, 0.32 * sliceArc, 52);
@@ -383,32 +404,27 @@ function drawWheel(){
       const lum = luminance(t.primary_color);
 
       ctx.save();
-      // Clip to wedge
       ctx.beginPath();
       ctx.moveTo(0,0);
       ctx.arc(0,0, radius - 1, a0, a1);
       ctx.closePath();
       ctx.clip();
 
-      // Rotate to bisector and keep upright
       ctx.rotate(aMid);
       const needFlip = Math.cos(aMid) < 0;
       if (needFlip) ctx.rotate(Math.PI);
       const sign = needFlip ? -1 : 1;
 
-      // Geometry: text box then logo
       const xLogo = sign * (radius * 0.74);
       const xText = sign * (radius * 0.42);
       const logoInner = xLogo - sign * (logoHalf + pad);
       const xBoxLeft = Math.min(xText, logoInner);
       const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
-      // Decide what to render this slice
       const canShowName    = !hideText && optName?.checked && t.team_name && maxTextWidth >= PERF.minTextWidth;
       const canShowStadium = !hideText && optStadium?.checked && t.stadium && maxTextWidth >= PERF.minTextWidth;
       const canShowLogo    = !hideLogos && optLogo?.checked && t.logo_url && (logoHalf * 2) >= PERF.minLogoBox;
 
-      // Text
       if (canShowName || canShowStadium) {
         ctx.save();
         ctx.textAlign = 'left';
@@ -430,7 +446,7 @@ function drawWheel(){
           yName = -totalH/2 + namePx/2;
 
           ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
-          ctx.strokeStyle = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.65)'; // lighter stroke in perf mode
+          ctx.strokeStyle = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.65)';
           ctx.lineWidth = Math.max(1, Math.round(namePx/10));
           ctx.fillStyle = fg;
           ctx.strokeText(fitted.text, xBoxLeft, yName);
@@ -454,12 +470,10 @@ function drawWheel(){
         ctx.restore();
       }
 
-      // Logo
       if (canShowLogo) {
         ctx.save();
         ctx.translate(xLogo, 0);
 
-        // Cheaper shadow for perf
         if (N < PERF.hideLogosThreshold) {
           ctx.shadowColor = 'rgba(0,0,0,0.5)';
           ctx.shadowBlur = 4;
@@ -497,14 +511,14 @@ function drawWheel(){
         ctx.restore();
       }
 
-      ctx.restore(); // clip + rotations
+      ctx.restore();
     }
   }
 
   ctx.restore();
 }
 
-// -------------------- Result + Spin (precise pointer snap) --------------------
+// -------------------- Result + Spin --------------------
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -537,7 +551,7 @@ function spin(){
   const N = data.length;
   const slice = TAU / N;
 
-  const extraTurns  = 6 + Math.floor(Math.random()*3); // 6..8
+  const extraTurns  = 6 + Math.floor(Math.random()*3);
   const finalOffset = Math.random() * TAU;
   const targetAngle = TAU * extraTurns + finalOffset;
 
@@ -557,7 +571,6 @@ function spin(){
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
 
-      // Snap the chosen slice center under the pointer
       const centerAngle = idx * slice + slice/2;
       const snapDelta = mod(centerAngle - offset, TAU);
       currentAngle = mod(currentAngle + snapDelta, TAU);
@@ -574,25 +587,39 @@ function spin(){
 
 // -------------------- Events / Boot --------------------
 function setupEventListeners() {
-  chips.addEventListener('change', () => {
+  // Delegated change handler for both chip containers
+  chipsWrap.addEventListener('change', () => {
     selectedIdx = -1;
     drawWheel();
-    if (getFiltered().length === 0) {
-      if (currentText) currentText.textContent = 'Please select at least one league.';
-      spinBtn.disabled = true;
+    const len = getFiltered().length;
+    spinBtn.disabled = len === 0;
+    if (len === 0 && currentText) currentText.textContent = 'Please select at least one league.';
+    updateSelectionBanner();
+  });
+
+  // Toggle "more leagues"
+  toggleMore.addEventListener('click', () => {
+    const hidden = chipsMore.hasAttribute('hidden');
+    if (hidden) {
+      chipsMore.removeAttribute('hidden');
+      toggleMore.textContent = 'Show fewer leagues';
+      toggleMore.setAttribute('aria-expanded', 'true');
     } else {
-      if (currentText) currentText.textContent = '';
-      spinBtn.disabled = false;
+      chipsMore.setAttribute('hidden', '');
+      toggleMore.textContent = 'Show more leagues';
+      toggleMore.setAttribute('aria-expanded', 'false');
     }
   });
 
-  // Quick picks
-  qpAll.onclick  = () => setCheckedCodes([...new Set(TEAMS.map(t=>t.league_code))]);
-  qpNone.onclick = () => setCheckedCodes([]);
-  qpEPL.onclick  = () => setCheckedCodes(['EPL']);
-  qpTop5.onclick = () => setCheckedCodes(['EPL','LLA','SA','BUN','L1']);
+  // Quick picks with active styling
+  function setActive(btn) {
+    [qpAll, qpNone, qpEPL, qpTop5].forEach(b => b.classList.toggle('active', b === btn));
+  }
+  qpAll.onclick  = () => { setCheckedCodes([...new Set(TEAMS.map(t=>t.league_code))]); setActive(qpAll); };
+  qpNone.onclick = () => { setCheckedCodes([]); setActive(qpNone); };
+  qpEPL.onclick  = () => { setCheckedCodes(['EPL']); setActive(qpEPL); };
+  qpTop5.onclick = () => { setCheckedCodes(TOP5.filter(c => TEAMS.some(t=>t.league_code===c))); setActive(qpTop5); };
 
-  // Redraw wheel + refresh modal reveal when toggles change
   optName.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
   optLogo.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
   optStadium.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
@@ -615,15 +642,16 @@ function setupEventListeners() {
   }, { passive: true });
 }
 
-// Use a cache-buster so browsers don't hold on to stale teams.json
+// Cache-busted teams.json to avoid stale
 fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
   .then(data => {
     TEAMS = data;
     ensureRevealStyles();
-    renderChips();             // will default to EPL only
+    renderChips();              // EPL checked by default
     renderHistory();
     sizeCanvas();
+    setCheckedCodes(['EPL']);   // enforce EPL-only on first load
     drawWheel();
     setupEventListeners();
   })
