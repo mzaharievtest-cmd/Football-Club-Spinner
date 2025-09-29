@@ -11,18 +11,25 @@ const MAP_FILES = [
   path.resolve(ROOT, 'data', 'stadiums-extra.json') // optional
 ];
 
-function exists(p) { try { fs.accessSync(p, fs.constants.FOK ?? fs.constants.F_OK); return true; } catch { return false; } }
+function exists(p) { try { fs.accessSync(p, fs.constants.F_OK); return true; } catch { return false; } }
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 
 function norm(s) {
   return String(s || '')
     .normalize('NFD').replace(/\p{Diacritic}/gu, '')
-    .toLowerCase().replace(/&/g, 'and')
+    .toLowerCase()
+    .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, ' ')
-    .trim().replace(/\s+/g, ' ');
+    .trim()
+    .replace(/\s+/g, ' ');
 }
-function key(leagueCode, teamName) { return `${String(leagueCode||'').toUpperCase()}:${norm(teamName)}`; }
-function isEmpty(v) { const s = String(v ?? '').trim(); return s === '' || s === '-' || s === '—'; }
+function key(leagueCode, teamName) {
+  return `${String(leagueCode || '').toUpperCase()}:${norm(teamName)}`;
+}
+function isEmpty(val) {
+  const s = String(val ?? '').trim();
+  return s === '' || s === '-' || s === '—';
+}
 
 function loadMap() {
   const merged = {};
@@ -55,7 +62,9 @@ function main() {
 
   const map = loadMap();
   const fallback = {};
-  for (const [mk, mv] of Object.entries(map)) if (mk.startsWith('team:')) fallback[mk] = mv;
+  for (const [mk, mv] of Object.entries(map)) {
+    if (mk.startsWith('team:')) fallback[mk] = mv;
+  }
 
   let already = 0, filled = 0, missing = 0;
 
