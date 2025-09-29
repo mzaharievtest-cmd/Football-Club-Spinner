@@ -1,14 +1,21 @@
 // Football Club Spinner — app.js
-// Upright, adaptive wheel + Modal reveal/blur per toggle (robust with overlay fallback)
+// Upright, adaptive wheel; crisp HiDPI; no overlap; precise pointer snap.
+// Modal reveal/blur per toggle with robust inline blur + overlay fallback.
+//
+// Behavior:
+// - If Logo/Name/Stadium toggle is OFF, the modal blurs that field and shows a “Show …” button.
+// - Clicking “Show …” reveals that field (for the current modal session only).
+// - Wheel labels: single-line team name, optional stadium below; logo on the outer side;
+//   all upright and clipped to slice; adaptive sizes by slice arc length.
 
 let TEAMS = [];
 let currentAngle = 0; // radians
 let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
-let lastModalTeam = null;
+let lastModalTeam = null; // current team shown in modal
 
-// DOM
+// -------- DOM --------
 const chips = document.getElementById('chips');
 const spinBtn = document.getElementById('spinBtn');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -21,11 +28,10 @@ const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
 const historyEl = document.getElementById('history');
 
+// Modal
 const backdrop = document.getElementById('backdrop');
 const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
-
-// Modal fields
 const mHead = document.getElementById('mHead');       // team name (heading)
 const mSub = document.getElementById('mSub');         // league code
 const mLogo = document.getElementById('mLogo');       // <img>
@@ -33,16 +39,18 @@ const mColor = document.getElementById('mColor');     // color swatch
 const mColorHex = document.getElementById('mColorHex');
 const mStadium = document.getElementById('mStadium'); // stadium name
 
+// Canvases
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx'); // reserved
 
-// Constants / helpers
+// -------- Constants / helpers --------
 const TAU = Math.PI * 2;
-const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
+const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
 const DEBUG = false;
 
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 const mod = (x, m) => ((x % m) + m) % m;
+const isModalOpen = () => backdrop && backdrop.style.display === 'flex';
 
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
@@ -57,36 +65,8 @@ function luminance(hex){
   const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
-const isModalOpen = () => backdrop && backdrop.style.display === 'flex';
 
-// Inject minimal CSS (buttons + classes). Blurs use inline styles too, for reliability.
-function ensureRevealStyles() {
-  if (document.getElementById('reveal-style')) return;
-  const s = document.createElement('style');
-  s.id = 'reveal-style';
-  s.textContent = `
-    .reveal-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      margin-top: 8px; margin-left: 10px; padding: 8px 12px;
-      border-radius: 10px; border: 1px solid rgba(90,161,255,.6);
-      background: #152036; color: #fff; font-weight: 700; letter-spacing: .03em;
-      cursor: pointer; user-select: none;
-    }
-    #mHead + .reveal-btn { display: inline-block; margin-left: 0; }
-    .reveal-wrap { position: relative; display: inline-block; }
-    .reveal-overlay {
-      position: absolute; inset: -2px;
-      border-radius: inherit;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      background: rgba(15,23,42,.25);
-      pointer-events: none;
-    }
-  `;
-  document.head.appendChild(s);
-}
-
-// Image cache for wheel (modal uses its <img>)
+// -------- Image cache for wheel (modal uses <img> directly) --------
 const IMG_CACHE = new Map();
 function getLogo(url, onLoad) {
   if (!url) return null;
@@ -100,7 +80,7 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// Fit a single line by shrinking font before ellipsis
+// -------- Single-line fitting helper (shrink before ellipsis) --------
 function fitSingleLine(ctx, text, {
   maxWidth, targetPx, minPx = 9, maxPx = 28, weight = 800,
   fontFamily = 'Inter, system-ui, sans-serif'
@@ -113,27 +93,29 @@ function fitSingleLine(ctx, text, {
     ctx.font = `${weight} ${px}px ${fontFamily}`;
     if (ctx.measureText(text).width <= maxWidth) return { text, fontPx: px, truncated: false };
   }
-  let s = text || '';
+  let s = (text || '').trim();
   while (s && ctx.measureText(s + '…').width > maxWidth) s = s.slice(0,-1);
-  return { text: (s || '').trim() + '…', fontPx: minPx, truncated: true };
+  return { text: (s || '') + '…', fontPx: minPx, truncated: true };
 }
 
-// HiDPI sizing
+// -------- HiDPI sizing --------
 function sizeCanvas() {
   const rect = (wheel.parentElement || wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width || 640), 1200);
   const DPR = Math.max(1, window.devicePixelRatio || 1);
+
   wheel.width = Math.round(cssSize * DPR);
   wheel.height = Math.round(cssSize * DPR);
   fx.width = wheel.width;
   fx.height = wheel.height;
+
   wheel.style.width = cssSize + 'px';
   wheel.style.height = cssSize + 'px';
   fx.style.width = cssSize + 'px';
   fx.style.height = cssSize + 'px';
 }
 
-// Chips / History
+// -------- Chips / History --------
 function renderChips() {
   const leagues = [...new Set(TEAMS.map(t => t.league_code))].sort();
   chips.innerHTML = '';
@@ -170,7 +152,32 @@ function renderHistory() {
   });
 }
 
-// ---------- Modal reveal helpers (robust blur with overlay fallback) ----------
+// -------- Modal blur/reveal (robust: inline filter + overlay fallback) --------
+function ensureRevealStyles() {
+  if (document.getElementById('reveal-style')) return;
+  const s = document.createElement('style');
+  s.id = 'reveal-style';
+  s.textContent = `
+    .reveal-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-top: 8px; margin-left: 10px; padding: 8px 12px;
+      border-radius: 10px; border: 1px solid rgba(90,161,255,.6);
+      background: #152036; color: #fff; font-weight: 700; letter-spacing: .03em;
+      cursor: pointer; user-select: none;
+    }
+    #mHead + .reveal-btn { display: inline-block; margin-left: 0; }
+    .reveal-wrap { position: relative; display: inline-block; }
+    .reveal-overlay {
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background: rgba(15,23,42,.22);
+      pointer-events: none;
+    }
+  `;
+  document.head.appendChild(s);
+}
 function removeExistingRevealBtn(id) {
   const old = document.getElementById(id);
   if (old) old.remove();
@@ -180,10 +187,8 @@ function ensureWrapped(el) {
   if (el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
   const wrap = document.createElement('span');
   wrap.className = 'reveal-wrap';
-  // Preserve inline size by copying border-radius when present
   const cs = getComputedStyle(el);
-  const br = cs.borderRadius || '';
-  if (br) wrap.style.borderRadius = br;
+  if (cs.borderRadius) wrap.style.borderRadius = cs.borderRadius;
   el.parentElement.insertBefore(wrap, el);
   wrap.appendChild(el);
   return wrap;
@@ -191,9 +196,8 @@ function ensureWrapped(el) {
 function addOverlay(el) {
   const wrap = ensureWrapped(el);
   if (!wrap) return;
-  let ov = wrap.querySelector('.reveal-overlay');
-  if (!ov) {
-    ov = document.createElement('span');
+  if (!wrap.querySelector('.reveal-overlay')) {
+    const ov = document.createElement('span');
     ov.className = 'reveal-overlay';
     wrap.appendChild(ov);
   }
@@ -204,30 +208,22 @@ function removeOverlay(el) {
   if (wrap.classList.contains('reveal-wrap')) {
     const ov = wrap.querySelector('.reveal-overlay');
     if (ov) ov.remove();
-    // optional: unwrap (skip to avoid layout jumps)
   }
 }
 function blurElement(el) {
   if (!el) return;
-  // Inline filter with !important + webkit for stubborn CSS
   el.style.setProperty('filter', 'blur(8px) saturate(0.9)', 'important');
   el.style.setProperty('-webkit-filter', 'blur(8px) saturate(0.9)', 'important');
   el.style.pointerEvents = 'none';
   el.setAttribute('aria-hidden', 'true');
-  el.classList.add('reveal-blur-inline');
-
-  // If computed style still shows 'none', apply overlay fallback
   requestAnimationFrame(() => {
     const cs = getComputedStyle(el);
-    const f = cs.filter || cs.webkitFilter || 'none';
-    if (f === 'none' || f === '') {
-      addOverlay(el);
-    }
+    const f = (cs.filter || cs.webkitFilter || '').trim();
+    if (!f || f === 'none') addOverlay(el);
   });
 }
 function unblurElement(el) {
   if (!el) return;
-  el.classList.remove('reveal-blur-inline');
   el.style.removeProperty('filter');
   el.style.removeProperty('-webkit-filter');
   el.style.pointerEvents = '';
@@ -235,29 +231,19 @@ function unblurElement(el) {
   removeOverlay(el);
 }
 function placeButtonAfter(el, btn) {
-  const wrap = el && el.parentElement && el.parentElement.classList.contains('reveal-wrap')
-    ? el.parentElement
-    : el;
-  if (wrap && wrap.insertAdjacentElement) {
-    wrap.insertAdjacentElement('afterend', btn);
-  } else if (el && el.insertAdjacentElement) {
-    el.insertAdjacentElement('afterend', btn);
-  } else if (el && el.parentElement) {
-    el.parentElement.appendChild(btn);
-  }
+  const host = el?.parentElement?.classList.contains('reveal-wrap') ? el.parentElement : el;
+  if (host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn);
+  else el?.parentElement?.appendChild(btn);
 }
 function applyReveal(el, enabled, btnId, labelText) {
   if (!el) return;
   removeExistingRevealBtn(btnId);
-
   const wasRevealed = el.dataset.revealed === 'true';
   if (enabled || wasRevealed) {
     unblurElement(el);
     return;
   }
-
   blurElement(el);
-
   const btn = document.createElement('button');
   btn.id = btnId;
   btn.type = 'button';
@@ -268,8 +254,17 @@ function applyReveal(el, enabled, btnId, labelText) {
     unblurElement(el);
     btn.remove();
   });
-
   placeButtonAfter(el, btn);
+}
+let modalObserver = null;
+function startModalObserver() {
+  if (!modalEl) return;
+  stopModalObserver();
+  modalObserver = new MutationObserver(() => updateModalRevealFromToggles());
+  modalObserver.observe(modalEl, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+}
+function stopModalObserver() {
+  if (modalObserver) { modalObserver.disconnect(); modalObserver = null; }
 }
 function updateModalRevealFromToggles() {
   if (!isModalOpen() || !lastModalTeam) return;
@@ -278,11 +273,12 @@ function updateModalRevealFromToggles() {
   applyReveal(mStadium,!!optStadium?.checked,'revealStadiumBtn','stadium');
 }
 
+// -------- Modal open/close --------
 function openModal(team){
   ensureRevealStyles();
   lastModalTeam = team;
 
-  // Populate and reset reveal state for this session
+  // Populate + reset per-session reveal flags
   if (mHead)   { mHead.textContent = team.team_name || '—'; mHead.dataset.revealed = 'false'; }
   if (mSub)    mSub.textContent = team.league_code || '';
   if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; mLogo.dataset.revealed = 'false'; }
@@ -290,25 +286,27 @@ function openModal(team){
   if (mColorHex) mColorHex.textContent = team.primary_color || '#4f8cff';
   if (mStadium) { mStadium.textContent = team.stadium || '—'; mStadium.dataset.revealed = 'false'; }
 
-  // Apply reveal/blur per toggles
-  updateModalRevealFromToggles();
-
   backdrop.style.display = 'flex';
-  requestAnimationFrame(()=> modalEl.classList.add('show'));
+  requestAnimationFrame(() => {
+    modalEl.classList.add('show');
+    updateModalRevealFromToggles();
+    startModalObserver();
+  });
 }
 function closeModal(){
+  stopModalObserver();
   modalEl.classList.remove('show');
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
-// ---------- Wheel drawing (upright single-line names, optional stadium, no overlap) ----------
+// -------- Wheel drawing (upright single-line names, optional stadium, logo; no overlap) --------
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
 
   const ctx = wheel.getContext('2d');
   const DPR = Math.max(1, window.devicePixelRatio || 1);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); // draw in CSS px
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
@@ -325,11 +323,12 @@ function drawWheel(){
   const radius = Math.min(W, H) * 0.48;
   const sliceAngle = TAU / N;
 
-  // Wedges
+  // 1) Wedges
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const startAngle = i * sliceAngle;
     const endAngle   = (i + 1) * sliceAngle;
+
     ctx.beginPath();
     ctx.moveTo(0,0);
     ctx.arc(0,0, radius, startAngle, endAngle);
@@ -338,7 +337,7 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // Selected rim stroke
+  // 2) Selected rim stroke
   if (selectedIdx >= 0 && selectedIdx < N) {
     const a0 = selectedIdx * sliceAngle;
     const a1 = (selectedIdx + 1) * sliceAngle;
@@ -351,7 +350,7 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // Content
+  // 3) Content
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const wantLogo    = !!(optLogo?.checked && t.logo_url);
@@ -364,6 +363,7 @@ function drawWheel(){
     const midAngle   = (startAngle + endAngle) / 2;
     const sliceArc   = radius * (endAngle - startAngle);
 
+    // Adaptive targets — keep names single-line
     const nameTargetPx    = clamp(11, 0.18 * sliceArc, 20);
     const stadiumTargetPx = clamp(10, 0.15 * sliceArc, 16);
     let   logoSize        = clamp(22, 0.32 * sliceArc, 52);
@@ -381,20 +381,20 @@ function drawWheel(){
     ctx.closePath();
     ctx.clip();
 
-    // Rotate to bisector + upright
+    // Rotate to bisector and keep upright (flip left side)
     ctx.rotate(midAngle);
     const needFlip = Math.cos(midAngle) < 0;
     if (needFlip) ctx.rotate(Math.PI);
     const sign = needFlip ? -1 : 1;
 
-    // Geometry: text then logo
+    // Geometry: text from xText to just before logo; logo on rim side
     const xLogo = sign * (radius * 0.74);
     const xText = sign * (radius * 0.42);
     const logoInner = wantLogo ? (xLogo - sign * (logoHalf + pad)) : sign * (radius * 0.86);
     const xBoxLeft = Math.min(xText, logoInner);
     const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
-    // Text (single-line)
+    // Text
     if (wantName || wantStadium) {
       ctx.save();
       ctx.textAlign = 'left';
@@ -406,7 +406,8 @@ function drawWheel(){
       if (wantName) {
         const heavy = (lum >= 0.35 && lum <= 0.45);
         const fitted = fitSingleLine(ctx, t.team_name || '', {
-          maxWidth: maxTextWidth, targetPx: nameTargetPx, minPx: 9, maxPx: 22, weight: heavy ? 900 : 800
+          maxWidth: maxTextWidth, targetPx: nameTargetPx, minPx: 9, maxPx: 22,
+          weight: heavy ? 900 : 800
         });
         namePx = fitted.fontPx;
 
@@ -420,6 +421,10 @@ function drawWheel(){
         ctx.fillStyle = fg;
         ctx.strokeText(fitted.text, xBoxLeft, yName);
         ctx.fillText(fitted.text, xBoxLeft, yName);
+
+        if (DEBUG && fitted.truncated) {
+          console.log({ team: t.team_name, truncated: true, fontPx: namePx, maxTextWidth });
+        }
       }
 
       if (wantStadium) {
@@ -437,6 +442,19 @@ function drawWheel(){
       }
 
       ctx.restore();
+
+      if (DEBUG) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0,255,255,0.6)';
+        ctx.setLineDash([4,3]);
+        ctx.beginPath();
+        ctx.moveTo(xBoxLeft, -radius*0.04);
+        ctx.lineTo(xBoxLeft,  radius*0.04);
+        ctx.moveTo(xBoxLeft + maxTextWidth, -radius*0.04);
+        ctx.lineTo(xBoxLeft + maxTextWidth,  radius*0.04);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
 
     // Logo
@@ -485,7 +503,7 @@ function drawWheel(){
   ctx.restore();
 }
 
-// Result + Spin (precise snap)
+// -------- Result + Spin (precise pointer snap) --------
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -536,6 +554,7 @@ function spin(){
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
 
+      // Snap center of chosen slice under pointer
       const centerAngle = idx * slice + slice/2;
       const snapDelta = mod(centerAngle - offset, TAU);
       currentAngle = mod(currentAngle + snapDelta, TAU);
@@ -550,7 +569,7 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
-// Events / Boot
+// -------- Events / Boot --------
 function setupEventListeners() {
   chips.addEventListener('change', () => {
     selectedIdx = -1;
@@ -564,9 +583,9 @@ function setupEventListeners() {
     }
   });
 
-  // Redraw + refresh modal reveal states on toggles
-  optName.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
-  optLogo.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
+  // Redraw wheel + refresh modal reveal when toggles change
+  optName.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
+  optLogo.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
   optStadium.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
 
   spinBtn.onclick = spin;
@@ -574,7 +593,7 @@ function setupEventListeners() {
 
   mClose.onclick = closeModal;
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
-  window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
+  window.addEventListener('keydown', e => { if(e.key==='Escape' && isModalOpen()) closeModal(); });
 
   // Debounced resize redraw
   let resizeTO;
