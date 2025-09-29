@@ -104,11 +104,42 @@ header h1 {
 }
 
 /* =========================
-   League chips (filters) — long names
+   Quick picks + selection tip
    ========================= */
+.quick-picks {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
 
-/* Container allows wrapping and spacing */
-#chips {
+.perf-tip {
+  font-size: 12px;
+  color: #9ec1ff;
+  background: rgba(40, 60, 100, 0.28);
+  border: 1px solid rgba(120, 160, 255, 0.25);
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin: 6px 0 10px;
+}
+
+/* Active state for quick-pick buttons */
+.chip-btn.active {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 2px rgba(34,211,238,.22) inset;
+  background: linear-gradient(180deg, rgba(30,44,80,.95), rgba(14,24,48,.92));
+}
+
+/* Ghost variant for “Show more” toggle */
+.chip-btn.ghost {
+  background: linear-gradient(180deg, rgba(18,22,36,.8), rgba(10,14,26,.78));
+  border-style: dashed;
+}
+
+/* =========================
+   League chips (filters)
+   ========================= */
+#chips .chips {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -177,9 +208,9 @@ header h1 {
 /* Visible label text (full league names) */
 #chips .chip .chip-text {
   display: inline-block;
-  white-space: nowrap;     /* keep on one line if possible */
+  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* fallback */
+  text-overflow: ellipsis;
   max-width: 28ch;
 }
 
@@ -214,7 +245,7 @@ header h1 {
   transition: .18s;
 }
 
-.showopts .chip input { /* custom checkbox style reused */
+.showopts .chip input {
   appearance: none;
   position: absolute;
   left: 16px;
@@ -490,9 +521,9 @@ canvas#wheel {
   letter-spacing: .03em;
   cursor: pointer;
   user-select: none;
-  z-index: 3;            /* above overlay */
-  position: relative;    /* keeps it clickable */
-  white-space: nowrap;   /* prevents ugly wrapping */
+  z-index: 3;
+  position: relative;
+  white-space: nowrap;
 }
 
 #modal #mHead + .reveal-btn {
@@ -508,8 +539,8 @@ canvas#wheel {
   border-radius: inherit;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  background: transparent; /* no tint */
-  pointer-events: none;     /* never block clicks */
+  background: transparent;
+  pointer-events: none;
   z-index: 2;
 }
 
