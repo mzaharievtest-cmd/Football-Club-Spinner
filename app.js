@@ -172,7 +172,7 @@ function ensureRevealStyles() {
       border-radius: inherit;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      background: rgba(15,23,42,.28);
+      background: transparent; /* no tint */
       pointer-events: none;
     }
   `;
@@ -212,13 +212,14 @@ function removeOverlay(el) {
 }
 function blurElement(el) {
   if (!el) return;
-  // Strong inline blur (applies to actual element pixels)
-  el.style.setProperty('filter', 'blur(14px) saturate(0.85)', 'important');
-  el.style.setProperty('-webkit-filter', 'blur(14px) saturate(0.85)', 'important');
-  el.style.transform = 'translateZ(0)'; // avoid edge bleeding
+  // Strong inline blur (applies to actual pixels). This hides the logo/image — not just tint.
+  el.style.setProperty('filter', 'blur(14px) saturate(0.9)', 'important');
+  el.style.setProperty('-webkit-filter', 'blur(14px) saturate(0.9)', 'important');
+  el.style.transform = 'translateZ(0)'; // prevent edge bleed
   el.style.pointerEvents = 'none';
   el.setAttribute('aria-hidden', 'true');
-  // Fallback overlay if some CSS still cancels filter
+
+  // Fallback overlay (in case some CSS still cancels filters)
   requestAnimationFrame(() => {
     const cs = getComputedStyle(el);
     const f = (cs.filter || cs.webkitFilter || '').trim();
@@ -235,6 +236,7 @@ function unblurElement(el) {
   removeOverlay(el);
 }
 function placeButtonAfter(el, btn) {
+  // Put the button after the wrapping host to keep it clickable (overlay has pointer-events:none)
   const host = el?.parentElement?.classList.contains('reveal-wrap') ? el.parentElement : el;
   if (host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn);
   else el?.parentElement?.appendChild(btn);
@@ -242,22 +244,27 @@ function placeButtonAfter(el, btn) {
 function applyReveal(el, enabled, btnId, labelText) {
   if (!el) return;
   removeExistingRevealBtn(btnId);
+  // Persist reveal within the current modal session
   const wasRevealed = el.dataset.revealed === 'true';
+
   if (enabled || wasRevealed) {
     unblurElement(el);
     return;
   }
+
   blurElement(el);
+
   const btn = document.createElement('button');
   btn.id = btnId;
   btn.type = 'button';
   btn.className = 'reveal-btn';
   btn.textContent = `Show ${labelText}`;
   btn.addEventListener('click', () => {
+    // Reveal this one field (do not change the sidebar toggle)
     el.dataset.revealed = 'true';
     unblurElement(el);
     btn.remove();
-  }, { passive: true });
+  });
   placeButtonAfter(el, btn);
 }
 
@@ -333,7 +340,7 @@ function drawWheel(){
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const startAngle = i * sliceAngle;
-       const endAngle   = (i + 1) * sliceAngle;
+    const endAngle   = (i + 1) * sliceAngle;
 
     ctx.beginPath();
     ctx.moveTo(0,0);
