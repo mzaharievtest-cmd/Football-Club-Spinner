@@ -34,6 +34,7 @@ body {
     radial-gradient(1400px 840px at 30% -20%, rgba(90,161,255,.35) 0, transparent 50%),
     radial-gradient(1100px 880px at 90% -10%, rgba(34,211,238,.22) 0, transparent 45%),
     linear-gradient(180deg, #05070f, #060914 28%, #08101e 100%);
+  background-attachment: fixed; /* avoid any visible seam while scrolling */
   overflow-x: hidden;
 }
 
@@ -47,7 +48,7 @@ header {
   position: sticky;
   top: 0;
   background: linear-gradient(180deg,rgba(15,23,42,.92),rgba(11,18,31,.78));
-  border-bottom: 1px solid rgba(95,141,255,.18);
+  border-bottom: none; /* remove separation line */
   backdrop-filter: blur(14px);
   z-index: 20;
 }
@@ -130,7 +131,7 @@ header h1 {
   background: linear-gradient(180deg, rgba(30,44,80,.95), rgba(14,24,48,.92));
 }
 
-/* Disabled/ghost for Show more (no expansion) */
+/* Ghost variant (disabled “show more”) */
 .chip-btn.ghost {
   background: linear-gradient(180deg, rgba(18,22,36,.8), rgba(10,14,26,.78));
   border-style: dashed;
@@ -369,20 +370,21 @@ canvas#wheel {
 
 #fx { position: absolute; inset: 0; pointer-events: none; }
 
+/* Pointer flipped “around” but kept above the wheel */
 .pointer {
   position: absolute;
-  top: -6px;
+  top: -10px;
   border-left: 16px solid transparent;
   border-right: 16px solid transparent;
-  border-bottom: 26px solid var(--accent-2);
+  border-top: 26px solid var(--accent-2);  /* flipped from border-bottom to border-top */
 }
 
 @media (max-width: 600px) {
   .pointer {
-    top: -2px;
+    top: -6px;
     border-left-width: 12px;
     border-right-width: 12px;
-    border-bottom-width: 20px;
+    border-top-width: 20px;
   }
 }
 
@@ -429,7 +431,7 @@ canvas#wheel {
   text-align: center;
 }
 
-/* Body wrapper (keeps spacing consistent) */
+/* Body wrapper */
 .m-body {
   padding: 6px 22px 12px;
   display: flex;
@@ -451,7 +453,7 @@ canvas#wheel {
   display: block;
 }
 
-/* Color swatch + hex row */
+/* Row */
 .m-row {
   width: 100%;
   display: flex;
@@ -530,10 +532,23 @@ canvas#wheel {
   white-space: nowrap;
 }
 
-#modal #mHead + .reveal-btn { display: inline-block; margin-left: 0; margin-top: 6px; }
+#modal #mHead + .reveal-btn {
+  display: inline-block;
+  margin-left: 0;
+  margin-top: 6px;
+}
 
 .reveal-wrap { position: relative; display: inline-block; z-index: 0; }
-.reveal-overlay { position: absolute; inset: 0; border-radius: inherit; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: transparent; pointer-events: none; z-index: 2; }
+.reveal-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: transparent;
+  pointer-events: none;
+  z-index: 2;
+}
 
 /* Mobile modal sizing */
 @media (max-width: 600px) {
