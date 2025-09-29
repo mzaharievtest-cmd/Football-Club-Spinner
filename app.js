@@ -693,6 +693,72 @@ function setupEventListeners() {
   }, { passive: true });
 }
 
+function setupEventListeners() {
+  // Leagues toggles
+  chipsWrap.addEventListener('change', () => {
+    if (spinning) return;
+    selectedIdx = -1;
+    drawWheel();
+    const len = getFiltered().length;
+    spinBtn.disabled = len === 0;
+    spinFab.disabled = len === 0;
+    if (len === 0 && currentText) currentText.textContent = 'Please select at least one league.';
+    updateSelectionBanner();
+  });
+
+  // NEW: Show-on-wheel toggles (Logo / Name / Stadium)
+  const onWheelToggleChange = () => {
+    if (spinning) return;
+    drawWheel();
+    if (isModalOpen()) updateModalRevealFromToggles();
+  };
+  optName?.addEventListener('change', onWheelToggleChange);
+  optLogo?.addEventListener('change', onWheelToggleChange);
+  optStadium?.addEventListener('change', onWheelToggleChange);
+
+  // Show more / fewer leagues
+  toggleMore.addEventListener('click', () => {
+    if (spinning) return;
+    const hidden = chipsMore.hidden;
+    if (hidden) {
+      chipsMore.hidden = false;
+      toggleMore.textContent = 'Show fewer leagues';
+      toggleMore.setAttribute('aria-expanded', 'true');
+    } else {
+      chipsMore.hidden = true;
+      toggleMore.textContent = 'Show more leagues';
+      toggleMore.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Quick picks (“All” respects visibility)
+  function setActive(btn) { [qpAll, qpNone, qpTop5].forEach(b => b.classList.toggle('active', b === btn)); }
+  qpAll.onclick  = () => { if (spinning) return; setCheckedCodes(visibleCodes()); setActive(qpAll); };
+  qpNone.onclick = () => { if (spinning) return; setCheckedCodes([]); setActive(qpNone); };
+  qpTop5.onclick = () => {
+    if (spinning) return;
+    setCheckedCodes(['EPL','SA','BUN','L1','LLA'].filter(c => visibleCodes().includes(c)));
+    setActive(qpTop5);
+  };
+
+  // Spin actions
+  spinBtn.onclick = spin;
+  spinFab.onclick = spin;
+
+  // History and modal
+  resetHistoryBtn.addEventListener('click', () => { if (!spinning) resetHistory(); });
+  mClose.onclick = () => { if (!spinning) closeModal(); };
+  backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
+  window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
+
+  // Debounced resize redraw
+  let resizeTO;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTO);
+    resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120);
+  }, { passive: true });
+}
+
 fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
   .then(data => {
