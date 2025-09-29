@@ -1,0 +1,21 @@
+name: Audit missing stadium AND primary_color
+
+on:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: List teams with both fields empty
+        run: |
+          node -e '
+          const fs=require("fs");
+          const data=JSON.parse(fs.readFileSync("teams.json","utf8"));
+          const clean=s=>String(s??"").trim();
+          const both=data.filter(t=>clean(t.stadium)==="" && clean(t.primary_color)==="");
+          console.log("league_code\tteam_name");
+          both.forEach(t=>console.log(`${t.league_code}\t${t.team_name}`));
+          console.log(`\nTotal: ${both.length}`);
+          '
