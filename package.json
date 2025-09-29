@@ -1,0 +1,10 @@
+{
+  "name": "football-club-spinner",
+  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "stadiums:fill": "node scripts/fill-stadiums.js --write",
+    "stadiums:check": "node scripts/fill-stadiums.js --check --fail-on-missing"
+  }
+}
