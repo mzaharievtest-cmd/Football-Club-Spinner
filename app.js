@@ -1,9 +1,8 @@
 // Football Club Spinner — app.js
 // Upright, adaptive wheel; crisp HiDPI; no overlap; precise pointer snap.
 // Modal reveal/blur per toggle with robust inline blur + overlay fallback.
-// League filter chips now display full league names (labels only) while keeping values as codes.
+// League filter chips show full league names (labels only) while keeping values as codes.
 
-// -------------------- App State --------------------
 let TEAMS = [];
 let currentAngle = 0; // radians
 let spinning = false;
@@ -31,8 +30,8 @@ const historyEl = document.getElementById('history');
 const backdrop = document.getElementById('backdrop');
 const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
-const mHead = document.getElementById('mHead');       // team name (heading)
-const mSub = document.getElementById('mSub');         // league code
+const mHead = document.getElementById('mHead');       // team name
+const mSub = document.getElementById('mSub');         // league label (updated)
 const mLogo = document.getElementById('mLogo');       // <img>
 const mColor = document.getElementById('mColor');     // color swatch
 const mColorHex = document.getElementById('mColorHex');
@@ -302,9 +301,12 @@ function openModal(team){
   lastModalTeam = team;
   modalRevealState = { logo: false, name: false, stadium: false };
 
+  // League label (full name like in filters)
+  const leagueLabel = LEAGUE_LABELS[team.league_code] || team.league_code;
+
   // Populate content
   if (mHead)   mHead.textContent = team.team_name || '—';
-  if (mSub)    mSub.textContent = team.league_code || '';
+  if (mSub)    mSub.textContent = leagueLabel; // UPDATED: show full league name
   if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
   if (mColor)  mColor.style.background = team.primary_color || '#4f8cff';
   if (mColorHex) mColorHex.textContent = team.primary_color || '#4f8cff';
@@ -532,7 +534,9 @@ function setResult(idx){
   selectedIdx = idx;
   drawWheel();
 
-  currentText.textContent = `${t.team_name} · ${t.league_code}`;
+  // UPDATED: show full league name in the current selection text, too
+  const leagueLabel = LEAGUE_LABELS[t.league_code] || t.league_code;
+  currentText.textContent = `${t.team_name} · ${leagueLabel}`;
   currentLogo.src         = t.logo_url || "";
 
   history.unshift(t);
