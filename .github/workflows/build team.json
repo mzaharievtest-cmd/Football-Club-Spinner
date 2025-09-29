@@ -11,34 +11,42 @@ on:
       - "scripts/generate-teams.mjs"
       - ".github/workflows/build-teams.yml"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
 
-      - name: Install palette deps
+      # Install deps only for this run, do not touch package.json or package-lock
+      - name: Install palette deps (no-save)
         run: |
-          npm init -y >/dev/null 2>&1 || true
-          npm i node-vibrant@3 sharp@0.33.4
+          npm install --no-save --no-audit --no-fund --no-package-lock \
+            node-vibrant@3 sharp@0.33.4
 
       - name: Generate teams.json
         run: node scripts/generate-teams.mjs
 
-      - name: Commit changes
+      # Commit only if teams.json changed; ignore other untracked/modified files
+      - name: Commit and push teams.json (if changed)
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add teams.json
-            git commit -m "chore: generate teams.json from logos1/vendor (auto colors, stadium overrides)"
-            git push
-          else
-            echo "No changes to commit."
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Check if teams.json differs from HEAD; commit only that file
+          if git diff --quiet -- teams.json; then
+            echo "No changes to teams.json."
+            exit 0
           fi
+
+          git add teams.json
+          git commit -m "chore: build teams.json"
+          git push
