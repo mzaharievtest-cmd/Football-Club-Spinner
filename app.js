@@ -1,7 +1,5 @@
 // Football Club Spinner — app.js
-// Upright, adaptive wheel + Modal reveal/blur per toggle (robust inline blur)
-// If Logo/Name/Stadium toggle is OFF in the sidebar, the modal blurs that field and shows a "Show …" button.
-// Clicking the button reveals the field for the current modal session (does NOT change the toggle).
+// Upright, adaptive wheel + Modal reveal/blur per toggle (robust with overlay fallback)
 
 let TEAMS = [];
 let currentAngle = 0; // radians
@@ -61,13 +59,12 @@ function luminance(hex){
 }
 const isModalOpen = () => backdrop && backdrop.style.display === 'flex';
 
-// Inject minimal CSS (button style + class selector). Blur is also applied inline for reliability.
+// Inject minimal CSS (buttons + classes). Blurs use inline styles too, for reliability.
 function ensureRevealStyles() {
   if (document.getElementById('reveal-style')) return;
   const s = document.createElement('style');
   s.id = 'reveal-style';
   s.textContent = `
-    .reveal-blur { filter: blur(7px) saturate(.9); transition: filter .15s ease; }
     .reveal-btn {
       display: inline-flex; align-items: center; justify-content: center;
       margin-top: 8px; margin-left: 10px; padding: 8px 12px;
@@ -76,6 +73,15 @@ function ensureRevealStyles() {
       cursor: pointer; user-select: none;
     }
     #mHead + .reveal-btn { display: inline-block; margin-left: 0; }
+    .reveal-wrap { position: relative; display: inline-block; }
+    .reveal-overlay {
+      position: absolute; inset: -2px;
+      border-radius: inherit;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background: rgba(15,23,42,.25);
+      pointer-events: none;
+    }
   `;
   document.head.appendChild(s);
 }
@@ -164,41 +170,94 @@ function renderHistory() {
   });
 }
 
-// ---------- Modal reveal helpers ----------
+// ---------- Modal reveal helpers (robust blur with overlay fallback) ----------
 function removeExistingRevealBtn(id) {
   const old = document.getElementById(id);
   if (old) old.remove();
 }
+function ensureWrapped(el) {
+  if (!el || !el.parentElement) return null;
+  if (el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
+  const wrap = document.createElement('span');
+  wrap.className = 'reveal-wrap';
+  // Preserve inline size by copying border-radius when present
+  const cs = getComputedStyle(el);
+  const br = cs.borderRadius || '';
+  if (br) wrap.style.borderRadius = br;
+  el.parentElement.insertBefore(wrap, el);
+  wrap.appendChild(el);
+  return wrap;
+}
+function addOverlay(el) {
+  const wrap = ensureWrapped(el);
+  if (!wrap) return;
+  let ov = wrap.querySelector('.reveal-overlay');
+  if (!ov) {
+    ov = document.createElement('span');
+    ov.className = 'reveal-overlay';
+    wrap.appendChild(ov);
+  }
+}
+function removeOverlay(el) {
+  if (!el || !el.parentElement) return;
+  const wrap = el.parentElement;
+  if (wrap.classList.contains('reveal-wrap')) {
+    const ov = wrap.querySelector('.reveal-overlay');
+    if (ov) ov.remove();
+    // optional: unwrap (skip to avoid layout jumps)
+  }
+}
 function blurElement(el) {
   if (!el) return;
-  el.classList.add('reveal-blur');
-  el.style.setProperty('filter', 'blur(7px) saturate(0.9)', 'important'); // inline fallback
+  // Inline filter with !important + webkit for stubborn CSS
+  el.style.setProperty('filter', 'blur(8px) saturate(0.9)', 'important');
+  el.style.setProperty('-webkit-filter', 'blur(8px) saturate(0.9)', 'important');
   el.style.pointerEvents = 'none';
   el.setAttribute('aria-hidden', 'true');
+  el.classList.add('reveal-blur-inline');
+
+  // If computed style still shows 'none', apply overlay fallback
+  requestAnimationFrame(() => {
+    const cs = getComputedStyle(el);
+    const f = cs.filter || cs.webkitFilter || 'none';
+    if (f === 'none' || f === '') {
+      addOverlay(el);
+    }
+  });
 }
 function unblurElement(el) {
   if (!el) return;
-  el.classList.remove('reveal-blur');
+  el.classList.remove('reveal-blur-inline');
   el.style.removeProperty('filter');
+  el.style.removeProperty('-webkit-filter');
   el.style.pointerEvents = '';
   el.setAttribute('aria-hidden', 'false');
+  removeOverlay(el);
+}
+function placeButtonAfter(el, btn) {
+  const wrap = el && el.parentElement && el.parentElement.classList.contains('reveal-wrap')
+    ? el.parentElement
+    : el;
+  if (wrap && wrap.insertAdjacentElement) {
+    wrap.insertAdjacentElement('afterend', btn);
+  } else if (el && el.insertAdjacentElement) {
+    el.insertAdjacentElement('afterend', btn);
+  } else if (el && el.parentElement) {
+    el.parentElement.appendChild(btn);
+  }
 }
 function applyReveal(el, enabled, btnId, labelText) {
   if (!el) return;
-
-  // Clean any prior button
   removeExistingRevealBtn(btnId);
 
-  // Preserve manual reveals while the modal is open
   const wasRevealed = el.dataset.revealed === 'true';
-
   if (enabled || wasRevealed) {
     unblurElement(el);
     return;
   }
 
-  // Blur + "Show" button
   blurElement(el);
+
   const btn = document.createElement('button');
   btn.id = btnId;
   btn.type = 'button';
@@ -210,9 +269,8 @@ function applyReveal(el, enabled, btnId, labelText) {
     btn.remove();
   });
 
-  el.insertAdjacentElement('afterend', btn);
+  placeButtonAfter(el, btn);
 }
-
 function updateModalRevealFromToggles() {
   if (!isModalOpen() || !lastModalTeam) return;
   applyReveal(mLogo,   !!optLogo?.checked,   'revealLogoBtn',   'logo');
@@ -224,7 +282,7 @@ function openModal(team){
   ensureRevealStyles();
   lastModalTeam = team;
 
-  // Populate fields and reset reveal state for this session
+  // Populate and reset reveal state for this session
   if (mHead)   { mHead.textContent = team.team_name || '—'; mHead.dataset.revealed = 'false'; }
   if (mSub)    mSub.textContent = team.league_code || '';
   if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; mLogo.dataset.revealed = 'false'; }
@@ -232,7 +290,7 @@ function openModal(team){
   if (mColorHex) mColorHex.textContent = team.primary_color || '#4f8cff';
   if (mStadium) { mStadium.textContent = team.stadium || '—'; mStadium.dataset.revealed = 'false'; }
 
-  // Apply initial reveal/blur per toggles
+  // Apply reveal/blur per toggles
   updateModalRevealFromToggles();
 
   backdrop.style.display = 'flex';
@@ -243,7 +301,7 @@ function closeModal(){
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
-// ---------- Wheel drawing (single-line names, optional stadium, upright) ----------
+// ---------- Wheel drawing (upright single-line names, optional stadium, no overlap) ----------
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
@@ -323,7 +381,7 @@ function drawWheel(){
     ctx.closePath();
     ctx.clip();
 
-    // Rotate to bisector, keep upright
+    // Rotate to bisector + upright
     ctx.rotate(midAngle);
     const needFlip = Math.cos(midAngle) < 0;
     if (needFlip) ctx.rotate(Math.PI);
@@ -336,7 +394,7 @@ function drawWheel(){
     const xBoxLeft = Math.min(xText, logoInner);
     const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
-    // Text
+    // Text (single-line)
     if (wantName || wantStadium) {
       ctx.save();
       ctx.textAlign = 'left';
@@ -427,7 +485,7 @@ function drawWheel(){
   ctx.restore();
 }
 
-// Result + Spin (unchanged precise pointer snap)
+// Result + Spin (precise snap)
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -506,7 +564,7 @@ function setupEventListeners() {
     }
   });
 
-  // Redraw wheel + refresh modal reveal states when toggles change
+  // Redraw + refresh modal reveal states on toggles
   optName.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
   optLogo.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
   optStadium.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
@@ -516,7 +574,7 @@ function setupEventListeners() {
 
   mClose.onclick = closeModal;
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
-  window.addEventListener('keydown', e => { if(e.key==='Escape' && isModalOpen()) closeModal(); });
+  window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
 
   // Debounced resize redraw
   let resizeTO;
