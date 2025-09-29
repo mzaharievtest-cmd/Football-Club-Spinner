@@ -1,5 +1,6 @@
 // Football Club Spinner — app.js
-// Show more leagues toggle enabled, EPL default, selected count banner, gradient idle, perf-aware rendering.
+// Show more leagues toggle enabled, EPL default, selected count banner, gradient idle,
+// perf-aware rendering, and a strict UI lock while spinning (no clicks/edits).
 
 let TEAMS = [];
 let currentAngle = 0; // radians
@@ -38,7 +39,7 @@ const mSub = document.getElementById('mSub');
 const mLogo = document.getElementById('mLogo');
 const mStadium = document.getElementById('mStadium');
 
-// Quick picks and tip
+// Quick picks and banner
 const qpAll  = document.getElementById('qpAll');
 const qpNone = document.getElementById('qpNone');
 const qpEPL  = document.getElementById('qpEPL');
@@ -93,6 +94,7 @@ const LEAGUE_LABELS = {
   UKR: "Ukrainian Premier League"
 };
 
+// -------------------- Image cache --------------------
 const IMG_CACHE = new Map();
 function getLogo(url, onLoad) {
   if (!url) return null;
@@ -150,6 +152,33 @@ function sizeCanvas() {
   wheel.style.height = cssSize + 'px';
   fx.style.width = cssSize + 'px';
   fx.style.height = cssSize + 'px';
+}
+
+// -------------------- Strict UI lock while spinning --------------------
+const INTERACTIVE_SELECTOR = 'button, input, select, textarea, [role="button"]';
+function lockUI(lock) {
+  document.body.classList.toggle('ui-locked', !!lock);
+  const els = document.querySelectorAll(INTERACTIVE_SELECTOR);
+  els.forEach(el => {
+    if (lock) {
+      // Save original disabled state only once
+      if (!el.dataset.lockSaved) {
+        el.dataset.lockSaved = '1';
+        el.dataset.prevDisabled = el.disabled ? '1' : '0';
+      }
+      el.disabled = true;
+      el.setAttribute('aria-disabled', 'true');
+    } else {
+      // Restore original disabled state if we saved it
+      if (el.dataset.lockSaved === '1') {
+        const prev = el.dataset.prevDisabled === '1';
+        el.disabled = prev;
+        if (!prev) el.removeAttribute('aria-disabled');
+        delete el.dataset.lockSaved;
+        delete el.dataset.prevDisabled;
+      }
+    }
+  });
 }
 
 // -------------------- Chips / History --------------------
@@ -546,6 +575,7 @@ function setResult(idx){
   renderHistory();
   openModal(t);
 }
+
 function spin(){
   if (spinning) return;
   const data = getFiltered();
@@ -555,7 +585,8 @@ function spin(){
   }
 
   spinning = true;
-  spinBtn.disabled = true;
+  lockUI(true);            // HARD LOCK: disable all controls while spinning
+  spinBtn.disabled = true; // redundant, but explicit
   selectedIdx = -1;
 
   const N = data.length;
@@ -588,6 +619,7 @@ function spin(){
 
       spinning = false;
       spinBtn.disabled = false;
+      lockUI(false);       // UNLOCK: restore original disabled states
       selectedIdx = idx;
       drawWheel();
       setResult(idx);
@@ -600,6 +632,7 @@ function spin(){
 function setupEventListeners() {
   // Leagues toggles
   chipsWrap.addEventListener('change', () => {
+    if (spinning) return; // guard (redundant since disabled, but safe)
     selectedIdx = -1;
     drawWheel();
     const len = getFiltered().length;
@@ -610,6 +643,7 @@ function setupEventListeners() {
 
   // Enable Show more / Show fewer toggle
   toggleMore.addEventListener('click', () => {
+    if (spinning) return;
     const hidden = chipsMore.hasAttribute('hidden');
     if (hidden) {
       chipsMore.removeAttribute('hidden');
@@ -624,34 +658,32 @@ function setupEventListeners() {
 
   // Quick picks with active styling
   function setActive(btn) { [qpAll, qpNone, qpEPL, qpTop5].forEach(b => b.classList.toggle('active', b === btn)); }
-  qpAll.onclick  = () => { setCheckedCodes(allCodesFromDOM()); setActive(qpAll); };
-  qpNone.onclick = () => { setCheckedCodes([]); setActive(qpNone); };
-  qpEPL.onclick  = () => { setCheckedCodes(['EPL']); setActive(qpEPL); };
+  qpAll.onclick  = () => { if (spinning) return; setCheckedCodes(allCodesFromDOM()); setActive(qpAll); };
+  qpNone.onclick = () => { if (spinning) return; setCheckedCodes([]); setActive(qpNone); };
+  qpEPL.onclick  = () => { if (spinning) return; setCheckedCodes(['EPL']); setActive(qpEPL); };
   qpTop5.onclick = () => {
+    if (spinning) return;
     const presentTop5 = TOP5.filter(c => allCodesFromDOM().includes(c));
     setCheckedCodes(presentTop5);
     setActive(qpTop5);
   };
 
-  optName.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
-  optLogo.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
-  optStadium.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
+  optName.onchange    = () => { if (!spinning) { drawWheel(); updateModalRevealFromToggles(); } };
+  optLogo.onchange    = () => { if (!spinning) { drawWheel(); updateModalRevealFromToggles(); } };
+  optStadium.onchange = () => { if (!spinning) { drawWheel(); updateModalRevealFromToggles(); } };
 
   spinBtn.onclick = spin;
-  resetHistoryBtn.addEventListener('click', resetHistory);
+  resetHistoryBtn.addEventListener('click', () => { if (!spinning) resetHistory(); });
 
-  mClose.onclick = closeModal;
-  backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
-  window.addEventListener('keydown', e => { if(e.key==='Escape' && isModalOpen()) closeModal(); });
+  mClose.onclick = () => { if (!spinning) closeModal(); };
+  backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
+  window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
 
   // Debounced resize redraw
   let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
-    resizeTO = setTimeout(() => {
-      sizeCanvas();
-      drawWheel();
-    }, 120);
+    resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120);
   }, { passive: true });
 }
 
