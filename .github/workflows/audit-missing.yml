@@ -1,4 +1,4 @@
-name: Audit missing stadium AND primary_color
+name: Audit missing stadium/primary_color
 
 on:
   workflow_dispatch:
@@ -8,14 +8,67 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: List teams with both fields empty
+
+      - name: Build lists (both, stadium-only, color-only, at-least-one)
         run: |
           node -e '
           const fs=require("fs");
           const data=JSON.parse(fs.readFileSync("teams.json","utf8"));
           const clean=s=>String(s??"").trim();
-          const both=data.filter(t=>clean(t.stadium)==="" && clean(t.primary_color)==="");
-          console.log("league_code\tteam_name");
-          both.forEach(t=>console.log(`${t.league_code}\t${t.team_name}`));
-          console.log(`\nTotal: ${both.length}`);
+          const both=[], stadiumOnly=[], colorOnly=[];
+          for (const t of data) {
+            const sEmpty = clean(t.stadium)==="";
+            const cEmpty = clean(t.primary_color)==="";
+            if (sEmpty && cEmpty) both.push(t);
+            else if (sEmpty) stadiumOnly.push(t);
+            else if (cEmpty) colorOnly.push(t);
+          }
+          const atLeastOne=[...both, ...stadiumOnly, ...colorOnly];
+          function fmt(list){ return list.map(t=>`${t.league_code}\t${t.team_name}`).join("\\n"); }
+
+          const out = [
+            "=== AT LEAST ONE EMPTY (stadium OR primary_color) ===",
+            "league_code\tteam_name",
+            fmt(atLeastOne),
+            "",
+            `Total: ${atLeastOne.length}`,
+            "",
+            "=== BOTH EMPTY (for reference) ===",
+            "league_code\tteam_name",
+            fmt(both),
+            "",
+            `Total: ${both.length}`,
+            "",
+            "=== STADIUM EMPTY ONLY ===",
+            "league_code\tteam_name",
+            fmt(stadiumOnly),
+            "",
+            `Total: ${stadiumOnly.length}`,
+            "",
+            "=== PRIMARY_COLOR EMPTY ONLY ===",
+            "league_code\tteam_name",
+            fmt(colorOnly),
+            "",
+            `Total: ${colorOnly.length}`
+          ].join("\\n");
+          fs.writeFileSync("audit-at-least-one-missing.txt", out);
+          console.log(out);
           '
+
+      - name: Add list to Run Summary
+        run: |
+          {
+            echo "### Teams with at least one empty field (stadium OR primary_color)";
+            echo;
+            echo '```text';
+            sed -n '1,200p' audit-at-least-one-missing.txt;
+            echo '```';
+            echo;
+            echo "> Full list is attached as an artifact if this view is truncated."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload list as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-at-least-one-missing
+          path: audit-at-least-one-missing.txt
