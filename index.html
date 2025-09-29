@@ -20,17 +20,26 @@
 <main class="container">
   <section class="card">
     <div class="section-title">Leagues (filter)</div>
+
+    <!-- Quick picks -->
+    <div class="quick-picks" role="group" aria-label="Quick league selections">
+      <button id="qpAll"   class="chip-btn" type="button">All</button>
+      <button id="qpNone"  class="chip-btn" type="button">None</button>
+      <button id="qpEPL"   class="chip-btn" type="button">EPL only</button>
+      <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
+    </div>
+
     <div id="chips" class="chips"></div>
+
     <div class="section-title">Show on wheel</div>
     <div class="showopts">
       <label class="chip"><input type="checkbox" id="optName" checked> Name</label>
       <label class="chip"><input type="checkbox" id="optLogo" checked> Logo</label>
       <label class="chip"><input type="checkbox" id="optStadium"> Stadium</label>
     </div>
+
     <button id="spinBtn">SPIN</button>
     <button id="resetHistoryBtn">Reset History</button>
-
-    <!-- Removed the "result" block (logo + 'No selection yet' text) -->
 
     <div class="history-title">History</div>
     <div class="history" id="history"></div>
@@ -38,6 +47,7 @@
 
   <section class="card">
     <div class="section-title">Club Wheel</div>
+    <div id="perfTip" class="perf-tip" aria-live="polite" hidden></div>
     <div class="wheel-wrap">
       <div class="pointer"></div>
       <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
@@ -55,8 +65,6 @@
       <div class="m-row">
         <img id="mLogo" class="m-logo" alt="" />
       </div>
-
-      <!-- Removed primary color swatch + HEX row -->
 
       <div class="m-row" style="margin-top:12px">
         <strong style="min-width:84px">Stadium</strong>
