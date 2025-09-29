@@ -378,6 +378,7 @@ canvas#wheel {
   flex-direction: column;
 }
 
+/* Headline/sub */
 #mHead {
   padding: 22px 26px 0;
   font-weight: 900;
@@ -393,7 +394,7 @@ canvas#wheel {
   text-align: center;
 }
 
-/* new: center contents and constrain width inside modal body */
+/* Body wrapper (keeps spacing consistent) */
 .m-body {
   padding: 6px 22px 12px;
   display: flex;
@@ -415,7 +416,7 @@ canvas#wheel {
   display: block;
 }
 
-/* Swatch + hex row */
+/* Color swatch + hex row */
 .m-row {
   width: 100%;
   display: flex;
@@ -434,6 +435,7 @@ canvas#wheel {
   box-shadow: 0 2px 8px rgba(90,161,255,0.18);
 }
 
+/* Divider */
 .m-sep {
   width: 100%;
   height: 1px;
@@ -441,7 +443,7 @@ canvas#wheel {
   margin: 8px 0;
 }
 
-/* Stadium label/value styling so blur doesn't break layout */
+/* Stadium value pill so blur doesn't break layout */
 #mStadium {
   display: inline-block;
   min-width: 180px;
