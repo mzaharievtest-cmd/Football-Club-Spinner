@@ -1,6 +1,7 @@
 // Football Club Spinner — app.js
-// Upright labels, crisp HiDPI, adaptive single-line names, stadium shown when toggled,
-// no overlap with logos, precise pointer snap, wedge clipping to avoid bleed.
+// Polished wheel (upright labels, adaptive, no overlap, HiDPI) + Modal "reveal" logic
+// New: If a toggle (Logo/Name/Stadium) is OFF, the modal shows a blurred value with a "Show" button
+// Clicking "Show" reveals that specific field without changing the toggle. If ON, it shows normally.
 
 // --------------------------- App State ---------------------------
 let TEAMS = [];
@@ -8,6 +9,7 @@ let currentAngle = 0; // radians
 let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
+let lastModalTeam = null; // remember current modal team to re-apply reveal on toggle change
 
 // --------------------------- DOM ---------------------------
 const chips = document.getElementById('chips');
@@ -23,15 +25,24 @@ const currentLogo = document.getElementById('currentLogo');
 const historyEl = document.getElementById('history');
 
 const backdrop = document.getElementById('backdrop');
+const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
 
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx'); // reserved
 
+// Modal content elements (existing structure)
+const mHead = document.getElementById('mHead');       // team name (text node inside)
+const mSub = document.getElementById('mSub');         // league code
+const mLogo = document.getElementById('mLogo');       // <img>
+const mColor = document.getElementById('mColor');     // color swatch
+const mColorHex = document.getElementById('mColorHex');
+const mStadium = document.getElementById('mStadium'); // stadium name text
+
 // --------------------------- Constants & Helpers ---------------------------
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
-const DEBUG = false; // set true to see text boxes/rulers in console+canvas
+const DEBUG = false; // set true to visualize rulers/boxes in drawWheel
 
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 const mod = (x, m) => ((x % m) + m) % m;
@@ -49,6 +60,26 @@ function luminance(hex){
   const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
+const isModalOpen = () => backdrop && backdrop.style.display === 'flex';
+
+// Inject minimal styles for reveal buttons + blur
+function ensureRevealStyles() {
+  if (document.getElementById('reveal-style')) return;
+  const s = document.createElement('style');
+  s.id = 'reveal-style';
+  s.textContent = `
+    .blurred-reveal { filter: blur(6px); transition: filter .15s ease; }
+    .reveal-btn {
+      display: inline-block; margin-top: 8px; margin-left: 8px;
+      padding: 8px 12px; border-radius: 10px;
+      border: 1px solid rgba(90,161,255,.6);
+      background: #152036; color: #fff; font-weight: 700; letter-spacing: .03em;
+      cursor: pointer; user-select: none;
+    }
+    .reveal-row { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  `;
+  document.head.appendChild(s);
+}
 
 // Image cache; redraw when loaded
 const IMG_CACHE = new Map();
@@ -65,8 +96,6 @@ function getLogo(url, onLoad) {
 }
 
 // --------------------------- Single-line fitting helpers ---------------------------
-
-// Fit a single line by reducing font px; only ellipsize at minPx.
 function fitSingleLine(ctx, text, {
   maxWidth,
   targetPx,
@@ -85,7 +114,7 @@ function fitSingleLine(ctx, text, {
     if (ctx.measureText(text).width <= maxWidth) return { text, fontPx: px, truncated: false };
   }
   // Ellipsize at character granularity
-  let s = text;
+  let s = text || '';
   while (s && ctx.measureText(s + '…').width > maxWidth) s = s.slice(0, -1);
   return { text: (s || '').trim() + '…', fontPx: minPx, truncated: true };
 }
@@ -143,22 +172,76 @@ function renderHistory() {
     historyEl.append(div);
   });
 }
+
+// Reveal helpers for modal
+function applyReveal(el, enabled, btnId, labelText) {
+  if (!el) return;
+  // Remove prior button if exists
+  const old = document.getElementById(btnId);
+  if (old) old.remove();
+
+  el.classList.remove('blurred-reveal');
+  el.setAttribute('aria-hidden', 'false');
+
+  if (enabled) {
+    // fully visible, no button
+    return;
+  }
+
+  // blurred view + "Show" button
+  el.classList.add('blurred-reveal');
+  el.setAttribute('aria-hidden', 'true');
+
+  const btn = document.createElement('button');
+  btn.id = btnId;
+  btn.type = 'button';
+  btn.className = 'reveal-btn';
+  btn.textContent = `Show ${labelText}`;
+  btn.addEventListener('click', () => {
+    el.classList.remove('blurred-reveal');
+    el.setAttribute('aria-hidden', 'false');
+    btn.remove();
+  });
+
+  // Insert right after the element (works for img and text blocks)
+  if (el.parentElement) {
+    el.insertAdjacentElement('afterend', btn);
+  }
+}
+
+function updateModalRevealFromToggles() {
+  if (!isModalOpen() || !lastModalTeam) return;
+  // Respect current toggles: visible if ON, blurred + show button if OFF
+  applyReveal(mLogo, !!optLogo?.checked, 'revealLogoBtn', 'logo');
+  applyReveal(mHead, !!optName?.checked, 'revealNameBtn', 'name');
+  applyReveal(mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
+}
+
 function openModal(team){
-  document.getElementById('mHead').textContent = team.team_name;
-  document.getElementById('mSub').textContent  = team.league_code;
-  document.getElementById('mLogo').src         = team.logo_url || "";
-  document.getElementById('mColor').style.background = team.primary_color || '#4f8cff';
-  document.getElementById('mColorHex').textContent   = team.primary_color || '#4f8cff';
-  document.getElementById('mStadium').textContent    = team.stadium || '—';
+  ensureRevealStyles();
+  lastModalTeam = team;
+
+  // Fill content
+  if (mHead) mHead.textContent = team.team_name || '—';
+  if (mSub) mSub.textContent = team.league_code || '';
+  if (mLogo) mLogo.src = team.logo_url || '';
+  if (mColor) mColor.style.background = team.primary_color || '#4f8cff';
+  if (mColorHex) mColorHex.textContent = team.primary_color || '#4f8cff';
+  if (mStadium) mStadium.textContent = team.stadium || '—';
+
+  // Apply reveal rules based on toggles (initial state)
+  updateModalRevealFromToggles();
+
+  // Show modal
   backdrop.style.display = 'flex';
-  requestAnimationFrame(()=> document.getElementById('modal').classList.add('show'));
+  requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
 function closeModal(){
-  document.getElementById('modal').classList.remove('show');
+  modalEl.classList.remove('show');
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
-// --------------------------- WHEEL DRAWING ---------------------------
+// --------------------------- WHEEL DRAWING (upright, adaptive, single-line names) ---------------------------
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
@@ -182,7 +265,7 @@ function drawWheel(){
   const radius = Math.min(W, H) * 0.48;
   const sliceAngle = TAU / N;
 
-  // 1) Draw wedges
+  // 1) Wedges
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const startAngle = i * sliceAngle;
@@ -209,7 +292,7 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // 3) Slice content (single-line name, optional stadium, logo on outer side)
+  // 3) Slice content
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const wantLogo    = !!(optLogo?.checked && t.logo_url);
@@ -223,7 +306,7 @@ function drawWheel(){
     const midAngle   = (startAngle + endAngle) / 2;
     const sliceArc   = radius * (endAngle - startAngle);
 
-    // Adaptive targets (slightly smaller to keep names 1 row)
+    // Adaptive targets — keep names single-line by default
     const nameTargetPx    = clamp(11, 0.18 * sliceArc, 20);
     const stadiumTargetPx = clamp(10, 0.15 * sliceArc, 16);
     let   logoSize        = clamp(22, 0.32 * sliceArc, 52);
@@ -242,66 +325,58 @@ function drawWheel(){
     ctx.closePath();
     ctx.clip();
 
-    // Rotate to slice frame (+x radial)
+    // Rotate to bisector and keep upright
     ctx.rotate(midAngle);
-
-    // Upright text rule
     const needFlip = Math.cos(midAngle) < 0;
     if (needFlip) ctx.rotate(Math.PI);
     const sign = needFlip ? -1 : 1;
 
-    // Geometry: text block from xText to just before logo; logo on the rim side
+    // Geometry (left-to-right along radial): text block then logo
     const xLogo = sign * (radius * 0.74);
     const xText = sign * (radius * 0.42);
     const logoInner = wantLogo ? (xLogo - sign * (logoHalf + pad)) : sign * (radius * 0.86);
     const xBoxLeft = Math.min(xText, logoInner);
     const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
-    // Draw text (name single line, stadium single line below if toggled)
+    // Text block
     if (wantName || wantStadium) {
-      // Name first (single line, shrink first then ellipsis)
-      let nameLine = null;
+      ctx.save();
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+
+      let yCenter = 0;
       let namePx = nameTargetPx;
 
+      // Name single line
       if (wantName) {
         const heavy = (lum >= 0.35 && lum <= 0.45);
-        const fit = fitSingleLine(ctx, t.team_name || '', {
+        const fitted = fitSingleLine(ctx, t.team_name || '', {
           maxWidth: maxTextWidth,
           targetPx: nameTargetPx,
           minPx: 9,
           maxPx: 22,
           weight: heavy ? 900 : 800
         });
-        nameLine = fit;
-        namePx = fit.fontPx;
+        namePx = fitted.fontPx;
 
-        // Draw name
-        ctx.save();
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
+        // If stadium also shown, shift name up a bit to make room for stadium
+        const stadEstimate = wantStadium ? stadiumTargetPx : 0;
+        const gap = wantStadium ? 4 : 0;
+        const totalH = wantStadium ? (namePx + gap + stadEstimate) : namePx;
+        let yName = -totalH/2 + namePx/2;
 
-        // Center the text block vertically: name on center if no stadium; otherwise slightly above
-        const lineGap = wantStadium ? 4 : 0;
-        const totalH = wantStadium ? (namePx + lineGap + stadiumTargetPx) : namePx;
-        let yBase = -totalH/2 + namePx/2;
-
-        // stroke + fill for contrast
         ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
         ctx.strokeStyle = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.85)';
         ctx.lineWidth = Math.max(1, Math.round(namePx/9));
         ctx.fillStyle = fg;
-        ctx.strokeText(nameLine.text, xBoxLeft, yBase);
-        ctx.fillText(nameLine.text, xBoxLeft, yBase);
-        ctx.restore();
+        ctx.strokeText(fitted.text, xBoxLeft, yName);
+        ctx.fillText(fitted.text, xBoxLeft, yName);
 
-        if (DEBUG && nameLine.truncated) {
-          console.log({ team: t.team_name, trunc: true, fontPx: namePx, width: maxTextWidth });
-        }
+        yCenter = yName; // remember for below calc
       }
 
-      // Stadium (always attempt to show if toggled)
+      // Stadium (always attempt when toggled)
       if (wantStadium) {
-        // fit single line
         const stadFit = fitSingleLine(ctx, t.stadium || '', {
           maxWidth: maxTextWidth,
           targetPx: stadiumTargetPx,
@@ -309,30 +384,21 @@ function drawWheel(){
           maxPx: 18,
           weight: 700
         });
-
-        // Draw below name (or centered if no name)
-        ctx.save();
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        const lineGap = 4;
-        let yBase;
-        if (wantName) {
-          const totalH = (namePx + lineGap + stadFit.fontPx);
-          yBase = -totalH/2 + namePx + lineGap + stadFit.fontPx/2;
-        } else {
-          yBase = 0; // center stadium if no name shown
-        }
+        const gap = wantName ? 4 : 0;
+        const totalH = wantName ? (namePx + gap + stadFit.fontPx) : stadFit.fontPx;
+        // name centered at -total/2 + namePx/2; stadium baseline at +total/2 - stadPx/2
+        const yStad = wantName ? (totalH/2 - stadFit.fontPx/2) : 0;
 
         ctx.font = `700 ${stadFit.fontPx}px Inter, system-ui, sans-serif`;
         ctx.strokeStyle = 'rgba(12,16,28,0.75)';
         ctx.lineWidth = Math.max(1, Math.round(stadFit.fontPx/9));
         ctx.fillStyle = '#D7E8FF';
-        ctx.strokeText(stadFit.text, xBoxLeft, yBase);
-        ctx.fillText(stadFit.text, xBoxLeft, yBase);
-        ctx.restore();
+        ctx.strokeText(stadFit.text, xBoxLeft, yStad);
+        ctx.fillText(stadFit.text, xBoxLeft, yStad);
       }
 
-      // Debug ruler
+      ctx.restore();
+
       if (DEBUG) {
         ctx.save();
         ctx.strokeStyle = 'rgba(0,255,255,0.6)';
@@ -347,7 +413,7 @@ function drawWheel(){
       }
     }
 
-    // Draw logo badge (upright)
+    // Logo
     if (wantLogo) {
       ctx.save();
       ctx.translate(xLogo, 0);
@@ -389,7 +455,7 @@ function drawWheel(){
       ctx.restore();
     }
 
-    ctx.restore(); // clip + rotations
+    ctx.restore(); // wedge clip + rotations
   }
 
   ctx.restore();
@@ -474,13 +540,17 @@ function setupEventListeners() {
     }
   });
 
-  optName.onchange = optLogo.onchange = optStadium.onchange = () => drawWheel();
+  // Wheel redraw + live modal reveal state updates
+  optName.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
+  optLogo.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
+  optStadium.onchange = () => { drawWheel(); updateModalRevealFromToggles(); };
+
   spinBtn.onclick = spin;
   resetHistoryBtn.addEventListener('click', resetHistory);
 
   mClose.onclick = closeModal;
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
-  window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
+  window.addEventListener('keydown', e => { if(e.key==='Escape' && isModalOpen()) closeModal(); });
 
   // Redraw on resize (debounced)
   let resizeTO;
@@ -493,10 +563,12 @@ function setupEventListeners() {
   }, { passive: true });
 }
 
+// Boot
 fetch('./teams.json')
   .then(res => res.json())
   .then(data => {
     TEAMS = data;
+    ensureRevealStyles();
     renderChips();
     renderHistory();
     sizeCanvas();
