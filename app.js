@@ -1,14 +1,6 @@
 // Football Club Spinner — app.js
-// Polished wheel rendering per acceptance criteria:
-// - HiDPI crisp canvas
-// - Even slice spacing
-// - Text (team + stadium) always upright
-// - Stable left-to-right layout in each slice (text block then logo), no overlap
-// - Adaptive scaling by slice arc (L = radius * sliceAngle)
-// - Wrap/ellipsis helpers minimize premature truncation
-// - Clip to wedge so nothing bleeds outside
-// - Subtle selected-slice rim highlight
-// - Precise pointer snap preserved, spin animation unchanged
+// Fixes: upright labels, no overlap, adaptive scaling, stable layout, crisp HiDPI.
+// Draw logic follows the requested geometry and rules.
 
 // --------------------------- App State ---------------------------
 let TEAMS = [];
@@ -34,13 +26,12 @@ const backdrop = document.getElementById('backdrop');
 const mClose = document.getElementById('mClose');
 
 const wheel = document.getElementById('wheel');
-const fx = document.getElementById('fx'); // reserved for future effects
+const fx = document.getElementById('fx'); // reserved
 
 // --------------------------- Constants & Helpers ---------------------------
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
-
-const DEBUG = false; // set to true to draw text boxes and log truncation details
+const DEBUG = false; // set true for overlay boxes/rulers/logging
 
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 const mod = (x, m) => ((x % m) + m) % m;
@@ -52,7 +43,6 @@ function textColorFor(hex){
   const L = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
   return L > 0.35 ? '#0b0f17' : '#fff';
 }
-
 function luminance(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return 0;
   hex = hex.replace('#','');
@@ -60,12 +50,12 @@ function luminance(hex){
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
 
-// Image cache; redraw when an image loads (no layout shift)
+// Image cache; trigger redraw when loaded
 const IMG_CACHE = new Map();
 function getLogo(url, onLoad) {
   if (!url) return null;
-  let entry = IMG_CACHE.get(url);
-  if (entry) return entry.img;
+  const cached = IMG_CACHE.get(url);
+  if (cached) return cached.img;
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.src = url;
@@ -74,55 +64,53 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// --------------------------- Wrapping / Fitting ---------------------------
+// --------------------------- Wrap / Fit helpers ---------------------------
 
-// Split text into tokens that allow breaking on space and soft separators
+// Normalize and tokenise so we can break on spaces and soft separators.
 function tokenize(text) {
-  // Normalize whitespace
-  const normalized = (text || '').replace(/\s+/g, ' ').trim();
-  if (!normalized) return [];
-  // We want to be able to break on -, /, · as well. Split but keep separators.
-  const parts = [];
-  normalized.split(' ').forEach(word => {
-    const chunks = word.split(/([\-\/·])/g).filter(Boolean);
-    for (let i=0;i<chunks.length;i++){
-      if (chunks[i].match(/[\-\/·]/)) {
-        // attach separator to previous chunk to keep semantics, but allow break before next chunk
-        if (parts.length) parts[parts.length-1] += chunks[i];
-        else parts.push(chunks[i]);
+  const norm = (text || '').replace(/\s+/g, ' ').trim();
+  if (!norm) return [];
+  const out = [];
+  norm.split(' ').forEach(word => {
+    // Split on soft separators but keep them attached to the previous token
+    const pieces = word.split(/([\-\/·])/g).filter(Boolean);
+    for (let i=0;i<pieces.length;i++) {
+      const p = pieces[i];
+      if (/[\-\/·]/.test(p)) {
+        if (out.length) out[out.length-1] += p;
+        else out.push(p);
       } else {
-        parts.push(chunks[i]);
+        out.push(p);
       }
     }
-    // space token to indicate gap
-    parts.push(' ');
+    out.push(' ');
   });
-  if (parts.length && parts[parts.length-1] === ' ') parts.pop();
-  return parts;
+  if (out[out.length-1] === ' ') out.pop();
+  return out;
 }
 
-// Greedy wrap without changing font size; returns lines array
+// Greedy wrap without resizing
 function measureWrapped(ctx, text, maxWidth) {
   const tokens = tokenize(text);
   const lines = [];
   let line = '';
   for (let i=0;i<tokens.length;i++){
     const t = tokens[i];
-    const candidate = line ? line + t : t;
-    if (ctx.measureText(candidate).width <= maxWidth) {
-      line = candidate;
+    const tryLine = line ? line + t : t;
+    if (ctx.measureText(tryLine).width <= maxWidth) {
+      line = tryLine;
     } else {
       if (line) {
         lines.push(line.trim());
         line = '';
-        i--; // reprocess this token on the next line
+        i--; // re-try token on new line
       } else {
-        // single token too wide; break at character level
+        // single token too wide: hard cut at character level
         let s = t;
-        while (s && ctx.measureText(s).width > maxWidth) s = s.slice(0, -1);
+        while (s && ctx.measureText(s).width > maxWidth) s = s.slice(0,-1);
         if (s) lines.push(s);
         const rest = t.slice(s.length);
-        if (rest) tokens.splice(i+1, 0, rest); // insert remainder
+        if (rest) tokens.splice(i+1, 0, rest);
       }
     }
   }
@@ -130,8 +118,7 @@ function measureWrapped(ctx, text, maxWidth) {
   return lines;
 }
 
-// Fit text into a box by shrinking font size before truncation.
-// Returns { lines, fontPx, truncated }
+// Fit into a box by shrinking font size before truncating the last line.
 function fitTextIntoBox(ctx, text, opts) {
   const {
     maxWidth,
@@ -145,37 +132,30 @@ function fitTextIntoBox(ctx, text, opts) {
     weight = 800,
   } = opts;
 
-  const clampPx = clamp(minPx, Math.round(targetPx), maxPx);
-  let px = clampPx;
+  let px = clamp(minPx, Math.round(targetPx), maxPx);
   let lines = [];
 
   while (px >= minPx) {
     ctx.font = `${weight} ${px}px ${fontFamily}`;
     lines = measureWrapped(ctx, text, maxWidth);
-
     if (lines.length <= maxLines) {
-      return { lines, fontPx: px, truncated: false, lineHeight };
+      return { lines, fontPx: px, truncated: false };
     }
-
-    // Too many lines, try shrinking
     px -= allowTighten ? 1 : 2;
   }
 
-  // At minPx: take first (maxLines - 1) full lines, and ellipsize the last visible line
+  // At minPx: truncate only the last visible line
   ctx.font = `${weight} ${minPx}px ${fontFamily}`;
-  const all = measureWrapped(ctx, text, maxWidth);
-  let used = all.slice(0, Math.max(0, maxLines - 1));
-  const remaining = all.slice(maxLines - 1).join(' ');
-  // Ellipsize at character granularity for the last line
-  let last = remaining;
-  while (last && ctx.measureText(last + '…').width > maxWidth) last = last.slice(0, -1);
-  if (last) used.push(last + '…');
-  else if (!used.length && text) used = [text[0] + '…'];
-  return { lines: used, fontPx: minPx, truncated: true, lineHeight };
+  const full = measureWrapped(ctx, text, maxWidth);
+  const used = full.slice(0, Math.max(0, maxLines - 1));
+  let last = full.slice(maxLines - 1).join(' ');
+  while (last && ctx.measureText(last + '…').width > maxWidth) last = last.slice(0,-1);
+  if (last) used.push(last + '…'); else if (!used.length && text) used.push(text[0] + '…');
+  return { lines: used, fontPx: minPx, truncated: true };
 }
 
-// Draw the name + stadium block at (x,y), left-aligned along +x
-// cfg: { ctx, x, y, maxWidth, name, stadium, basePxName, basePxStadium, maxLinesName=2, color, xLogo, logoHalf, padding, backgroundLum }
+// Draw name + stadium block at (x, y), left-aligned.
+// cfg: { ctx, x, y, maxWidth, name, stadium, basePxName, basePxStadium, maxLinesName, color, xLogo, logoHalf, padding, backgroundLum, forceOneLine }
 function drawLabelBlock(cfg) {
   const {
     ctx, x, y, maxWidth,
@@ -188,14 +168,14 @@ function drawLabelBlock(cfg) {
     forceOneLine = false
   } = cfg;
 
-  const smallSlice = forceOneLine;
-  const nameMaxLines = smallSlice ? 1 : maxLinesName;
+  const nameMaxLines = forceOneLine ? 1 : maxLinesName;
+  const lhName = forceOneLine ? 1.03 : 1.06;
+  const lhStad = forceOneLine ? 1.03 : 1.05;
 
-  // Slightly tighter line-height on very small slices
-  const lhName = smallSlice ? 1.03 : 1.06;
-  const lhStad = smallSlice ? 1.03 : 1.05;
+  const heavy = (backgroundLum >= 0.35 && backgroundLum <= 0.45);
+  const weightName = heavy ? 900 : 800;
 
-  // Fit name first
+  // Fit name
   const nameFit = fitTextIntoBox(ctx, name || '', {
     maxWidth,
     maxLines: nameMaxLines,
@@ -205,19 +185,15 @@ function drawLabelBlock(cfg) {
     maxPx: 26,
     lineHeight: lhName,
     allowTighten: true,
-    weight: (backgroundLum >= 0.35 && backgroundLum <= 0.45) ? 900 : 800,
+    weight: weightName
   });
 
-  // After fitting name, check if we have space for stadium
-  let canDrawStadium = !!stadium && !!optStadium?.checked && maxWidth >= 80;
-  // Ensure the text block's right edge doesn't encroach into the logo area (horizontal guard)
-  const rightEdge = x + maxWidth;
-  const logoLeftEdge = xLogo - logoHalf - padding;
-  if (rightEdge > logoLeftEdge) {
-    // reduce available width; re-fit name
-    const newMax = Math.max(40, logoLeftEdge - x);
-    const nameFit2 = fitTextIntoBox(ctx, name || '', {
-      maxWidth: newMax,
+  // Guard against logo overlap by shrinking text width if needed
+  const logoLeft = xLogo - logoHalf - padding;
+  let usableWidth = Math.min(maxWidth, Math.max(40, logoLeft - x));
+  if (usableWidth < maxWidth) {
+    const nf = fitTextIntoBox(ctx, name || '', {
+      maxWidth: usableWidth,
       maxLines: nameMaxLines,
       fontFamily: 'Inter, system-ui, sans-serif',
       targetPx: nameFit.fontPx,
@@ -225,97 +201,94 @@ function drawLabelBlock(cfg) {
       maxPx: 26,
       lineHeight: lhName,
       allowTighten: true,
-      weight: (backgroundLum >= 0.35 && backgroundLum <= 0.45) ? 900 : 800,
+      weight: weightName
     });
-    if (DEBUG && nameFit2.truncated && !nameFit.truncated) {
-      console.log({ team: name, reason: 'logo-guard-shrink', fontPx: nameFit2.fontPx, lines: nameFit2.lines });
+    if (DEBUG && nf.truncated && !nameFit.truncated) {
+      console.log({ team: name, reason: 'logo-guard', fontPx: nf.fontPx, lines: nf.lines });
     }
-    nameFit.lines = nameFit2.lines;
-    nameFit.fontPx = nameFit2.fontPx;
-    nameFit.truncated = nameFit2.truncated;
+    nameFit.lines = nf.lines;
+    nameFit.fontPx = nf.fontPx;
+    nameFit.truncated = nf.truncated;
   }
 
-  // Decide stadium presence: ensure at least 0.85 * basePxStadium space visually remains
-  let stadDraw = null;
-  if (canDrawStadium) {
-    const stadFit = fitTextIntoBox(ctx, stadium || '', {
-      maxWidth: Math.max(40, Math.min(maxWidth, (xLogo - logoHalf - padding) - x)),
+  // Stadium optional
+  let stadFit = null;
+  const canTryStadium = !!stadium && !!optStadium?.checked && maxWidth >= 80;
+  if (canTryStadium) {
+    usableWidth = Math.min(maxWidth, Math.max(40, logoLeft - x));
+    const targetPx = basePxStadium;
+    stadFit = fitTextIntoBox(ctx, stadium || '', {
+      maxWidth: usableWidth,
       maxLines: 1,
       fontFamily: 'Inter, system-ui, sans-serif',
-      targetPx: basePxStadium,
+      targetPx,
       minPx: 9,
       maxPx: 22,
       lineHeight: lhStad,
       allowTighten: true,
-      weight: 700,
+      weight: 700
     });
-    if (stadFit.fontPx >= 0.85 * basePxStadium) {
-      stadDraw = stadFit;
+    if (stadFit.fontPx < 0.85 * basePxStadium) {
+      stadFit = null; // too small to render nicely
     }
   }
 
-  // Compute total block height
-  const nameLineH = nameFit.fontPx * nameFit.lineHeight;
-  const stadLineH = stadDraw ? (stadDraw.fontPx * stadDraw.lineHeight) : 0;
-  const gap = stadDraw ? 6 : 0;
-  const totalH = nameFit.lines.length * nameLineH + gap + (stadDraw ? stadLineH : 0);
+  // Compute total height
+  const nameLineH = nameFit.fontPx * (forceOneLine ? 1.03 : 1.06);
+  const gap = stadFit ? 6 : 0;
+  const stadH = stadFit ? stadFit.fontPx * (forceOneLine ? 1.03 : 1.05) : 0;
+  const totalH = nameFit.lines.length * nameLineH + (stadFit ? (gap + stadH) : 0);
 
-  // Vertical centering around y
-  let yCursor = y - totalH / 2;
+  let yCursor = y - totalH/2;
 
-  // Draw background debug rect
+  // Debug box
   if (DEBUG) {
     ctx.save();
-    ctx.fillStyle = 'rgba(0,255,255,0.10)';
-    ctx.fillRect(x, yCursor, maxWidth, totalH);
+    ctx.fillStyle = 'rgba(0,255,255,0.12)';
+    ctx.fillRect(x, yCursor, Math.min(maxWidth, Math.max(40, (xLogo - logoHalf - padding) - x)), totalH);
     ctx.restore();
   }
 
-  // Name lines
+  // Draw name lines
   ctx.save();
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-
-  // Subtle stroke for contrast; add extra light shadow in mid-contrast region
-  const strokeColor = (backgroundLum >= 0.35 && backgroundLum <= 0.45) ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.85)';
-  const nameWeight = (backgroundLum >= 0.35 && backgroundLum <= 0.45) ? 900 : 800;
-
+  ctx.strokeStyle = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.85)';
   for (const line of nameFit.lines) {
-    const baselineY = yCursor + nameLineH;
-    ctx.font = `${nameWeight} ${nameFit.fontPx}px Inter, system-ui, sans-serif`;
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = Math.max(1, Math.round(nameFit.fontPx / 9));
+    const baseY = yCursor + nameLineH;
+    ctx.font = `${weightName} ${nameFit.fontPx}px Inter, system-ui, sans-serif`;
+    ctx.lineWidth = Math.max(1, Math.round(nameFit.fontPx/9));
     ctx.fillStyle = color;
-    ctx.strokeText(line, x, baselineY);
-    ctx.fillText(line, x, baselineY);
+    ctx.strokeText(line, x, baseY);
+    ctx.fillText(line, x, baseY);
     yCursor += nameLineH;
   }
   ctx.restore();
 
-  // Gap then stadium
-  if (stadDraw) yCursor += gap;
+  if (stadFit) yCursor += gap;
 
-  if (stadDraw) {
+  // Draw stadium
+  if (stadFit) {
     ctx.save();
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.font = `700 ${stadDraw.fontPx}px Inter, system-ui, sans-serif`;
+    const baseY = yCursor + stadFit.fontPx * (forceOneLine ? 1.03 : 1.05);
+    ctx.font = `700 ${stadFit.fontPx}px Inter, system-ui, sans-serif`;
     ctx.strokeStyle = 'rgba(12,16,28,0.75)';
-    ctx.lineWidth = Math.max(1, Math.round(stadDraw.fontPx / 9));
+    ctx.lineWidth = Math.max(1, Math.round(stadFit.fontPx/9));
     ctx.fillStyle = '#D7E8FF';
-    const baselineY = yCursor + stadDraw.fontPx * stadDraw.lineHeight;
-    const lastLine = stadDraw.lines.join(' ').trim();
-    ctx.strokeText(lastLine, x, baselineY);
-    ctx.fillText(lastLine, x, baselineY);
+    const text = stadFit.lines.join(' ').trim();
+    ctx.strokeText(text, x, baseY);
+    ctx.fillText(text, x, baseY);
     ctx.restore();
   }
 
   if (DEBUG && nameFit.truncated) {
-    console.log({ team: name, fontPx: nameFit.fontPx, truncated: true, lines: nameFit.lines });
+    console.log({ team: name, truncated: true, fontPx: nameFit.fontPx, lines: nameFit.lines });
   }
 }
 
-// --------------------------- HiDPI sizing ---------------------------
+// --------------------------- Responsive HiDPI sizing ---------------------------
 function sizeCanvas() {
   const rect = (wheel.parentElement || wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width || 640), 1200);
@@ -332,7 +305,7 @@ function sizeCanvas() {
   fx.style.height = cssSize + 'px';
 }
 
-// --------------------------- Chips / History / Modal (unchanged) ---------------------------
+// --------------------------- Chips / History / Modal ---------------------------
 function renderChips() {
   const leagues = [...new Set(TEAMS.map(t => t.league_code))].sort();
   chips.innerHTML = '';
@@ -383,7 +356,7 @@ function closeModal(){
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
-// --------------------------- WHEEL DRAWING (UPDATED) ---------------------------
+// --------------------------- WHEEL DRAWING (FIXED) ---------------------------
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
@@ -407,34 +380,34 @@ function drawWheel(){
   const radius = Math.min(W, H) * 0.48;
   const sliceAngle = TAU / N;
 
-  // 1) Draw wedges
+  // 1) Draw all wedges
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const startAngle = i * sliceAngle;
     const endAngle   = (i + 1) * sliceAngle;
 
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, radius, startAngle, endAngle);
+    ctx.moveTo(0,0);
+    ctx.arc(0,0, radius, startAngle, endAngle);
     ctx.closePath();
     ctx.fillStyle = t.primary_color || '#4f8cff';
     ctx.fill();
   }
 
-  // 2) Subtle selected rim highlight
+  // 2) Selected slice highlight (subtle rim stroke)
   if (selectedIdx >= 0 && selectedIdx < N) {
     const a0 = selectedIdx * sliceAngle;
     const a1 = (selectedIdx + 1) * sliceAngle;
     ctx.save();
     ctx.beginPath();
-    ctx.arc(0, 0, radius - 1.0, a0, a1);
+    ctx.arc(0,0, radius - 1, a0, a1);
     ctx.lineWidth = Math.max(2, Math.round(radius * 0.015));
     ctx.strokeStyle = 'rgba(255,255,255,0.35)';
     ctx.stroke();
     ctx.restore();
   }
 
-  // 3) Per-slice content
+  // 3) Per-slice content (upright, clipped, adaptive)
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const showLogo    = !!(optLogo?.checked && t.logo_url);
@@ -448,12 +421,11 @@ function drawWheel(){
     const midAngle   = (startAngle + endAngle) / 2;
     const sliceArc   = radius * (endAngle - startAngle); // L
 
-    // Adaptive targets per spec
+    // Adaptive targets (per acceptance)
     const nameTargetPx    = clamp(14, 0.23 * sliceArc, 24);
     const stadiumTargetPx = clamp(12, 0.18 * sliceArc, 18);
     let   logoSize        = clamp(24, 0.34 * sliceArc, 56);
     const logoHalf = logoSize / 2;
-
     const pad = 10;
 
     const fg = textColorFor(t.primary_color);
@@ -461,28 +433,32 @@ function drawWheel(){
 
     ctx.save();
 
-    // Clip to wedge
+    // Clip to wedge to prevent bleed
     ctx.beginPath();
     ctx.moveTo(0,0);
     ctx.arc(0,0, radius - 1, startAngle, endAngle);
     ctx.closePath();
     ctx.clip();
 
-    // Rotate into slice frame (+x radial)
+    // Move into slice coordinate
     ctx.rotate(midAngle);
 
-    // Upright text rule
-    if (Math.cos(midAngle) < 0) ctx.rotate(Math.PI);
+    // Upright rule: if left side of circle, flip by 180°
+    const flipped = Math.cos(midAngle) < 0;
+    if (flipped) ctx.rotate(Math.PI);
 
-    // Geometry: text block then logo, both centered vertically on y=0
+    // Layout geometry (left-to-right along radius): text left, logo right
     const xLogo = radius * 0.74;
     const xText = radius * 0.42;
-    let   maxTextWidth = Math.max(60, (xLogo - logoHalf - pad) - xText);
+    let maxTextWidth = Math.max(60, (xLogo - logoHalf - pad) - xText);
 
-    const forceOneLine = sliceArc < 90; // very thin slice
+    const forceOneLine = sliceArc < 90; // very thin wedge
 
-    // Draw text block (may decide to skip stadium if width is small)
+    // Draw text upright by unrotating the local frame back to page orientation
     if (showName) {
+      ctx.save();
+      // Un-rotate to keep text upright
+      ctx.rotate(-(midAngle + (flipped ? Math.PI : 0)));
       drawLabelBlock({
         ctx,
         x: xText,
@@ -498,20 +474,22 @@ function drawWheel(){
         backgroundLum: lum,
         forceOneLine
       });
+      ctx.restore();
     }
 
-    // Draw logo badge (if enabled)
+    // Draw logo as circular badge (upright)
     if (showLogo) {
       ctx.save();
+      ctx.rotate(-(midAngle + (flipped ? Math.PI : 0)));
       ctx.translate(xLogo, 0);
 
-      // Shadow
+      // Soft shadow
       ctx.shadowColor = 'rgba(0,0,0,0.6)';
       ctx.shadowBlur = 6;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 2;
 
-      // Outer ring
+      // Badge ring
       ctx.beginPath();
       ctx.arc(0, 0, logoHalf, 0, TAU);
       ctx.closePath();
@@ -522,7 +500,7 @@ function drawWheel(){
       ctx.strokeStyle = 'rgba(255,255,255,0.9)';
       ctx.stroke();
 
-      // Clip circle then draw image (contain)
+      // Clip circle and draw image (contain)
       ctx.save();
       ctx.beginPath();
       ctx.arc(0, 0, logoHalf - 1, 0, TAU);
@@ -531,27 +509,25 @@ function drawWheel(){
 
       const img = getLogo(t.logo_url, () => requestAnimationFrame(drawWheel));
       if (img && img.complete) {
-        // contain in square (2*logoHalf - 2)
         const box = Math.max(4, 2 * (logoHalf - 1));
-        const iw = img.naturalWidth || box;
-        const ih = img.naturalHeight || box;
-        const scale = Math.min(box / iw, box / ih);
-        const dw = iw * scale, dh = ih * scale;
+        const iw = img.naturalWidth || box, ih = img.naturalHeight || box;
+        const s = Math.min(box / iw, box / ih);
+        const dw = iw * s, dh = ih * s;
         ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
       } else {
         // placeholder
-        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
         const ph = (logoHalf - 3) * 2;
         ctx.fillRect(-ph/2, -ph/2, ph, ph);
       }
-      ctx.restore(); // end clip
-
+      ctx.restore(); // image clip
       ctx.restore();
     }
 
+    // Debug rulers for text box
     if (DEBUG) {
-      // Visualize the text box width ruler
       ctx.save();
+      ctx.rotate(-(midAngle + (flipped ? Math.PI : 0)));
       ctx.strokeStyle = 'rgba(0,255,255,0.6)';
       ctx.setLineDash([4,3]);
       ctx.beginPath();
@@ -563,7 +539,7 @@ function drawWheel(){
       ctx.restore();
     }
 
-    ctx.restore(); // slice clip + rotation
+    ctx.restore(); // wedge clip + rotations
   }
 
   ctx.restore();
@@ -601,7 +577,7 @@ function spin(){
   const N = data.length;
   const slice = TAU / N;
 
-  const extraTurns  = 6 + Math.floor(Math.random()*3); // 6..8 turns
+  const extraTurns  = 6 + Math.floor(Math.random()*3); // 6..8
   const finalOffset = Math.random() * TAU;
   const targetAngle = TAU * extraTurns + finalOffset;
 
@@ -617,13 +593,13 @@ function spin(){
     if (p < 1){
       requestAnimationFrame(anim);
     } else {
-      // Determine index under the pointer (top)
+      // Find index under pointer at top
       const theta = mod(currentAngle, TAU);
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
 
-      // Snap: align center of that slice exactly under pointer
-      const centerAngle = idx * slice + slice / 2;
+      // Snap slice center exactly under pointer
+      const centerAngle = idx * slice + slice/2;
       const snapDelta = mod(centerAngle - offset, TAU);
       currentAngle = mod(currentAngle + snapDelta, TAU);
 
@@ -659,7 +635,7 @@ function setupEventListeners() {
   backdrop.addEventListener('click', e => { if(e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(e.key==='Escape' && backdrop.style.display==='flex') closeModal(); });
 
-  // Debounced resize redraw
+  // Redraw on resize (debounced)
   let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
@@ -670,7 +646,6 @@ function setupEventListeners() {
   }, { passive: true });
 }
 
-// Load data & init
 fetch('./teams.json')
   .then(res => res.json())
   .then(data => {
