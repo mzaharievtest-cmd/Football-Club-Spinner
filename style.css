@@ -34,7 +34,7 @@ body {
     radial-gradient(1400px 840px at 30% -20%, rgba(90,161,255,.35) 0, transparent 50%),
     radial-gradient(1100px 880px at 90% -10%, rgba(34,211,238,.22) 0, transparent 45%),
     linear-gradient(180deg, #05070f, #060914 28%, #08101e 100%);
-  background-attachment: fixed; /* avoid any visible seam while scrolling */
+  background-attachment: fixed;
   overflow-x: hidden;
 }
 
@@ -48,7 +48,7 @@ header {
   position: sticky;
   top: 0;
   background: linear-gradient(180deg,rgba(15,23,42,.92),rgba(11,18,31,.78));
-  border-bottom: none; /* remove separation line */
+  border-bottom: none; /* no separation line */
   backdrop-filter: blur(14px);
   z-index: 20;
 }
@@ -105,7 +105,7 @@ header h1 {
 }
 
 /* =========================
-   Quick picks + selection tip
+   Quick picks + selection banner
    ========================= */
 .quick-picks {
   display: flex;
@@ -124,25 +124,25 @@ header h1 {
   margin: 6px 0 10px;
 }
 
-/* Active state for quick-pick buttons */
 .chip-btn.active {
   border-color: var(--accent-2);
   box-shadow: 0 0 0 2px rgba(34,211,238,.22) inset;
   background: linear-gradient(180deg, rgba(30,44,80,.95), rgba(14,24,48,.92));
 }
 
-/* Ghost variant (disabled “show more”) */
+/* While UI is locked for spin: show wait cursor */
+body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked label, body.ui-locked .chip {
+  cursor: wait !important;
+}
+
+/* Ghost variant for “Show more” */
 .chip-btn.ghost {
   background: linear-gradient(180deg, rgba(18,22,36,.8), rgba(10,14,26,.78));
   border-style: dashed;
 }
-.chip-btn.ghost.disabled {
-  opacity: .7;
-  cursor: not-allowed;
-}
 
 /* =========================
-   League chips (filters)
+   League chips
    ========================= */
 #chips .chips {
   display: flex;
@@ -151,13 +151,12 @@ header h1 {
   margin: 6px 0 14px;
 }
 
-/* Base chip (label) */
 #chips .chip {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px 10px 44px; /* space for custom checkbox */
+  padding: 10px 16px 10px 44px;
   border-radius: 999px;
   border: 1px solid rgba(90,161,255,.18);
   background: linear-gradient(135deg,rgba(13,22,40,.95),rgba(9,15,28,.85));
@@ -168,13 +167,8 @@ header h1 {
   transition: .18s ease;
   max-width: 100%;
 }
+#chips .chip:hover { border-color: rgba(90,161,255,.38); transform: translateY(-1px); }
 
-#chips .chip:hover {
-  border-color: rgba(90,161,255,.38);
-  transform: translateY(-1px);
-}
-
-/* Custom checkbox */
 #chips .chip input[type="checkbox"] {
   appearance: none;
   position: absolute;
@@ -188,7 +182,6 @@ header h1 {
   place-items: center;
   transition: .18s;
 }
-
 #chips .chip input[type="checkbox"]::after {
   content: "";
   width: 9px;
@@ -199,18 +192,9 @@ header h1 {
   opacity: 0;
   transition: .18s;
 }
+#chips .chip input[type="checkbox"]:checked { border-color: var(--accent); background: rgba(90,161,255,.18); }
+#chips .chip input[type="checkbox"]:checked::after { transform: scale(1); opacity: 1; }
 
-#chips .chip input[type="checkbox"]:checked {
-  border-color: var(--accent);
-  background: rgba(90,161,255,.18);
-}
-
-#chips .chip input[type="checkbox"]:checked::after {
-  transform: scale(1);
-  opacity: 1;
-}
-
-/* Visible label text (full league names) */
 #chips .chip .chip-text {
   display: inline-block;
   white-space: nowrap;
@@ -225,7 +209,7 @@ header h1 {
 }
 
 /* =========================
-   Show-on-wheel toggles (Name/Logo/Stadium)
+   Show-on-wheel toggles
    ========================= */
 .showopts {
   display: flex;
@@ -249,7 +233,6 @@ header h1 {
   cursor: pointer;
   transition: .18s;
 }
-
 .showopts .chip input {
   appearance: none;
   position: absolute;
@@ -284,12 +267,7 @@ button, .chip-btn {
   cursor: pointer;
   transition: .18s;
 }
-
-button:hover, .chip-btn:hover {
-  border-color: var(--accent-2);
-  transform: translateY(-1px);
-}
-
+button:hover, .chip-btn:hover { border-color: var(--accent-2); transform: translateY(-1px); }
 button:disabled { opacity: .6; cursor: wait; }
 
 .result {
@@ -370,15 +348,14 @@ canvas#wheel {
 
 #fx { position: absolute; inset: 0; pointer-events: none; }
 
-/* Pointer flipped “around” but kept above the wheel */
+/* Pointer flipped around and above the wheel */
 .pointer {
   position: absolute;
   top: -10px;
   border-left: 16px solid transparent;
   border-right: 16px solid transparent;
-  border-top: 26px solid var(--accent-2);  /* flipped from border-bottom to border-top */
+  border-top: 26px solid var(--accent-2);
 }
-
 @media (max-width: 600px) {
   .pointer {
     top: -6px;
@@ -389,14 +366,14 @@ canvas#wheel {
 }
 
 /* =========================
-   Modal (IDs used in JS)
+   Modal
    ========================= */
 #backdrop {
   position: fixed;
   inset: 0;
   background: rgba(4,10,24,0.85);
   backdrop-filter: blur(12px);
-  display: none; /* toggled to flex in JS */
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
@@ -415,7 +392,6 @@ canvas#wheel {
   flex-direction: column;
 }
 
-/* Headline/sub */
 #mHead {
   padding: 22px 26px 0;
   font-weight: 900;
@@ -423,7 +399,6 @@ canvas#wheel {
   color: #f4f7ff;
   text-align: center;
 }
-
 #mSub {
   font-size: 14px;
   color: #a3b8e7;
@@ -431,7 +406,6 @@ canvas#wheel {
   text-align: center;
 }
 
-/* Body wrapper */
 .m-body {
   padding: 6px 22px 12px;
   display: flex;
@@ -440,7 +414,6 @@ canvas#wheel {
   gap: 10px;
 }
 
-/* Logo */
 #mLogo {
   width: 110px; height: 110px;
   max-width: 60vw;
@@ -453,7 +426,6 @@ canvas#wheel {
   display: block;
 }
 
-/* Row */
 .m-row {
   width: 100%;
   display: flex;
@@ -472,15 +444,8 @@ canvas#wheel {
   box-shadow: 0 2px 8px rgba(90,161,255,0.18);
 }
 
-/* Divider */
-.m-sep {
-  width: 100%;
-  height: 1px;
-  background: #234080;
-  margin: 8px 0;
-}
+.m-sep { width: 100%; height: 1px; background: #234080; margin: 8px 0; }
 
-/* Stadium pill */
 #mStadium {
   display: inline-block;
   min-width: 180px;
@@ -497,7 +462,6 @@ canvas#wheel {
   white-space: nowrap;
 }
 
-/* Actions */
 .m-actions {
   padding: 12px 22px 18px;
   background: #111a2c;
@@ -507,13 +471,8 @@ canvas#wheel {
   justify-content: center;
 }
 
-#backdrop .chip-btn,
-#backdrop button {
-  width: auto;
-  min-width: 160px;
-}
+#backdrop .chip-btn, #backdrop button { width: auto; min-width: 160px; }
 
-/* Reveal helpers */
 .reveal-btn {
   display: inline-flex;
   align-items: center;
@@ -531,26 +490,11 @@ canvas#wheel {
   position: relative;
   white-space: nowrap;
 }
-
-#modal #mHead + .reveal-btn {
-  display: inline-block;
-  margin-left: 0;
-  margin-top: 6px;
-}
+#modal #mHead + .reveal-btn { display: inline-block; margin-left: 0; margin-top: 6px; }
 
 .reveal-wrap { position: relative; display: inline-block; z-index: 0; }
-.reveal-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: transparent;
-  pointer-events: none;
-  z-index: 2;
-}
+.reveal-overlay { position: absolute; inset: 0; border-radius: inherit; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: transparent; pointer-events: none; z-index: 2; }
 
-/* Mobile modal sizing */
 @media (max-width: 600px) {
   #modal { max-width: 95vw; border-radius: 14px; }
   .m-body { padding: 8px 16px 12px; }
