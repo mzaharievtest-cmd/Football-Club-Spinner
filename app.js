@@ -1,6 +1,6 @@
 // Football Club Spinner — app.js
 // Upright, adaptive wheel; crisp HiDPI; no overlap; precise pointer snap.
-// Modal reveal/blur per toggle with robust inline blur + overlay fallback.
+// Modal reveal/blur per toggle with robust inline blur + overlay fallback and working “Show …” buttons.
 //
 // Behavior:
 // - If Logo/Name/Stadium toggle is OFF, the modal blurs that field and shows a “Show …” button.
@@ -170,9 +170,9 @@ function ensureRevealStyles() {
     .reveal-overlay {
       position: absolute; inset: 0;
       border-radius: inherit;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      background: rgba(15,23,42,.22);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(15,23,42,.28);
       pointer-events: none;
     }
   `;
@@ -212,10 +212,13 @@ function removeOverlay(el) {
 }
 function blurElement(el) {
   if (!el) return;
-  el.style.setProperty('filter', 'blur(8px) saturate(0.9)', 'important');
-  el.style.setProperty('-webkit-filter', 'blur(8px) saturate(0.9)', 'important');
+  // Strong inline blur (applies to actual element pixels)
+  el.style.setProperty('filter', 'blur(14px) saturate(0.85)', 'important');
+  el.style.setProperty('-webkit-filter', 'blur(14px) saturate(0.85)', 'important');
+  el.style.transform = 'translateZ(0)'; // avoid edge bleeding
   el.style.pointerEvents = 'none';
   el.setAttribute('aria-hidden', 'true');
+  // Fallback overlay if some CSS still cancels filter
   requestAnimationFrame(() => {
     const cs = getComputedStyle(el);
     const f = (cs.filter || cs.webkitFilter || '').trim();
@@ -226,6 +229,7 @@ function unblurElement(el) {
   if (!el) return;
   el.style.removeProperty('filter');
   el.style.removeProperty('-webkit-filter');
+  el.style.transform = '';
   el.style.pointerEvents = '';
   el.setAttribute('aria-hidden', 'false');
   removeOverlay(el);
@@ -253,9 +257,11 @@ function applyReveal(el, enabled, btnId, labelText) {
     el.dataset.revealed = 'true';
     unblurElement(el);
     btn.remove();
-  });
+  }, { passive: true });
   placeButtonAfter(el, btn);
 }
+
+// Re-apply when toggles change or modal mutates
 let modalObserver = null;
 function startModalObserver() {
   if (!modalEl) return;
@@ -327,7 +333,7 @@ function drawWheel(){
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const startAngle = i * sliceAngle;
-    const endAngle   = (i + 1) * sliceAngle;
+       const endAngle   = (i + 1) * sliceAngle;
 
     ctx.beginPath();
     ctx.moveTo(0,0);
