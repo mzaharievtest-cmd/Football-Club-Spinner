@@ -23,15 +23,14 @@
   <section class="card">
     <div class="section-title">Leagues (filter)</div>
 
-    <!-- Quick picks -->
+    <!-- Quick picks (EPL only removed) -->
     <div class="quick-picks" role="group" aria-label="Quick league selections">
       <button id="qpAll"   class="chip-btn" type="button">All</button>
       <button id="qpNone"  class="chip-btn" type="button">None</button>
-      <button id="qpEPL"   class="chip-btn active" type="button">EPL only</button>
       <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
     </div>
 
-    <!-- Chips grouped: Top 5 first, then a toggle, then more leagues -->
+    <!-- Chips grouped: Top 5 first, then a toggle, then more leagues (hidden by default) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
       <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
@@ -58,6 +57,8 @@
     <div id="perfTip" class="perf-tip" aria-live="polite">0 teams selected</div>
     <div class="wheel-wrap">
       <div class="pointer"></div>
+      <!-- Center spin button -->
+      <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
       <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
       <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
     </div>
