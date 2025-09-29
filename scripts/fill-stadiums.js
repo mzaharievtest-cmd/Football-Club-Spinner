@@ -6,56 +6,44 @@ const path = require('path');
 const ROOT = process.cwd();
 const TEAMS_PATH = path.resolve(ROOT, 'teams.json');
 
-// You maintain these mapping files:
-// Keys are "LEAGUE_CODE:normalized_team_name" or "team:normalized_team_name"
 const MAP_FILES = [
   path.resolve(ROOT, 'data', 'stadiums.json'),
   path.resolve(ROOT, 'data', 'stadiums-extra.json') // optional
 ];
 
-function readJSON(p) {
-  return JSON.parse(fs.readFileSync(p, 'utf8'));
-}
-function exists(p) {
-  try { fs.accessSync(p, fs.constants.F_OK); return true; } catch { return false; }
-}
+function exists(p) { try { fs.accessSync(p, fs.constants.FOK ?? fs.constants.F_OK); return true; } catch { return false; } }
+function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 
 function norm(s) {
   return String(s || '')
     .normalize('NFD').replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
-    .replace(/&/g, 'and')
+    .toLowerCase().replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim().replace(/\s+/g, ' ');
 }
-function k(leagueCode, teamName) { return `${String(leagueCode||'').toUpperCase()}:${norm(teamName)}`; }
-function isEmpty(v) {
-  const s = String(v ?? '').trim();
-  return s === '' || s === '-' || s === '—';
-}
+function key(leagueCode, teamName) { return `${String(leagueCode||'').toUpperCase()}:${norm(teamName)}`; }
+function isEmpty(v) { const s = String(v ?? '').trim(); return s === '' || s === '-' || s === '—'; }
 
 function loadMap() {
   const merged = {};
   for (const f of MAP_FILES) {
     if (!exists(f)) continue;
     const data = readJSON(f);
-    for (const [key, val] of Object.entries(data || {})) {
-      if (typeof val === 'string' && val.trim()) {
-        merged[key] = val.trim();
-      }
+    for (const [k, v] of Object.entries(data || {})) {
+      if (typeof v === 'string' && v.trim()) merged[k] = v.trim();
     }
   }
   return merged;
 }
 
 function main() {
-  const argv = new Set(process.argv.slice(2));
-  const write = argv.has('--write');
-  const check = argv.has('--check');
-  const failOnMissing = argv.has('--fail-on-missing');
+  const args = new Set(process.argv.slice(2));
+  const write = args.has('--write');
+  const check = args.has('--check');
+  const failOnMissing = args.has('--fail-on-missing');
 
   if (!exists(TEAMS_PATH)) {
-    console.error(`ERROR: ${TEAMS_PATH} not found (run from repo root).`);
+    console.error(`ERROR: ${TEAMS_PATH} not found in repo root.`);
     process.exit(2);
   }
 
@@ -66,31 +54,20 @@ function main() {
   }
 
   const map = loadMap();
-
-  // Fallback map supports keys like "team:arsenal fc"
   const fallback = {};
-  for (const [mk, mv] of Object.entries(map)) {
-    if (mk.startsWith('team:')) fallback[mk] = mv;
-  }
+  for (const [mk, mv] of Object.entries(map)) if (mk.startsWith('team:')) fallback[mk] = mv;
 
   let already = 0, filled = 0, missing = 0;
 
   for (const t of teams) {
-    const league = t.league_code || '';
-    const name = t.team_name || '';
-    const exactKey = k(league, name);
-    const fallbackKey = `team:${norm(name)}`;
-
     if (!isEmpty(t.stadium)) { already++; continue; }
-
+    const exactKey = key(t.league_code || '', t.team_name || '');
+    const fallbackKey = `team:${norm(t.team_name || '')}`;
     const val = map[exactKey] || fallback[fallbackKey];
-    if (val) { t.stadium = val; filled++; }
-    else { missing++; }
+    if (val) { t.stadium = val; filled++; } else { missing++; }
   }
 
-  if (write) {
-    fs.writeFileSync(TEAMS_PATH, JSON.stringify(teams, null, 2) + '\n', 'utf8');
-  }
+  if (write) fs.writeFileSync(TEAMS_PATH, JSON.stringify(teams, null, 2) + '\n', 'utf8');
 
   console.log('Stadium fill summary:');
   console.log(`- Already present: ${already}`);
@@ -99,7 +76,7 @@ function main() {
   console.log(`- Mode: ${write ? 'write' : (check ? 'check' : 'dry-run')}`);
 
   if (check && failOnMissing && missing > 0) {
-    console.error(`ERROR: ${missing} teams still missing stadiums. Add entries to data/stadiums.json and re-run.`);
+    console.error(`ERROR: ${missing} teams still missing stadiums. Add mappings and re-run.`);
     process.exit(1);
   }
 }
