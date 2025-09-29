@@ -2,6 +2,7 @@
 // Upright, adaptive wheel; crisp HiDPI; no overlap; precise pointer snap.
 // Modal reveal/blur per toggle with robust inline blur + overlay fallback.
 // League filter chips show full league names (labels only) while keeping values as codes.
+// Modal also shows full league names. "Current selection" row removed safely.
 
 let TEAMS = [];
 let currentAngle = 0; // radians
@@ -22,20 +23,23 @@ const optName = document.getElementById('optName');
 const optLogo = document.getElementById('optLogo');
 const optStadium = document.getElementById('optStadium');
 
+// These may not exist anymore if result block was removed; guard all uses.
 const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
+
 const historyEl = document.getElementById('history');
 
 // Modal
 const backdrop = document.getElementById('backdrop');
 const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
-const mHead = document.getElementById('mHead');       // team name
-const mSub = document.getElementById('mSub');         // league label (updated)
-const mLogo = document.getElementById('mLogo');       // <img>
-const mColor = document.getElementById('mColor');     // color swatch
+const mHead = document.getElementById('mHead');
+const mSub = document.getElementById('mSub');
+const mLogo = document.getElementById('mLogo');
+// Optional (may be absent now)
+const mColor = document.getElementById('mColor');
 const mColorHex = document.getElementById('mColorHex');
-const mStadium = document.getElementById('mStadium'); // stadium name
+const mStadium = document.getElementById('mStadium');
 
 // Canvases
 const wheel = document.getElementById('wheel');
@@ -306,8 +310,9 @@ function openModal(team){
 
   // Populate content
   if (mHead)   mHead.textContent = team.team_name || '—';
-  if (mSub)    mSub.textContent = leagueLabel; // UPDATED: show full league name
+  if (mSub)    mSub.textContent = leagueLabel; // full league name in modal
   if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
+  // Color swatch/hex are optional now; only set if present
   if (mColor)  mColor.style.background = team.primary_color || '#4f8cff';
   if (mColorHex) mColorHex.textContent = team.primary_color || '#4f8cff';
   if (mStadium) mStadium.textContent = team.stadium || '—';
@@ -466,19 +471,6 @@ function drawWheel(){
       }
 
       ctx.restore();
-
-      if (DEBUG) {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0,255,255,0.6)';
-        ctx.setLineDash([4,3]);
-        ctx.beginPath();
-        ctx.moveTo(xBoxLeft, -radius*0.04);
-        ctx.lineTo(xBoxLeft,  radius*0.04);
-        ctx.moveTo(xBoxLeft + maxTextWidth, -radius*0.04);
-        ctx.lineTo(xBoxLeft + maxTextWidth,  radius*0.04);
-        ctx.stroke();
-        ctx.restore();
-      }
     }
 
     // Logo
@@ -534,10 +526,10 @@ function setResult(idx){
   selectedIdx = idx;
   drawWheel();
 
-  // UPDATED: show full league name in the current selection text, too
   const leagueLabel = LEAGUE_LABELS[t.league_code] || t.league_code;
-  currentText.textContent = `${t.team_name} · ${leagueLabel}`;
-  currentLogo.src         = t.logo_url || "";
+
+  if (currentText) currentText.textContent = `${t.team_name} · ${leagueLabel}`;
+  if (currentLogo) currentLogo.src = t.logo_url || "";
 
   history.unshift(t);
   if (history.length > 50) history = history.slice(0,50);
@@ -549,7 +541,7 @@ function spin(){
   if (spinning) return;
   const data = getFiltered();
   if (!data.length) {
-    currentText.textContent = 'Please select at least one league.';
+    if (currentText) currentText.textContent = 'Please select at least one league.';
     return;
   }
 
@@ -601,10 +593,10 @@ function setupEventListeners() {
     selectedIdx = -1;
     drawWheel();
     if (getFiltered().length === 0) {
-      currentText.textContent = 'Please select at least one league.';
+      if (currentText) currentText.textContent = 'Please select at least one league.';
       spinBtn.disabled = true;
     } else {
-      currentText.textContent = 'No selection yet';
+      if (currentText) currentText.textContent = '';
       spinBtn.disabled = false;
     }
   });
