@@ -16,6 +16,9 @@
   color-scheme: dark;
 }
 
+/* Ensure anything with the hidden attribute is never shown by CSS resets */
+[hidden] { display: none !important; }
+
 /* =========================
    Base / Layout
    ========================= */
@@ -348,7 +351,7 @@ canvas#wheel {
 
 #fx { position: absolute; inset: 0; pointer-events: none; }
 
-/* Pointer flipped around and above the wheel */
+/* Pointer above the wheel (flipped) */
 .pointer {
   position: absolute;
   top: -10px;
