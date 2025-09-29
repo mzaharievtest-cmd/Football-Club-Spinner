@@ -130,10 +130,14 @@ header h1 {
   background: linear-gradient(180deg, rgba(30,44,80,.95), rgba(14,24,48,.92));
 }
 
-/* Ghost variant for “Show more” toggle */
+/* Disabled/ghost for Show more (no expansion) */
 .chip-btn.ghost {
   background: linear-gradient(180deg, rgba(18,22,36,.8), rgba(10,14,26,.78));
   border-style: dashed;
+}
+.chip-btn.ghost.disabled {
+  opacity: .7;
+  cursor: not-allowed;
 }
 
 /* =========================
@@ -454,7 +458,7 @@ canvas#wheel {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  flex-wrap: wrap; /* allow button to wrap on small screens */
+  flex-wrap: wrap;
   margin: 6px 0;
 }
 
@@ -474,7 +478,7 @@ canvas#wheel {
   margin: 8px 0;
 }
 
-/* Stadium value pill so blur doesn't break layout */
+/* Stadium pill */
 #mStadium {
   display: inline-block;
   min-width: 180px;
@@ -507,7 +511,7 @@ canvas#wheel {
   min-width: 160px;
 }
 
-/* Reveal / blur helpers (modal) */
+/* Reveal helpers */
 .reveal-btn {
   display: inline-flex;
   align-items: center;
@@ -526,23 +530,10 @@ canvas#wheel {
   white-space: nowrap;
 }
 
-#modal #mHead + .reveal-btn {
-  display: inline-block;
-  margin-left: 0;
-  margin-top: 6px;
-}
+#modal #mHead + .reveal-btn { display: inline-block; margin-left: 0; margin-top: 6px; }
 
 .reveal-wrap { position: relative; display: inline-block; z-index: 0; }
-.reveal-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: transparent;
-  pointer-events: none;
-  z-index: 2;
-}
+.reveal-overlay { position: absolute; inset: 0; border-radius: inherit; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: transparent; pointer-events: none; z-index: 2; }
 
 /* Mobile modal sizing */
 @media (max-width: 600px) {
