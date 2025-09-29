@@ -1,14 +1,9 @@
 // Football Club Spinner — app.js
 // Upright, adaptive wheel; crisp HiDPI; no overlap; precise pointer snap.
 // Modal reveal/blur per toggle with robust inline blur + overlay fallback.
-// FIX: When 2–3 fields are blurred simultaneously, each “Show …” button now works reliably.
-// Implementation notes:
-// - No MutationObserver (to avoid races that re-blur after click).
-// - Per-field session state (modalRevealState) so clicks persist while the modal is open.
-// - Blur uses inline filter with !important; if still overridden, a backdrop-filter overlay
-//   is drawn above the element’s own pixels. Overlay has pointer-events: none.
-// - Buttons are inserted after the wrapped element and have a high z-index inside the modal.
+// League filter chips now display full league names (labels only) while keeping values as codes.
 
+// -------------------- App State --------------------
 let TEAMS = [];
 let currentAngle = 0; // radians
 let spinning = false;
@@ -19,7 +14,7 @@ let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 let lastModalTeam = null;
 let modalRevealState = { logo: false, name: false, stadium: false };
 
-// DOM
+// -------------------- DOM --------------------
 const chips = document.getElementById('chips');
 const spinBtn = document.getElementById('spinBtn');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -32,25 +27,24 @@ const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
 const historyEl = document.getElementById('history');
 
+// Modal
 const backdrop = document.getElementById('backdrop');
 const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
-
-// Modal fields (IDs confirmed by user)
 const mHead = document.getElementById('mHead');       // team name (heading)
 const mSub = document.getElementById('mSub');         // league code
 const mLogo = document.getElementById('mLogo');       // <img>
 const mColor = document.getElementById('mColor');     // color swatch
 const mColorHex = document.getElementById('mColorHex');
-const mStadium = document.getElementById('mStadium'); // stadium text
+const mStadium = document.getElementById('mStadium'); // stadium name
 
 // Canvases
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx'); // reserved
 
-// Constants / helpers
+// -------------------- Utils --------------------
 const TAU = Math.PI * 2;
-const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at top
+const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
 const DEBUG = false;
 
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
@@ -71,7 +65,16 @@ function luminance(hex){
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
 
-// Image cache for wheel (modal uses <img> directly)
+// -------------------- League label mapping (labels only) --------------------
+const LEAGUE_LABELS = {
+  EPL: 'English Premier League',
+  LLA: 'La Liga',
+  SA:  'Serie A',
+  BUN: 'Bundesliga',
+  L1:  'Ligue 1',
+};
+
+// -------------------- Image cache for wheel (modal uses <img> directly) --------------------
 const IMG_CACHE = new Map();
 function getLogo(url, onLoad) {
   if (!url) return null;
@@ -85,7 +88,7 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// Fit a single line by shrinking font before ellipsis
+// -------- Single-line fitting helper --------
 function fitSingleLine(ctx, text, {
   maxWidth, targetPx, minPx = 9, maxPx = 28, weight = 800,
   fontFamily = 'Inter, system-ui, sans-serif'
@@ -103,7 +106,7 @@ function fitSingleLine(ctx, text, {
   return { text: (s || '') + '…', fontPx: minPx, truncated: true };
 }
 
-// HiDPI sizing
+// -------------------- HiDPI sizing --------------------
 function sizeCanvas() {
   const rect = (wheel.parentElement || wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width || 640), 1200);
@@ -120,14 +123,19 @@ function sizeCanvas() {
   fx.style.height = cssSize + 'px';
 }
 
-// Chips / History
+// -------------------- Chips / History --------------------
 function renderChips() {
   const leagues = [...new Set(TEAMS.map(t => t.league_code))].sort();
   chips.innerHTML = '';
   leagues.forEach(code => {
+    const full = LEAGUE_LABELS[code] || code;
     const label = document.createElement('label');
     label.className = 'chip';
-    label.innerHTML = `<input type="checkbox" value="${code}" checked aria-checked="true"> ${code}`;
+    // Keep the input value as the short code; only the visible label is the full name
+    label.innerHTML = `
+      <input type="checkbox" value="${code}" checked aria-checked="true" aria-label="${full}">
+      <span class="chip-text" title="${full}">${full}</span>
+    `;
     chips.appendChild(label);
   });
 }
@@ -157,7 +165,7 @@ function renderHistory() {
   });
 }
 
-// --------------- Modal blur / reveal (robust) ---------------
+// -------------------- Modal blur/reveal (robust) --------------------
 function ensureRevealStyles() {
   if (document.getElementById('reveal-style')) return;
   const s = document.createElement('style');
@@ -178,7 +186,7 @@ function ensureRevealStyles() {
       border-radius: inherit;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      background: transparent; /* no color tint */
+      background: transparent;
       pointer-events: none;
       z-index: 2;
     }
@@ -269,12 +277,12 @@ function applyRevealByKey(key, el, enabled, btnId, labelText) {
   btn.type = 'button';
   btn.className = 'reveal-btn';
   btn.textContent = `Show ${labelText}`;
-  // Make absolutely sure clicks are captured even when multiple elements are blurred.
+  // Keep clicks reliable even if several fields are blurred
   btn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     modalRevealState[key] = true;   // remember for session
-    unblurElement(el);              // reveal
+    unblurElement(el);              // reveal this field
     btn.remove();                   // remove only this button
   }, { passive: false });
 
@@ -288,13 +296,13 @@ function updateModalRevealFromToggles() {
   applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
 }
 
-// Modal open/close
+// -------------------- Modal open/close --------------------
 function openModal(team){
   ensureRevealStyles();
   lastModalTeam = team;
   modalRevealState = { logo: false, name: false, stadium: false };
 
-  // Populate
+  // Populate content
   if (mHead)   mHead.textContent = team.team_name || '—';
   if (mSub)    mSub.textContent = team.league_code || '';
   if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
@@ -314,14 +322,14 @@ function closeModal(){
   setTimeout(()=> backdrop.style.display='none', 150);
 }
 
-// --------------- Wheel drawing (upright, adaptive, single-line) ---------------
+// -------------------- Wheel drawing (upright, adaptive, single-line) --------------------
 function drawWheel(){
   const data = getFiltered();
   const N = data.length || 1;
 
   const ctx = wheel.getContext('2d');
   const DPR = Math.max(1, window.devicePixelRatio || 1);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); // draw in CSS px
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
@@ -338,7 +346,7 @@ function drawWheel(){
   const radius = Math.min(W, H) * 0.48;
   const sliceAngle = TAU / N;
 
-  // 1) Wedges
+  // Wedges
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const startAngle = i * sliceAngle;
@@ -352,7 +360,7 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // 2) Selected rim stroke
+  // Selected rim stroke
   if (selectedIdx >= 0 && selectedIdx < N) {
     const a0 = selectedIdx * sliceAngle;
     const a1 = (selectedIdx + 1) * sliceAngle;
@@ -365,7 +373,7 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // 3) Content
+  // Content
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const showLogo    = !!(optLogo?.checked && t.logo_url);
@@ -395,7 +403,7 @@ function drawWheel(){
     ctx.closePath();
     ctx.clip();
 
-    // Rotate to bisector and keep upright (flip left side)
+    // Rotate to bisector and keep upright
     ctx.rotate(aMid);
     const needFlip = Math.cos(aMid) < 0;
     if (needFlip) ctx.rotate(Math.PI);
@@ -435,6 +443,10 @@ function drawWheel(){
         ctx.fillStyle = fg;
         ctx.strokeText(fitted.text, xBoxLeft, yName);
         ctx.fillText(fitted.text, xBoxLeft, yName);
+
+        if (DEBUG && fitted.truncated) {
+          console.log({ team: t.team_name, truncated: true, fontPx: namePx, maxTextWidth });
+        }
       }
 
       if (showStadium) {
@@ -513,7 +525,7 @@ function drawWheel(){
   ctx.restore();
 }
 
-// Result + Spin (precise pointer snap)
+// -------------------- Result + Spin (precise pointer snap) --------------------
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -544,7 +556,7 @@ function spin(){
   const N = data.length;
   const slice = TAU / N;
 
-  const extraTurns  = 6 + Math.floor(Math.random()*3); // 6..8 turns
+  const extraTurns  = 6 + Math.floor(Math.random()*3); // 6..8
   const finalOffset = Math.random() * TAU;
   const targetAngle = TAU * extraTurns + finalOffset;
 
@@ -579,7 +591,7 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
-// Events / Boot
+// -------------------- Events / Boot --------------------
 function setupEventListeners() {
   chips.addEventListener('change', () => {
     selectedIdx = -1;
