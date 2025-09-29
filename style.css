@@ -531,6 +531,43 @@ canvas#wheel {
   #mStadium { min-width: 150px; max-width: 220px; }
 }
 
+/* Spacing: add more room below the leagues block */
+#chips {
+  /* previously margin: 6px 0 14px; */
+  margin-bottom: 28px;
+}
+
+/* Optional: a little space between the button and revealed extra chips */
+#chipsMore {
+  margin-top: 10px;
+}
+
+/* Center the “N teams selected” banner text */
+.perf-tip {
+  text-align: center;
+  width: 100%;
+  margin: 8px auto 12px; /* slight breathing room */
+}
+
+/* Create a larger gap above the wheel so the pointer can float in it */
+.wheel-wrap {
+  /* keep existing side/bottom padding, but increase top padding only */
+  padding-top: clamp(32px, 4.5vw, 56px);
+}
+
+/* Move the pointer into that gap and keep it centered */
+.pointer {
+  top: clamp(6px, 1.2vw, 12px); /* floats between the banner and the wheel */
+  z-index: 3;                   /* ensure it's above canvases */
+}
+
+/* Mobile pointer offset */
+@media (max-width: 600px) {
+  .pointer {
+    top: 6px;
+  }
+}
+
 /* =========================
    Misc
    ========================= */
