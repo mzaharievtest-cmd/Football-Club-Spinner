@@ -23,9 +23,7 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html, body {
-  height: 100%;
-}
+html, body { height: 100%; }
 
 body {
   margin: 0;
@@ -106,7 +104,7 @@ header h1 {
 }
 
 /* =========================
-   League chips (filters)
+   League chips (filters) — long names
    ========================= */
 
 /* Container allows wrapping and spacing */
@@ -179,20 +177,11 @@ header h1 {
 /* Visible label text (full league names) */
 #chips .chip .chip-text {
   display: inline-block;
-  white-space: nowrap;     /* prefer single line */
+  white-space: nowrap;     /* keep on one line if possible */
   overflow: hidden;
-  text-overflow: ellipsis; /* fall back */
+  text-overflow: ellipsis; /* fallback */
   max-width: 28ch;
 }
-
-/* If your layout allows taller chips, switch to wrapping:
-#chips .chip .chip-text {
-  white-space: normal;
-  word-break: break-word;
-  hyphens: auto;
-  max-width: 36ch;
-}
-*/
 
 @media (max-width: 560px) {
   #chips .chip { padding: 10px 18px 10px 44px; }
@@ -370,7 +359,7 @@ canvas#wheel {
   inset: 0;
   background: rgba(4,10,24,0.85);
   backdrop-filter: blur(12px);
-  display: none;
+  display: none; /* toggled to flex in JS */
   align-items: center;
   justify-content: center;
   z-index: 1000;
@@ -379,8 +368,8 @@ canvas#wheel {
 
 #modal {
   border-radius: 18px;
-  max-width: 380px;
-  width: 95vw;
+  max-width: 400px;
+  width: min(95vw, 400px);
   background: #111a2c;
   box-shadow: 0 24px 80px rgba(18,30,52,0.42);
   border: 1px solid #5aa1ff;
@@ -389,7 +378,6 @@ canvas#wheel {
   flex-direction: column;
 }
 
-/* Headline / sub */
 #mHead {
   padding: 22px 26px 0;
   font-weight: 900;
@@ -401,31 +389,41 @@ canvas#wheel {
 #mSub {
   font-size: 14px;
   color: #a3b8e7;
-  margin: 6px 0 10px;
+  margin: 6px 0 2px;
   text-align: center;
 }
 
-/* Body */
+/* new: center contents and constrain width inside modal body */
+.m-body {
+  padding: 6px 22px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Logo */
 #mLogo {
-  width: 110px;
-  height: 110px;
+  width: 110px; height: 110px;
   max-width: 60vw;
   object-fit: contain;
   border-radius: 14px;
-  margin: 10px auto;
+  margin: 10px auto 6px;
   background: #0b1220;
   border: 1px solid #5aa1ff;
-  display: block;
   box-shadow: 0 2px 8px rgba(16,24,48,.45);
+  display: block;
 }
 
+/* Swatch + hex row */
 .m-row {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 8px 0 14px;
-  font-size: 15px;
   justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap; /* allow button to wrap on small screens */
+  margin: 6px 0;
 }
 
 #modal .swatch, #mColor {
@@ -434,13 +432,30 @@ canvas#wheel {
   border-radius: 8px;
   border: 2px solid #fff;
   box-shadow: 0 2px 8px rgba(90,161,255,0.18);
-  margin-right: 6px;
-  display: inline-block;
 }
 
+.m-sep {
+  width: 100%;
+  height: 1px;
+  background: #234080;
+  margin: 8px 0;
+}
+
+/* Stadium label/value styling so blur doesn't break layout */
 #mStadium {
+  display: inline-block;
+  min-width: 180px;
+  max-width: 260px;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(17,28,48,.85);
+  border: 1px solid rgba(90,161,255,.16);
   color: #d7e8ff;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Actions */
@@ -464,9 +479,7 @@ canvas#wheel {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 8px;
-  margin-left: 10px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 10px;
   border: 1px solid rgba(90,161,255,.6);
   background: #152036;
@@ -475,11 +488,16 @@ canvas#wheel {
   letter-spacing: .03em;
   cursor: pointer;
   user-select: none;
-  z-index: 999;
-  position: relative;
+  z-index: 3;            /* above overlay */
+  position: relative;    /* keeps it clickable */
+  white-space: nowrap;   /* prevents ugly wrapping */
 }
 
-#modal #mHead + .reveal-btn { display: inline-block; margin-left: 0; }
+#modal #mHead + .reveal-btn {
+  display: inline-block;
+  margin-left: 0;
+  margin-top: 6px;
+}
 
 .reveal-wrap { position: relative; display: inline-block; z-index: 0; }
 .reveal-overlay {
@@ -489,22 +507,20 @@ canvas#wheel {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   background: transparent; /* no tint */
-  pointer-events: none;
+  pointer-events: none;     /* never block clicks */
   z-index: 2;
 }
 
 /* Mobile modal sizing */
 @media (max-width: 600px) {
   #modal { max-width: 95vw; border-radius: 14px; }
-  #mLogo { width: 80px; height: 80px; }
+  .m-body { padding: 8px 16px 12px; }
+  #mLogo { width: 86px; height: 86px; }
+  #mStadium { min-width: 150px; max-width: 220px; }
 }
 
 /* =========================
    Misc
    ========================= */
-.small {
-  font-size: 12px;
-  color: var(--muted);
-}
-
+.small { font-size: 12px; color: var(--muted); }
 .hidden { display: none !important; }
