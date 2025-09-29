@@ -29,13 +29,13 @@
     </div>
     <button id="spinBtn">SPIN</button>
     <button id="resetHistoryBtn">Reset History</button>
-    <div class="result">
-      <img id="currentLogo" alt="Club logo" aria-hidden="true">
-      <div class="current-name" id="currentText">No selection yet</div>
-    </div>
+
+    <!-- Removed the "result" block (logo + 'No selection yet' text) -->
+
     <div class="history-title">History</div>
     <div class="history" id="history"></div>
   </section>
+
   <section class="card">
     <div class="section-title">Club Wheel</div>
     <div class="wheel-wrap">
@@ -45,18 +45,19 @@
     </div>
   </section>
 </main>
+
 <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mHead">
   <div id="modal" class="modal">
     <div id="mHead" class="m-head">Team</div>
     <div class="m-body">
       <div class="m-sub" id="mSub">League</div>
+
       <div class="m-row">
         <img id="mLogo" class="m-logo" alt="" />
-        <div class="m-row">
-          <span class="swatch" id="mColor"></span>
-          <span id="mColorHex" class="m-sub"></span>
-        </div>
       </div>
+
+      <!-- Removed primary color swatch + HEX row -->
+
       <div class="m-row" style="margin-top:12px">
         <strong style="min-width:84px">Stadium</strong>
         <span id="mStadium" class="m-sub"></span>
@@ -65,6 +66,7 @@
     <div class="m-actions"><button id="mClose" class="chip-btn">Close</button></div>
   </div>
 </div>
+
 <script src="app.js"></script>
 </body>
 </html>
