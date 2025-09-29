@@ -1,0 +1,71 @@
+name: Fill missing stadiums and primary colors
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fill-missing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 1) Stadiums: fetch + fill
+      - name: Fetch stadiums from Wikidata
+        run: node scripts/fetch-stadiums-wikidata.js
+
+      - name: Fill stadiums into teams.json
+        run: node scripts/fill-stadiums.js --write
+
+      # 2) Colors: deps + extract + fill (no package.json/lock changes)
+      - name: Install palette deps (no-save)
+        run: |
+          npm install --no-save --no-audit --no-fund --no-package-lock \
+            node-vibrant@3 sharp@0.33.4
+
+      - name: Extract primary colors from logos
+        run: node scripts/extract-colors.js
+
+      - name: Fill primary colors into teams.json
+        run: node scripts/fill-colors.js --write
+
+      # Commit only relevant files if changed
+      - name: Commit changes
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          CHANGED=0
+          for f in teams.json data/stadiums.generated.json data/colors.generated.json; do
+            if [ -f "$f" ] && ! git diff --quiet -- "$f"; then
+              git add "$f"
+              CHANGED=1
+            fi
+          done
+
+          if [ "$CHANGED" -eq 1 ]; then
+            git commit -m "chore: fill missing stadiums and primary colors"
+            git push
+          else
+            echo "No changes to commit."
+          fi
+
+      # Quick audit summary
+      - name: Audit (at least one empty)
+        run: |
+          node -e '
+          const fs=require("fs");
+          const data=JSON.parse(fs.readFileSync("teams.json","utf8"));
+          const clean=s=>String(s??"").trim();
+          const atLeastOne = data.filter(t => clean(t.stadium)==="" || clean(t.primary_color)==="");
+          console.log(`Remaining teams with at least one empty field: ${atLeastOne.length}`);
+          '
