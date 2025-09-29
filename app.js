@@ -391,10 +391,11 @@ function drawWheel(){
   const hideLogos = N >= hideLogosThresholdDyn;
   const hideText  = N >= hideTextThresholdDyn;
 
-  // If logos are hidden due to threshold, reflect in UI (uncheck Logo)
+  // If logos are hidden due to threshold, reflect in UI (uncheck Logo) and update modal reveal state
   if (hideLogos && optLogo && optLogo.checked) {
     optLogo.checked = false;
     optLogo.setAttribute('aria-checked', 'false');
+    if (isModalOpen()) updateModalRevealFromToggles();
   }
 
   updateSelectionBanner();
@@ -691,7 +692,7 @@ function setupEventListeners() {
     updateSelectionBanner();
   });
 
-  // Enable Show more / Show fewer toggle — only reveals extra leagues on click
+  // "Show more leagues" toggle
   toggleMore.addEventListener('click', () => {
     if (spinning) return;
     const hidden = chipsMore.hidden;
@@ -717,6 +718,16 @@ function setupEventListeners() {
     setActive(qpTop5);
   };
 
+  // NEW: Show-on-wheel toggles (Logo / Name / Stadium) — immediate redraw
+  const onWheelToggleChange = () => {
+    if (spinning) return;
+    drawWheel();
+    if (isModalOpen()) updateModalRevealFromToggles();
+  };
+  optName?.addEventListener('change', onWheelToggleChange);
+  optLogo?.addEventListener('change', onWheelToggleChange);
+  optStadium?.addEventListener('change', onWheelToggleChange);
+
   // Spin actions
   spinBtn.onclick = spin;
   spinFab.onclick = spin;
@@ -734,9 +745,6 @@ function setupEventListeners() {
     resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120);
   }, { passive: true });
 }
-
-// Note: a second setupEventListeners existed in the repo; keeping only one definition is recommended.
-// (If you still have both in your codebase, remove the duplicate to avoid confusion.)
 
 fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
