@@ -6,50 +6,46 @@ const path = require('path');
 const ROOT = process.cwd();
 const TEAMS_PATH = path.resolve(ROOT, 'teams.json');
 
-// You maintain this mapping file:
-const MAP_PATHS = [
+// You maintain these mapping files:
+// Keys are "LEAGUE_CODE:normalized_team_name" or "team:normalized_team_name"
+const MAP_FILES = [
   path.resolve(ROOT, 'data', 'stadiums.json'),
-  path.resolve(ROOT, 'data', 'stadiums-extra.json') // optional, if you want to split
+  path.resolve(ROOT, 'data', 'stadiums-extra.json') // optional
 ];
 
 function readJSON(p) {
   return JSON.parse(fs.readFileSync(p, 'utf8'));
 }
-
-function fileExists(p) {
+function exists(p) {
   try { fs.accessSync(p, fs.constants.F_OK); return true; } catch { return false; }
 }
 
-// Normalize strings for matching
 function norm(s) {
   return String(s || '')
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
+    .normalize('NFD').replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
     .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .replace(/\s+/g, ' ');
+    .trim().replace(/\s+/g, ' ');
+}
+function k(leagueCode, teamName) { return `${String(leagueCode||'').toUpperCase()}:${norm(teamName)}`; }
+function isEmpty(v) {
+  const s = String(v ?? '').trim();
+  return s === '' || s === '-' || s === '—';
 }
 
-function key(leagueCode, teamName) {
-  return `${(leagueCode || '').toUpperCase()}:${norm(teamName)}`;
-}
-
-function loadMappings() {
+function loadMap() {
   const merged = {};
-  for (const p of MAP_PATHS) {
-    if (!fileExists(p)) continue;
-    const obj = readJSON(p);
-    for (const [k, v] of Object.entries(obj || {})) {
-      if (typeof v === 'string' && v.trim()) merged[k] = v.trim();
+  for (const f of MAP_FILES) {
+    if (!exists(f)) continue;
+    const data = readJSON(f);
+    for (const [key, val] of Object.entries(data || {})) {
+      if (typeof val === 'string' && val.trim()) {
+        merged[key] = val.trim();
+      }
     }
   }
   return merged;
-}
-
-function isEmptyStadium(v) {
-  return v == null || String(v).trim() === '' || String(v).trim() === '-' || String(v).trim() === '—';
 }
 
 function main() {
@@ -58,57 +54,44 @@ function main() {
   const check = argv.has('--check');
   const failOnMissing = argv.has('--fail-on-missing');
 
-  if (!fileExists(TEAMS_PATH)) {
-    console.error(`ERROR: ${TEAMS_PATH} not found. Run from repo root where teams.json exists.`);
+  if (!exists(TEAMS_PATH)) {
+    console.error(`ERROR: ${TEAMS_PATH} not found (run from repo root).`);
     process.exit(2);
   }
 
   const teams = readJSON(TEAMS_PATH);
   if (!Array.isArray(teams)) {
-    console.error('ERROR: teams.json must be an array of team objects.');
+    console.error('ERROR: teams.json must be an array.');
     process.exit(2);
   }
 
-  const mapping = loadMappings();
+  const map = loadMap();
 
-  // Also support fallback map by team name only: {"team:arsenal fc": "Emirates Stadium"}
-  const fallbackTeamOnly = {};
-  for (const [k, v] of Object.entries(mapping)) {
-    if (k.startsWith('team:')) fallbackTeamOnly[k] = v;
+  // Fallback map supports keys like "team:arsenal fc"
+  const fallback = {};
+  for (const [mk, mv] of Object.entries(map)) {
+    if (mk.startsWith('team:')) fallback[mk] = mv;
   }
 
-  let filled = 0;
-  let already = 0;
-  let missing = 0;
+  let already = 0, filled = 0, missing = 0;
 
   for (const t of teams) {
-    const lc = (t.league_code || '').toUpperCase();
-    const tn = t.team_name || '';
+    const league = t.league_code || '';
+    const name = t.team_name || '';
+    const exactKey = k(league, name);
+    const fallbackKey = `team:${norm(name)}`;
 
-    const k = key(lc, tn);
-    const kFallback = `team:${norm(tn)}`;
+    if (!isEmpty(t.stadium)) { already++; continue; }
 
-    if (!isEmptyStadium(t.stadium)) {
-      already++;
-      continue;
-    }
-
-    let val = mapping[k];
-    if (!val) val = fallbackTeamOnly[kFallback];
-
-    if (val) {
-      t.stadium = val;
-      filled++;
-    } else {
-      missing++;
-    }
+    const val = map[exactKey] || fallback[fallbackKey];
+    if (val) { t.stadium = val; filled++; }
+    else { missing++; }
   }
 
   if (write) {
     fs.writeFileSync(TEAMS_PATH, JSON.stringify(teams, null, 2) + '\n', 'utf8');
   }
 
-  // Report
   console.log('Stadium fill summary:');
   console.log(`- Already present: ${already}`);
   console.log(`- Newly filled:    ${filled}`);
@@ -116,7 +99,7 @@ function main() {
   console.log(`- Mode: ${write ? 'write' : (check ? 'check' : 'dry-run')}`);
 
   if (check && failOnMissing && missing > 0) {
-    console.error(`\nERROR: ${missing} teams are still missing stadium values. Add them to data/stadiums.json (or stadiums-extra.json) and re-run.`);
+    console.error(`ERROR: ${missing} teams still missing stadiums. Add entries to data/stadiums.json and re-run.`);
     process.exit(1);
   }
 }
