@@ -1,8 +1,8 @@
 // Football Club Spinner — app.js
-// Perf-aware, EPL default, always show selected count, Top-5 first + Show more.
+// Keep extra leagues hidden (no expansion), EPL default, count banner, gradient idle.
 
 let TEAMS = [];
-let currentAngle = 0; // radians
+let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
@@ -14,7 +14,7 @@ let modalRevealState = { logo: false, name: false, stadium: false };
 // -------------------- DOM --------------------
 const chipsWrap = document.getElementById('chips');
 const chipsTop = document.getElementById('chipsTop');
-const chipsMore = document.getElementById('chipsMore');
+const chipsMore = document.getElementById('chipsMore'); // will remain hidden
 const toggleMore = document.getElementById('toggleMore');
 
 const spinBtn = document.getElementById('spinBtn');
@@ -49,6 +49,7 @@ const perfTip = document.getElementById('perfTip');
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
 
+// -------------------- Utils --------------------
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
@@ -63,7 +64,7 @@ const PERF = {
   minLogoBox: 28
 };
 
-// League labels (25)
+// Labels
 const LEAGUE_LABELS = {
   AUT: "Austrian Bundesliga",
   BEL: "Jupiler Pro League",
@@ -92,6 +93,7 @@ const LEAGUE_LABELS = {
   UKR: "Ukrainian Premier League"
 };
 
+// Cache
 const IMG_CACHE = new Map();
 function getLogo(url, onLoad) {
   if (!url) return null;
@@ -119,7 +121,6 @@ function luminance(hex){
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
 
-// -------- Single-line fitting --------
 function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx = 9, maxPx = 28, weight = 800, fontFamily = 'Inter, system-ui, sans-serif' }) {
   let px = clamp(minPx, Math.round(targetPx), maxPx);
   ctx.font = `${weight} ${px}px ${fontFamily}`;
@@ -152,7 +153,7 @@ function sizeCanvas() {
 }
 
 // -------------------- Chips / History --------------------
-const TOP5 = ['EPL','SA','BUN','L1','LLA']; // Order as requested
+const TOP5 = ['EPL','SA','BUN','L1','LLA'];
 
 function makeChip(code, checked) {
   const full = LEAGUE_LABELS[code] || code;
@@ -169,13 +170,25 @@ function renderChips() {
   const allCodes = [...new Set(TEAMS.map(t => t.league_code))];
 
   const topCodes = TOP5.filter(c => allCodes.includes(c));
-  const moreCodes = allCodes.filter(c => !topCodes.includes(c)).sort();
 
   chipsTop.innerHTML = '';
-  chipsMore.innerHTML = '';
-
   topCodes.forEach(code => chipsTop.appendChild(makeChip(code, code === 'EPL')));
-  moreCodes.forEach(code => chipsMore.appendChild(makeChip(code, false)));
+
+  // Keep extra leagues hidden permanently
+  if (chipsMore) {
+    chipsMore.innerHTML = '';
+    chipsMore.setAttribute('hidden', '');
+  }
+  if (toggleMore) {
+    toggleMore.textContent = 'More leagues are hidden';
+    toggleMore.classList.add('disabled');
+    toggleMore.setAttribute('aria-expanded', 'false');
+    toggleMore.disabled = true;
+  }
+}
+
+function visibleCodes() {
+  return Array.from(chipsTop.querySelectorAll('input[type="checkbox"]')).map(i => i.value);
 }
 
 function setCheckedCodes(codes = []) {
@@ -299,7 +312,6 @@ function drawGradientIdle(ctx, W, H) {
 
   const radius = Math.min(W, H) * 0.48;
 
-  // Radial gradient ring
   const g = ctx.createRadialGradient(0,0, radius*0.1, 0,0, radius);
   g.addColorStop(0.00, '#1A2C5A');
   g.addColorStop(0.35, '#21386F');
@@ -307,17 +319,16 @@ function drawGradientIdle(ctx, W, H) {
   g.addColorStop(1.00, '#0B1B38');
 
   ctx.beginPath();
-  ctx.arc(0,0, radius, 0, TAU);
+  ctx.arc(0,0, radius, 0, Math.PI*2);
   ctx.closePath();
   ctx.fillStyle = g;
   ctx.fill();
 
-  // Subtle concentric lines
   ctx.lineWidth = 1;
   ctx.strokeStyle = 'rgba(255,255,255,0.06)';
   for (let i=1;i<=5;i++){
     ctx.beginPath();
-    ctx.arc(0,0, radius*(i/5), 0, TAU);
+    ctx.arc(0,0, radius*(i/5), 0, Math.PI*2);
     ctx.stroke();
   }
 
@@ -351,11 +362,11 @@ function drawWheel(){
   ctx.save();
   ctx.translate(W/2, H/2);
 
-  const angleDraw = mod(currentAngle, TAU);
+  const angleDraw = mod(currentAngle, Math.PI*2);
   ctx.rotate(angleDraw);
 
   const radius = Math.min(W, H) * 0.48;
-  const sliceAngle = TAU / N;
+  const sliceAngle = Math.PI*2 / N;
 
   // Wedges
   for (let i = 0; i < N; i++) {
@@ -371,7 +382,7 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // Selected rim stroke (skip if ultra dense)
+  // Selected rim stroke
   if (!hideText && selectedIdx >= 0 && selectedIdx < N) {
     const a0 = selectedIdx * sliceAngle;
     const a1 = (selectedIdx + 1) * sliceAngle;
@@ -587,7 +598,6 @@ function spin(){
 
 // -------------------- Events / Boot --------------------
 function setupEventListeners() {
-  // Delegated change handler for both chip containers
   chipsWrap.addEventListener('change', () => {
     selectedIdx = -1;
     drawWheel();
@@ -597,28 +607,22 @@ function setupEventListeners() {
     updateSelectionBanner();
   });
 
-  // Toggle "more leagues"
-  toggleMore.addEventListener('click', () => {
-    const hidden = chipsMore.hasAttribute('hidden');
-    if (hidden) {
-      chipsMore.removeAttribute('hidden');
-      toggleMore.textContent = 'Show fewer leagues';
-      toggleMore.setAttribute('aria-expanded', 'true');
-    } else {
-      chipsMore.setAttribute('hidden', '');
-      toggleMore.textContent = 'Show more leagues';
-      toggleMore.setAttribute('aria-expanded', 'false');
-    }
-  });
+  // Show more is disabled by design
+  if (toggleMore) {
+    toggleMore.addEventListener('click', (e) => {
+      e.preventDefault();
+      // No expansion; optional small visual feedback
+      toggleMore.classList.add('active');
+      setTimeout(() => toggleMore.classList.remove('active'), 250);
+    });
+  }
 
   // Quick picks with active styling
-  function setActive(btn) {
-    [qpAll, qpNone, qpEPL, qpTop5].forEach(b => b.classList.toggle('active', b === btn));
-  }
-  qpAll.onclick  = () => { setCheckedCodes([...new Set(TEAMS.map(t=>t.league_code))]); setActive(qpAll); };
+  function setActive(btn) { [qpAll, qpNone, qpEPL, qpTop5].forEach(b => b.classList.toggle('active', b === btn)); }
+  qpAll.onclick  = () => { setCheckedCodes(visibleCodes()); setActive(qpAll); };
   qpNone.onclick = () => { setCheckedCodes([]); setActive(qpNone); };
   qpEPL.onclick  = () => { setCheckedCodes(['EPL']); setActive(qpEPL); };
-  qpTop5.onclick = () => { setCheckedCodes(TOP5.filter(c => TEAMS.some(t=>t.league_code===c))); setActive(qpTop5); };
+  qpTop5.onclick = () => { setCheckedCodes(TOP5.filter(c => visibleCodes().includes(c))); setActive(qpTop5); };
 
   optName.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
   optLogo.onchange    = () => { drawWheel(); updateModalRevealFromToggles(); };
@@ -642,13 +646,12 @@ function setupEventListeners() {
   }, { passive: true });
 }
 
-// Cache-busted teams.json to avoid stale
 fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
   .then(data => {
     TEAMS = data;
     ensureRevealStyles();
-    renderChips();              // EPL checked by default
+    renderChips();              // Only Top 5 rendered (EPL checked)
     renderHistory();
     sizeCanvas();
     setCheckedCodes(['EPL']);   // enforce EPL-only on first load
