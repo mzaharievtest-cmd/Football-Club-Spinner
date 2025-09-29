@@ -1,45 +1,191 @@
-/* Chip styling updated for longer league names */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap");
+
+/* =========================
+   Theme variables
+   ========================= */
+:root {
+  --bg: #05070f;
+  --card: #0e1526;
+  --card-top: #121c34;
+  --line: #1b2740;
+  --muted: #9fb0c6;
+  --text: #e7eef7;
+  --accent: #5aa1ff;
+  --accent-2: #22d3ee;
+  --radius: 20px;
+  color-scheme: dark;
+}
+
+/* =========================
+   Base / Layout
+   ========================= */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", system-ui, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1400px 840px at 30% -20%, rgba(90,161,255,.35) 0, transparent 50%),
+    radial-gradient(1100px 880px at 90% -10%, rgba(34,211,238,.22) 0, transparent 45%),
+    linear-gradient(180deg, #05070f, #060914 28%, #08101e 100%);
+  overflow-x: hidden;
+}
+
+/* Header */
+header {
+  padding: 16px clamp(16px,3vw,36px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(180deg,rgba(15,23,42,.92),rgba(11,18,31,.78));
+  border-bottom: 1px solid rgba(95,141,255,.18);
+  backdrop-filter: blur(14px);
+  z-index: 20;
+}
+
+header h1 {
+  margin: 0;
+  font-size: clamp(20px,2.4vw,28px);
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.season-tag {
+  margin-top: 2px;
+  font-size: 12px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: rgba(197,212,235,.76);
+}
+
+/* Page grid */
+.container {
+  max-width: 1200px;
+  margin: 20px auto 48px;
+  padding: 0 clamp(12px,4vw,36px);
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 980px) {
+  .container { grid-template-columns: 380px 1fr; }
+}
+
+@media (max-width: 979.98px) {
+  .container { display: block; }
+  .card { margin-bottom: 16px; }
+}
+
+/* Cards / sections */
+.card {
+  position: relative;
+  background: linear-gradient(180deg, var(--card-top), var(--card));
+  border-radius: var(--radius);
+  padding: 18px clamp(14px,3vw,26px);
+  border: 1px solid rgba(111,148,255,.16);
+  box-shadow: 0 8px 30px rgba(0,0,0,.25);
+}
+
+.section-title {
+  font-size: 12px;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+/* =========================
+   League chips (filters)
+   ========================= */
 
 /* Container allows wrapping and spacing */
 #chips {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  margin: 6px 0 14px;
 }
 
-/* Base chip */
+/* Base chip (label) */
 #chips .chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 12px;
-  background: rgba(20,28,46,0.35);
-  border: 1px solid rgba(114,141,194,0.25);
-  color: #DCE9FF;
-  /* Prefer shrinking font slightly on smaller viewports */
-  font-size: clamp(11px, 0.95vw, 13px);
-  line-height: 1.15;
+  gap: 10px;
+  padding: 10px 16px 10px 44px; /* space for custom checkbox */
+  border-radius: 999px;
+  border: 1px solid rgba(90,161,255,.18);
+  background: linear-gradient(135deg,rgba(13,22,40,.95),rgba(9,15,28,.85));
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: .18s ease;
   max-width: 100%;
 }
 
-/* Checkbox stays compact */
+#chips .chip:hover {
+  border-color: rgba(90,161,255,.38);
+  transform: translateY(-1px);
+}
+
+/* Custom checkbox */
 #chips .chip input[type="checkbox"] {
-  flex: 0 0 auto;
-  accent-color: #5DA3FF;
+  appearance: none;
+  position: absolute;
+  left: 16px;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(120,150,220,.45);
+  background: rgba(4,9,19,.8);
+  display: grid;
+  place-items: center;
+  transition: .18s;
+}
+
+#chips .chip input[type="checkbox"]::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 4px;
+  background: var(--accent);
+  transform: scale(.2);
+  opacity: 0;
+  transition: .18s;
+}
+
+#chips .chip input[type="checkbox"]:checked {
+  border-color: var(--accent);
+  background: rgba(90,161,255,.18);
+}
+
+#chips .chip input[type="checkbox"]:checked::after {
+  transform: scale(1);
+  opacity: 1;
 }
 
 /* Visible label text (full league names) */
 #chips .chip .chip-text {
   display: inline-block;
-  /* Try to keep on one line; ellipsis if too long */
-  white-space: nowrap;
+  white-space: nowrap;     /* prefer single line */
   overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 28ch; /* tweak as needed for container width */
+  text-overflow: ellipsis; /* fall back */
+  max-width: 28ch;
 }
 
-/* If your layout allows chips to grow taller, you can allow wrapping instead:
+/* If your layout allows taller chips, switch to wrapping:
 #chips .chip .chip-text {
   white-space: normal;
   word-break: break-word;
@@ -48,18 +194,317 @@
 }
 */
 
-/* Slightly more padding on narrow screens so long names don’t feel cramped */
 @media (max-width: 560px) {
-  #chips .chip {
-    padding: 9px 16px;
-  }
-  #chips .chip .chip-text {
-    max-width: 24ch;
-  }
+  #chips .chip { padding: 10px 18px 10px 44px; }
+  #chips .chip .chip-text { max-width: 24ch; }
 }
 
-/* Keep canvas text crisp */
+/* =========================
+   Show-on-wheel toggles (Name/Logo/Stadium)
+   ========================= */
+.showopts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.showopts .chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(90,161,255,.18);
+  background: linear-gradient(135deg,rgba(13,22,40,.95),rgba(9,15,28,.85));
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: .18s;
+}
+
+.showopts .chip input { /* custom checkbox style reused */
+  appearance: none;
+  position: absolute;
+  left: 16px;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(120,150,220,.45);
+  background: rgba(4,9,19,.8);
+  display: grid;
+  place-items: center;
+  transition: .18s;
+}
+.showopts .chip input::after { content: ""; width: 9px; height: 9px; border-radius: 4px; background: var(--accent); transform: scale(.2); opacity: 0; transition: .18s; }
+.showopts .chip input:checked { border-color: var(--accent); background: rgba(90,161,255,.18); }
+.showopts .chip input:checked::after { transform: scale(1); opacity: 1; }
+
+/* =========================
+   Buttons / Result / History
+   ========================= */
+button, .chip-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(90,161,255,.38);
+  background: linear-gradient(180deg,rgba(18,30,52,.95),rgba(10,16,30,.92));
+  color: #f4f7ff;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: .18s;
+}
+
+button:hover, .chip-btn:hover {
+  border-color: var(--accent-2);
+  transform: translateY(-1px);
+}
+
+button:disabled { opacity: .6; cursor: wait; }
+
+.result {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(90,161,255,.16);
+  background: linear-gradient(135deg,rgba(13,22,40,.9),rgba(7,12,24,.85));
+}
+
+.result img,
+.item img {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: #0b1220;
+  border: 1px solid rgba(90,161,255,.18);
+}
+
+.current-name {
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-title {
+  margin: 18px 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+}
+
+.history {
+  max-height: 260px;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(17,28,48,.85);
+  border: 1px solid rgba(90,161,255,.12);
+}
+
+/* =========================
+   Wheel / Pointer
+   ========================= */
+.wheel-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(10px, 2.5vw, 18px);
+}
+
 canvas#wheel {
+  width: 100%;
+  max-width: 820px;
+  height: auto;
+  filter: drop-shadow(0 30px 60px rgba(0,0,0,.55));
+  border-radius: 50%;
+  background: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+#fx { position: absolute; inset: 0; pointer-events: none; }
+
+.pointer {
+  position: absolute;
+  top: -6px;
+  border-left: 16px solid transparent;
+  border-right: 16px solid transparent;
+  border-bottom: 26px solid var(--accent-2);
+}
+
+@media (max-width: 600px) {
+  .pointer {
+    top: -2px;
+    border-left-width: 12px;
+    border-right-width: 12px;
+    border-bottom-width: 20px;
+  }
+}
+
+/* =========================
+   Modal (IDs used in JS)
+   ========================= */
+#backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4,10,24,0.85);
+  backdrop-filter: blur(12px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+#modal {
+  border-radius: 18px;
+  max-width: 380px;
+  width: 95vw;
+  background: #111a2c;
+  box-shadow: 0 24px 80px rgba(18,30,52,0.42);
+  border: 1px solid #5aa1ff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Headline / sub */
+#mHead {
+  padding: 22px 26px 0;
+  font-weight: 900;
+  font-size: 22px;
+  color: #f4f7ff;
+  text-align: center;
+}
+
+#mSub {
+  font-size: 14px;
+  color: #a3b8e7;
+  margin: 6px 0 10px;
+  text-align: center;
+}
+
+/* Body */
+#mLogo {
+  width: 110px;
+  height: 110px;
+  max-width: 60vw;
+  object-fit: contain;
+  border-radius: 14px;
+  margin: 10px auto;
+  background: #0b1220;
+  border: 1px solid #5aa1ff;
+  display: block;
+  box-shadow: 0 2px 8px rgba(16,24,48,.45);
+}
+
+.m-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 14px;
+  font-size: 15px;
+  justify-content: center;
+}
+
+#modal .swatch, #mColor {
+  width: 20px;
+  height: 20px;
+  border-radius: 8px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(90,161,255,0.18);
+  margin-right: 6px;
+  display: inline-block;
+}
+
+#mStadium {
+  color: #d7e8ff;
+  font-weight: 700;
+}
+
+/* Actions */
+.m-actions {
+  padding: 12px 22px 18px;
+  background: #111a2c;
+  border-top: 1px solid #234080;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+#backdrop .chip-btn,
+#backdrop button {
+  width: auto;
+  min-width: 160px;
+}
+
+/* Reveal / blur helpers (modal) */
+.reveal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  margin-left: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(90,161,255,.6);
+  background: #152036;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: .03em;
+  cursor: pointer;
+  user-select: none;
+  z-index: 999;
+  position: relative;
+}
+
+#modal #mHead + .reveal-btn { display: inline-block; margin-left: 0; }
+
+.reveal-wrap { position: relative; display: inline-block; z-index: 0; }
+.reveal-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: transparent; /* no tint */
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Mobile modal sizing */
+@media (max-width: 600px) {
+  #modal { max-width: 95vw; border-radius: 14px; }
+  #mLogo { width: 80px; height: 80px; }
+}
+
+/* =========================
+   Misc
+   ========================= */
+.small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.hidden { display: none !important; }
