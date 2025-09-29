@@ -33,7 +33,13 @@
     <!-- Chips grouped: Top 5 first, then a toggle, then more leagues (hidden by default) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
-      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
+
+      <!-- IMPORTANT: hidden by default; only shown after click -->
+      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">
+        Show more leagues
+      </button>
+
+      <!-- Keep this container in the DOM but hidden -->
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
