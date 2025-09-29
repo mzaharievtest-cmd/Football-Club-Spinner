@@ -1,0 +1,56 @@
+name: Fetch and fill primary colors into teams.json
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-and-fill-colors:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Install only what we need for palette extraction; do not touch package.json/lock
+      - name: Install palette deps (no-save)
+        run: |
+          npm install --no-save --no-audit --no-fund --no-package-lock \
+            node-vibrant@3 sharp@0.33.4
+
+      - name: Extract primary colors from logos (generate mapping)
+        run: node scripts/extract-colors.js
+
+      - name: Fill primary_color into teams.json (merge maps)
+        run: node scripts/fill-colors.js --write
+
+      - name: Commit teams.json and generated mapping (if changed)
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          CHANGED=0
+          if ! git diff --quiet -- teams.json; then
+            git add teams.json
+            CHANGED=1
+          fi
+
+          if [ -f data/colors.generated.json ] && ! git diff --quiet -- data/colors.generated.json; then
+            git add data/colors.generated.json
+            CHANGED=1
+          fi
+
+          if [ "$CHANGED" -eq 1 ]; then
+            git commit -m "chore: fetch and fill primary colors into teams.json"
+            git push
+          else
+            echo "No changes to commit."
+          fi
