@@ -272,7 +272,7 @@ function ensureRevealStyles() {
   const s = document.createElement('style');
   s.id = 'reveal-style';
   s.textContent = `
-    .reveal-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:700;letter-spacing:.03em;cursor:pointer;user-select:none;z-index:999;position:relative}
+    .reveal-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;user-select:none;z-index:3;position:relative;white-space:nowrap}
     #mHead + .reveal-btn{display:inline-block;margin-left:0}
     .reveal-wrap{position:relative;display:inline-block;z-index:0}
     .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none;z-index:2}
@@ -280,12 +280,13 @@ function ensureRevealStyles() {
   document.head.appendChild(s);
 }
 function removeExistingRevealBtn(id){ const old=document.getElementById(id); if(old) old.remove(); }
-function ensureWrapped(el){ if(!el||!el.parentElement) return null; if(el.parentElement.classList.contains('reveal-wrap')) return el.parentElement; const wrap=document.createElement('span'); wrap.className='reveal-wrap'; const cs=getComputedStyle(el); if(cs.borderRadius) wrap.style.borderRadius=cs.borderRadius; el.parentElement.insertBefore(wrap,el); wrap.appendChild(el); return wrap; }
+function ensureWrapped(el){ if(!el||!el.parentElement) return null; if(el.parentElement.classList.contains('reveal-wrap')) return el.parentElement; const wrap=document.createElement('span'); wrap.className='reveal-wrap'; el.parentElement.insertBefore(wrap,el); wrap.appendChild(el); return wrap; }
 function addOverlay(el){ const wrap=ensureWrapped(el); if(!wrap) return; if(!wrap.querySelector('.reveal-overlay')){ const ov=document.createElement('span'); ov.className='reveal-overlay'; wrap.appendChild(ov); } }
 function removeOverlay(el){ if(!el||!el.parentElement) return; const wrap=el.parentElement; if(wrap.classList.contains('reveal-wrap')){ const ov=wrap.querySelector('.reveal-overlay'); if(ov) ov.remove(); } }
-function blurElement(el){ if(!el) return; el.style.setProperty('filter','blur(14px) saturate(0.9)','important'); el.style.setProperty('-webkit-filter','blur(14px) saturate(0.9)','important'); el.style.transform='translateZ(0)'; el.style.pointerEvents='none'; el.setAttribute('aria-hidden','true'); requestAnimationFrame(()=>{ const cs=getComputedStyle(el); const f=(cs.filter||cs.webkitFilter||'').trim(); if(!f||f==='none') addOverlay(el); }); }
-function unblurElement(el){ if(!el) return; el.style.removeProperty('filter'); el.style.removeProperty('-webkit-filter'); el.style.transform=''; el.style.pointerEvents=''; el.setAttribute('aria-hidden','false'); removeOverlay(el); }
-function placeButtonAfter(el,btn){ const host=el?.parentElement?.classList.contains('reveal-wrap') ? el.parentElement : el; if (host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn); else el?.parentElement?.appendChild(btn); }
+function blurElement(el){ if(!el) return; el.style.setProperty('filter','blur(14px) saturate(0.9)','important'); el.style.setProperty('-webkit-filter','blur(14px) saturate(0.9)','important'); el.style.transform=''; el.style.pointerEvents='none'; addOverlay(el); }
+function unblurElement(el){ if(!el) return; el.style.removeProperty('filter'); el.style.removeProperty('-webkit-filter'); el.style.transform=''; el.style.pointerEvents=''; removeOverlay(el); el.setAttribute('aria-hidden','false'); }
+function placeButtonAfter(el,btn){ const host=el?.parentElement?.classList.contains('reveal-wrap') ? el.parentElement : el; if (host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn); }
+
 function applyRevealByKey(key, el, enabled, btnId, labelText) {
   if (!el) return;
   removeExistingRevealBtn(btnId);
@@ -382,8 +383,20 @@ function drawWheel(){
     return;
   }
 
-  const hideLogos = N >= PERF.hideLogosThreshold;
-  const hideText = N >= PERF.hideTextThreshold;
+  // DYNAMIC THRESHOLDS for better legibility when both text lines are enabled
+  const bothTextOn = !!optName?.checked && !!optStadium?.checked;
+  const hideTextThresholdDyn  = bothTextOn ? 55 : PERF.hideTextThreshold; // earlier cutoff when both lines visible
+  const hideLogosThresholdDyn = bothTextOn ? Math.min(55, PERF.hideLogosThreshold) : PERF.hideLogosThreshold;
+
+  const hideLogos = N >= hideLogosThresholdDyn;
+  const hideText  = N >= hideTextThresholdDyn;
+
+  // If logos are hidden due to threshold, reflect in UI (uncheck Logo)
+  if (hideLogos && optLogo && optLogo.checked) {
+    optLogo.checked = false;
+    optLogo.setAttribute('aria-checked', 'false');
+  }
+
   updateSelectionBanner();
 
   ctx.imageSmoothingEnabled = !hideText;
@@ -436,8 +449,9 @@ function drawWheel(){
       const aMid = (a0 + a1) / 2;
       const sliceArc = radius * (a1 - a0);
 
-      const nameTargetPx    = clamp(11, 0.18 * sliceArc, 20);
-      const stadiumTargetPx = clamp(10, 0.15 * sliceArc, 16);
+      // Target sizes tuned so Name > Stadium
+      const nameTargetPx    = clamp(12, 0.20 * sliceArc, 24);
+      const stadiumTargetPx = clamp(9,  0.14 * sliceArc, 18);
       let   logoSize        = clamp(22, 0.32 * sliceArc, 52);
       const logoHalf = logoSize / 2;
       const pad = 10;
@@ -467,46 +481,74 @@ function drawWheel(){
       const canShowStadium = !hideText && optStadium?.checked && t.stadium && maxTextWidth >= PERF.minTextWidth;
       const canShowLogo    = !hideLogos && optLogo?.checked && t.logo_url && (logoHalf * 2) >= PERF.minLogoBox;
 
+      // Unified typography & alignment for Name + Stadium
       if (canShowName || canShowStadium) {
         ctx.save();
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
 
-        let namePx = nameTargetPx;
-        let yName = 0;
+        const heavy = (lum >= 0.35 && lum <= 0.45);
+        const strokeCol = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.65)';
+        const fillCol = fg;
+
+        // Fit name first (bigger)
+        let namePx = 0, stadPx = 0;
+        let nameFit = { text: '', fontPx: 0 };
+        let stadFit = { text: '', fontPx: 0 };
 
         if (canShowName) {
-          const heavy = (lum >= 0.35 && lum <= 0.45);
-          const fitted = fitSingleLine(ctx, t.team_name || '', {
-            maxWidth: maxTextWidth, targetPx: nameTargetPx, minPx: 9, maxPx: 22,
+          nameFit = fitSingleLine(ctx, t.team_name || '', {
+            maxWidth: maxTextWidth,
+            targetPx: nameTargetPx,
+            minPx: 9,
+            maxPx: 24,
             weight: heavy ? 900 : 800
           });
-          namePx = fitted.fontPx;
-
-          const gap = canShowStadium ? 4 : 0;
-          const totalH = canShowStadium ? (namePx + gap + stadiumTargetPx) : namePx;
-          yName = -totalH/2 + namePx/2;
-
-          ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
-          ctx.strokeStyle = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.65)';
-          ctx.lineWidth = Math.max(1, Math.round(namePx/10));
-          ctx.fillStyle = fg;
-          ctx.strokeText(fitted.text, xBoxLeft, yName);
-          ctx.fillText(fitted.text, xBoxLeft, yName);
+          namePx = nameFit.fontPx;
         }
 
+        // Stadium aimed ~82% of fitted name size if both present
+        const stadTarget = (canShowName && namePx) ? Math.max(8, Math.round(namePx * 0.82)) : stadiumTargetPx;
         if (canShowStadium) {
-          const stadFit = fitSingleLine(ctx, t.stadium || '', {
-            maxWidth: maxTextWidth, targetPx: stadiumTargetPx, minPx: 8, maxPx: 18, weight: 700
+          stadFit = fitSingleLine(ctx, t.stadium || '', {
+            maxWidth: maxTextWidth,
+            targetPx: stadTarget,
+            minPx: 8,
+            maxPx: 20,
+            weight: 700
           });
-          const yStad = canShowName ? (yName + namePx/2 + 4 + stadFit.fontPx/2) : 0;
+          stadPx = stadFit.fontPx;
+        }
 
-          ctx.font = `700 ${stadFit.fontPx}px Inter, system-ui, sans-serif`;
-          ctx.strokeStyle = 'rgba(12,16,28,0.45)';
-          ctx.lineWidth = Math.max(1, Math.round(stadFit.fontPx/10));
-          ctx.fillStyle = '#D7E8FF';
-          ctx.strokeText(stadFit.text, xBoxLeft, yStad);
-          ctx.fillText(stadFit.text, xBoxLeft, yStad);
+        // Vertical layout: center combined block
+        const gap = (canShowName && canShowStadium) ? 3 : 0;
+        const totalH = (canShowName ? namePx : 0) + (canShowStadium ? stadPx : 0) + gap;
+        let yCursor = -totalH / 2;
+
+        // Draw Name
+        if (canShowName) {
+          yCursor += namePx / 2;
+          ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
+          ctx.strokeStyle = strokeCol;
+          ctx.lineWidth = Math.max(1, Math.round(namePx / 10));
+          ctx.fillStyle = fillCol;
+          ctx.strokeText(nameFit.text, xBoxLeft, yCursor);
+          ctx.fillText(nameFit.text, xBoxLeft, yCursor);
+          yCursor += namePx / 2 + gap;
+        }
+
+        // Draw Stadium (same design, slight alpha to de-emphasize)
+        if (canShowStadium) {
+          yCursor += stadPx / 2;
+          ctx.font = `700 ${stadPx}px Inter, system-ui, sans-serif`;
+          ctx.strokeStyle = strokeCol;
+          ctx.lineWidth = Math.max(1, Math.round(stadPx / 10));
+          ctx.fillStyle = fillCol;
+          ctx.save();
+          ctx.globalAlpha = 0.92;
+          ctx.strokeText(stadFit.text, xBoxLeft, yCursor);
+          ctx.fillText(stadFit.text, xBoxLeft, yCursor);
+          ctx.restore();
         }
 
         ctx.restore();
@@ -693,71 +735,8 @@ function setupEventListeners() {
   }, { passive: true });
 }
 
-function setupEventListeners() {
-  // Leagues toggles
-  chipsWrap.addEventListener('change', () => {
-    if (spinning) return;
-    selectedIdx = -1;
-    drawWheel();
-    const len = getFiltered().length;
-    spinBtn.disabled = len === 0;
-    spinFab.disabled = len === 0;
-    if (len === 0 && currentText) currentText.textContent = 'Please select at least one league.';
-    updateSelectionBanner();
-  });
-
-  // NEW: Show-on-wheel toggles (Logo / Name / Stadium)
-  const onWheelToggleChange = () => {
-    if (spinning) return;
-    drawWheel();
-    if (isModalOpen()) updateModalRevealFromToggles();
-  };
-  optName?.addEventListener('change', onWheelToggleChange);
-  optLogo?.addEventListener('change', onWheelToggleChange);
-  optStadium?.addEventListener('change', onWheelToggleChange);
-
-  // Show more / fewer leagues
-  toggleMore.addEventListener('click', () => {
-    if (spinning) return;
-    const hidden = chipsMore.hidden;
-    if (hidden) {
-      chipsMore.hidden = false;
-      toggleMore.textContent = 'Show fewer leagues';
-      toggleMore.setAttribute('aria-expanded', 'true');
-    } else {
-      chipsMore.hidden = true;
-      toggleMore.textContent = 'Show more leagues';
-      toggleMore.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  // Quick picks (“All” respects visibility)
-  function setActive(btn) { [qpAll, qpNone, qpTop5].forEach(b => b.classList.toggle('active', b === btn)); }
-  qpAll.onclick  = () => { if (spinning) return; setCheckedCodes(visibleCodes()); setActive(qpAll); };
-  qpNone.onclick = () => { if (spinning) return; setCheckedCodes([]); setActive(qpNone); };
-  qpTop5.onclick = () => {
-    if (spinning) return;
-    setCheckedCodes(['EPL','SA','BUN','L1','LLA'].filter(c => visibleCodes().includes(c)));
-    setActive(qpTop5);
-  };
-
-  // Spin actions
-  spinBtn.onclick = spin;
-  spinFab.onclick = spin;
-
-  // History and modal
-  resetHistoryBtn.addEventListener('click', () => { if (!spinning) resetHistory(); });
-  mClose.onclick = () => { if (!spinning) closeModal(); };
-  backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
-  window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
-
-  // Debounced resize redraw
-  let resizeTO;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTO);
-    resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120);
-  }, { passive: true });
-}
+// Note: a second setupEventListeners existed in the repo; keeping only one definition is recommended.
+// (If you still have both in your codebase, remove the duplicate to avoid confusion.)
 
 fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
