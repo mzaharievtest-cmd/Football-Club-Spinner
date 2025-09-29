@@ -25,7 +25,6 @@ jobs:
         with:
           node-version: 20
 
-      # No npm install; the script has no external deps
       - name: Fill stadium values into teams.json
         run: node scripts/fill-stadiums.js --write
 
@@ -34,7 +33,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Only commit teams.json changes; ignore node_modules or other noise
           if git diff --quiet -- teams.json; then
             echo "No stadium updates in teams.json."
             exit 0
