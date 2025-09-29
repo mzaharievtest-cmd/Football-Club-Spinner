@@ -1,6 +1,6 @@
 // Football Club Spinner — app.js
-// Show more leagues toggle enabled, EPL default, selected count banner, gradient idle,
-// perf-aware rendering, and a strict UI lock while spinning (no clicks/edits).
+// Enabled “Show more leagues” toggle, added center SPIN! button, removed “EPL only” quick pick.
+// Keeps EPL selected by default, locks all controls while spinning, shows selected count.
 
 let TEAMS = [];
 let currentAngle = 0; // radians
@@ -19,6 +19,7 @@ const chipsMore = document.getElementById('chipsMore');
 const toggleMore = document.getElementById('toggleMore');
 
 const spinBtn = document.getElementById('spinBtn');
+const spinFab = document.getElementById('spinFab');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 
 const optName = document.getElementById('optName');
@@ -39,10 +40,9 @@ const mSub = document.getElementById('mSub');
 const mLogo = document.getElementById('mLogo');
 const mStadium = document.getElementById('mStadium');
 
-// Quick picks and banner
+// Quick picks and banner (EPL-only removed)
 const qpAll  = document.getElementById('qpAll');
 const qpNone = document.getElementById('qpNone');
-const qpEPL  = document.getElementById('qpEPL');
 const qpTop5 = document.getElementById('qpTop5');
 const perfTip = document.getElementById('perfTip');
 
@@ -161,7 +161,6 @@ function lockUI(lock) {
   const els = document.querySelectorAll(INTERACTIVE_SELECTOR);
   els.forEach(el => {
     if (lock) {
-      // Save original disabled state only once
       if (!el.dataset.lockSaved) {
         el.dataset.lockSaved = '1';
         el.dataset.prevDisabled = el.disabled ? '1' : '0';
@@ -169,7 +168,6 @@ function lockUI(lock) {
       el.disabled = true;
       el.setAttribute('aria-disabled', 'true');
     } else {
-      // Restore original disabled state if we saved it
       if (el.dataset.lockSaved === '1') {
         const prev = el.dataset.prevDisabled === '1';
         el.disabled = prev;
@@ -197,7 +195,6 @@ function makeChip(code, checked) {
 
 function renderChips() {
   const allCodes = [...new Set(TEAMS.map(t => t.league_code))];
-
   const topCodes = TOP5.filter(c => allCodes.includes(c));
   const moreCodes = allCodes.filter(c => !topCodes.includes(c)).sort();
 
@@ -232,6 +229,7 @@ function setCheckedCodes(codes = []) {
   drawWheel();
   const hasAny = getFiltered().length > 0;
   spinBtn.disabled = !hasAny;
+  spinFab.disabled = !hasAny;
   if (!hasAny && currentText) currentText.textContent = 'Please select at least one league.';
   updateSelectionBanner();
 }
@@ -586,7 +584,8 @@ function spin(){
 
   spinning = true;
   lockUI(true);            // HARD LOCK: disable all controls while spinning
-  spinBtn.disabled = true; // redundant, but explicit
+  spinBtn.disabled = true;
+  spinFab.disabled = true;
   selectedIdx = -1;
 
   const N = data.length;
@@ -618,8 +617,11 @@ function spin(){
       currentAngle = mod(currentAngle + snapDelta, TAU);
 
       spinning = false;
-      spinBtn.disabled = false;
-      lockUI(false);       // UNLOCK: restore original disabled states
+      lockUI(false);
+      const hasAny = getFiltered().length > 0;
+      spinBtn.disabled = !hasAny;
+      spinFab.disabled = !hasAny;
+
       selectedIdx = idx;
       drawWheel();
       setResult(idx);
@@ -632,11 +634,12 @@ function spin(){
 function setupEventListeners() {
   // Leagues toggles
   chipsWrap.addEventListener('change', () => {
-    if (spinning) return; // guard (redundant since disabled, but safe)
+    if (spinning) return;
     selectedIdx = -1;
     drawWheel();
     const len = getFiltered().length;
     spinBtn.disabled = len === 0;
+    spinFab.disabled = len === 0;
     if (len === 0 && currentText) currentText.textContent = 'Please select at least one league.';
     updateSelectionBanner();
   });
@@ -656,11 +659,10 @@ function setupEventListeners() {
     }
   });
 
-  // Quick picks with active styling
-  function setActive(btn) { [qpAll, qpNone, qpEPL, qpTop5].forEach(b => b.classList.toggle('active', b === btn)); }
+  // Quick picks with active styling (EPL-only removed)
+  function setActive(btn) { [qpAll, qpNone, qpTop5].forEach(b => b.classList.toggle('active', b === btn)); }
   qpAll.onclick  = () => { if (spinning) return; setCheckedCodes(allCodesFromDOM()); setActive(qpAll); };
   qpNone.onclick = () => { if (spinning) return; setCheckedCodes([]); setActive(qpNone); };
-  qpEPL.onclick  = () => { if (spinning) return; setCheckedCodes(['EPL']); setActive(qpEPL); };
   qpTop5.onclick = () => {
     if (spinning) return;
     const presentTop5 = TOP5.filter(c => allCodesFromDOM().includes(c));
@@ -668,13 +670,12 @@ function setupEventListeners() {
     setActive(qpTop5);
   };
 
-  optName.onchange    = () => { if (!spinning) { drawWheel(); updateModalRevealFromToggles(); } };
-  optLogo.onchange    = () => { if (!spinning) { drawWheel(); updateModalRevealFromToggles(); } };
-  optStadium.onchange = () => { if (!spinning) { drawWheel(); updateModalRevealFromToggles(); } };
-
+  // Spin actions
   spinBtn.onclick = spin;
-  resetHistoryBtn.addEventListener('click', () => { if (!spinning) resetHistory(); });
+  spinFab.onclick = spin;
 
+  // History and modal
+  resetHistoryBtn.addEventListener('click', () => { if (!spinning) resetHistory(); });
   mClose.onclick = () => { if (!spinning) closeModal(); };
   backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
