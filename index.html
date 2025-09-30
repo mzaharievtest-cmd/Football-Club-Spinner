@@ -12,17 +12,18 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Inline brand styles to avoid touching style.css -->
+  <!-- Brand styling -->
   <style>
     header .brand {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
+    /* Bigger, responsive brand logo */
     .brand-img {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
+      width: clamp(32px, 3.6vw, 48px);
+      height: clamp(32px, 3.6vw, 48px);
+      border-radius: 10px;
       background: #0b1220;
       border: 1px solid #5aa1ff;
       box-shadow: 0 2px 8px rgba(16,24,48,.25);
@@ -34,8 +35,8 @@
 <body>
 <header>
   <div class="brand">
-    <!-- Replaced emoji with your logo -->
-    <img src="app-logo.png" alt="Football Club Spinner" class="brand-img" width="28" height="28" decoding="async" />
+    <!-- Use your new app logo -->
+    <img src="app-logo.png" alt="Football Club Spinner" class="brand-img" decoding="async" />
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
       <div class="season-tag">Top 5 Leagues · 2025/26</div>
