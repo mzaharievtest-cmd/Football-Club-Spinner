@@ -20,6 +20,9 @@
   --accent-2: #22d3ee;  /* cyan */
   --accent-3: #9b6bff;  /* purple */
 
+  /* Live accent for modal */
+  --accent-live: #4f82ff;
+
   /* Radii and shadows */
   --radius: 20px;
   --shadow-1: 0 8px 30px rgba(0,0,0,.25);
@@ -541,39 +544,64 @@ canvas#wheel {
   justify-content: center;
   z-index: 1000;
   padding: 24px;
+
+  /* Smooth fade */
+  opacity: 0;
+  transition: opacity .28s var(--ease-out);
 }
+#backdrop.visible { opacity: 1; }
 
 #modal {
+  position: relative;
   border-radius: 18px;
   max-width: 420px;
   width: min(95vw, 420px);
   background: linear-gradient(180deg, rgba(16,24,42,.96), rgba(13,20,38,.92));
-  box-shadow: var(--shadow-2);
-  border: 1px solid #4f82ff;
+  box-shadow:
+    var(--shadow-2),
+    0 0 0 1px var(--accent-live) inset,
+    0 12px 40px color-mix(in oklab, var(--accent-live), black 70%);
+  border: 1px solid var(--accent-live);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transform: translateY(8px) scale(.98);
+  transform: translateY(10px) scale(.985);
   opacity: 0;
-  transition: transform .22s var(--ease-out), opacity .22s var(--ease-out);
+  transition: transform .26s var(--ease-out), opacity .26s var(--ease-out), box-shadow .26s var(--ease-out), border-color .26s var(--ease-out);
+}
+#modal::before {
+  /* Soft accent glow */
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(60% 40% at 50% -10%, color-mix(in oklab, var(--accent-live), transparent 60%) 0%, transparent 60%);
+  pointer-events: none;
+  filter: blur(12px);
+  opacity: .75;
 }
 #modal.show {
   transform: translateY(0) scale(1);
   opacity: 1;
 }
 
-#mHead {
-  padding: 22px 26px 0;
-  font-weight: 900;
-  font-size: 24px;
-  color: #f4f7ff;
-  text-align: center;
+/* Staggered content reveals */
+#mHead, #mSub, #mLogo, #mStadium {
+  opacity: 0;
+  transform: translateY(6px) scale(.98);
+  transition: opacity .28s var(--ease-out), transform .28s var(--ease-out);
 }
-#mSub {
-  font-size: 14px;
-  color: #a3b8e7;
-  margin: 6px 0 2px;
-  text-align: center;
+.modal.show #mHead {
+  opacity: 1; transform: translateY(0) scale(1); transition-delay: .06s;
+}
+.modal.show #mSub {
+  opacity: 1; transform: translateY(0) scale(1); transition-delay: .12s;
+}
+.modal.show #mLogo {
+  opacity: 1; transform: translateY(0) scale(1); transition-delay: .16s;
+}
+.modal.show #mStadium {
+  opacity: 1; transform: translateY(0) scale(1); transition-delay: .22s;
 }
 
 .m-body {
@@ -685,4 +713,14 @@ canvas#wheel {
 /* While UI is locked for spin: show wait cursor */
 body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked label, body.ui-locked .chip {
   cursor: wait !important;
+}
+
+/* ========== FLIP clone used for the logo flight ========== */
+.fly-clone {
+  position: fixed;
+  z-index: 10000;
+  will-change: transform, opacity;
+  pointer-events: none;
+  transform-origin: top left;
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease;
 }
