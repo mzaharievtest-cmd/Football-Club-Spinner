@@ -85,10 +85,20 @@
     </div>
 
     <div class="section-title">Show on wheel</div>
-    <div class="showopts">
-      <label class="chip"><input type="checkbox" id="optName" checked> Name</label>
-      <label class="chip"><input type="checkbox" id="optLogo" checked> Logo</label>
-      <label class="chip"><input type="checkbox" id="optStadium"> Stadium</label>
+    <!-- UPDATED: use the same 'chips' container and 'chip-text' span as leagues -->
+    <div class="chips" id="showOnWheel">
+      <label class="chip">
+        <input type="checkbox" id="optName" checked aria-label="Name">
+        <span class="chip-text">Name</span>
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optLogo" checked aria-label="Logo">
+        <span class="chip-text">Logo</span>
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optStadium" aria-label="Stadium">
+        <span class="chip-text">Stadium</span>
+      </label>
     </div>
 
     <button id="spinBtn">SPIN</button>
