@@ -316,45 +316,27 @@ function updateModalRevealFromToggles() {
   applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
 }
 
-// -------------------- Smooth connection animation (banner logo -> modal logo) --------------------
-function flyLogoToModal() {
-  if (!currentLogo || !mLogo) return;
-  if (!currentLogo.src) return;
-  if (!currentLogo.complete || !currentLogo.naturalWidth) return;
-
-  const srcRect = currentLogo.getBoundingClientRect();
-  const dstRect = mLogo.getBoundingClientRect();
-
-  if (!srcRect.width || !srcRect.height || !dstRect.width || !dstRect.height) return;
-
-  const clone = currentLogo.cloneNode(true);
-  clone.classList.add('fly-clone');
-  clone.style.left = '0';
-  clone.style.top = '0';
-  clone.style.width = srcRect.width + 'px';
-  clone.style.height = srcRect.height + 'px';
-  clone.style.transform = `translate(${srcRect.left}px, ${srcRect.top}px) scale(1)`;
-  clone.style.opacity = '1';
-  document.body.appendChild(clone);
-
-  const prevVis = mLogo.style.visibility;
-  mLogo.style.visibility = 'hidden';
-
-  requestAnimationFrame(() => {
-    const scaleX = dstRect.width / srcRect.width;
-    const scaleY = dstRect.height / srcRect.height;
-    clone.style.transform = `translate(${dstRect.left}px, ${dstRect.top}px) scale(${scaleX}, ${scaleY})`;
-
-    const onDone = () => {
-      mLogo.style.visibility = prevVis || '';
-      clone.remove();
-    };
-    clone.addEventListener('transitionend', onDone, { once: true });
-    setTimeout(onDone, 700); // safety
-  });
+// -------------------- Preload selected team logo for instant modal display --------------------
+function preloadModalLogo(url, cb) {
+  if (!url) { cb && cb(); return; }
+  const img = getLogo(url, () => done());
+  let called = false;
+  const done = () => { if (called) return; called = true; cb && cb(); };
+  if (img) {
+    try {
+      if (img.complete) {
+        // Already loaded and decoded in most browsers
+        done();
+      } else if (typeof img.decode === 'function') {
+        img.decode().then(done).catch(done);
+      }
+    } catch { done(); }
+  } else {
+    done();
+  }
 }
 
-// -------------------- Modal open/close (IMG logo) --------------------
+// -------------------- Modal open/close --------------------
 function openModal(team){
   ensureRevealStyles();
   lastModalTeam = team;
@@ -364,36 +346,26 @@ function openModal(team){
 
   if (mHead)   mHead.textContent = team.team_name || '—';
   if (mSub)    mSub.textContent = leagueLabel;
-  if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
+
+  if (mLogo) {
+    // Hint the browser to decode and load eagerly
+    mLogo.setAttribute('decoding', 'sync');
+    mLogo.setAttribute('loading', 'eager');
+    mLogo.src = team.logo_url || '';
+    mLogo.alt = (team.team_name || 'Club') + ' logo';
+  }
+
   if (mStadium) mStadium.textContent = team.stadium || '—';
 
-  // Live accent glow based on team color
-  const accent = team.primary_color || '#4f82ff';
-  modalEl.style.setProperty('--accent-live', accent);
-
-  // Show backdrop so modal can be measured, then fade in + animate
   backdrop.style.display = 'flex';
-  // Hide the destination logo while the clone flies in
-  if (mLogo) mLogo.style.visibility = 'hidden';
-
   requestAnimationFrame(() => {
-    backdrop.classList.add('visible');
     modalEl.classList.add('show');
     updateModalRevealFromToggles();
-
-    // After layout with "show" applied, run the FLIP flight
-    requestAnimationFrame(() => {
-      try { flyLogoToModal(); }
-      finally {
-        setTimeout(() => { if (mLogo) mLogo.style.visibility = ''; }, 500);
-      }
-    });
   });
 }
 function closeModal(){
   modalEl.classList.remove('show');
-  backdrop.classList.remove('visible');
-  setTimeout(()=> { backdrop.style.display='none'; }, 260);
+  setTimeout(()=> { backdrop.style.display='none'; }, 150);
 }
 window.openModal = openModal;
 window.closeModal = closeModal;
@@ -686,7 +658,13 @@ function setResult(idx){
   if (history.length > 50) history = history.slice(0,50);
   saveHistory();
   renderHistory();
-  openModal(t);
+
+  // Preload and decode the modal logo first so it shows instantly
+  if (t.logo_url) {
+    preloadModalLogo(t.logo_url, () => openModal(t));
+  } else {
+    openModal(t);
+  }
 }
 
 function spin(){
