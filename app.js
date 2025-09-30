@@ -450,10 +450,10 @@ function drawWheel(){
       const aMid = (a0 + a1) / 2;
       const sliceArc = radius * (a1 - a0);
 
-      // Target sizes tuned so Name > Stadium
+      // Name and stadium sizes (unchanged), but make logo bigger
       const nameTargetPx    = clamp(12, 0.20 * sliceArc, 24);
       const stadiumTargetPx = clamp(9,  0.14 * sliceArc, 18);
-      let   logoSize        = clamp(22, 0.32 * sliceArc, 52);
+      let   logoSize        = clamp(28, 0.40 * sliceArc, 64); // bigger logos: min 28, scale 0.40, max 64
       const logoHalf = logoSize / 2;
       const pad = 10;
 
@@ -718,7 +718,7 @@ function setupEventListeners() {
     setActive(qpTop5);
   };
 
-  // NEW: Show-on-wheel toggles (Logo / Name / Stadium) — immediate redraw
+  // Show-on-wheel toggles (Logo / Name / Stadium) — immediate redraw
   const onWheelToggleChange = () => {
     if (spinning) return;
     drawWheel();
