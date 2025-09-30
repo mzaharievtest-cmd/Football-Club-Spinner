@@ -13,7 +13,7 @@ function exists(p) { try { fs.accessSync(p, fs.constants.F_OK); return true; } c
 function readJSON(p, fallback = {}) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return fallback; } }
 
 async function detectForLogo(absPath) {
-  // Dimensions via sharp (reliable and fast)
+  // Read image dimensions via sharp
   let iw = 0, ih = 0;
   try {
     const meta = await sharp(absPath).metadata();
@@ -25,18 +25,19 @@ async function detectForLogo(absPath) {
   }
   if (!iw || !ih) return [];
 
-  // OCR with tesseract.js
-  const res = await Tesseract.recognize(absPath, 'eng', { logger: null });
+  // OCR with a no-op logger (previously null caused TypeError)
+  const res = await Tesseract.recognize(absPath, 'eng', { logger: () => {} });
   const words = res?.data?.words || [];
 
-  // Filter small/low-confidence boxes (tune as needed)
-  const MIN_H = Math.max(10, Math.round(ih * 0.02)); // >=2% of height
-  const MIN_W = Math.max(10, Math.round(iw * 0.02)); // >=2% of width
+  // Filter small/low-confidence boxes
+  const MIN_H = Math.max(10, Math.round(ih * 0.02)); // >= 2% of height
+  const MIN_W = Math.max(10, Math.round(iw * 0.02)); // >= 2% of width
   const MIN_CONF = 60; // 0..100
 
   const rects = [];
   for (const w of words) {
-    const b = w?.bbox; const conf = Number(w?.confidence ?? 0);
+    const b = w?.bbox;
+    const conf = Number(w?.confidence ?? 0);
     if (!b || conf < MIN_CONF) continue;
     const bw = Math.max(0, (b.x1 ?? 0) - (b.x0 ?? 0));
     const bh = Math.max(0, (b.y1 ?? 0) - (b.y0 ?? 0));
@@ -73,12 +74,12 @@ async function main() {
     const abs = path.resolve(ROOT, rel);
     if (!exists(abs)) { failed++; continue; }
 
-    // Skip if already present (idempotent)
+    // Skip if we already have an entry (including empty array = "no text")
     if (current[rel] && Array.isArray(current[rel])) { skipped++; continue; }
 
     try {
       const rects = await detectForLogo(abs);
-      current[rel] = rects; // save empty array too (means "no text")
+      current[rel] = rects;
       if (rects.length) updated++; else processedNoText++;
     } catch (e) {
       failed++;
