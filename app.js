@@ -39,7 +39,7 @@ const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
 const mHead = document.getElementById('mHead');
 const mSub = document.getElementById('mSub');
-const mLogo = document.getElementById('mLogo');         // NOTE: now a <canvas>
+const mLogo = document.getElementById('mLogo'); // <img>
 const mStadium = document.getElementById('mStadium');
 
 // Quick picks and banner
@@ -51,9 +51,6 @@ const perfTip = document.getElementById('perfTip');
 // Canvases
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
-
-// -------------------- Optional: text masks for logo OCR blur --------------------
-const TEXT_MASKS = new Map(); // Map<logo_url, Array<{x,y,w,h}>> in normalized 0..1
 
 // -------------------- Utils --------------------
 const TAU = Math.PI * 2;
@@ -271,7 +268,7 @@ function renderHistory() {
   });
 }
 
-// -------------------- Modal blur/reveal helpers (optional) --------------------
+// -------------------- Modal reveal helpers (no logo masking) --------------------
 function ensureRevealStyles() {
   if (document.getElementById('reveal-style')) return;
   const s = document.createElement('style');
@@ -319,119 +316,7 @@ function updateModalRevealFromToggles() {
   applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
 }
 
-// -------------------- Modal logo drawing with mask blur --------------------
-function drawBlurOverLogoText(ctx, img, masks, iw, ih, scale, drawOriginX, drawOriginY) {
-  if (!Array.isArray(masks) || masks.length === 0) return;
-  ctx.save();
-  ctx.filter = 'blur(6px)';
-  for (const r of masks) {
-    const rx = (r.x || 0) * iw;
-    const ry = (r.y || 0) * ih;
-    const rw = (r.w || 0) * iw;
-    const rh = (r.h || 0) * ih;
-    const dx = drawOriginX + rx * scale;
-    const dy = drawOriginY + ry * scale;
-    const dw = rw * scale;
-    const dh = rh * scale;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(dx, dy, dw, dh);
-    ctx.clip();
-    ctx.drawImage(img, drawOriginX, drawOriginY, iw * scale, ih * scale);
-    ctx.restore();
-  }
-  ctx.filter = 'none';
-  ctx.restore();
-}
-
-function drawModalLogo(url, alt = 'Club logo') {
-  if (!mLogo || !(mLogo instanceof HTMLCanvasElement)) return;
-  const ctx = mLogo.getContext('2d');
-  const DPR = Math.max(1, window.devicePixelRatio || 1);
-
-  // Match canvas pixels to its CSS box
-  const rect = mLogo.getBoundingClientRect();
-  const W = Math.max(10, Math.round(rect.width * DPR));
-  const H = Math.max(10, Math.round(rect.height * DPR));
-  if (mLogo.width !== W || mLogo.height !== H) {
-    mLogo.width = W;
-    mLogo.height = H;
-  }
-
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.clearRect(0,0,W,H);
-
-  // Draw rounded background to mirror existing style
-  const radius = Math.min(W, H);
-  const r = Math.round(14 * DPR);
-  ctx.save();
-  ctx.fillStyle = '#0b1220';
-  ctx.strokeStyle = '#5aa1ff';
-  ctx.lineWidth = Math.max(1, Math.round(1 * DPR));
-  // rounded rect
-  const pad = Math.round(6 * DPR);
-  const x = pad, y = pad, w = W - pad*2, h = H - pad*2;
-  const rr = Math.min(r, Math.floor(Math.min(w,h)/5));
-  ctx.beginPath();
-  ctx.moveTo(x+rr, y);
-  ctx.arcTo(x+w, y,   x+w, y+h, rr);
-  ctx.arcTo(x+w, y+h, x,   y+h, rr);
-  ctx.arcTo(x,   y+h, x,   y,   rr);
-  ctx.arcTo(x,   y,   x+w, y,   rr);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-
-  const img = getLogo(url, () => drawModalLogo(url, alt));
-  if (!img) return;
-
-  if (img.complete) {
-    // Fit inside the inner box (padding accounts for border)
-    const innerPad = Math.round(12 * DPR);
-    const boxW = W - innerPad*2;
-    const boxH = H - innerPad*2;
-    const iw = img.naturalWidth || boxW;
-    const ih = img.naturalHeight || boxH;
-    const s = Math.min(boxW / iw, boxH / ih);
-    const originX = Math.round((W - iw * s) / 2);
-    const originY = Math.round((H - ih * s) / 2);
-
-    // Base logo
-    ctx.save();
-    // Clip to rounded inner box
-    const clipR = Math.round(10 * DPR);
-    const cx = originX, cy = originY, cw = Math.round(iw * s), ch = Math.round(ih * s);
-    ctx.beginPath();
-    ctx.moveTo(cx+clipR, cy);
-    ctx.arcTo(cx+cw, cy,     cx+cw, cy+ch, clipR);
-    ctx.arcTo(cx+cw, cy+ch,  cx,    cy+ch, clipR);
-    ctx.arcTo(cx,    cy+ch,  cx,    cy,    clipR);
-    ctx.arcTo(cx,    cy,     cx+cw, cy,    clipR);
-    ctx.closePath();
-    ctx.clip();
-
-    ctx.drawImage(img, originX, originY, iw * s, ih * s);
-
-    // Apply text-region blur if masks exist
-    const masks = TEXT_MASKS.get(url);
-    if (masks && masks.length) {
-      drawBlurOverLogoText(ctx, img, masks, iw, ih, s, originX, originY);
-    }
-    ctx.restore();
-  } else {
-    // Placeholder
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-    const ph = Math.min(W,H) - Math.round(12 * DPR);
-    const px = Math.round((W - ph)/2), py = Math.round((H - ph)/2);
-    ctx.fillRect(px, py, ph, ph);
-  }
-
-  mLogo.setAttribute('aria-label', alt);
-}
-
-// -------------------- Modal open/close --------------------
+// -------------------- Modal open/close (IMG logo) --------------------
 function openModal(team){
   ensureRevealStyles();
   lastModalTeam = team;
@@ -441,10 +326,8 @@ function openModal(team){
 
   if (mHead)   mHead.textContent = team.team_name || '—';
   if (mSub)    mSub.textContent = leagueLabel;
+  if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
   if (mStadium) mStadium.textContent = team.stadium || '—';
-
-  // Draw logo onto canvas (with blur if masks exist)
-  drawModalLogo(team.logo_url, (team.team_name || 'Club') + ' logo');
 
   backdrop.style.display = 'flex';
   requestAnimationFrame(() => {
@@ -576,7 +459,7 @@ function drawWheel(){
       const aMid = (a0 + a1) / 2;
       const sliceArc = radius * (a1 - a0);
 
-      // Name > Stadium; larger logos
+      // Name > Stadium; larger logos (kept from prior improvements)
       const nameTargetPx    = clamp(12, 0.20 * sliceArc, 24);
       const stadiumTargetPx = clamp(9,  0.14 * sliceArc, 18);
       let   logoSize        = clamp(28, 0.40 * sliceArc, 64);
@@ -714,17 +597,7 @@ function drawWheel(){
           const box = Math.max(4, 2 * (logoHalf - 1));
           const iw = img.naturalWidth || box, ih = img.naturalHeight || box;
           const s = Math.min(box / iw, box / ih);
-          const originX = -iw * s / 2;
-          const originY = -ih * s / 2;
-
-          // Base logo
-          ctx.drawImage(img, originX, originY, iw * s, ih * s);
-
-          // Apply text blur overlay if we have masks for this logo
-          const masks = TEXT_MASKS.get(t.logo_url);
-          if (masks && masks.length) {
-            drawBlurOverLogoText(ctx, img, masks, iw, ih, s, originX, originY);
-          }
+          ctx.drawImage(img, -iw*s/2, -ih*s/2, iw*s, ih*s);
         } else {
           ctx.fillStyle = 'rgba(255,255,255,0.12)';
           const ph = (logoHalf - 3) * 2;
@@ -896,22 +769,18 @@ function setupEventListeners() {
   backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
 
-  // Debounced resize redraw (and re-draw modal logo if open)
+  // Debounced resize redraw
   let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
-    resizeTO = setTimeout(() => {
-      sizeCanvas();
-      drawWheel();
-      if (isModalOpen() && lastModalTeam) drawModalLogo(lastModalTeam.logo_url, (lastModalTeam.team_name || 'Club') + ' logo');
-    }, 120);
+    resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120);
   }, { passive: true });
 }
 
-// Boot: load teams, then try to load masks (non-blocking)
+// Boot
 fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
-  .then(async data => {
+  .then(data => {
     TEAMS = data;
     ensureRevealStyles();
     renderChips();
@@ -920,21 +789,6 @@ fetch(`./teams.json?v=${Date.now()}`)
     setCheckedCodes(['EPL']);   // EPL-only on first load
     drawWheel();
     setupEventListeners();
-
-    // Load text masks in the background (safe if missing)
-    try {
-      const r = await fetch(`./data/logo-text-masks.json?v=${Date.now()}`);
-      if (r.ok) {
-        const obj = await r.json();
-        Object.entries(obj || {}).forEach(([logo, rects]) => {
-          if (Array.isArray(rects)) TEXT_MASKS.set(logo, rects);
-        });
-        requestAnimationFrame(() => {
-          drawWheel();
-          if (isModalOpen() && lastModalTeam) drawModalLogo(lastModalTeam.logo_url, (lastModalTeam.team_name || 'Club') + ' logo');
-        });
-      }
-    } catch { /* ignore if file missing */ }
   })
   .catch(err => {
     console.error('Failed to load teams.json', err);
