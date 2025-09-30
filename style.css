@@ -4,23 +4,53 @@
    Theme variables
    ========================= */
 :root {
-  --bg: #05070f;
-  --card: #0e1526;
-  --card-top: #121c34;
-  --line: #1b2740;
-  --muted: #9fb0c6;
-  --text: #e7eef7;
-  --accent: #5aa1ff;
-  --accent-2: #22d3ee;
-  --radius: 20px;
   color-scheme: dark;
+
+  /* Base palette */
+  --bg-0: #05070f;
+  --bg-1: #08101e;
+  --bg-2: #0e1526;
+  --bg-3: #121c34;
+
+  --text: #eaf0fb;
+  --muted: #a9b9d6;
+
+  /* Accents */
+  --accent: #64a8ff;    /* blue */
+  --accent-2: #22d3ee;  /* cyan */
+  --accent-3: #9b6bff;  /* purple */
+
+  /* Radii and shadows */
+  --radius: 20px;
+  --shadow-1: 0 8px 30px rgba(0,0,0,.25);
+  --shadow-2: 0 24px 80px rgba(18,30,52,0.42);
+
+  /* Gradients */
+  --grad-ui: conic-gradient(from 180deg at 50% 50%, #2f4a91, #1f2e5e, #142247, #0e1a39, #142247, #1f2e5e, #2f4a91);
+  --grad-brand: linear-gradient(135deg, #2b68ff, #22d3ee 50%, #9b6bff);
+  --grad-chip: linear-gradient(135deg, rgba(18,28,52,.96), rgba(10,16,30,.92));
+  --grad-card: linear-gradient(180deg, rgba(18,27,48,.9), rgba(10,16,30,.86));
+
+  /* Borders */
+  --line: rgba(120,160,255,.18);
+  --line-strong: rgba(120,160,255,.32);
+
+  /* Motion */
+  --ease: cubic-bezier(.2,.7,.1,1);
+  --ease-out: cubic-bezier(.16,1,.3,1);
 }
 
-/* Ensure anything with the hidden attribute is never shown by CSS resets */
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root { --ease: linear; --ease-out: linear; }
+  * { animation: none !important; transition: none !important; }
+}
+
+/* Ensure anything with the hidden attribute stays hidden */
 [hidden] { display: none !important; }
 
 /* =========================
-   Base / Layout
+   Base / Background
    ========================= */
 *,
 *::before,
@@ -33,15 +63,35 @@ body {
   min-height: 100vh;
   font-family: "Inter", system-ui, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(1400px 840px at 30% -20%, rgba(90,161,255,.35) 0, transparent 50%),
-    radial-gradient(1100px 880px at 90% -10%, rgba(34,211,238,.22) 0, transparent 45%),
-    linear-gradient(180deg, #05070f, #060914 28%, #08101e 100%);
-  background-attachment: fixed; /* seamless */
+  background: radial-gradient(1400px 840px at 25% -20%, rgba(90,161,255,.25) 0, transparent 48%),
+              radial-gradient(1100px 880px at 92% -12%, rgba(34,211,238,.16) 0, transparent 45%),
+              linear-gradient(180deg, var(--bg-0), var(--bg-1) 28%, var(--bg-1) 100%);
+  background-attachment: fixed;
   overflow-x: hidden;
 }
 
-/* Header */
+/* Subtle moving grid glow */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20vmax;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(60,120,255,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat,
+              radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat;
+  filter: blur(40px);
+  opacity: .8;
+  pointer-events: none;
+  z-index: 0;
+  animation: bg-drift 34s linear infinite;
+}
+@keyframes bg-drift {
+  0% { transform: translate3d(0,0,0) rotate(0deg); }
+  50%{ transform: translate3d(1.5%, -1.5%, 0) rotate(180deg); }
+  100%{ transform: translate3d(0,0,0) rotate(360deg); }
+}
+
+/* =========================
+   Header (glass + brand)
+   ========================= */
 header {
   padding: 16px clamp(16px,3vw,36px);
   display: flex;
@@ -50,100 +100,107 @@ header {
   gap: 24px;
   position: sticky;
   top: 0;
-  background: linear-gradient(180deg,rgba(15,23,42,.92),rgba(11,18,31,.78));
-  border-bottom: none; /* no separation line */
+  background: linear-gradient(180deg, rgba(12,18,31,.78), rgba(10,16,28,.62));
   backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(120,160,255,.14);
   z-index: 20;
 }
 
 header h1 {
   margin: 0;
-  font-size: clamp(20px,2.4vw,28px);
-  font-weight: 800;
-  letter-spacing: .02em;
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-weight: 900;
+  letter-spacing: .01em;
+  text-shadow: 0 1px 0 rgba(0,0,0,.3);
 }
 
 .season-tag {
   margin-top: 2px;
   font-size: 12px;
-  letter-spacing: .3em;
+  letter-spacing: .34em;
   text-transform: uppercase;
   color: rgba(197,212,235,.76);
 }
 
-/* Page grid */
+/* Brand cluster */
+header .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-img {
+  width: clamp(30px, 3.3vw, 44px);
+  height: clamp(30px, 3.3vw, 44px);
+  border-radius: 12px;
+  object-fit: cover;
+  display: inline-block;
+  position: relative;
+  z-index: 0;
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.28),
+    inset 0 0 0 1px rgba(255,255,255,.05);
+  background: #0b1220;
+  border: 1px solid rgba(100,160,255,.45);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
+}
+.brand-img:hover {
+  transform: translateY(-1px) scale(1.03);
+  border-color: rgba(120,190,255,.8);
+  box-shadow:
+    0 10px 30px rgba(32,80,200,.35),
+    0 0 0 6px rgba(80,160,255,.08),
+    inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+/* =========================
+   Page grid / cards
+   ========================= */
 .container {
   max-width: 1200px;
   margin: 20px auto 48px;
   padding: 0 clamp(12px,4vw,36px);
   display: grid;
-  gap: 20px;
+  gap: 22px;
+  position: relative;
+  z-index: 1;
 }
 
 @media (min-width: 980px) {
   .container { grid-template-columns: 380px 1fr; }
 }
-
 @media (max-width: 979.98px) {
   .container { display: block; }
   .card { margin-bottom: 16px; }
 }
 
-/* Cards / sections */
+/* Card */
 .card {
   position: relative;
-  background: linear-gradient(180deg, var(--card-top), var(--card));
+  background: var(--grad-card);
   border-radius: var(--radius);
   padding: 18px clamp(14px,3vw,26px);
-  border: 1px solid rgba(111,148,255,.16);
-  box-shadow: 0 8px 30px rgba(0,0,0,.25);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+  overflow: clip;
+  transform: translateY(8px);
+  opacity: 0;
+  animation: card-in .6s var(--ease-out) forwards;
+}
+@keyframes card-in {
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .section-title {
   font-size: 12px;
-  letter-spacing: .32em;
+  letter-spacing: .36em;
   text-transform: uppercase;
   color: var(--muted);
   margin: 0 0 10px;
 }
 
-/* Brand mark + header alignment (new) */
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-}
-
-.brand-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: #0b1220;
-  border: 1px solid #5aa1ff;
-  box-shadow: 0 2px 8px rgba(16,24,48,.25);
-  object-fit: cover;
-  flex: 0 0 auto;
-}
-
-.brand-title {
-  font-weight: 900;
-  letter-spacing: .02em;
-  margin: 0;
-}
-
-/* Keep the season stamp pushed to the right if it shares the header row */
-.app-header .timestamp {
-  margin-left: auto;
-}
-
-/* Responsive tweak */
-@media (max-width: 600px) {
-  .brand-mark { width: 24px; height: 24px; }
-}
-
 /* =========================
-   Quick picks + selection banner
+   Quick picks / chips
    ========================= */
 .quick-picks {
   display: flex;
@@ -152,36 +209,56 @@ header h1 {
   margin-bottom: 10px;
 }
 
-.perf-tip {
-  font-size: 12px;
-  color: #9ec1ff;
-  background: rgba(40, 60, 100, 0.28);
-  border: 1px solid rgba(120, 160, 255, 0.25);
-  border-radius: 10px;
-  padding: 6px 10px;
-  margin: 6px 0 10px;
+button, .chip-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(22,34,64,.96), rgba(12,18,34,.92));
+  color: #f4f7ff;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
+  position: relative;
+  overflow: hidden;
 }
+button:hover, .chip-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-2);
+  box-shadow: 0 10px 30px rgba(34,211,238,.16);
+}
+button:active { transform: translateY(0); }
+button:disabled { opacity: .6; cursor: wait; }
+
+/* Button shine */
+button::after, .chip-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(255,255,255,.08), transparent 30% 70%, rgba(255,255,255,.08));
+  transform: translateX(-100%);
+  transition: transform .7s var(--ease-out);
+  pointer-events: none;
+}
+button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
 
 .chip-btn.active {
   border-color: var(--accent-2);
-  box-shadow: 0 0 0 2px rgba(34,211,238,.22) inset;
-  background: linear-gradient(180deg, rgba(30,44,80,.95), rgba(14,24,48,.92));
-}
-
-/* While UI is locked for spin: show wait cursor */
-body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked label, body.ui-locked .chip {
-  cursor: wait !important;
+  box-shadow: 0 0 0 2px rgba(34,211,238,.20) inset, 0 12px 26px rgba(34,211,238,.12);
+  background: linear-gradient(180deg, rgba(32,46,88,.96), rgba(14,24,48,.92));
 }
 
 /* Ghost variant for “Show more” */
 .chip-btn.ghost {
-  background: linear-gradient(180deg, rgba(18,22,36,.8), rgba(10,14,26,.78));
+  background: linear-gradient(180deg, rgba(18,22,36,.86), rgba(10,14,26,.82));
   border-style: dashed;
 }
 
-/* =========================
-   League chips
-   ========================= */
+/* League chips */
 #chips .chips {
   display: flex;
   flex-wrap: wrap;
@@ -194,18 +271,19 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px 10px 44px;
+  padding: 10px 16px 10px 46px;
   border-radius: 999px;
-  border: 1px solid rgba(90,161,255,.18);
-  background: linear-gradient(135deg,rgba(13,22,40,.95),rgba(9,15,28,.85));
+  border: 1px solid var(--line);
+  background: var(--grad-chip);
   font-size: 13px;
   font-weight: 700;
   color: var(--text);
   cursor: pointer;
-  transition: .18s ease;
+  transition: transform .16s var(--ease), border-color .16s var(--ease), box-shadow .2s var(--ease);
   max-width: 100%;
+  will-change: transform;
 }
-#chips .chip:hover { border-color: rgba(90,161,255,.38); transform: translateY(-1px); }
+#chips .chip:hover { border-color: var(--line-strong); transform: translateY(-1px) scale(1.02); }
 
 #chips .chip input[type="checkbox"] {
   appearance: none;
@@ -218,19 +296,18 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   background: rgba(4,9,19,.8);
   display: grid;
   place-items: center;
-  transition: .18s;
+  transition: .18s var(--ease);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
 #chips .chip input[type="checkbox"]::after {
   content: "";
-  width: 9px;
-  height: 9px;
-  border-radius: 4px;
+  width: 9px; height: 9px; border-radius: 4px;
   background: var(--accent);
   transform: scale(.2);
   opacity: 0;
-  transition: .18s;
+  transition: .18s var(--ease);
 }
-#chips .chip input[type="checkbox"]:checked { border-color: var(--accent); background: rgba(90,161,255,.18); }
+#chips .chip input[type="checkbox"]:checked { border-color: var(--accent); background: rgba(90,161,255,.18); box-shadow: 0 0 0 2px rgba(90,161,255,.18) inset; }
 #chips .chip input[type="checkbox"]:checked::after { transform: scale(1); opacity: 1; }
 
 #chips .chip .chip-text {
@@ -242,72 +319,24 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
 }
 
 @media (max-width: 560px) {
-  #chips .chip { padding: 10px 18px 10px 44px; }
+  #chips .chip { padding: 10px 18px 10px 46px; }
   #chips .chip .chip-text { max-width: 24ch; }
 }
 
-/* =========================
-   Show-on-wheel toggles
-   ========================= */
+/* Show-on-wheel toggles */
 .showopts {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 10px;
 }
-
-.showopts .chip {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px 10px 44px;
-  border-radius: 999px;
-  border: 1px solid rgba(90,161,255,.18);
-  background: linear-gradient(135deg,rgba(13,22,40,.95),rgba(9,15,28,.85));
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  cursor: pointer;
-  transition: .18s;
+.showopts .chip { /* reuse chip visuals */
+  padding: 10px 16px 10px 46px;
 }
-.showopts .chip input {
-  appearance: none;
-  position: absolute;
-  left: 16px;
-  width: 18px;
-  height: 18px;
-  border-radius: 6px;
-  border: 1px solid rgba(120,150,220,.45);
-  background: rgba(4,9,19,.8);
-  display: grid;
-  place-items: center;
-  transition: .18s;
-}
-.showopts .chip input::after { content: ""; width: 9px; height: 9px; border-radius: 4px; background: var(--accent); transform: scale(.2); opacity: 0; transition: .18s; }
-.showopts .chip input:checked { border-color: var(--accent); background: rgba(90,161,255,.18); }
-.showopts .chip input:checked::after { transform: scale(1); opacity: 1; }
 
 /* =========================
-   Buttons / Result / History
+   Result / History
    ========================= */
-button, .chip-btn {
-  width: 100%;
-  margin-top: 6px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(90,161,255,.38);
-  background: linear-gradient(180deg,rgba(18,30,52,.95),rgba(10,16,30,.92));
-  color: #f4f7ff;
-  font-weight: 800;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: .18s;
-}
-button:hover, .chip-btn:hover { border-color: var(--accent-2); transform: translateY(-1px); }
-button:disabled { opacity: .6; cursor: wait; }
-
 .result {
   margin-top: 14px;
   display: flex;
@@ -315,22 +344,22 @@ button:disabled { opacity: .6; cursor: wait; }
   gap: 10px;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid rgba(90,161,255,.16);
-  background: linear-gradient(135deg,rgba(13,22,40,.9),rgba(7,12,24,.85));
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(13,22,40,.9), rgba(7,12,24,.85));
+  backdrop-filter: blur(6px);
 }
-
-.result img,
-.item img {
+.result img, .item img {
   width: 38px;
   height: 38px;
   border-radius: 12px;
   object-fit: contain;
   background: #0b1220;
-  border: 1px solid rgba(90,161,255,.18);
+  border: 1px solid rgba(90,161,255,.22);
+  box-shadow: 0 2px 8px rgba(16,24,48,.28);
 }
 
 .current-name {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 15px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -341,17 +370,15 @@ button:disabled { opacity: .6; cursor: wait; }
   margin: 18px 0 10px;
   color: var(--muted);
   font-size: 12px;
-  letter-spacing: .32em;
+  letter-spacing: .34em;
   text-transform: uppercase;
 }
-
 .history {
   max-height: 260px;
   overflow: auto;
   display: grid;
   gap: 10px;
 }
-
 .item {
   display: flex;
   gap: 10px;
@@ -360,17 +387,38 @@ button:disabled { opacity: .6; cursor: wait; }
   border-radius: 12px;
   background: rgba(17,28,48,.85);
   border: 1px solid rgba(90,161,255,.12);
+  transition: transform .16s var(--ease);
 }
+.item:hover { transform: translateY(-1px); }
 
 /* =========================
-   Wheel / Pointer
+   Selection banner
+   ========================= */
+.perf-tip {
+  font-size: 12px;
+  color: #bcd4ff;
+  background: rgba(40, 60, 100, 0.28);
+  border: 1px solid rgba(120, 160, 255, 0.25);
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin: 6px 0 10px;
+  text-align: center;
+  width: 100%;
+}
+
+/* Extra spacing around chips and pointer area */
+#chips { margin-bottom: 28px; }
+#chipsMore { margin-top: 10px; }
+
+/* =========================
+   Wheel / Pointer / Spin FAB
    ========================= */
 .wheel-wrap {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: clamp(10px, 2.5vw, 18px);
+  padding: clamp(36px, 5vw, 64px) clamp(10px, 2.5vw, 18px) clamp(10px, 2.5vw, 18px);
 }
 
 canvas#wheel {
@@ -382,28 +430,39 @@ canvas#wheel {
   background: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  animation: wheel-pop .6s var(--ease-out);
+}
+@keyframes wheel-pop {
+  0% { transform: scale(.98); opacity: .8; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 #fx { position: absolute; inset: 0; pointer-events: none; }
 
-/* Pointer above the wheel (flipped) */
+/* Pointer (float) */
 .pointer {
   position: absolute;
-  top: -10px;
+  top: clamp(4px, 1vw, 12px);
   border-left: 16px solid transparent;
   border-right: 16px solid transparent;
   border-top: 26px solid var(--accent-2);
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
+  z-index: 3;
+  animation: pointer-float 3.5s ease-in-out infinite;
+}
+@keyframes pointer-float {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-3px); }
 }
 @media (max-width: 600px) {
   .pointer {
-    top: -6px;
     border-left-width: 12px;
     border-right-width: 12px;
     border-top-width: 20px;
   }
 }
 
-/* Center SPIN! button over the wheel */
+/* Spin FAB with animated ring */
 .spin-fab {
   position: absolute;
   z-index: 5;
@@ -412,8 +471,8 @@ canvas#wheel {
   justify-content: center;
   inset: 50% auto auto 50%;
   transform: translate(-50%, -50%);
-  width: clamp(84px, 14vw, 130px);
-  height: clamp(84px, 14vw, 130px);
+  width: clamp(88px, 14vw, 132px);
+  height: clamp(88px, 14vw, 132px);
   border-radius: 999px;
   border: 2px solid rgba(120, 200, 255, 0.55);
   background: radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
@@ -422,20 +481,34 @@ canvas#wheel {
   letter-spacing: .16em;
   text-transform: uppercase;
   box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 0 30px rgba(90,161,255,.15);
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
   pointer-events: auto;
+  transition: transform .12s var(--ease), box-shadow .12s var(--ease), border-color .12s var(--ease), background .12s var(--ease);
 }
-.spin-fab:hover { transform: translate(-50%, -50%) scale(1.03); border-color: #22d3ee; }
-.spin-fab:active { transform: translate(-50%, -50%) scale(0.98); }
+.spin-fab::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  background: conic-gradient(from 0deg, #22d3ee, #2b68ff, #9b6bff, #22d3ee);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 8px), black 0);
+          mask: radial-gradient(closest-side, transparent calc(100% - 8px), black 0);
+  animation: ring-spin 4s linear infinite;
+  opacity: .9;
+}
+@keyframes ring-spin {
+  to { transform: rotate(360deg); }
+}
+.spin-fab:hover { transform: translate(-50%, -50%) scale(1.03); border-color: #22d3ee; box-shadow: 0 14px 34px rgba(34,211,238,.25); }
+.spin-fab:active { transform: translate(-50%, -50%) scale(0.985); }
 .spin-fab:disabled { opacity: .7; cursor: wait; }
 
 /* =========================
-   Modal
+   Modal (glass, reveal buttons)
    ========================= */
 #backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(4,10,24,0.85);
+  background: rgba(4,10,24,0.82);
   backdrop-filter: blur(12px);
   display: none;
   align-items: center;
@@ -446,20 +519,27 @@ canvas#wheel {
 
 #modal {
   border-radius: 18px;
-  max-width: 400px;
-  width: min(95vw, 400px);
-  background: #111a2c;
-  box-shadow: 0 24px 80px rgba(18,30,52,0.42);
-  border: 1px solid #5aa1ff;
+  max-width: 420px;
+  width: min(95vw, 420px);
+  background: linear-gradient(180deg, rgba(16,24,42,.96), rgba(13,20,38,.92));
+  box-shadow: var(--shadow-2);
+  border: 1px solid #4f82ff;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transform: translateY(8px) scale(.98);
+  opacity: 0;
+  transition: transform .22s var(--ease-out), opacity .22s var(--ease-out);
+}
+#modal.show {
+  transform: translateY(0) scale(1);
+  opacity: 1;
 }
 
 #mHead {
   padding: 22px 26px 0;
   font-weight: 900;
-  font-size: 22px;
+  font-size: 24px;
   color: #f4f7ff;
   text-align: center;
 }
@@ -471,7 +551,7 @@ canvas#wheel {
 }
 
 .m-body {
-  padding: 6px 22px 12px;
+  padding: 10px 22px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -482,11 +562,11 @@ canvas#wheel {
   width: 110px; height: 110px;
   max-width: 60vw;
   object-fit: contain;
-  border-radius: 14px;
+  border-radius: 16px;
   margin: 10px auto 6px;
   background: #0b1220;
   border: 1px solid #5aa1ff;
-  box-shadow: 0 2px 8px rgba(16,24,48,.45);
+  box-shadow: 0 2px 10px rgba(16,24,48,.45);
   display: block;
 }
 
@@ -520,23 +600,25 @@ canvas#wheel {
   background: rgba(17,28,48,.85);
   border: 1px solid rgba(90,161,255,.16);
   color: #d7e8ff;
-  font-weight: 700;
+  font-weight: 800;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .m-actions {
-  padding: 12px 22px 18px;
-  background: #111a2c;
+  padding: 14px 22px 20px;
+  background: #0f1830;
   border-top: 1px solid #234080;
   display: flex;
   gap: 10px;
   justify-content: center;
 }
 
+/* Keep modal buttons narrow */
 #backdrop .chip-btn, #backdrop button { width: auto; min-width: 160px; }
 
+/* Reveal button styling used by JS */
 .reveal-btn {
   display: inline-flex;
   align-items: center;
@@ -553,58 +635,28 @@ canvas#wheel {
   z-index: 3;
   position: relative;
   white-space: nowrap;
+  transition: transform .12s var(--ease), border-color .12s var(--ease), box-shadow .12s var(--ease);
+}
+.reveal-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-2);
+  box-shadow: 0 6px 18px rgba(34,211,238,.18);
 }
 #modal #mHead + .reveal-btn { display: inline-block; margin-left: 0; margin-top: 6px; }
 
 .reveal-wrap { position: relative; display: inline-block; z-index: 0; }
 .reveal-overlay { position: absolute; inset: 0; border-radius: inherit; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: transparent; pointer-events: none; z-index: 2; }
 
-@media (max-width: 600px) {
-  #modal { max-width: 95vw; border-radius: 14px; }
-  .m-body { padding: 8px 16px 12px; }
-  #mLogo { width: 86px; height: 86px; }
-  #mStadium { min-width: 150px; max-width: 220px; }
-}
-
-/* Spacing: add more room below the leagues block */
-#chips {
-  /* previously margin: 6px 0 14px; */
-  margin-bottom: 28px;
-}
-
-/* Optional: a little space between the button and revealed extra chips */
-#chipsMore {
-  margin-top: 10px;
-}
-
-/* Center the “N teams selected” banner text */
-.perf-tip {
-  text-align: center;
-  width: 100%;
-  margin: 8px auto 12px; /* slight breathing room */
-}
-
-/* Create a larger gap above the wheel so the pointer can float in it */
-.wheel-wrap {
-  /* keep existing side/bottom padding, but increase top padding only */
-  padding-top: clamp(32px, 4.5vw, 56px);
-}
-
-/* Move the pointer into that gap and keep it centered */
-.pointer {
-  top: clamp(6px, 1.2vw, 12px); /* floats between the banner and the wheel */
-  z-index: 3;                   /* ensure it's above canvases */
-}
-
-/* Mobile pointer offset */
-@media (max-width: 600px) {
-  .pointer {
-    top: 6px;
-  }
-}
-
 /* =========================
-   Misc
+   Pointer room / misc tweaks
    ========================= */
+.wheel-wrap { padding-top: clamp(36px, 5vw, 64px); }
+.pointer { top: clamp(6px, 1vw, 12px); z-index: 3; }
+
 .small { font-size: 12px; color: var(--muted); }
 .hidden { display: none !important; }
+
+/* While UI is locked for spin: show wait cursor */
+body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked label, body.ui-locked .chip {
+  cursor: wait !important;
+}
