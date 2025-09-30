@@ -23,6 +23,27 @@
       display: inline-block;
     }
     @media (min-width: 900px) { .brand-img { width: 40px; height: 40px; } }
+
+    /* Smooth connection animation from selected team banner logo to modal logo */
+    .fly-clone {
+      position: fixed;
+      z-index: 10000;
+      will-change: transform, opacity;
+      pointer-events: none;
+      transform-origin: top left;
+      transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease;
+    }
+
+    /* Gentle intro for the modal content logo */
+    .m-logo {
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 250ms ease 160ms, transform 300ms ease 160ms;
+    }
+    .modal.show .m-logo {
+      opacity: 1;
+      transform: scale(1);
+    }
   </style>
 </head>
 <body>
