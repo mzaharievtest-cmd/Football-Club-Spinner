@@ -4,12 +4,38 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Football Club Spinner — Top 5 Leagues (2025/26)</title>
+
+  <!-- App icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png">
+  <link rel="apple-touch-icon" href="app-logo.png">
+
   <link rel="stylesheet" href="style.css">
+
+  <!-- Inline brand styles to avoid touching style.css -->
+  <style>
+    header .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-img {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #0b1220;
+      border: 1px solid #5aa1ff;
+      box-shadow: 0 2px 8px rgba(16,24,48,.25);
+      object-fit: cover;
+      flex: 0 0 auto;
+    }
+  </style>
 </head>
 <body>
 <header>
   <div class="brand">
-    <div class="brand-icon" aria-hidden="true">🎡</div>
+    <!-- Replaced emoji with your logo -->
+    <img src="app-logo.png" alt="Football Club Spinner" class="brand-img" width="28" height="28" decoding="async" />
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
       <div class="season-tag">Top 5 Leagues · 2025/26</div>
