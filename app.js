@@ -39,7 +39,7 @@ const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
 const mHead = document.getElementById('mHead');
 const mSub = document.getElementById('mSub');
-const mLogo = document.getElementById('mLogo');
+const mLogo = document.getElementById('mLogo');         // NOTE: now a <canvas>
 const mStadium = document.getElementById('mStadium');
 
 // Quick picks and banner
@@ -319,39 +319,7 @@ function updateModalRevealFromToggles() {
   applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
 }
 
-// -------------------- Modal open/close (restore and expose) --------------------
-function openModal(team){
-  ensureRevealStyles();
-  lastModalTeam = team;
-  modalRevealState = { logo: false, name: false, stadium: false };
-
-  const leagueLabel = LEAGUE_LABELS[team.league_code] || team.league_code;
-
-  if (mHead)   mHead.textContent = team.team_name || '—';
-  if (mSub)    mSub.textContent = leagueLabel;
-  if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
-  if (mStadium) mStadium.textContent = team.stadium || '—';
-
-  backdrop.style.display = 'flex';
-  requestAnimationFrame(() => {
-    modalEl.classList.add('show');
-    updateModalRevealFromToggles();
-  });
-}
-function closeModal(){
-  modalEl.classList.remove('show');
-  setTimeout(()=> { backdrop.style.display='none'; }, 150);
-}
-window.openModal = openModal;
-window.closeModal = closeModal;
-
-// -------------------- Selection banner --------------------
-function updateSelectionBanner() {
-  const N = getFiltered().length;
-  perfTip.textContent = `${N} teams selected`;
-}
-
-// -------------------- Drawing helpers (logo text blur) --------------------
+// -------------------- Modal logo drawing with mask blur --------------------
 function drawBlurOverLogoText(ctx, img, masks, iw, ih, scale, drawOriginX, drawOriginY) {
   if (!Array.isArray(masks) || masks.length === 0) return;
   ctx.save();
@@ -375,6 +343,126 @@ function drawBlurOverLogoText(ctx, img, masks, iw, ih, scale, drawOriginX, drawO
   }
   ctx.filter = 'none';
   ctx.restore();
+}
+
+function drawModalLogo(url, alt = 'Club logo') {
+  if (!mLogo || !(mLogo instanceof HTMLCanvasElement)) return;
+  const ctx = mLogo.getContext('2d');
+  const DPR = Math.max(1, window.devicePixelRatio || 1);
+
+  // Match canvas pixels to its CSS box
+  const rect = mLogo.getBoundingClientRect();
+  const W = Math.max(10, Math.round(rect.width * DPR));
+  const H = Math.max(10, Math.round(rect.height * DPR));
+  if (mLogo.width !== W || mLogo.height !== H) {
+    mLogo.width = W;
+    mLogo.height = H;
+  }
+
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  // Draw rounded background to mirror existing style
+  const radius = Math.min(W, H);
+  const r = Math.round(14 * DPR);
+  ctx.save();
+  ctx.fillStyle = '#0b1220';
+  ctx.strokeStyle = '#5aa1ff';
+  ctx.lineWidth = Math.max(1, Math.round(1 * DPR));
+  // rounded rect
+  const pad = Math.round(6 * DPR);
+  const x = pad, y = pad, w = W - pad*2, h = H - pad*2;
+  const rr = Math.min(r, Math.floor(Math.min(w,h)/5));
+  ctx.beginPath();
+  ctx.moveTo(x+rr, y);
+  ctx.arcTo(x+w, y,   x+w, y+h, rr);
+  ctx.arcTo(x+w, y+h, x,   y+h, rr);
+  ctx.arcTo(x,   y+h, x,   y,   rr);
+  ctx.arcTo(x,   y,   x+w, y,   rr);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  const img = getLogo(url, () => drawModalLogo(url, alt));
+  if (!img) return;
+
+  if (img.complete) {
+    // Fit inside the inner box (padding accounts for border)
+    const innerPad = Math.round(12 * DPR);
+    const boxW = W - innerPad*2;
+    const boxH = H - innerPad*2;
+    const iw = img.naturalWidth || boxW;
+    const ih = img.naturalHeight || boxH;
+    const s = Math.min(boxW / iw, boxH / ih);
+    const originX = Math.round((W - iw * s) / 2);
+    const originY = Math.round((H - ih * s) / 2);
+
+    // Base logo
+    ctx.save();
+    // Clip to rounded inner box
+    const clipR = Math.round(10 * DPR);
+    const cx = originX, cy = originY, cw = Math.round(iw * s), ch = Math.round(ih * s);
+    ctx.beginPath();
+    ctx.moveTo(cx+clipR, cy);
+    ctx.arcTo(cx+cw, cy,     cx+cw, cy+ch, clipR);
+    ctx.arcTo(cx+cw, cy+ch,  cx,    cy+ch, clipR);
+    ctx.arcTo(cx,    cy+ch,  cx,    cy,    clipR);
+    ctx.arcTo(cx,    cy,     cx+cw, cy,    clipR);
+    ctx.closePath();
+    ctx.clip();
+
+    ctx.drawImage(img, originX, originY, iw * s, ih * s);
+
+    // Apply text-region blur if masks exist
+    const masks = TEXT_MASKS.get(url);
+    if (masks && masks.length) {
+      drawBlurOverLogoText(ctx, img, masks, iw, ih, s, originX, originY);
+    }
+    ctx.restore();
+  } else {
+    // Placeholder
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    const ph = Math.min(W,H) - Math.round(12 * DPR);
+    const px = Math.round((W - ph)/2), py = Math.round((H - ph)/2);
+    ctx.fillRect(px, py, ph, ph);
+  }
+
+  mLogo.setAttribute('aria-label', alt);
+}
+
+// -------------------- Modal open/close --------------------
+function openModal(team){
+  ensureRevealStyles();
+  lastModalTeam = team;
+  modalRevealState = { logo: false, name: false, stadium: false };
+
+  const leagueLabel = LEAGUE_LABELS[team.league_code] || team.league_code;
+
+  if (mHead)   mHead.textContent = team.team_name || '—';
+  if (mSub)    mSub.textContent = leagueLabel;
+  if (mStadium) mStadium.textContent = team.stadium || '—';
+
+  // Draw logo onto canvas (with blur if masks exist)
+  drawModalLogo(team.logo_url, (team.team_name || 'Club') + ' logo');
+
+  backdrop.style.display = 'flex';
+  requestAnimationFrame(() => {
+    modalEl.classList.add('show');
+    updateModalRevealFromToggles();
+  });
+}
+function closeModal(){
+  modalEl.classList.remove('show');
+  setTimeout(()=> { backdrop.style.display='none'; }, 150);
+}
+window.openModal = openModal;
+window.closeModal = closeModal;
+
+// -------------------- Selection banner --------------------
+function updateSelectionBanner() {
+  const N = getFiltered().length;
+  perfTip.textContent = `${N} teams selected`;
 }
 
 // -------------------- Drawing (wheel) --------------------
@@ -629,7 +717,7 @@ function drawWheel(){
           const originX = -iw * s / 2;
           const originY = -ih * s / 2;
 
-          // Draw base logo
+          // Base logo
           ctx.drawImage(img, originX, originY, iw * s, ih * s);
 
           // Apply text blur overlay if we have masks for this logo
@@ -808,11 +896,15 @@ function setupEventListeners() {
   backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
 
-  // Debounced resize redraw
+  // Debounced resize redraw (and re-draw modal logo if open)
   let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
-    resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120);
+    resizeTO = setTimeout(() => {
+      sizeCanvas();
+      drawWheel();
+      if (isModalOpen() && lastModalTeam) drawModalLogo(lastModalTeam.logo_url, (lastModalTeam.team_name || 'Club') + ' logo');
+    }, 120);
   }, { passive: true });
 }
 
@@ -837,7 +929,10 @@ fetch(`./teams.json?v=${Date.now()}`)
         Object.entries(obj || {}).forEach(([logo, rects]) => {
           if (Array.isArray(rects)) TEXT_MASKS.set(logo, rects);
         });
-        requestAnimationFrame(drawWheel);
+        requestAnimationFrame(() => {
+          drawWheel();
+          if (isModalOpen() && lastModalTeam) drawModalLogo(lastModalTeam.logo_url, (lastModalTeam.team_name || 'Club') + ' logo');
+        });
       }
     } catch { /* ignore if file missing */ }
   })
