@@ -22,7 +22,7 @@ jobs:
       - name: Install OCR deps (no-save)
         run: |
           npm install --no-save --no-audit --no-fund --no-package-lock \
-            tesseract.js @tesseract.js/node sharp
+            tesseract.js sharp
 
       - name: Generate logo text masks
         run: node scripts/detect-logo-text.js
