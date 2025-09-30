@@ -1,0 +1,41 @@
+name: Generate logo text masks
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ocr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Install OCR deps without touching package.json/lock
+      - name: Install OCR deps (no-save)
+        run: |
+          npm install --no-save --no-audit --no-fund --no-package-lock \
+            tesseract.js @tesseract.js/node sharp
+
+      - name: Generate logo text masks
+        run: node scripts/detect-logo-text.js
+
+      - name: Commit masks (if changed)
+        run: |
+          set -e
+          if [ -f data/logo-text-masks.json ] && ! git diff --quiet -- data/logo-text-masks.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/logo-text-masks.json
+            git commit -m "chore: generate logo text masks"
+            git push
+          else
+            echo "No changes to commit."
+          fi
