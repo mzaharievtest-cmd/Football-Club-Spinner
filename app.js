@@ -350,7 +350,7 @@ function flyLogoToModal() {
       clone.remove();
     };
     clone.addEventListener('transitionend', onDone, { once: true });
-    setTimeout(onDone, 650); // safety
+    setTimeout(onDone, 700); // safety
   });
 }
 
@@ -367,28 +367,33 @@ function openModal(team){
   if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
   if (mStadium) mStadium.textContent = team.stadium || '—';
 
-  // Make modal measurable
-  backdrop.style.display = 'flex';
+  // Live accent glow based on team color
+  const accent = team.primary_color || '#4f82ff';
+  modalEl.style.setProperty('--accent-live', accent);
 
-  // Hide destination logo during the incoming flight
+  // Show backdrop so modal can be measured, then fade in + animate
+  backdrop.style.display = 'flex';
+  // Hide the destination logo while the clone flies in
   if (mLogo) mLogo.style.visibility = 'hidden';
 
   requestAnimationFrame(() => {
+    backdrop.classList.add('visible');
     modalEl.classList.add('show');
     updateModalRevealFromToggles();
 
-    // After layout with "show" applied, run the FLIP animation
+    // After layout with "show" applied, run the FLIP flight
     requestAnimationFrame(() => {
       try { flyLogoToModal(); }
       finally {
-        setTimeout(() => { if (mLogo) mLogo.style.visibility = ''; }, 450);
+        setTimeout(() => { if (mLogo) mLogo.style.visibility = ''; }, 500);
       }
     });
   });
 }
 function closeModal(){
   modalEl.classList.remove('show');
-  setTimeout(()=> { backdrop.style.display='none'; }, 150);
+  backdrop.classList.remove('visible');
+  setTimeout(()=> { backdrop.style.display='none'; }, 260);
 }
 window.openModal = openModal;
 window.closeModal = closeModal;
