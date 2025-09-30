@@ -13,7 +13,7 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Optional: small style for brand image and modal animation helpers -->
+  <!-- Optional: small style for brand image -->
   <style>
     header .brand { display: inline-flex; align-items: center; gap: 10px; }
     .brand-img {
@@ -23,37 +23,19 @@
       display: inline-block;
     }
     @media (min-width: 900px) { .brand-img { width: 40px; height: 40px; } }
-
-    /* Smooth connection animation from selected team banner logo to modal logo */
-    .fly-clone {
-      position: fixed;
-      z-index: 10000;
-      will-change: transform, opacity;
-      pointer-events: none;
-      transform-origin: top left;
-      transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease;
-    }
-    .m-logo {
-      opacity: 0;
-      transform: scale(0.95);
-      transition: opacity 250ms ease 160ms, transform 300ms ease 160ms;
-    }
-    .modal.show .m-logo {
-      opacity: 1;
-      transform: scale(1);
-    }
   </style>
 </head>
 <body>
 <header>
   <div class="brand">
+    <!-- Header logo (now points to the root file) -->
     <img src="app-logo.png?v=1" alt="Football Club Spinner" class="brand-img" decoding="async" />
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
-      <div class="season-tag">Top 5 Leagues · 2025/26</div>
+      <div class="season-tag">398 Clubs · 25 Leagues</div>
     </div>
   </div>
-  <div class="timestamp">Season 2025 / 26</div>
+  <div class="timestamp">Season 2025/26</div>
 </header>
 
 <main class="container">
@@ -72,28 +54,20 @@
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
 
+      <!-- IMPORTANT: hidden by default; only shown after click -->
       <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">
         Show more leagues
       </button>
 
+      <!-- Keep this container in the DOM but hidden -->
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
     <div class="section-title">Show on wheel</div>
-    <!-- Updated: wrap label text with span.chip-text for perfect parity with league chips -->
-    <div class="showopts" id="showOnWheel">
-      <label class="chip">
-        <input type="checkbox" id="optName" checked aria-label="Name">
-        <span class="chip-text">Name</span>
-      </label>
-      <label class="chip">
-        <input type="checkbox" id="optLogo" checked aria-label="Logo">
-        <span class="chip-text">Logo</span>
-      </label>
-      <label class="chip">
-        <input type="checkbox" id="optStadium" aria-label="Stadium">
-        <span class="chip-text">Stadium</span>
-      </label>
+    <div class="showopts">
+      <label class="chip"><input type="checkbox" id="optName" checked> Name</label>
+      <label class="chip"><input type="checkbox" id="optLogo" checked> Logo</label>
+      <label class="chip"><input type="checkbox" id="optStadium"> Stadium</label>
     </div>
 
     <button id="spinBtn">SPIN</button>
@@ -109,6 +83,7 @@
     <div id="perfTip" class="perf-tip" aria-live="polite">0 teams selected</div>
     <div class="wheel-wrap">
       <div class="pointer"></div>
+      <!-- Center spin button -->
       <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
       <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
       <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
