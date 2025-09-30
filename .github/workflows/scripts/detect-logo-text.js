@@ -13,7 +13,7 @@ function exists(p) { try { fs.accessSync(p, fs.constants.F_OK); return true; } c
 function readJSON(p, fallback = {}) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return fallback; } }
 
 async function detectForLogo(absPath) {
-  // Get image dimensions up front
+  // Dimensions via sharp (reliable and fast)
   let iw = 0, ih = 0;
   try {
     const meta = await sharp(absPath).metadata();
@@ -25,11 +25,11 @@ async function detectForLogo(absPath) {
   }
   if (!iw || !ih) return [];
 
-  // OCR
+  // OCR with tesseract.js
   const res = await Tesseract.recognize(absPath, 'eng', { logger: null });
   const words = res?.data?.words || [];
 
-  // Filter small/low-confidence boxes; tune as needed
+  // Filter small/low-confidence boxes (tune as needed)
   const MIN_H = Math.max(10, Math.round(ih * 0.02)); // >=2% of height
   const MIN_W = Math.max(10, Math.round(iw * 0.02)); // >=2% of width
   const MIN_CONF = 60; // 0..100
@@ -73,7 +73,7 @@ async function main() {
     const abs = path.resolve(ROOT, rel);
     if (!exists(abs)) { failed++; continue; }
 
-    // Skip if already present
+    // Skip if already present (idempotent)
     if (current[rel] && Array.isArray(current[rel])) { skipped++; continue; }
 
     try {
