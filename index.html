@@ -3,32 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Football Club Spinner — Top 5 Leagues (2025/26)</title>
+  <title>Football Club Spinner — 398 Clubs · 25 Leagues</title>
 
-  <!-- Consistently use the root logo file -->
+  <!-- Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1">
   <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png?v=1">
   <link rel="apple-touch-icon" href="app-logo.png?v=1">
   <link rel="shortcut icon" href="app-logo.png?v=1">
 
-  <link rel="stylesheet" href="style.css">
+  <!-- Fonts (faster than @import in CSS) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-  <!-- Optional: small style for brand image -->
-  <style>
-    header .brand { display: inline-flex; align-items: center; gap: 10px; }
-    .brand-img {
-      width: 32px; height: 32px; border-radius: 8px;
-      background: #0b1220; border: 1px solid #5aa1ff; object-fit: cover;
-      box-shadow: 0 2px 8px rgba(16,24,48,.25);
-      display: inline-block;
-    }
-    @media (min-width: 900px) { .brand-img { width: 40px; height: 40px; } }
-  </style>
+  <!-- App styles -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
   <div class="brand">
-    <!-- Header logo (now points to the root file) -->
     <img src="app-logo.png?v=1" alt="Football Club Spinner" class="brand-img" decoding="async" />
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
@@ -40,8 +33,8 @@
 
 <main class="container">
   <!-- Left: controls -->
-  <section class="card">
-    <div class="section-title">Leagues (filter)</div>
+  <section class="card" aria-labelledby="filter-title">
+    <div class="section-title" id="filter-title">Leagues (filter)</div>
 
     <!-- Quick picks -->
     <div class="quick-picks" role="group" aria-label="Quick league selections">
@@ -54,20 +47,28 @@
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
 
-      <!-- IMPORTANT: hidden by default; only shown after click -->
       <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">
         Show more leagues
       </button>
 
-      <!-- Keep this container in the DOM but hidden -->
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
     <div class="section-title">Show on wheel</div>
-    <div class="showopts">
-      <label class="chip"><input type="checkbox" id="optName" checked> Name</label>
-      <label class="chip"><input type="checkbox" id="optLogo" checked> Logo</label>
-      <label class="chip"><input type="checkbox" id="optStadium"> Stadium</label>
+    <!-- Use the same chip markup as leagues -->
+    <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
+      <label class="chip">
+        <input type="checkbox" id="optName" checked aria-label="Name">
+        <span class="chip-text">Name</span>
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optLogo" checked aria-label="Logo">
+        <span class="chip-text">Logo</span>
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optStadium" aria-label="Stadium">
+        <span class="chip-text">Stadium</span>
+      </label>
     </div>
 
     <button id="spinBtn">SPIN</button>
@@ -78,12 +79,11 @@
   </section>
 
   <!-- Right: wheel -->
-  <section class="card">
-    <div class="section-title">Club Wheel</div>
+  <section class="card" aria-labelledby="wheel-title">
+    <div class="section-title" id="wheel-title">Club Wheel</div>
     <div id="perfTip" class="perf-tip" aria-live="polite">0 teams selected</div>
     <div class="wheel-wrap">
-      <div class="pointer"></div>
-      <!-- Center spin button -->
+      <div class="pointer" aria-hidden="true"></div>
       <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
       <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
       <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
@@ -107,7 +107,7 @@
         <span id="mStadium" class="m-sub"></span>
       </div>
     </div>
-    <div class="m-actions"><button id="mClose" class="chip-btn">Close</button></div>
+    <div class="m-actions"><button id="mClose" class="chip-btn" type="button">Close</button></div>
   </div>
 </div>
 
