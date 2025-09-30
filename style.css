@@ -258,15 +258,20 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   border-style: dashed;
 }
 
-/* League chips */
-#chips .chips {
+/* League chips container AND “Show on wheel” container */
+#chips .chips,
+#showOnWheel,
+.showopts {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin: 6px 0 14px;
 }
 
-#chips .chip {
+/* League chips AND “Show on wheel” chips */
+#chips .chip,
+#showOnWheel .chip,
+.showopts .chip {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -283,9 +288,17 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   max-width: 100%;
   will-change: transform;
 }
-#chips .chip:hover { border-color: var(--line-strong); transform: translateY(-1px) scale(1.02); }
+#chips .chip:hover,
+#showOnWheel .chip:hover,
+.showopts .chip:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px) scale(1.02);
+}
 
-#chips .chip input[type="checkbox"] {
+/* Checkbox visuals inside chips (league + show-on-wheel) */
+#chips .chip input[type="checkbox"],
+#showOnWheel .chip input[type="checkbox"],
+.showopts .chip input[type="checkbox"] {
   appearance: none;
   position: absolute;
   left: 16px;
@@ -299,7 +312,9 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   transition: .18s var(--ease);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
-#chips .chip input[type="checkbox"]::after {
+#chips .chip input[type="checkbox"]::after,
+#showOnWheel .chip input[type="checkbox"]::after,
+.showopts .chip input[type="checkbox"]::after {
   content: "";
   width: 9px; height: 9px; border-radius: 4px;
   background: var(--accent);
@@ -307,10 +322,24 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   opacity: 0;
   transition: .18s var(--ease);
 }
-#chips .chip input[type="checkbox"]:checked { border-color: var(--accent); background: rgba(90,161,255,.18); box-shadow: 0 0 0 2px rgba(90,161,255,.18) inset; }
-#chips .chip input[type="checkbox"]:checked::after { transform: scale(1); opacity: 1; }
+#chips .chip input[type="checkbox"]:checked,
+#showOnWheel .chip input[type="checkbox"]:checked,
+.showopts .chip input[type="checkbox"]:checked {
+  border-color: var(--accent);
+  background: rgba(90,161,255,.18);
+  box-shadow: 0 0 0 2px rgba(90,161,255,.18) inset;
+}
+#chips .chip input[type="checkbox"]:checked::after,
+#showOnWheel .chip input[type="checkbox"]:checked::after,
+.showopts .chip input[type="checkbox"]:checked::after {
+  transform: scale(1);
+  opacity: 1;
+}
 
-#chips .chip .chip-text {
+/* Chip text */
+#chips .chip .chip-text,
+#showOnWheel .chip .chip-text,
+.showopts .chip .chip-text {
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;
@@ -319,19 +348,16 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
 }
 
 @media (max-width: 560px) {
-  #chips .chip { padding: 10px 18px 10px 46px; }
-  #chips .chip .chip-text { max-width: 24ch; }
-}
-
-/* Show-on-wheel toggles */
-.showopts {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-.showopts .chip { /* reuse chip visuals */
-  padding: 10px 16px 10px 46px;
+  #chips .chip,
+  #showOnWheel .chip,
+  .showopts .chip {
+    padding: 10px 18px 10px 46px;
+  }
+  #chips .chip .chip-text,
+  #showOnWheel .chip .chip-text,
+  .showopts .chip .chip-text {
+    max-width: 24ch;
+  }
 }
 
 /* =========================
