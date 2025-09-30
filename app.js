@@ -187,9 +187,11 @@ function makeChip(code, checked) {
   const label = document.createElement('label');
   label.className = 'chip';
   label.innerHTML = `
-    <input type="checkbox" value="${code}" ${checked ? 'checked aria-checked="true"' : ''} aria-label="${full}">
-    <span class="chip-text" title="${full}">${full}</span>
+    <input type="checkbox" value="\${code}" \${checked ? 'checked aria-checked="true"' : ''} aria-label="\${full}">
+    <span class="chip-text" title="\${full}">\${full}</span>
   `;
+  // replace the template placeholders
+  label.innerHTML = label.innerHTML.replaceAll('${code}', code).replaceAll('${full}', full).replaceAll('${checked ? \'checked aria-checked="true"\' : \'\'}', checked ? 'checked aria-checked="true"' : '');
   return label;
 }
 
@@ -391,12 +393,8 @@ function drawWheel(){
   const hideLogos = N >= hideLogosThresholdDyn;
   const hideText  = N >= hideTextThresholdDyn;
 
-  // If logos are hidden due to threshold, reflect in UI (uncheck Logo) and update modal reveal state
-  if (hideLogos && optLogo && optLogo.checked) {
-    optLogo.checked = false;
-    optLogo.setAttribute('aria-checked', 'false');
-    if (isModalOpen()) updateModalRevealFromToggles();
-  }
+  // Do NOT auto-uncheck any toggle. Keep UI available regardless of density.
+  // Rendering will still hide text/logos when thresholds are exceeded.
 
   updateSelectionBanner();
 
@@ -450,10 +448,10 @@ function drawWheel(){
       const aMid = (a0 + a1) / 2;
       const sliceArc = radius * (a1 - a0);
 
-      // Name and stadium sizes (unchanged), but make logo bigger
+      // Name and stadium sizes (Name > Stadium), bigger logos
       const nameTargetPx    = clamp(12, 0.20 * sliceArc, 24);
       const stadiumTargetPx = clamp(9,  0.14 * sliceArc, 18);
-      let   logoSize        = clamp(28, 0.40 * sliceArc, 64); // bigger logos: min 28, scale 0.40, max 64
+      let   logoSize        = clamp(28, 0.40 * sliceArc, 64); // larger logos
       const logoHalf = logoSize / 2;
       const pad = 10;
 
@@ -680,6 +678,26 @@ function spin(){
 
 // -------------------- Events / Boot --------------------
 function setupEventListeners() {
+  // helper: quick-pick active state
+  function setActive(btn) {
+    [qpAll, qpNone, qpTop5].forEach(b => b.classList.toggle('active', b === btn));
+  }
+  function updateQuickPickActive() {
+    const vis = new Set(visibleCodes());
+    const sel = Array.from(chipsWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value);
+    const selVisible = sel.filter(c => vis.has(c));
+
+    const allVisibleSelected = selVisible.length === vis.size && Array.from(vis).every(c => selVisible.includes(c));
+    const noneSelected = selVisible.length === 0;
+    const top5Visible = TOP5.filter(c => vis.has(c));
+    const top5SelectedOnly = selVisible.length === top5Visible.length && top5Visible.every(c => selVisible.includes(c));
+
+    if (allVisibleSelected) setActive(qpAll);
+    else if (noneSelected) setActive(qpNone);
+    else if (top5SelectedOnly) setActive(qpTop5);
+    else setActive(null);
+  }
+
   // Leagues toggles
   chipsWrap.addEventListener('change', () => {
     if (spinning) return;
@@ -690,6 +708,7 @@ function setupEventListeners() {
     spinFab.disabled = len === 0;
     if (len === 0 && currentText) currentText.textContent = 'Please select at least one league.';
     updateSelectionBanner();
+    updateQuickPickActive(); // keep quick-pick button state accurate
   });
 
   // "Show more leagues" toggle
@@ -705,11 +724,11 @@ function setupEventListeners() {
       toggleMore.textContent = 'Show more leagues';
       toggleMore.setAttribute('aria-expanded', 'false');
     }
+    // visibility changed; recompute which quick-pick matches
+    updateQuickPickActive();
   });
 
   // Quick picks with active styling — "All" selects only visible leagues
-  function setActive(btn) { [qpAll, qpNone, qpTop5].forEach(b => b.classList.toggle('active', b === btn)); }
-
   qpAll.onclick  = () => { if (spinning) return; setCheckedCodes(visibleCodes()); setActive(qpAll); };
   qpNone.onclick = () => { if (spinning) return; setCheckedCodes([]); setActive(qpNone); };
   qpTop5.onclick = () => {
