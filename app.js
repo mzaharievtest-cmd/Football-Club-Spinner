@@ -316,6 +316,44 @@ function updateModalRevealFromToggles() {
   applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
 }
 
+// -------------------- Smooth connection animation (banner logo -> modal logo) --------------------
+function flyLogoToModal() {
+  if (!currentLogo || !mLogo) return;
+  if (!currentLogo.src) return;
+  if (!currentLogo.complete || !currentLogo.naturalWidth) return;
+
+  const srcRect = currentLogo.getBoundingClientRect();
+  const dstRect = mLogo.getBoundingClientRect();
+
+  if (!srcRect.width || !srcRect.height || !dstRect.width || !dstRect.height) return;
+
+  const clone = currentLogo.cloneNode(true);
+  clone.classList.add('fly-clone');
+  clone.style.left = '0';
+  clone.style.top = '0';
+  clone.style.width = srcRect.width + 'px';
+  clone.style.height = srcRect.height + 'px';
+  clone.style.transform = `translate(${srcRect.left}px, ${srcRect.top}px) scale(1)`;
+  clone.style.opacity = '1';
+  document.body.appendChild(clone);
+
+  const prevVis = mLogo.style.visibility;
+  mLogo.style.visibility = 'hidden';
+
+  requestAnimationFrame(() => {
+    const scaleX = dstRect.width / srcRect.width;
+    const scaleY = dstRect.height / srcRect.height;
+    clone.style.transform = `translate(${dstRect.left}px, ${dstRect.top}px) scale(${scaleX}, ${scaleY})`;
+
+    const onDone = () => {
+      mLogo.style.visibility = prevVis || '';
+      clone.remove();
+    };
+    clone.addEventListener('transitionend', onDone, { once: true });
+    setTimeout(onDone, 650); // safety
+  });
+}
+
 // -------------------- Modal open/close (IMG logo) --------------------
 function openModal(team){
   ensureRevealStyles();
@@ -329,10 +367,23 @@ function openModal(team){
   if (mLogo)   { mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
   if (mStadium) mStadium.textContent = team.stadium || '—';
 
+  // Make modal measurable
   backdrop.style.display = 'flex';
+
+  // Hide destination logo during the incoming flight
+  if (mLogo) mLogo.style.visibility = 'hidden';
+
   requestAnimationFrame(() => {
     modalEl.classList.add('show');
     updateModalRevealFromToggles();
+
+    // After layout with "show" applied, run the FLIP animation
+    requestAnimationFrame(() => {
+      try { flyLogoToModal(); }
+      finally {
+        setTimeout(() => { if (mLogo) mLogo.style.visibility = ''; }, 450);
+      }
+    });
   });
 }
 function closeModal(){
