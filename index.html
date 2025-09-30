@@ -4,12 +4,30 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Football Club Spinner — Top 5 Leagues (2025/26)</title>
+
+  <!-- Use the logo from the files/ folder -->
+  <link rel="icon" type="image/png" sizes="32x32" href="files/app-logo.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="files/app-logo.png">
+  <link rel="apple-touch-icon" href="files/app-logo.png">
+
   <link rel="stylesheet" href="style.css">
+
+  <!-- Optional: small style for brand image -->
+  <style>
+    header .brand { display: inline-flex; align-items: center; gap: 10px; }
+    .brand-img {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: #0b1220; border: 1px solid #5aa1ff; object-fit: cover;
+      box-shadow: 0 2px 8px rgba(16,24,48,.25);
+    }
+    @media (min-width: 900px) { .brand-img { width: 40px; height: 40px; } }
+  </style>
 </head>
 <body>
 <header>
   <div class="brand">
-    <div class="brand-icon" aria-hidden="true">🎡</div>
+    <!-- Replaced emoji with the real logo in files/ -->
+    <img src="files/app-logo.png" alt="Football Club Spinner" class="brand-img" decoding="async" />
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
       <div class="season-tag">Top 5 Leagues · 2025/26</div>
@@ -23,7 +41,7 @@
   <section class="card">
     <div class="section-title">Leagues (filter)</div>
 
-    <!-- Quick picks (EPL only removed) -->
+    <!-- Quick picks -->
     <div class="quick-picks" role="group" aria-label="Quick league selections">
       <button id="qpAll"   class="chip-btn" type="button">All</button>
       <button id="qpNone"  class="chip-btn" type="button">None</button>
@@ -79,7 +97,6 @@
       <div class="m-sub" id="mSub">League</div>
 
       <div class="m-row">
-        <!-- Reverted back to IMG (no canvas drawing, no text masking) -->
         <img id="mLogo" class="m-logo" alt="" />
       </div>
 
