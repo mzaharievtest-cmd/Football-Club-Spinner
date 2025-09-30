@@ -107,6 +107,41 @@ header h1 {
   margin: 0 0 10px;
 }
 
+/* Brand mark + header alignment (new) */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #0b1220;
+  border: 1px solid #5aa1ff;
+  box-shadow: 0 2px 8px rgba(16,24,48,.25);
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.brand-title {
+  font-weight: 900;
+  letter-spacing: .02em;
+  margin: 0;
+}
+
+/* Keep the season stamp pushed to the right if it shares the header row */
+.app-header .timestamp {
+  margin-left: auto;
+}
+
+/* Responsive tweak */
+@media (max-width: 600px) {
+  .brand-mark { width: 24px; height: 24px; }
+}
+
 /* =========================
    Quick picks + selection banner
    ========================= */
