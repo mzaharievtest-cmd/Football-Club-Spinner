@@ -12,7 +12,7 @@ let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 
 // Modal/session state
 let lastModalTeam = null;
-let modalRevealState = { logo: false, name: false, stadium: false };
+let modalRevealState = { logo: false, name: false, stadium: false, league: false };
 
 // -------------------- DOM --------------------
 const chipsWrap = document.getElementById('chips');
@@ -27,6 +27,7 @@ const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 const optName = document.getElementById('optName');
 const optLogo = document.getElementById('optLogo');
 const optStadium = document.getElementById('optStadium');
+const optLeague = document.getElementById('optLeague'); // NEW
 
 const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
@@ -38,8 +39,8 @@ const backdrop = document.getElementById('backdrop');
 const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
 const mHead = document.getElementById('mHead');
-const mSub = document.getElementById('mSub');
-const mLogo = document.getElementById('mLogo'); // <img>
+const mSub = document.getElementById('mSub');     // League line in modal
+const mLogo = document.getElementById('mLogo');   // <img>
 const mStadium = document.getElementById('mStadium');
 
 // Quick picks and banner
@@ -306,7 +307,12 @@ function applyRevealByKey(key, el, enabled, btnId, labelText) {
   const btn = document.createElement('button');
   btn.id = btnId; btn.type = 'button'; btn.className = 'reveal-btn';
   btn.textContent = `Show ${labelText}`;
-  btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); modalRevealState[key] = true; unblurElement(el); btn.remove(); }, { passive: false });
+  btn.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    modalRevealState[key] = true;
+    unblurElement(el);
+    btn.remove();
+  }, { passive: false });
   placeButtonAfter(el, btn);
 }
 function updateModalRevealFromToggles() {
@@ -314,6 +320,7 @@ function updateModalRevealFromToggles() {
   applyRevealByKey('logo',    mLogo,    !!optLogo?.checked,    'revealLogoBtn',    'logo');
   applyRevealByKey('name',    mHead,    !!optName?.checked,    'revealNameBtn',    'name');
   applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
+  applyRevealByKey('league',  mSub,     !!optLeague?.checked,  'revealLeagueBtn',  'league'); // NEW
 }
 
 // -------------------- Preload selected team logo for instant modal display --------------------
@@ -321,40 +328,26 @@ function preloadModalLogo(url, cb) {
   if (!url) { cb && cb(); return; }
   const img = getLogo(url, () => done());
   let called = false;
-  const done = () => { if (called) return; called = true; cb && cb(); };
+  function done(){ if (called) return; called = true; cb && cb(); }
   if (img) {
     try {
-      if (img.complete) {
-        // Already loaded and decoded in most browsers
-        done();
-      } else if (typeof img.decode === 'function') {
-        img.decode().then(done).catch(done);
-      }
+      if (img.complete) { done(); }
+      else if (typeof img.decode === 'function') { img.decode().then(done).catch(done); }
     } catch { done(); }
-  } else {
-    done();
-  }
+  } else { done(); }
 }
 
 // -------------------- Modal open/close --------------------
 function openModal(team){
   ensureRevealStyles();
   lastModalTeam = team;
-  modalRevealState = { logo: false, name: false, stadium: false };
+  modalRevealState = { logo: false, name: false, stadium: false, league: false };
 
   const leagueLabel = LEAGUE_LABELS[team.league_code] || team.league_code;
 
   if (mHead)   mHead.textContent = team.team_name || '—';
   if (mSub)    mSub.textContent = leagueLabel;
-
-  if (mLogo) {
-    // Hint the browser to decode and load eagerly
-    mLogo.setAttribute('decoding', 'sync');
-    mLogo.setAttribute('loading', 'eager');
-    mLogo.src = team.logo_url || '';
-    mLogo.alt = (team.team_name || 'Club') + ' logo';
-  }
-
+  if (mLogo)   { mLogo.setAttribute('decoding','sync'); mLogo.setAttribute('loading','eager'); mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
   if (mStadium) mStadium.textContent = team.stadium || '—';
 
   backdrop.style.display = 'flex';
@@ -487,7 +480,6 @@ function drawWheel(){
       const aMid = (a0 + a1) / 2;
       const sliceArc = radius * (a1 - a0);
 
-      // Name > Stadium; larger logos (kept from prior improvements)
       const nameTargetPx    = clamp(12, 0.20 * sliceArc, 24);
       const stadiumTargetPx = clamp(9,  0.14 * sliceArc, 18);
       let   logoSize        = clamp(28, 0.40 * sliceArc, 64);
@@ -660,11 +652,8 @@ function setResult(idx){
   renderHistory();
 
   // Preload and decode the modal logo first so it shows instantly
-  if (t.logo_url) {
-    preloadModalLogo(t.logo_url, () => openModal(t));
-  } else {
-    openModal(t);
-  }
+  if (t.logo_url) preloadModalLogo(t.logo_url, () => openModal(t));
+  else openModal(t);
 }
 
 function spin(){
@@ -792,6 +781,7 @@ function setupEventListeners() {
   optName?.addEventListener('change', onWheelToggleChange);
   optLogo?.addEventListener('change', onWheelToggleChange);
   optStadium?.addEventListener('change', onWheelToggleChange);
+  optLeague?.addEventListener('change', onWheelToggleChange); // NEW
 
   // Spin actions
   spinBtn.onclick = spin;
