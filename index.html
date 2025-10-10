@@ -3,12 +3,23 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Football Club Spinner — 398 Clubs · 25 Leagues</title>
-  <meta name="description" content="Football Spinner lets you spin the wheel to pick a random football club from 25 leagues. Play fun guessing games – guess the club by logo, guess the stadium, or spin for a surprise team!">
-  <meta name="keywords" content="football spinner, random football club, club wheel, guess the football logo, guess the stadium, football quiz, football trivia game, soccer spinner, football logo quiz">
 
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010"
-     crossorigin="anonymous"></script>
+  <title>Football Club Spinner — 398 Clubs · 25 Leagues</title>
+  <meta name="description" content="Football Spinner is a free random football club generator. Spin the wheel to discover clubs across the Premier League, La Liga, Serie A, Bundesliga, Ligue 1 and more. Great for quizzes, watch parties, and learning new teams and stadiums." />
+  <meta name="keywords" content="football spinner, random football club, football wheel, premier league, la liga, serie a, bundesliga, ligue 1, guess the club, football quiz, stadium quiz" />
+  <link rel="canonical" href="https://footballspinner.com/" />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Football Club Spinner — Random Football Club Generator" />
+  <meta property="og:description" content="Spin the wheel to discover clubs from the Premier League, La Liga, Serie A, Bundesliga, Ligue 1 and more. A fun tool for quizzes, watch parties, and learning new teams." />
+  <meta property="og:url" content="https://footballspinner.com/" />
+  <meta property="og:site_name" content="Football Spinner" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://footballspinner.com/app-logo.png" />
+
+  <!-- Google AdSense (loader only, once per page) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
 
   <!-- Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1">
@@ -16,7 +27,7 @@
   <link rel="apple-touch-icon" href="app-logo.png?v=1">
   <link rel="shortcut icon" href="app-logo.png?v=1">
 
-  <!-- Fonts (faster than @import in CSS) -->
+  <!-- Fonts (faster than @import) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -48,7 +59,7 @@
       <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
     </div>
 
-    <!-- Chips grouped: Top 5 first, then a toggle, then more leagues (hidden by default) -->
+    <!-- League chips (Top 5 visible; more hidden until toggled) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
 
@@ -60,28 +71,28 @@
     </div>
 
     <div class="section-title">Show on wheel</div>
-    <!-- Added League toggle; same chip markup as others -->
+    <!-- Matches the league chip styling -->
     <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
       <label class="chip">
-        <input type="checkbox" id="optName" checked aria-label="Name">
+        <input type="checkbox" id="optName" checked aria-label="Name" />
         <span class="chip-text">Name</span>
       </label>
       <label class="chip">
-        <input type="checkbox" id="optLogo" checked aria-label="Logo">
+        <input type="checkbox" id="optLogo" checked aria-label="Logo" />
         <span class="chip-text">Logo</span>
       </label>
       <label class="chip">
-        <input type="checkbox" id="optStadium" aria-label="Stadium">
+        <input type="checkbox" id="optStadium" aria-label="Stadium" />
         <span class="chip-text">Stadium</span>
       </label>
       <label class="chip">
-        <input type="checkbox" id="optLeague" checked aria-label="League">
+        <input type="checkbox" id="optLeague" checked aria-label="League" />
         <span class="chip-text">League</span>
       </label>
     </div>
 
-    <button id="spinBtn">SPIN</button>
-    <button id="resetHistoryBtn">Reset History</button>
+    <button id="spinBtn" type="button">SPIN</button>
+    <button id="resetHistoryBtn" type="button">Reset History</button>
 
     <div class="history-title">History</div>
     <div class="history" id="history"></div>
@@ -97,6 +108,42 @@
       <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
       <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
     </div>
+  </section>
+
+  <!-- SEO content block spanning the grid (desktop) -->
+  <section class="card" style="grid-column: 1 / -1" aria-labelledby="about-title">
+    <h2 id="about-title">What is Football Spinner?</h2>
+    <p>
+      Football Spinner is a free, fan‑made tool that randomly picks a football club for you at the tap of a button.
+      Use it as a fun <strong>random football club generator</strong>, a quick ice‑breaker for watch parties,
+      or a fresh way to discover teams you’ve never followed before. You can spin across Europe’s
+      top competitions — including the <strong>Premier League</strong>, <strong>La Liga</strong>,
+      <strong>Serie A</strong>, <strong>Bundesliga</strong>, and <strong>Ligue 1</strong> — plus many more leagues.
+    </p>
+
+    <h3>How it works</h3>
+    <p>
+      Choose the leagues you want to include, then hit <em>Spin</em>. The wheel lands on one club and shows key info:
+      team name, league, crest/logo, and home stadium. Prefer a lighter reveal? Toggle what you want to show (Name, Logo,
+      Stadium, League) and make a guess before uncovering the details — perfect for a quick <strong>football logo quiz</strong>
+      or a “guess the stadium” challenge with friends.
+    </p>
+
+    <h3>Why fans love it</h3>
+    <p>
+      It’s fast, mobile‑friendly, and great for trivia, career mode inspiration, or picking a neutral game to watch tonight.
+      Your recent spins are saved locally so you can revisit clubs you’ve discovered.
+    </p>
+
+    <section id="faq" aria-labelledby="faq-title">
+      <h3 id="faq-title">Quick FAQ</h3>
+      <dl>
+        <dt>Can I limit spins to one league?</dt>
+        <dd>Yes — select only the league chips you want (e.g., just Premier League) and spin.</dd>
+        <dt>Is Football Spinner official?</dt>
+        <dd>No — it’s a community tool for entertainment and learning; club names and logos belong to their respective owners.</dd>
+      </dl>
+    </section>
   </section>
 </main>
 
@@ -116,7 +163,9 @@
         <span id="mStadium" class="m-sub"></span>
       </div>
     </div>
-    <div class="m-actions"><button id="mClose" class="chip-btn" type="button">Close</button></div>
+    <div class="m-actions">
+      <button id="mClose" class="chip-btn" type="button">Close</button>
+    </div>
   </div>
 </div>
 
