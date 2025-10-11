@@ -1,6 +1,6 @@
 /* Main stylesheet for Football Spinner
    - Dark theme, responsive grid cards, chip UI, wheel, modal
-   - Includes enhanced details/summary (accordion) and content section styling (#content)
+   - Includes clean details/summary (accordion) styling for the SEO section
    - Inter font is loaded via <link> in index.html (no @import here for better performance)
 */
 
@@ -80,7 +80,7 @@ body::before {
   position: fixed;
   inset: -20vmax;
   background: radial-gradient(50% 50% at 50% 50%, rgba(60,120,255,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat,
-              radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat;
+              radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0, transparent 60%) 0 0/40vmax 40vmax no-repeat;
   filter: blur(40px);
   opacity: .8;
   pointer-events: none;
@@ -701,6 +701,7 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
    Content Section Enhancements (semantic section with details/summary)
    Target: <section id="content"> ... </section>
    Clean, minimal styles with reliable custom chevron
+   Also includes a fallback that styles ANY .card details (in case id="content" is missing).
    ======================================================================= */
 
 /* Content container card */
@@ -844,13 +845,67 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   #content p, #content li, #content dd { line-height: 1.7; }
 }
 
+/* ------------- Fallback styling (in case id="content" is missing) ------------- */
+/* Style any details/summary that appear inside a .card but only if it contains a summary>h3 (SEO section pattern) */
+.card details:has(> summary > h3) {
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.02);
+  border-radius: 12px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+.card details:has(> summary > h3)[open] {
+  border-color: rgba(0,180,216,.28);
+  background: linear-gradient(180deg, rgba(0,180,216,.05), rgba(255,255,255,.02));
+}
+.card details:has(> summary > h3) > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+  outline: none;
+}
+.card details:has(> summary > h3) > summary::-webkit-details-marker { display: none !important; }
+.card details:has(> summary > h3) > summary::marker { content: "" !important; }
+
+.card details:has(> summary > h3) > summary:hover { background: rgba(255,255,255,.03); }
+.card details:has(> summary > h3) > summary:focus-visible {
+  outline: 2px solid #22d3ee; outline-offset: 4px;
+}
+.card details:has(> summary > h3) > summary::after {
+  content: "";
+  margin-left: auto;
+  width: 10px; height: 10px;
+  border-right: 2px solid #aeeaff;
+  border-bottom: 2px solid #aeeaff;
+  transform: rotate(-45deg);
+  transition: transform .22s ease, border-color .22s ease, opacity .22s ease;
+  opacity: .9;
+}
+.card details:has(> summary > h3)[open] > summary::after {
+  transform: rotate(135deg);
+  border-color: #22d3ee;
+}
+.card details:has(> summary > h3) > *:not(summary) {
+  padding: 12px 16px 16px;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+
 /* =======================================================================
    FINAL FORCE-HIDE OVERRIDES (in case of UA quirks rendering ► or ▾)
    Keep these at the very end of the file.
    ======================================================================= */
-#content details > summary::-webkit-details-marker { display: none !important; }
-#content summary::-webkit-details-marker { display: none !important; }
-#content details > summary::marker { content: "" !important; font-size: 0 !important; }
-#content summary::marker { content: "" !important; font-size: 0 !important; }
-#content details > summary { list-style: none !important; display: flex !important; align-items: center !important; gap: 10px !important; }
-#content summary > h3 { margin: 0 !important; font: inherit !important; font-weight: 800 !important; }
+#content details > summary::-webkit-details-marker,
+#content summary::-webkit-details-marker,
+.card details > summary::-webkit-details-marker { display: none !important; }
+#content details > summary::marker,
+#content summary::marker,
+.card details > summary::marker { content: "" !important; font-size: 0 !important; }
+#content details > summary,
+.card details > summary { list-style: none !important; display: flex !important; align-items: center !important; gap: 10px !important; }
+#content summary > h3,
+.card summary > h3 { margin: 0 !important; font: inherit !important; font-weight: 800 !important; }
