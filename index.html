@@ -6,7 +6,7 @@
 
   <title>Football Club Spinner — 398 Clubs · 25 Leagues</title>
   <meta name="description" content="Football Spinner is a free random football club generator. Spin the wheel to discover clubs across the Premier League, La Liga, Serie A, Bundesliga, Ligue 1 and more. Great for quizzes, watch parties, and learning new teams and stadiums." />
-  <meta name="keywords" content="football spinner, random football club, club wheel, premier league, la liga, serie a, bundesliga, ligue 1, guess the club, football quiz, stadium quiz" />
+  <meta name="keywords" content="football spinner, random football club, club wheel, random club generator, premier league, la liga, serie a, bundesliga, ligue 1, football trivia, stadium quiz" />
   <link rel="canonical" href="https://footballspinner.com/" />
   <meta name="robots" content="index,follow" />
 
@@ -111,131 +111,133 @@
   </section>
 
   <!-- SEO content block spanning the grid (desktop) -->
-  <section class="card" style="grid-column: 1 / -1" aria-labelledby="about-title">
+  <section id="content" class="card" style="grid-column: 1 / -1" aria-labelledby="about-title">
+    <!-- Optional quick links -->
+    <nav aria-label="On this page" class="toc">
+      <a href="#what-is">What is Football Spinner?</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#leagues">Leagues</a>
+      <a href="#why">Why use it</a>
+      <a href="#faq">FAQ</a>
+      <a href="#updates">Updates</a>
+      <a href="#disclaimer">Disclaimer</a>
+    </nav>
+
     <!-- Visible by default -->
-    <h2 id="about-title">What is Football Spinner?</h2>
+    <h2 id="what-is">What is Football Spinner?</h2>
     <p>
-      Football Spinner is a free, fan‑made random football club generator. Press a button and get a club at random to follow, quiz, or learn about—ideal for match nights and football‑mad group chats. You can spin across Europe’s top leagues, including the <strong>Premier League</strong>, <strong>La Liga</strong>, <strong>Serie A</strong>, <strong>Bundesliga</strong>, and <strong>Ligue 1</strong>, plus many more. Each result can show the club’s name, league, crest/logo, and home stadium, so you can discover new teams or test your knowledge in seconds. There’s no signup, nothing to install, and no affiliation with any club or competition—just a fast, friendly tool built by fans for fans. Whether you want an unbiased team to watch tonight or a fresh trivia prompt, Football Spinner keeps it simple and fun.
+      Football Spinner is a free, fan‑made <strong>random football club generator</strong> built for quick fun and discovery. Tap spin and get a club at random from major <strong>European leagues</strong>—including the
+      <strong>Premier League</strong>, <strong>La Liga</strong>, <strong>Serie A</strong>, <strong>Bundesliga</strong>, and <strong>Ligue 1</strong>—plus many more. Use it for <strong>football trivia</strong>, to find a neutral team to watch tonight, or to learn a new crest and stadium in seconds. Results can show the club’s
+      name, logo, league, and home stadium, and you can hide any of them for a quick “guess the club” or “guess the stadium” challenge. No accounts, no downloads, and no affiliation—just a fast, friendly tool made by fans for fans. Spin now, discover a new side to matchday, and share your picks with friends.
     </p>
 
     <!-- Visible by default -->
     <h2 id="how-it-works">How it works</h2>
-    <p>
-      Pick the leagues you want, press <em>Spin</em>, and the wheel lands on one club. The modal reveals key details: <strong>name</strong>, <strong>logo</strong>, <strong>league</strong>, and <strong>stadium</strong>. Prefer a challenge first? Use the optional toggles to hide elements, then guess the crest or “<em>guess the stadium</em>” before revealing. Switch leagues anytime to narrow the pool—stick to one division or mix the big five for variety. It’s quick, mobile‑friendly, and perfect for a rapid <strong>football logo quiz</strong> with friends.
-    </p>
+    <ol class="list-decimal pl-5">
+      <li><strong>Pick leagues:</strong> choose one or many (stick to a single division or mix the big five).</li>
+      <li><strong>Spin the wheel:</strong> we randomly select one club.</li>
+      <li><strong>Reveal or guess:</strong> toggle <em>logo</em>, <em>league</em>, and <em>stadium</em> on/off to run a quick quiz, then reveal the answer.</li>
+    </ol>
 
     <!-- Collapsed, still indexable -->
     <details id="leagues" aria-label="Leagues we cover">
       <summary><h3>Leagues We Cover</h3></summary>
-      <p>
-        Spin across Europe’s most followed competitions. Here are the big five with a few iconic examples:
-      </p>
-      <ul>
-        <li><strong>Premier League</strong> — Arsenal, Manchester City, Liverpool</li>
-        <li><strong>La Liga</strong> — Real Madrid, Barcelona, Atlético de Madrid</li>
-        <li><strong>Serie A</strong> — Juventus, Inter, AC Milan</li>
-        <li><strong>Bundesliga</strong> — Bayern Munich, Borussia Dortmund, RB Leipzig</li>
-        <li><strong>Ligue 1</strong> — Paris Saint‑Germain, Marseille, Lyon</li>
-      </ul>
+      <div class="panel">
+        <ul>
+          <li><strong>Premier League:</strong> Arsenal, Manchester City, Liverpool.</li>
+          <li><strong>La Liga:</strong> Real Madrid, Barcelona, Atlético de Madrid.</li>
+          <li><strong>Serie A:</strong> Juventus, Inter, AC Milan.</li>
+          <li><strong>Bundesliga:</strong> Bayern Munich, Borussia Dortmund, RB Leipzig.</li>
+          <li><strong>Ligue 1:</strong> Paris Saint‑Germain, Marseille, Lyon.</li>
+        </ul>
+      </div>
     </details>
 
     <details id="why" aria-label="Why use Football Spinner">
       <summary><h3>Why Use Football Spinner?</h3></summary>
-      <p>
-        It’s a lightweight, no‑nonsense way to discover clubs and spark conversations—great on the sofa, at the pub, or on the go.
-      </p>
-      <ul>
-        <li>🎲 Neutral game picker for tonight’s watch.</li>
-        <li>📚 Learn new clubs, leagues, and stadiums at a glance.</li>
-        <li>🎮 Career mode inspiration when you can’t choose a save.</li>
-        <li>⚽ Quick trivia and logo‑guessing games with friends.</li>
-        <li>🌍 Explore beyond your usual league in seconds.</li>
-      </ul>
+      <div class="panel">
+        <ul class="list-disc pl-5">
+          <li>Pick a neutral match when you can’t decide what to watch.</li>
+          <li>Run quick <strong>football trivia</strong> with logo/league/stadium reveals.</li>
+          <li>Learn new clubs and competitions at a glance.</li>
+          <li>Get <strong>career mode</strong> inspiration for your next save.</li>
+          <li>Explore Europe beyond your usual league and find surprises.</li>
+        </ul>
+      </div>
     </details>
 
     <details id="faq" aria-label="Frequently asked questions">
       <summary><h3>Quick FAQ</h3></summary>
-      <dl>
-        <dt>Can I limit spins to one league?</dt>
-        <dd>Yes—select only the league you want and spin.</dd>
+      <div class="panel">
+        <dl>
+          <dt>Can I limit spins to one league?</dt>
+          <dd>Yes—select only that league and spin.</dd>
 
-        <dt>Is Football Spinner official?</dt>
-        <dd>No—it's a fan‑made community tool; club names and logos belong to their respective owners.</dd>
+          <dt>Is Football Spinner official?</dt>
+          <dd>No—fan‑made; names, crests, and logos belong to their respective owners.</dd>
 
-        <dt>Is it mobile‑friendly?</dt>
-        <dd>Yes—designed to work smoothly on phones and tablets.</dd>
+          <dt>Is it mobile‑friendly?</dt>
+          <dd>Yes—designed to work smoothly on phones and tablets.</dd>
 
-        <dt>Is it free?</dt>
-        <dd>Yes—Football Spinner is free to use.</dd>
+          <dt>Is it free?</dt>
+          <dd>Yes—free to use.</dd>
 
-        <dt>What can I reveal after a spin?</dt>
-        <dd>You can show or hide the club name, logo, league, and stadium to create guess‑the‑club or stadium quizzes.</dd>
-      </dl>
-      <!-- FAQPage structured data -->
-      <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": [
-            {
-              "@type": "Question",
-              "name": "Can I limit spins to one league?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes—select only the league you want and spin."
+          <dt>What can I reveal after a spin?</dt>
+          <dd>You can show or hide the club <em>name</em>, <em>logo</em>, <em>league</em>, and <em>stadium</em> for quick quiz rounds.</dd>
+        </dl>
+        <!-- FAQPage structured data -->
+        <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Can I limit spins to one league?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes—select only that league and spin." }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Football Spinner official?",
+                "acceptedAnswer": { "@type": "Answer", "text": "No—fan‑made; names, crests, and logos belong to their respective owners." }
+              },
+              {
+                "@type": "Question",
+                "name": "Is it mobile-friendly?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes—designed to work smoothly on phones and tablets." }
+              },
+              {
+                "@type": "Question",
+                "name": "Is it free?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes—free to use." }
+              },
+              {
+                "@type": "Question",
+                "name": "What can I reveal after a spin?",
+                "acceptedAnswer": { "@type": "Answer", "text": "You can show or hide the club name, logo, league, and stadium for quick quiz rounds." }
               }
-            },
-            {
-              "@type": "Question",
-              "name": "Is Football Spinner official?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "No—it's a fan-made community tool; club names and logos belong to their respective owners."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Is it mobile-friendly?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes—designed to work smoothly on phones and tablets."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Is it free?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes—Football Spinner is free to use."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "What can I reveal after a spin?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "You can show or hide the club name, logo, league, and stadium to create guess-the-club or stadium quizzes."
-              }
-            }
-          ]
-        }
-      </script>
+            ]
+          }
+        </script>
+      </div>
     </details>
 
     <details id="updates" aria-label="Latest updates">
       <summary><h3>Latest Updates</h3></summary>
-      <ul>
-        <li><strong>October 2025:</strong> Performance tweaks for faster logo display and smoother modal experience.</li>
-        <li><strong>September 2025:</strong> New reveal toggles for league and stadium; accessibility refinements.</li>
-        <li><strong>August 2025:</strong> Expanded club data and minor bug fixes across mobile layouts.</li>
-      </ul>
+      <div class="panel">
+        <ul>
+          <li><strong class="badge">Oct 2025</strong> Faster logo rendering and smoother modal transitions.</li>
+          <li><strong class="badge">Sep 2025</strong> New league/stadium reveal toggles and accessibility refinements.</li>
+          <li><strong class="badge">Aug 2025</strong> Expanded club data and small mobile fixes.</li>
+        </ul>
+      </div>
     </details>
 
     <details id="disclaimer" aria-label="Legal disclaimer">
       <summary><h3>Disclaimer</h3></summary>
-      <p>
-        Football Spinner is a fan‑made, non‑commercial project for entertainment and educational purposes. All club names, crests, and logos are the property of their respective owners. Football Spinner is not affiliated with any league, club, or governing body.
-      </p>
+      <div class="panel">
+        <p>Football Spinner is a fan‑made, non‑commercial project for entertainment and educational purposes. All club names, crests, and logos are the property of their respective owners. Football Spinner is not affiliated with any league, club, or governing body.</p>
+      </div>
     </details>
   </section>
 </main>
