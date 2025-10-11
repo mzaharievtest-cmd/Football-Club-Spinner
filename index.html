@@ -6,7 +6,7 @@
 
   <title>Football Club Spinner — 398 Clubs · 25 Leagues</title>
   <meta name="description" content="Football Spinner is a free random football club generator. Spin the wheel to discover clubs across the Premier League, La Liga, Serie A, Bundesliga, Ligue 1 and more. Great for quizzes, watch parties, and learning new teams and stadiums." />
-  <meta name="keywords" content="football spinner, random football club, club wheel, random club generator, premier league, la liga, serie a, bundesliga, ligue 1, football trivia, stadium quiz" />
+  <meta name="keywords" content="football spinner, random football club, random club generator, european leagues, premier league, la liga, serie a, bundesliga, ligue 1, football trivia, stadium quiz" />
   <link rel="canonical" href="https://footballspinner.com/" />
   <meta name="robots" content="index,follow" />
 
@@ -71,7 +71,7 @@
     </div>
 
     <div class="section-title">Show on wheel</div>
-    <!-- Matches the league chip styling -->
+    <!-- Show-on-wheel options -->
     <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
       <label class="chip">
         <input type="checkbox" id="optName" checked aria-label="Name" />
@@ -110,135 +110,197 @@
     </div>
   </section>
 
-  <!-- SEO content block spanning the grid (desktop) -->
-  <section id="content" class="card" style="grid-column: 1 / -1" aria-labelledby="about-title">
-    <!-- Optional quick links -->
-    <nav aria-label="On this page" class="toc">
-      <a href="#what-is">What is Football Spinner?</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="#leagues">Leagues</a>
-      <a href="#why">Why use it</a>
-      <a href="#faq">FAQ</a>
-      <a href="#updates">Updates</a>
-      <a href="#disclaimer">Disclaimer</a>
+  <!-- Content block (Tailwind utilities + small inline CSS for accordions). Spans both columns. -->
+  <section id="content" style="grid-column: 1 / -1" class="scroll-smooth max-w-4xl mx-auto p-6 md:p-10 rounded-2xl shadow-2xl ring-1 bg-white text-slate-700 ring-slate-200 dark:bg-gradient-to-b dark:from-slate-900/50 dark:to-slate-900/20 dark:text-slate-200 dark:ring-white/10">
+    <!-- TOC -->
+    <nav aria-label="On this page" class="mb-6">
+      <ul class="flex flex-wrap gap-2">
+        <li><a class="rounded-full px-3 py-1 text-sm hover:underline text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300" href="#what-is">What is Football Spinner?</a></li>
+        <li><a class="rounded-full px-3 py-1 text-sm hover:underline text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300" href="#how-it-works">How it works</a></li>
+        <li><a class="rounded-full px-3 py-1 text-sm hover:underline text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300" href="#leagues">Leagues</a></li>
+        <li><a class="rounded-full px-3 py-1 text-sm hover:underline text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300" href="#why">Why use it</a></li>
+        <li><a class="rounded-full px-3 py-1 text-sm hover:underline text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300" href="#faq">FAQ</a></li>
+        <li><a class="rounded-full px-3 py-1 text-sm hover:underline text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300" href="#updates">Updates</a></li>
+        <li><a class="rounded-full px-3 py-1 text-sm hover:underline text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300" href="#disclaimer">Disclaimer</a></li>
+        <li><a class="rounded-full px-3 py-1 text-sm hover:underline text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300" href="#ads">Ads & Cookies</a></li>
+      </ul>
     </nav>
 
-    <!-- Visible by default -->
-    <h2 id="what-is">What is Football Spinner?</h2>
-    <p>
-      Football Spinner is a free, fan‑made <strong>random football club generator</strong> built for quick fun and discovery. Tap spin and get a club at random from major <strong>European leagues</strong>—including the
-      <strong>Premier League</strong>, <strong>La Liga</strong>, <strong>Serie A</strong>, <strong>Bundesliga</strong>, and <strong>Ligue 1</strong>—plus many more. Use it for <strong>football trivia</strong>, to find a neutral team to watch tonight, or to learn a new crest and stadium in seconds. Results can show the club’s
-      name, logo, league, and home stadium, and you can hide any of them for a quick “guess the club” or “guess the stadium” challenge. No accounts, no downloads, and no affiliation—just a fast, friendly tool made by fans for fans. Spin now, discover a new side to matchday, and share your picks with friends.
+    <!-- Visible (not collapsed) -->
+    <h2 id="what-is" class="scroll-mt-28 text-3xl md:text-4xl font-semibold tracking-tight mb-4 text-slate-900 dark:text-slate-50">What is Football Spinner?</h2>
+    <p class="text-[15px] md:text-base leading-relaxed">
+      Football Spinner is a free, fan‑made <strong>random football club generator</strong> built for quick fun, discovery, and <strong>football trivia</strong>. Choose the competitions you care about and spin to get one club at random from the biggest <strong>European leagues</strong>, including the <strong>Premier League</strong>, <strong>La Liga</strong>, <strong>Serie A</strong>, <strong>Bundesliga</strong>, and <strong>Ligue 1</strong>, plus many others. Each result can display the club’s name, logo/crest, league, and home stadium; you can also hide any of these to run a “guess the club” or “guess the stadium” round with friends. There’s no signup and nothing to install—just a fast, friendly tool that helps you discover teams, pick a neutral game to watch, or spark conversation. We’re independent and not affiliated with any club, league, or governing body. Ready to try your luck? <strong>Pick a few leagues and hit Spin.</strong>
     </p>
 
-    <!-- Visible by default -->
-    <h2 id="how-it-works">How it works</h2>
-    <ol class="list-decimal pl-5">
-      <li><strong>Pick leagues:</strong> choose one or many (stick to a single division or mix the big five).</li>
-      <li><strong>Spin the wheel:</strong> we randomly select one club.</li>
-      <li><strong>Reveal or guess:</strong> toggle <em>logo</em>, <em>league</em>, and <em>stadium</em> on/off to run a quick quiz, then reveal the answer.</li>
+    <!-- Visible (not collapsed) -->
+    <h2 id="how-it-works" class="scroll-mt-28 text-3xl md:text-4xl font-semibold tracking-tight mt-8 mb-4 text-slate-900 dark:text-slate-50">How it works</h2>
+    <ol class="list-decimal pl-5 space-y-2 text-[15px] md:text-base leading-relaxed">
+      <li><strong>Pick leagues:</strong> Select one or many—stick to a single division or mix the big five for variety.</li>
+      <li><strong>Spin the wheel:</strong> We randomly select one club and show a clean result card.</li>
+      <li><strong>Reveal or guess:</strong> Toggle the <em>logo</em>, <em>league</em>, and <em>stadium</em> on/off to run quick quiz rounds, then reveal the answer.</li>
     </ol>
+    <p class="mt-2 text-[15px] md:text-base leading-relaxed">Optimized for phones and tablets—great between matches or on the go.</p>
 
-    <!-- Collapsed, still indexable -->
-    <details id="leagues" aria-label="Leagues we cover">
-      <summary><h3>Leagues We Cover</h3></summary>
-      <div class="panel">
-        <ul>
-          <li><strong>Premier League:</strong> Arsenal, Manchester City, Liverpool.</li>
-          <li><strong>La Liga:</strong> Real Madrid, Barcelona, Atlético de Madrid.</li>
-          <li><strong>Serie A:</strong> Juventus, Inter, AC Milan.</li>
-          <li><strong>Bundesliga:</strong> Bayern Munich, Borussia Dortmund, RB Leipzig.</li>
-          <li><strong>Ligue 1:</strong> Paris Saint‑Germain, Marseille, Lyon.</li>
-        </ul>
-      </div>
-    </details>
+    <!-- Accordions -->
+    <div class="mt-8 space-y-3">
+      <details id="leagues" aria-label="Leagues we cover" class="block w-full">
+        <summary class="grid grid-cols-[1fr_auto] items-center px-5 py-4 rounded-xl bg-slate-50 ring-1 ring-slate-200 hover:bg-slate-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 dark:bg-slate-900/30 dark:ring-white/10 dark:hover:bg-white/5">
+          <h3 class="text-xl font-semibold mb-0 text-slate-900 dark:text-slate-100">Leagues We Cover</h3>
+          <svg width="18" height="18" class="chev text-cyan-600 dark:text-cyan-300" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 5l6 5-6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <div class="panel px-5 pb-5 pt-2 border-t border-slate-200 dark:border-white/10 text-[15px] md:text-base leading-relaxed">
+          <p class="mb-2">Spin across Europe’s most‑watched competitions. A few examples you might land on:</p>
+          <ul class="space-y-1.5">
+            <li><strong>Premier League:</strong> Arsenal, Manchester City, Liverpool.</li>
+            <li><strong>La Liga:</strong> Real Madrid, Barcelona, Atlético de Madrid.</li>
+            <li><strong>Serie A:</strong> Juventus, Inter, AC Milan.</li>
+            <li><strong>Bundesliga:</strong> Bayern Munich, Borussia Dortmund, RB Leipzig.</li>
+            <li><strong>Ligue 1:</strong> Paris Saint‑Germain, Marseille, Lyon.</li>
+          </ul>
+        </div>
+      </details>
 
-    <details id="why" aria-label="Why use Football Spinner">
-      <summary><h3>Why Use Football Spinner?</h3></summary>
-      <div class="panel">
-        <ul class="list-disc pl-5">
-          <li>Pick a neutral match when you can’t decide what to watch.</li>
-          <li>Run quick <strong>football trivia</strong> with logo/league/stadium reveals.</li>
-          <li>Learn new clubs and competitions at a glance.</li>
-          <li>Get <strong>career mode</strong> inspiration for your next save.</li>
-          <li>Explore Europe beyond your usual league and find surprises.</li>
-        </ul>
-      </div>
-    </details>
+      <details id="why" aria-label="Why use Football Spinner" class="block w-full">
+        <summary class="grid grid-cols-[1fr_auto] items-center px-5 py-4 rounded-xl bg-slate-50 ring-1 ring-slate-200 hover:bg-slate-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 dark:bg-slate-900/30 dark:ring-white/10 dark:hover:bg-white/5">
+          <h3 class="text-xl font-semibold mb-0 text-slate-900 dark:text-slate-100">Why Use Football Spinner?</h3>
+          <svg width="18" height="18" class="chev text-cyan-600 dark:text-cyan-300" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 5l6 5-6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <div class="panel px-5 pb-5 pt-2 border-t border-slate-200 dark:border-white/10 text-[15px] md:text-base leading-relaxed">
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li>Pick a neutral game when you can’t decide what to watch.</li>
+            <li>Learn clubs, leagues, and stadiums at a glance.</li>
+            <li>Run fast <strong>football trivia</strong> with reveal/guess rounds.</li>
+            <li>Find <strong>career‑mode</strong> inspiration for your next save.</li>
+            <li>Explore Europe beyond your usual league and discover new teams.</li>
+            <li>Reduce choice fatigue—let the wheel decide.</li>
+          </ul>
+        </div>
+      </details>
 
-    <details id="faq" aria-label="Frequently asked questions">
-      <summary><h3>Quick FAQ</h3></summary>
-      <div class="panel">
-        <dl>
-          <dt>Can I limit spins to one league?</dt>
-          <dd>Yes—select only that league and spin.</dd>
+      <details id="faq" aria-label="Frequently asked questions" class="block w-full">
+        <summary class="grid grid-cols-[1fr_auto] items-center px-5 py-4 rounded-xl bg-slate-50 ring-1 ring-slate-200 hover:bg-slate-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 dark:bg-slate-900/30 dark:ring-white/10 dark:hover:bg-white/5">
+          <h3 class="text-xl font-semibold mb-0 text-slate-900 dark:text-slate-100">Quick FAQ</h3>
+          <svg width="18" height="18" class="chev text-cyan-600 dark:text-cyan-300" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 5l6 5-6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <div class="panel px-5 pb-5 pt-2 border-t border-slate-200 dark:border-white/10 text-[15px] md:text-base leading-relaxed">
+          <dl class="space-y-2">
+            <div>
+              <dt class="font-semibold text-slate-900 dark:text-slate-100">Can I limit spins to one league?</dt>
+              <dd>Yes—select only that league and spin.</dd>
+            </div>
+            <div>
+              <dt class="font-semibold text-slate-900 dark:text-slate-100">Is Football Spinner official?</dt>
+              <dd>No—independent and fan‑made; names, crests, and logos belong to their respective owners.</dd>
+            </div>
+            <div>
+              <dt class="font-semibold text-slate-900 dark:text-slate-100">Does it work on mobile?</dt>
+              <dd>Yes—designed to run smoothly on phones and tablets.</dd>
+            </div>
+            <div>
+              <dt class="font-semibold text-slate-900 dark:text-slate-100">Is it free?</dt>
+              <dd>Yes—free to use.</dd>
+            </div>
+            <div>
+              <dt class="font-semibold text-slate-900 dark:text-slate-100">What can I reveal after a spin?</dt>
+              <dd>You can show or hide the club <em>name</em>, <em>logo/crest</em>, <em>league</em>, and <em>stadium</em>.</dd>
+            </div>
+          </dl>
+          <script type="application/ld+json">
+            {
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "Can I limit spins to one league?",
+                  "acceptedAnswer": { "@type": "Answer", "text": "Yes—select only that league and spin." }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Is Football Spinner official?",
+                  "acceptedAnswer": { "@type": "Answer", "text": "No—independent and fan‑made; names, crests, and logos belong to their respective owners." }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Does it work on mobile?",
+                  "acceptedAnswer": { "@type": "Answer", "text": "Yes—designed to run smoothly on phones and tablets." }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Is it free?",
+                  "acceptedAnswer": { "@type": "Answer", "text": "Yes—free to use." }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What can I reveal after a spin?",
+                  "acceptedAnswer": { "@type": "Answer", "text": "You can show or hide the club name, logo/crest, league, and stadium." }
+                }
+              ]
+            }
+          </script>
+        </div>
+      </details>
 
-          <dt>Is Football Spinner official?</dt>
-          <dd>No—fan‑made; names, crests, and logos belong to their respective owners.</dd>
+      <details id="updates" aria-label="Latest updates" class="block w-full">
+        <summary class="grid grid-cols-[1fr_auto] items-center px-5 py-4 rounded-xl bg-slate-50 ring-1 ring-slate-200 hover:bg-slate-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 dark:bg-slate-900/30 dark:ring-white/10 dark:hover:bg-white/5">
+          <h3 class="text-xl font-semibold mb-0 text-slate-900 dark:text-slate-100">Latest Updates</h3>
+          <svg width="18" height="18" class="chev text-cyan-600 dark:text-cyan-300" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 5l6 5-6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <div class="panel px-5 pb-5 pt-2 border-t border-slate-200 dark:border-white/10 text-[15px] md:text-base leading-relaxed">
+          <ul class="space-y-1.5">
+            <li><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset ring-slate-300/40 bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:ring-white/10 mr-2">Oct 2025</span> Performance improvements and smoother modal transitions.</li>
+            <li><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset ring-slate-300/40 bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:ring-white/10 mr-2">Sep 2025</span> Added league/stadium reveal toggles and accessibility polish.</li>
+            <li><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset ring-slate-300/40 bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:ring-white/10 mr-2">Aug 2025</span> Expanded club data and minor mobile fixes.</li>
+          </ul>
+        </div>
+      </details>
 
-          <dt>Is it mobile‑friendly?</dt>
-          <dd>Yes—designed to work smoothly on phones and tablets.</dd>
+      <details id="disclaimer" aria-label="Legal disclaimer" class="block w-full">
+        <summary class="grid grid-cols-[1fr_auto] items-center px-5 py-4 rounded-xl bg-slate-50 ring-1 ring-slate-200 hover:bg-slate-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 dark:bg-slate-900/30 dark:ring-white/10 dark:hover:bg-white/5">
+          <h3 class="text-xl font-semibold mb-0 text-slate-900 dark:text-slate-100">Disclaimer</h3>
+          <svg width="18" height="18" class="chev text-cyan-600 dark:text-cyan-300" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 5l6 5-6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <div class="panel px-5 pb-5 pt-2 border-t border-slate-200 dark:border-white/10 text-[15px] md:text-base leading-relaxed">
+          <p>Football Spinner is an independent, fan‑made project for entertainment and educational use. All club names, crests, and other trademarks are the property of their respective owners and are used for identification and informational purposes only. We are not affiliated with, endorsed, or sponsored by any club, league, or governing body; no endorsement is implied.</p>
+        </div>
+      </details>
 
-          <dt>Is it free?</dt>
-          <dd>Yes—free to use.</dd>
+      <details id="ads" aria-label="Advertising and cookies" class="block w-full">
+        <summary class="grid grid-cols-[1fr_auto] items-center px-5 py-4 rounded-xl bg-slate-50 ring-1 ring-slate-200 hover:bg-slate-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 dark:bg-slate-900/30 dark:ring-white/10 dark:hover:bg-white/5">
+          <h3 class="text-xl font-semibold mb-0 text-slate-900 dark:text-slate-100">Advertising & Cookies</h3>
+          <svg width="18" height="18" class="chev text-cyan-600 dark:text-cyan-300" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 5l6 5-6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <div class="panel px-5 pb-5 pt-2 border-t border-slate-200 dark:border-white/10 text-[15px] md:text-base leading-relaxed">
+          <p>We display advertising via Google AdSense. Ads are separate from our content and do not influence spinner results.</p>
+          <p>Google and its partners may use cookies or similar technologies to deliver, personalize, and measure ads. Visitors in the EEA/UK can choose personalized or non‑personalized ads.</p>
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li>See our <a class="underline hover:text-cyan-600 dark:hover:text-cyan-300" href="/privacy">Privacy Policy</a> and <a class="underline hover:text-cyan-600 dark:hover:text-cyan-300" href="/cookies">Cookie Policy</a>.</li>
+            <li>Manage Google ad settings: <a class="underline hover:text-cyan-600 dark:hover:text-cyan-300" href="https://adssettings.google.com/" rel="nofollow">adssettings.google.com</a>.</li>
+            <li>Update site choices anytime via <a class="underline hover:text-cyan-600 dark:hover:text-cyan-300" href="#cookie-settings">Cookie Settings</a>.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
 
-          <dt>What can I reveal after a spin?</dt>
-          <dd>You can show or hide the club <em>name</em>, <em>logo</em>, <em>league</em>, and <em>stadium</em> for quick quiz rounds.</dd>
-        </dl>
-        <!-- FAQPage structured data -->
-        <script type="application/ld+json">
-          {
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": [
-              {
-                "@type": "Question",
-                "name": "Can I limit spins to one league?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Yes—select only that league and spin." }
-              },
-              {
-                "@type": "Question",
-                "name": "Is Football Spinner official?",
-                "acceptedAnswer": { "@type": "Answer", "text": "No—fan‑made; names, crests, and logos belong to their respective owners." }
-              },
-              {
-                "@type": "Question",
-                "name": "Is it mobile-friendly?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Yes—designed to work smoothly on phones and tablets." }
-              },
-              {
-                "@type": "Question",
-                "name": "Is it free?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Yes—free to use." }
-              },
-              {
-                "@type": "Question",
-                "name": "What can I reveal after a spin?",
-                "acceptedAnswer": { "@type": "Answer", "text": "You can show or hide the club name, logo, league, and stadium for quick quiz rounds." }
-              }
-            ]
-          }
-        </script>
-      </div>
-    </details>
+    <!-- Cookie settings anchor -->
+    <p id="cookie-settings" class="mt-6 text-xs text-slate-500 dark:text-slate-400">Cookie/consent preferences for footballspinner.com can be managed here. If a consent banner is shown, you can reopen it from this link to change your choices.</p>
 
-    <details id="updates" aria-label="Latest updates">
-      <summary><h3>Latest Updates</h3></summary>
-      <div class="panel">
-        <ul>
-          <li><strong class="badge">Oct 2025</strong> Faster logo rendering and smoother modal transitions.</li>
-          <li><strong class="badge">Sep 2025</strong> New league/stadium reveal toggles and accessibility refinements.</li>
-          <li><strong class="badge">Aug 2025</strong> Expanded club data and small mobile fixes.</li>
-        </ul>
-      </div>
-    </details>
-
-    <details id="disclaimer" aria-label="Legal disclaimer">
-      <summary><h3>Disclaimer</h3></summary>
-      <div class="panel">
-        <p>Football Spinner is a fan‑made, non‑commercial project for entertainment and educational purposes. All club names, crests, and logos are the property of their respective owners. Football Spinner is not affiliated with any league, club, or governing body.</p>
-      </div>
-    </details>
+    <!-- Minimal CSS to hide native markers, animate panels, and rotate chevrons -->
+    <style>
+      /* Hide default details marker */
+      #content details > summary::-webkit-details-marker { display: none; }
+      #content details > summary::marker { content: ""; }
+      /* Chevron rotation */
+      #content summary .chev { transition: transform .2s ease; transform: rotate(0deg); }
+      #content details[open] summary .chev { transform: rotate(90deg); }
+      /* Panel animation with reduced motion respect */
+      #content details > .panel { max-height: 0; opacity: 0; overflow: hidden; transition: max-height .3s ease, opacity .2s ease; }
+      #content details[open] > .panel { max-height: 1000px; opacity: 1; }
+      @media (prefers-reduced-motion: reduce) {
+        #content summary .chev { transition: none; }
+        #content details > .panel { transition: none; }
+      }
+    </style>
   </section>
 </main>
 
