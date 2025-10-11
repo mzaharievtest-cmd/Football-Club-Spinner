@@ -1,6 +1,6 @@
 /* Main stylesheet for Football Spinner
    - Dark theme, responsive grid cards, chip UI, wheel, modal
-   - Includes clean details/summary (accordion) styling for the SEO section
+   - Includes clean details/summary (accordion) styling for the SEO section (#content)
    - Inter font is loaded via <link> in index.html (no @import here for better performance)
 */
 
@@ -80,7 +80,7 @@ body::before {
   position: fixed;
   inset: -20vmax;
   background: radial-gradient(50% 50% at 50% 50%, rgba(60,120,255,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat,
-              radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0, transparent 60%) 0 0/40vmax 40vmax no-repeat;
+              radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat;
   filter: blur(40px);
   opacity: .8;
   pointer-events: none;
@@ -701,7 +701,6 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
    Content Section Enhancements (semantic section with details/summary)
    Target: <section id="content"> ... </section>
    Clean, minimal styles with reliable custom chevron
-   Also includes a fallback that styles ANY .card details (in case id="content" is missing).
    ======================================================================= */
 
 /* Content container card */
@@ -741,7 +740,12 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   line-height: 1.65;
   color: #e8eefb;
 }
-#content dt { color: #b6c5e6; font-weight: 800; }
+#content dt {
+  font-size: clamp(13px, 1.45vw, 14px);
+  color: var(--muted);
+  font-weight: 800;
+  margin-top: 12px;
+}
 
 /* Optional Table of Contents (links with .toc) */
 #content .toc {
@@ -762,12 +766,12 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   text-decoration: none;
   color: #e9f5ff;
   background: linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));
-  border: 1px solid rgba(120,160,255,.18);
+  border: 1px solid var(--line);
   transition: transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease);
 }
 #content .toc a:hover {
   transform: translateY(-1px);
-  border-color: #22d3ee;
+  border-color: var(--accent-2);
   box-shadow: 0 10px 22px rgba(34,211,238,.18);
 }
 
@@ -802,8 +806,9 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
 
 #content summary:hover { background: rgba(255,255,255,.03); }
 #content summary:focus-visible {
-  outline: 2px solid #22d3ee;
+  outline: 2px solid var(--accent-2);
   outline-offset: 4px;
+  border-radius: 8px;
 }
 
 /* Chevron icon (right aligned) */
@@ -815,21 +820,31 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   border-right: 2px solid #aeeaff;
   border-bottom: 2px solid #aeeaff;
   transform: rotate(-45deg);
-  transition: transform .22s ease, border-color .22s ease, opacity .22s ease;
+  transition: transform .22s var(--ease), border-color .22s var(--ease), opacity .22s var(--ease);
   opacity: .9;
   flex: 0 0 auto;
 }
 #content details[open] summary::after {
   transform: rotate(135deg);
-  border-color: #22d3ee;
+  border-color: var(--accent-2);
 }
 
-/* Content area inside details */
-#content details > *:not(summary) {
+/* Animated panel (fade/height) */
+#content details > .panel {
+  padding: 0 16px 0;
+  border-top: 1px solid rgba(255,255,255,.10);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height .3s var(--ease), opacity .22s var(--ease);
+}
+#content details[open] > .panel {
   padding: 12px 16px 16px;
-  border-top: 1px solid rgba(255,255,255,.06);
+  max-height: 1000px;
   opacity: 1;
-  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #content details > .panel { transition: none; }
 }
 
 /* Lists/FAQ spacing */
@@ -839,73 +854,33 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
 #content ul { padding-left: 18px; margin: 8px 0 0 0; }
 #content li + li { margin-top: 6px; }
 
+/* Update date badge */
+#content .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.2;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  margin-right: 8px;
+  color: #eaf0fb;
+}
+
 /* Responsive tweaks for the content block */
 @media (max-width: 640px) {
   #content { padding: 16px; }
   #content p, #content li, #content dd { line-height: 1.7; }
 }
 
-/* ------------- Fallback styling (in case id="content" is missing) ------------- */
-/* Style any details/summary that appear inside a .card but only if it contains a summary>h3 (SEO section pattern) */
-.card details:has(> summary > h3) {
-  border: 1px solid rgba(255,255,255,.07);
-  background: rgba(255,255,255,.02);
-  border-radius: 12px;
-  margin: 12px 0;
-  overflow: hidden;
-}
-.card details:has(> summary > h3)[open] {
-  border-color: rgba(0,180,216,.28);
-  background: linear-gradient(180deg, rgba(0,180,216,.05), rgba(255,255,255,.02));
-}
-.card details:has(> summary > h3) > summary {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  cursor: pointer;
-  border-radius: 10px;
-  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
-  outline: none;
-}
-.card details:has(> summary > h3) > summary::-webkit-details-marker { display: none !important; }
-.card details:has(> summary > h3) > summary::marker { content: "" !important; }
-
-.card details:has(> summary > h3) > summary:hover { background: rgba(255,255,255,.03); }
-.card details:has(> summary > h3) > summary:focus-visible {
-  outline: 2px solid #22d3ee; outline-offset: 4px;
-}
-.card details:has(> summary > h3) > summary::after {
-  content: "";
-  margin-left: auto;
-  width: 10px; height: 10px;
-  border-right: 2px solid #aeeaff;
-  border-bottom: 2px solid #aeeaff;
-  transform: rotate(-45deg);
-  transition: transform .22s ease, border-color .22s ease, opacity .22s ease;
-  opacity: .9;
-}
-.card details:has(> summary > h3)[open] > summary::after {
-  transform: rotate(135deg);
-  border-color: #22d3ee;
-}
-.card details:has(> summary > h3) > *:not(summary) {
-  padding: 12px 16px 16px;
-  border-top: 1px solid rgba(255,255,255,.06);
-}
-
 /* =======================================================================
-   FINAL FORCE-HIDE OVERRIDES (in case of UA quirks rendering ► or ▾)
+   FINAL FORCE-HIDE OVERRIDES (just in case of UA quirks rendering ► or ▾)
    Keep these at the very end of the file.
    ======================================================================= */
 #content details > summary::-webkit-details-marker,
-#content summary::-webkit-details-marker,
-.card details > summary::-webkit-details-marker { display: none !important; }
+#content summary::-webkit-details-marker { display: none !important; }
 #content details > summary::marker,
-#content summary::marker,
-.card details > summary::marker { content: "" !important; font-size: 0 !important; }
-#content details > summary,
-.card details > summary { list-style: none !important; display: flex !important; align-items: center !important; gap: 10px !important; }
-#content summary > h3,
-.card summary > h3 { margin: 0 !important; font: inherit !important; font-weight: 800 !important; }
+#content summary::marker { content: "" !important; font-size: 0 !important; }
+#content details > summary { list-style: none !important; display: flex !important; align-items: center !important; gap: 10px !important; }
+#content summary > h3 { margin: 0 !important; font: inherit !important; font-weight: 800 !important; }
