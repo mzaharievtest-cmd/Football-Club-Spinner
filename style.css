@@ -690,7 +690,7 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
 /* =======================================================================
    Content Section Enhancements (semantic section with details/summary)
    Target: <section id="content"> ... </section>
-   Clean, premium look with reliable custom chevron
+   Clean, premium look
    ======================================================================= */
 
 /* Content container card */
@@ -745,7 +745,7 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   display: flex;
   flex-wrap: wrap;
   gap: 10px 12px;
-  margin: 8px 0 14px;
+  margin: 8px 0 18px; /* +2px vertical space before the H2 */
   padding-top: 6px;
 }
 #content .toc a {
@@ -781,10 +781,11 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   background: linear-gradient(180deg, rgba(0,180,216,.05), rgba(255,255,255,.02));
 }
 
-/* Summary row: hide native marker and add custom chevron */
+/* Summary row: hide native marker and add hover/focus states */
 #content summary {
   list-style: none;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
@@ -796,14 +797,12 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
 #content summary::-webkit-details-marker { display: none !important; }
 #content summary::marker { content: "" !important; } /* Firefox */
 
-#content summary:hover { background: rgba(255,255,255,.03); }
+#content summary:hover { background: rgba(255,255,255,.03); text-decoration: underline; }
 #content summary:focus-visible {
   outline: 2px solid var(--accent-2);
   outline-offset: 4px;
   border-radius: 8px;
 }
-
-/* Use inline SVG chevrons; rotation handled inline in index.html <style> */
 
 /* Panel animation (fallback if inline style missing) */
 #content details > .panel {
@@ -848,5 +847,5 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
 #content summary::-webkit-details-marker { display: none !important; }
 #content details > summary::marker,
 #content summary::marker { content: "" !important; font-size: 0 !important; }
-#content details > summary { list-style: none !important; display: flex !important; align-items: center !important; gap: 10px !important; }
+#content details > summary { list-style: none !important; }
 #content summary > h3 { margin: 0 !important; font: inherit !important; font-weight: 800 !important; }
