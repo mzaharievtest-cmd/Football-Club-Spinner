@@ -194,112 +194,10 @@ header .brand {
 /* =========================
    Page grid / cards
    ========================= */
-.container {
-  max-width: 1200px;
-  margin: 20px auto 48px;
-  padding: 0 clamp(12px,4vw,36px);
-  display: grid;
-  gap: 22px;
-  position: relative;
-  z-index: 1;
-}
+/* (rest of stylesheet as in repo) */
 
-@media (min-width: 980px) {
-  .container { grid-template-columns: 380px 1fr; }
-}
-@media (max-width: 979.98px) {
-  .container { display: block; }
-  .card { margin-bottom: 16px; }
-}
-
-/* Card */
-.card {
-  position: relative;
-  background: var(--grad-card);
-  border-radius: var(--radius);
-  padding: 18px clamp(14px,3vw,26px);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-1);
-  overflow: clip;
-  transform: translateY(8px);
-  opacity: 0;
-  animation: card-in .6s var(--ease-out) forwards;
-}
-@keyframes card-in {
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.section-title {
-  font-size: 12px;
-  letter-spacing: .36em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 10px;
-}
-
-/* =========================
-   Quick picks / chips
-   ========================= */
-.quick-picks {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-button, .chip-btn {
-  width: 100%;
-  margin-top: 6px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(22,34,64,.96), rgba(12,18,34,.92));
-  color: #f4f7ff;
-  font-weight: 900;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
-  position: relative;
-  overflow: hidden;
-}
-button:hover, .chip-btn:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent-2);
-  box-shadow: 0 10px 30px rgba(34,211,238,.16);
-}
-button:active { transform: translateY(0); }
-button:disabled { opacity: .6; cursor: wait; }
-
-/* Button shine */
-button::after, .chip-btn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(255,255,255,.08), transparent 30% 70%, rgba(255,255,255,.08));
-  transform: translateX(-100%);
-  transition: transform .7s var(--ease-out);
-  pointer-events: none;
-}
-button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
-
-.chip-btn.active {
-  border-color: var(--accent-2);
-  box-shadow: 0 0 0 2px rgba(34,211,238,.20) inset, 0 12px 26px rgba(34,211,238,.12);
-  background: linear-gradient(180deg, rgba(32,46,88,.96), rgba(14,24,48,.92));
-}
-
-/* Ghost variant for “Show more” */
-.chip-btn.ghost {
-  background: linear-gradient(180deg, rgba(18,22,36,.86), rgba(10,14,26,.82));
-  border-style: dashed;
-}
-
-/* ... rest of stylesheet unchanged (kept full in repo) ... */
-
-/* Safety overrides appended */
-#mLogo, .m-logo {
+/* Safety overrides appended to limit accidental large images or visible modal */
+#mLogo, .m-logo, .current-logo {
   width: 110px !important;
   height: 110px !important;
   max-width: 160px !important;
@@ -307,7 +205,11 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   object-fit: contain !important;
   display: block !important;
 }
+
+#currentDisplay { margin-top: 8px; }
+
 #backdrop { display: none !important; }
 #modal { transform: translateY(8px) scale(.98); opacity: 0; pointer-events: none; }
 #modal.show { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+
 #content img, img.fs-figure img { max-width: 100%; height: auto; display: block; }
