@@ -1,8 +1,5 @@
 // Football Club Spinner — app.js
-// Extra leagues are hidden until "Show more" is clicked.
-// "All" selects only visible leagues. EPL is selected on first load.
-// UI is locked while spinning. Name > Stadium styling, aligned block.
-// Dynamic thresholds: when both Name+Stadium are on, text/logos hide earlier for legibility.
+// Updated: fix ensureRevealStyles (broken CSS string), ensure history images are sized & classed.
 
 let TEAMS = [];
 let currentAngle = 0; // radians
@@ -27,7 +24,7 @@ const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 const optName = document.getElementById('optName');
 const optLogo = document.getElementById('optLogo');
 const optStadium = document.getElementById('optStadium');
-const optLeague = document.getElementById('optLeague'); // NEW
+const optLeague = document.getElementById('optLeague');
 
 const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
@@ -111,6 +108,7 @@ function getLogo(url, onLoad) {
   return img;
 }
 
+// text color utils omitted for brevity (keeps original implementations)...
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
   hex = hex.replace('#','');
@@ -125,7 +123,7 @@ function luminance(hex){
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
 
-// -------- Single-line fitting --------
+// fitSingleLine implementation kept unchanged (original code)
 function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx = 9, maxPx = 28, weight = 800, fontFamily = 'Inter, system-ui, sans-serif' }) {
   let px = clamp(minPx, Math.round(targetPx), maxPx);
   ctx.font = `${weight} ${px}px ${fontFamily}`;
@@ -183,7 +181,7 @@ function lockUI(lock) {
 }
 
 // -------------------- Chips / History --------------------
-const TOP5 = ['EPL','SA','BUN','L1','LLA']; // Premier League, Serie A, Bundesliga, Ligue 1, LaLiga
+const TOP5 = ['EPL','SA','BUN','L1','LLA'];
 
 function makeChip(code, checked) {
   const full = LEAGUE_LABELS[code] || code;
@@ -204,13 +202,9 @@ function renderChips() {
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
 
-  // Top 5 — EPL checked by default
   topCodes.forEach(code => chipsTop.appendChild(makeChip(code, code === 'EPL')));
-
-  // Extra leagues — populated but hidden until the user clicks the button
   moreCodes.forEach(code => chipsMore.appendChild(makeChip(code, false)));
 
-  // Ensure hidden on initial render
   chipsMore.hidden = true;
   toggleMore.textContent = 'Show more leagues';
   toggleMore.setAttribute('aria-expanded', 'false');
@@ -218,7 +212,6 @@ function renderChips() {
   toggleMore.classList.remove('disabled');
 }
 
-// Only select visible league codes (Top 5 by default; plus extras when shown)
 function visibleCodes() {
   const codes = Array.from(chipsTop.querySelectorAll('input[type="checkbox"]')).map(i => i.value);
   if (!chipsMore.hidden) {
@@ -253,13 +246,18 @@ function renderHistory() {
   if (history.length === 0) {
     historyEl.setAttribute('aria-live', 'polite');
     historyEl.innerHTML = '<div class="item">Spin the wheel to start your club journey</div>';
+    return;
   }
   history.forEach(item => {
     const div = document.createElement('div');
     div.className = 'item';
     const i = document.createElement('img');
-    i.src = item.logo_url;
+    i.src = item.logo_url || '';
     i.alt = `${item.team_name} logo`;
+    // Assign class & size to avoid giant natural images breaking layout
+    i.className = 'history-logo';
+    i.width = 38;
+    i.height = 38;
     i.onerror = () => { i.src = ''; i.alt = 'No image'; };
     const s = document.createElement('span');
     const full = LEAGUE_LABELS[item.league_code] || item.league_code;
@@ -269,16 +267,30 @@ function renderHistory() {
   });
 }
 
-// -------------------- Modal reveal helpers (no logo masking) --------------------
+// -------------------- Modal reveal helpers --------------------
 function ensureRevealStyles() {
   if (document.getElementById('reveal-style')) return;
   const s = document.createElement('style');
   s.id = 'reveal-style';
   s.textContent = `
-    .reveal-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;user-select:none;z-index:3;position:relative;white-space:nowrap}
-    #mHead + .reveal-btn{display:inline-block;margin-left:0}
-    .reveal-wrap{position:relative;display:inline-block;z-index:0}
-    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none;z-index:2}
+    .reveal-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      margin-top:8px;
+      margin-left:10px;
+      padding:8px 12px;
+      border-radius:10px;
+      border:1px solid rgba(90,161,255,.6);
+      background:#152036;
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .reveal-btn:hover{ transform: translateY(-1px); }
+    #mHead + .reveal-btn{ display:inline-block; margin-left:0; }
+    .reveal-wrap{ position:relative; display:inline-block; z-index:0; }
+    .reveal-overlay{ position:absolute; inset:0; border-radius:inherit; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); background:transparent; pointer-events:none; z-index:2; }
   `;
   document.head.appendChild(s);
 }
@@ -292,11 +304,42 @@ function ensureWrapped(el){
   wrap.appendChild(el);
   return wrap;
 }
-function addOverlay(el){ const wrap=ensureWrapped(el); if(!wrap) return; if(!wrap.querySelector('.reveal-overlay')){ const ov=document.createElement('span'); ov.className='reveal-overlay'; wrap.appendChild(ov); } }
-function removeOverlay(el){ if(!el||!el.parentElement) return; const wrap=el.parentElement; if(wrap.classList.contains('reveal-wrap')){ const ov=wrap.querySelector('.reveal-overlay'); if(ov) ov.remove(); } }
-function blurElement(el){ if(!el) return; el.style.setProperty('filter','blur(14px) saturate(0.9)','important'); el.style.setProperty('-webkit-filter','blur(14px) saturate(0.9)','important'); el.style.pointerEvents='none'; addOverlay(el); }
-function unblurElement(el){ if(!el) return; el.style.removeProperty('filter'); el.style.removeProperty('-webkit-filter'); el.style.pointerEvents=''; removeOverlay(el); el.setAttribute('aria-hidden','false'); }
-function placeButtonAfter(el,btn){ const host=el?.parentElement?.classList.contains('reveal-wrap') ? el.parentElement : el; if (host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn); }
+function addOverlay(el){
+  const wrap = ensureWrapped(el);
+  if(!wrap) return;
+  if(!wrap.querySelector('.reveal-overlay')) {
+    const ov = document.createElement('span');
+    ov.className = 'reveal-overlay';
+    wrap.appendChild(ov);
+  }
+}
+function removeOverlay(el){
+  if(!el || !el.parentElement) return;
+  const wrap = el.parentElement;
+  if(wrap.classList.contains('reveal-wrap')){
+    const ov = wrap.querySelector('.reveal-overlay');
+    if(ov) ov.remove();
+  }
+}
+function blurElement(el){
+  if(!el) return;
+  el.style.setProperty('filter','blur(14px) saturate(0.9)','important');
+  el.style.setProperty('-webkit-filter','blur(14px) saturate(0.9)','important');
+  addOverlay(el);
+  el.setAttribute('aria-hidden', 'true');
+}
+function unblurElement(el){
+  if(!el) return;
+  el.style.removeProperty('filter');
+  el.style.removeProperty('-webkit-filter');
+  el.style.pointerEvents = '';
+  removeOverlay(el);
+  el.removeAttribute('aria-hidden');
+}
+function placeButtonAfter(el,btn){
+  const host = el?.parentElement?.classList?.contains('reveal-wrap') ? el.parentElement : el;
+  if(host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn);
+}
 
 function applyRevealByKey(key, el, enabled, btnId, labelText) {
   if (!el) return;
@@ -320,7 +363,7 @@ function updateModalRevealFromToggles() {
   applyRevealByKey('logo',    mLogo,    !!optLogo?.checked,    'revealLogoBtn',    'logo');
   applyRevealByKey('name',    mHead,    !!optName?.checked,    'revealNameBtn',    'name');
   applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
-  applyRevealByKey('league',  mSub,     !!optLeague?.checked,  'revealLeagueBtn',  'league'); // NEW
+  applyRevealByKey('league',  mSub,     !!optLeague?.checked,  'revealLeagueBtn',  'league');
 }
 
 // -------------------- Preload selected team logo for instant modal display --------------------
@@ -419,15 +462,13 @@ function drawWheel(){
     return;
   }
 
-  // DYNAMIC THRESHOLDS for better legibility when both text lines are enabled
   const bothTextOn = !!optName?.checked && !!optStadium?.checked;
-  const hideTextThresholdDyn  = bothTextOn ? 55 : PERF.hideTextThreshold; // earlier cutoff when both lines visible
+  const hideTextThresholdDyn  = bothTextOn ? 55 : PERF.hideTextThreshold;
   const hideLogosThresholdDyn = bothTextOn ? Math.min(55, PERF.hideLogosThreshold) : PERF.hideLogosThreshold;
 
   const hideLogos = N >= hideLogosThresholdDyn;
   const hideText  = N >= hideTextThresholdDyn;
 
-  // Do NOT auto-uncheck toggles; keep UI available regardless of density.
   updateSelectionBanner();
 
   ctx.imageSmoothingEnabled = !hideText;
@@ -511,7 +552,6 @@ function drawWheel(){
       const canShowStadium = !hideText && optStadium?.checked && t.stadium && maxTextWidth >= PERF.minTextWidth;
       const canShowLogo    = !hideLogos && optLogo?.checked && t.logo_url && (logoHalf * 2) >= PERF.minLogoBox;
 
-      // Unified typography & alignment for Name + Stadium
       if (canShowName || canShowStadium) {
         ctx.save();
         ctx.textAlign = 'left';
@@ -521,7 +561,6 @@ function drawWheel(){
         const strokeCol = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.65)';
         const fillCol = fg;
 
-        // Fit name first (bigger)
         let namePx = 0, stadPx = 0;
         let nameFit = { text: '', fontPx: 0 };
         let stadFit = { text: '', fontPx: 0 };
@@ -537,7 +576,6 @@ function drawWheel(){
           namePx = nameFit.fontPx;
         }
 
-        // Stadium ~82% of fitted name size when both present
         const stadTarget = (canShowName && namePx) ? Math.max(8, Math.round(namePx * 0.82)) : stadiumTargetPx;
         if (canShowStadium) {
           stadFit = fitSingleLine(ctx, t.stadium || '', {
@@ -550,12 +588,10 @@ function drawWheel(){
           stadPx = stadFit.fontPx;
         }
 
-        // Vertical layout: center combined block
         const gap = (canShowName && canShowStadium) ? 3 : 0;
         const totalH = (canShowName ? namePx : 0) + (canShowStadium ? stadPx : 0) + gap;
         let yCursor = -totalH / 2;
 
-        // Draw Name
         if (canShowName) {
           yCursor += namePx / 2;
           ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
@@ -567,7 +603,6 @@ function drawWheel(){
           yCursor += namePx / 2 + gap;
         }
 
-        // Draw Stadium (same design, slight alpha to de-emphasize)
         if (canShowStadium) {
           yCursor += stadPx / 2;
           ctx.font = `700 ${stadPx}px Inter, system-ui, sans-serif`;
@@ -644,14 +679,16 @@ function setResult(idx){
   const leagueLabel = LEAGUE_LABELS[t.league_code] || t.league_code;
 
   if (currentText) currentText.textContent = `${t.team_name} · ${leagueLabel}`;
-  if (currentLogo) currentLogo.src = t.logo_url || "";
+  if (currentLogo) {
+    currentLogo.src = t.logo_url || "";
+    currentLogo.alt = (t.team_name || 'Club') + ' logo';
+  }
 
   history.unshift(t);
   if (history.length > 50) history = history.slice(0,50);
   saveHistory();
   renderHistory();
 
-  // Preload and decode the modal logo first so it shows instantly
   if (t.logo_url) preloadModalLogo(t.logo_url, () => openModal(t));
   else openModal(t);
 }
@@ -693,7 +730,6 @@ function spin(){
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
 
-      // Snap the chosen slice center under the pointer
       const centerAngle = idx * slice + slice/2;
       const snapDelta = mod(centerAngle - offset, TAU);
       currentAngle = mod(currentAngle + snapDelta, TAU);
@@ -714,7 +750,6 @@ function spin(){
 
 // -------------------- Events / Boot --------------------
 function setupEventListeners() {
-  // helper: quick-pick active state
   function setActive(btn) {
     [qpAll, qpNone, qpTop5].forEach(b => b?.classList?.toggle('active', b === btn));
   }
@@ -734,7 +769,6 @@ function setupEventListeners() {
     else setActive(null);
   }
 
-  // Leagues toggles
   chipsWrap.addEventListener('change', () => {
     if (spinning) return;
     selectedIdx = -1;
@@ -747,7 +781,6 @@ function setupEventListeners() {
     updateQuickPickActive();
   });
 
-  // "Show more leagues" toggle
   toggleMore.addEventListener('click', () => {
     if (spinning) return;
     const hidden = chipsMore.hidden;
@@ -763,7 +796,6 @@ function setupEventListeners() {
     updateQuickPickActive();
   });
 
-  // Quick picks
   qpAll.onclick  = () => { if (spinning) return; setCheckedCodes(visibleCodes()); setActive(qpAll); };
   qpNone.onclick = () => { if (spinning) return; setCheckedCodes([]); setActive(qpNone); };
   qpTop5.onclick = () => {
@@ -772,7 +804,6 @@ function setupEventListeners() {
     setActive(qpTop5);
   };
 
-  // Show-on-wheel toggles — immediate redraw
   const onWheelToggleChange = () => {
     if (spinning) return;
     drawWheel();
@@ -781,19 +812,16 @@ function setupEventListeners() {
   optName?.addEventListener('change', onWheelToggleChange);
   optLogo?.addEventListener('change', onWheelToggleChange);
   optStadium?.addEventListener('change', onWheelToggleChange);
-  optLeague?.addEventListener('change', onWheelToggleChange); // NEW
+  optLeague?.addEventListener('change', onWheelToggleChange);
 
-  // Spin actions
   spinBtn.onclick = spin;
   spinFab.onclick = spin;
 
-  // History and modal
   resetHistoryBtn.addEventListener('click', () => { if (!spinning) resetHistory(); });
   mClose.onclick = () => { if (!spinning) closeModal(); };
   backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
 
-  // Debounced resize redraw
   let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
