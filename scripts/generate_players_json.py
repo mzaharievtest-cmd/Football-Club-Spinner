@@ -1,14 +1,14 @@
 # scripts/generate_players_json.py
 # Build data/players.json by scraping Wikipedia for each PL club (season page + club page).
-# Key features:
-# - Uses Wikipedia REST HTML
+# Features:
+# - Wikipedia REST HTML
 # - Aggregates ALL blocks in the squad section (tables/lists)
+# - Merges season + club page when season yields < 10 players
 # - Skips Academy/Loans/etc. subsections
 # - Reads ONLY the Player/Name column from tables (via header map)
-# - Accepts full-word positions (maps to GK/DF/MF/FW)
-# - Cleans names (removes refs, captain tags, heights/fees/DOB lines)
-# - If season page yields < 10 players, MERGE with club page before picking
-# - Picks a balanced 18 per club (2 GK, 6 DF, 6 MF, 4 FW, then best remaining)
+# - Robust name cleaning (no recursive regex)
+# - Position normalization + guessing from text (and keeps rows without a position)
+# - Balanced 18 per club (2 GK, 6 DF, 6 MF, 4 FW, then best remaining)
 
 from __future__ import annotations
 import json, re, time, random, pathlib
@@ -83,6 +83,9 @@ POS_WORDS = {
     "lw": "FW", "rw": "FW", "st": "FW", "cf": "FW",
 }
 
+# For guessing positions from free text / player cell
+POS_TOKEN_RX = re.compile(r"\b(GK|GKP|DF|DEF|CB|LB|RB|LWB|RWB|MF|MID|DM|CM|AM|LW|RW|ST|CF|FW|FWD)\b", re.I)
+
 # ---------- Helpers ----------
 def _polite():
     time.sleep(random.uniform(0.18, 0.4))
@@ -118,7 +121,7 @@ def iter_section_blocks(soup: BeautifulSoup, start_heading: BeautifulSoup):
         if el.name in ("table","ul","ol"):
             yield el
 
-# ---- Name cleaning (no (?R) recursion) ----
+# ---- Name cleaning (no recursive regex) ----
 def clean_name(raw: str) -> str | None:
     if not raw:
         return None
@@ -187,9 +190,24 @@ def normalize_pos(text: str | None) -> str | None:
             return POS_WORDS[key]
     return None
 
+def guess_pos_from_text(text: str | None) -> str | None:
+    if not text:
+        return None
+    m = POS_TOKEN_RX.search(text)
+    if not m:
+        return None
+    tok = m.group(1).upper()
+    table = {
+        "GKP":"GK","DEF":"DF","MID":"MF","FWD":"FW",
+        "CB":"DF","LB":"DF","RB":"DF","LWB":"DF","RWB":"DF",
+        "DM":"MF","CM":"MF","AM":"MF","LW":"FW","RW":"FW","ST":"FW","CF":"FW"
+    }
+    if tok in {"GK","DF","MF","FW"}:
+        return tok
+    return table.get(tok)
+
 def header_map(tbl) -> dict:
     """Map normalized headers -> column index (player/name, pos/position, no/number)."""
-    # Prefer the first <thead><tr> if present
     heads = []
     thead = tbl.find("thead")
     if thead:
@@ -204,6 +222,10 @@ def header_map(tbl) -> dict:
         h2 = h
         h2 = h2.replace("squad no.", "no").replace("no.", "no").replace("shirt number","no")
         h2 = h2.replace("player name", "player").replace("name", "player")
+        # broaden position aliases
+        h2 = (h2.replace("position(s)", "position")
+                 .replace("positions", "position")
+                 .replace("role", "position"))
         h2 = h2.replace("position", "pos")
         norm.append(h2)
 
@@ -244,23 +266,20 @@ def extract_rows_from_table(tbl) -> list[dict]:
         if ROW_LOAN_RX.search(row_txt):
             continue
 
-        # Name strictly from Player column
-        name = first_player_link(tds[hmap["player"]])
+        # name from Player column only
+        player_cell = tds[hmap["player"]]
+        name = first_player_link(player_cell)
         if not name:
             continue
 
-        # Position (from pos column, else anywhere)
+        # position from pos column OR guessed from player cell text; keep even if None
         pos = None
         if "pos" in hmap:
             pos = normalize_pos(tds[hmap["pos"]].get_text(" ", strip=True))
         if not pos:
-            for td in tds:
-                pos = normalize_pos(td.get_text(" ", strip=True))
-                if pos: break
-        if not pos:
-            continue
+            pos = guess_pos_from_text(player_cell.get_text(" ", strip=True))
 
-        # Number (optional)
+        # number (optional)
         number = None
         if "no" in hmap:
             raw_no = tds[hmap["no"]].get_text(" ", strip=True)
@@ -280,10 +299,10 @@ def extract_from_list(lst) -> list[dict]:
             continue
         a = li.find("a", href=True)
         nm = first_player_link(li) if a else None
-        pos = normalize_pos(text)
+        pos = normalize_pos(text) or guess_pos_from_text(text)  # keep if None
         m = re.match(r"^\s*(\d{1,2})\s*[–-]\s*", text)
         number = m.group(1) if m else None
-        if nm and pos:
+        if nm:
             players.append({"name": nm, "number": number, "pos": pos})
     return players
 
@@ -304,8 +323,9 @@ def parse_squad(soup: BeautifulSoup, heading_needles: list[str]) -> list[dict]:
     # de-dup by (name,pos)
     out, seen = [], set()
     for p in combined:
-        key = ((p.get("name") or "").strip().lower(), p.get("pos"))
-        if key not in seen and p.get("name"):
+        nm = (p.get("name") or "").strip().lower()
+        key = (nm, p.get("pos"))
+        if nm and key not in seen:
             seen.add(key)
             out.append(p)
     return out
