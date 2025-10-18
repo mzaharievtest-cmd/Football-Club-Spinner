@@ -1,13 +1,19 @@
-# scripts/generate_players_from_wikipedia.py
+# scripts/generate_players_json.py
 # Build data/players.json by scraping Wikipedia for each PL club (season page -> fallback to club page).
-# Robust table parsing: map headers -> use only Player/Name column; never guess from longest cell.
-# Filters junk (heights, fees, DOB lines). Balanced pick_top18.
+# Robust parsing:
+# - Uses Wikipedia REST HTML for stability
+# - Finds First-team/Current squad section; skips Academy/Loans/etc.
+# - Reads ONLY the Player/Name column from tables (via header map)
+# - Accepts full-word positions (maps to GK/DF/MF/FW)
+# - Cleans names (removes refs, captain tags, heights/fees/DOB lines)
+# - Picks a balanced 18 per club (2 GK, 6 DF, 6 MF, 4 FW, then best remaining)
 
 from __future__ import annotations
 import json, re, time, random, pathlib
 import requests
 from bs4 import BeautifulSoup
 
+# ---------- Config ----------
 REST_HTML = "https://en.wikipedia.org/w/rest.php/v1/page/{title}/html"
 UA = {"User-Agent": "footballspinner/1.0 (first-team fetcher)"}
 
@@ -75,13 +81,7 @@ POS_WORDS = {
     "lw": "FW", "rw": "FW", "st": "FW", "cf": "FW",
 }
 
-# Junk detectors for names
-RX_M_HEIGHT = re.compile(r"\b\d\.\d{2}\s*m\b", re.I)                 # 1.86 m
-RX_FT_IN    = re.compile(r"\b\d+\s*ft\s*\d*\s*in\b", re.I)           # 6 ft 1 in
-RX_MONEY    = re.compile(r"[£$€]\s*\d", re.I)                         # £34.3m
-RX_AGE      = re.compile(r"\bage\b|\baged\b|\(\d{4}-\d{2}-\d{2}\)", re.I)
-RX_BIG_BLOB = re.compile(r"No\.\s*Pos\.", re.I)
-
+# ---------- Helpers ----------
 def _polite():
     time.sleep(random.uniform(0.18, 0.4))
 
@@ -104,18 +104,74 @@ def find_heading(soup: BeautifulSoup, needles: list[str]) -> BeautifulSoup | Non
 
 def iter_section_blocks(soup: BeautifulSoup, start_heading: BeautifulSoup):
     if not start_heading: return
-    # iterate siblings until next h2/h3; skip excluded subsections (but do not kill whole section)
     for el in start_heading.find_all_next():
         if el.name in ("h2","h3") and el is not start_heading:
             break
         if el.name in ("h2","h3") and is_excluded_heading(el.get_text(" ", strip=True)):
-            # skip content of this excluded sub-section
+            # skip excluded subsection content
             for sib in el.find_all_next():
                 if sib.name in ("h2","h3") and sib is not el:
                     break
             continue
         if el.name in ("table","ul","ol"):
             yield el
+
+# ---- Name cleaning (no (?R) recursion) ----
+def clean_name(raw: str) -> str | None:
+    if not raw:
+        return None
+
+    s = str(raw)
+    # drop bracket refs like [137]
+    s = re.sub(r"\[\s*\d+\s*\]", "", s)
+    # collapse whitespace
+    s = re.sub(r"\s+", " ", s).strip()
+
+    # remove trailing (...) groups safely (balanced from the end)
+    def strip_trailing_parens(txt: str) -> str:
+        while txt.endswith(")"):
+            depth = 0
+            matched = False
+            for i in range(len(txt)-1, -1, -1):
+                c = txt[i]
+                if c == ")":
+                    depth += 1
+                elif c == "(":
+                    depth -= 1
+                    if depth == 0:
+                        txt = txt[:i].rstrip()
+                        matched = True
+                        break
+            if not matched:
+                break
+        return txt
+
+    s = strip_trailing_parens(s)
+
+    # reject junky lines (heights, fees, ages, header blobs)
+    RX_M_HEIGHT = re.compile(r"\b\d\.\d{2}\s*m\b", re.I)                 # 1.86 m
+    RX_FT_IN    = re.compile(r"\b\d+\s*ft\s*\d*\s*in\b", re.I)           # 6 ft 1 in
+    RX_MONEY    = re.compile(r"[£$€]\s*\d", re.I)                         # £34.3m
+    RX_AGE      = re.compile(r"\bage\b|\baged\b|\(\d{4}-\d{2}-\d{2}\)", re.I)
+    RX_BIG_BLOB = re.compile(r"No\.\s*Pos\.", re.I)                       # header row dump
+
+    if (RX_M_HEIGHT.search(s) or RX_FT_IN.search(s) or RX_MONEY.search(s)
+        or RX_AGE.search(s) or RX_BIG_BLOB.search(s)):
+        return None
+
+    if not re.search(r"[A-Za-zÀ-ž]", s):
+        return None
+
+    # strip common role tags left in-line
+    s = re.sub(r"\b(captain|vice-captain|3rd captain|4th captain|hg|ct)\b", "", s, flags=re.I)
+    s = s.strip(" -–—·,")
+    s = re.sub(r"\s{2,}", " ", s).strip()
+
+    # drop obvious column labels
+    if s.lower() in {"player","name","position","pos","no.","no","nation","date of birth (age)"}:
+        return None
+
+    return s or None
 
 def normalize_pos(text: str | None) -> str | None:
     if not text: return None
@@ -129,47 +185,30 @@ def normalize_pos(text: str | None) -> str | None:
             return POS_WORDS[key]
     return None
 
-def clean_name(raw: str) -> str | None:
-    if not raw: return None
-    name = raw
-    # drop bracket refs like [137]
-    name = re.sub(r"\[\s*\d+\s*\]", "", name)
-    # drop multiple spaces
-    name = re.sub(r"\s{2,}", " ", name).strip()
-    # drop trailing role/captain tags in parentheses
-    name = re.sub(r"\s*\((?:[^()]|(?R))*\)\s*$", "", name).strip()
-    # reject junky lines
-    bad = (RX_M_HEIGHT.search(name) or RX_FT_IN.search(name) or
-           RX_MONEY.search(name) or RX_AGE.search(name) or RX_BIG_BLOB.search(name))
-    if bad: return None
-    # reject if line has almost no letters
-    if not re.search(r"[A-Za-zÀ-ž]", name): return None
-    # common column labels
-    if name.lower() in {"player","name","position","pos","no.","no", "nation", "date of birth (age)"}:
-        return None
-    return name
-
 def header_map(tbl) -> dict:
-    """Return mapping of normalized header -> index. Normalize like 'player','name','pos','position','no','number'."""
+    """Map normalized headers -> column index (player/name, pos/position, no/number)."""
+    # Prefer the first <thead><tr> if present
     heads = []
-    for th in tbl.find_all("th"):
-        heads.append(th.get_text(" ", strip=True).lower())
-    # build by first header row only (better than all th in table)
     thead = tbl.find("thead")
     if thead:
         row = thead.find("tr")
         if row:
             heads = [th.get_text(" ", strip=True).lower() for th in row.find_all("th")]
+    if not heads:
+        # fallback: collect top-row THs
+        heads = [th.get_text(" ", strip=True).lower() for th in tbl.find_all("th")]
+
     norm = []
     for h in heads:
         h2 = h
         h2 = h2.replace("squad no.", "no").replace("no.", "no").replace("shirt number","no")
-        h2 = h2.replace("player name", "player")
+        h2 = h2.replace("player name", "player").replace("name", "player")
         h2 = h2.replace("position", "pos")
         norm.append(h2)
+
     idx = {}
     for i, h in enumerate(norm):
-        if "player" in h or h == "name":
+        if "player" in h:
             idx["player"] = i
         if h in {"pos"} or "position" in h:
             idx["pos"] = i
@@ -178,48 +217,47 @@ def header_map(tbl) -> dict:
     return idx
 
 def first_player_link(cell) -> str | None:
-    # choose first /wiki/ link that is not a meta namespace (no colon like 'File:')
-    for a in cell.find_all("a", href=True):
-        href = a["href"]
-        if href.startswith("/wiki/") and ":" not in href.split("/wiki/")[1]:
-            nm = clean_name(a.get_text(" ", strip=True))
-            if nm:
-                return nm
-    # if no link, try plain text of the cell (last resort)
-    text = clean_name(cell.get_text(" ", strip=True))
-    return text
+    # Prefer first /wiki/ link; skip File:/Category: etc.
+    if hasattr(cell, "find_all"):
+        for a in cell.find_all("a", href=True):
+            href = a["href"]
+            if href.startswith("/wiki/") and ":" not in href.split("/wiki/")[1]:
+                nm = clean_name(a.get_text(" ", strip=True))
+                if nm:
+                    return nm
+        return clean_name(cell.get_text(" ", strip=True))
+    return clean_name(str(cell))
 
 def extract_rows_from_table(tbl) -> list[dict]:
-    # Only parse if there's a recognizable header with a Player/Name column
     hmap = header_map(tbl)
     if "player" not in hmap:
         return []
     players = []
-    body_rows = tbl.find("tbody").find_all("tr") if tbl.find("tbody") else tbl.find_all("tr")
-    for tr in body_rows:
+    tbody = tbl.find("tbody")
+    rows = tbody.find_all("tr") if tbody else tbl.find_all("tr")
+    for tr in rows:
         tds = tr.find_all(["td","th"])
-        if len(tds) < max(hmap.values(), default=0)+1:
+        if len(tds) <= max(hmap.values(), default=-1):
             continue
         row_txt = " ".join(td.get_text(" ", strip=True) for td in tds)
         if ROW_LOAN_RX.search(row_txt):
             continue
 
-        # Player name from the Player column ONLY
+        # Name strictly from Player column
         name = first_player_link(tds[hmap["player"]])
         if not name:
             continue
 
-        # Position (optional but preferred)
+        # Position (from pos column, else anywhere)
         pos = None
         if "pos" in hmap:
             pos = normalize_pos(tds[hmap["pos"]].get_text(" ", strip=True))
         if not pos:
-            # scan the row for any pos token
             for td in tds:
                 pos = normalize_pos(td.get_text(" ", strip=True))
                 if pos: break
         if not pos:
-            continue  # require a position to keep it first-team-ish
+            continue
 
         # Number (optional)
         number = None
@@ -227,7 +265,6 @@ def extract_rows_from_table(tbl) -> list[dict]:
             raw_no = tds[hmap["no"]].get_text(" ", strip=True)
             number = raw_no if re.fullmatch(r"\d{1,2}", raw_no) else None
         else:
-            # soft guess: first 1-2 digit token
             m = re.search(r"\b(\d{1,2})\b", row_txt)
             number = m.group(1) if m else None
 
@@ -243,7 +280,6 @@ def extract_from_list(lst) -> list[dict]:
         a = li.find("a", href=True)
         nm = first_player_link(li) if a else None
         pos = normalize_pos(text)
-        # Optional number at start like "7 – Bukayo Saka (RW)"
         m = re.match(r"^\s*(\d{1,2})\s*[–-]\s*", text)
         number = m.group(1) if m else None
         if nm and pos:
@@ -265,8 +301,9 @@ def parse_squad(soup: BeautifulSoup, heading_needles: list[str]) -> list[dict]:
                 return got
     return []
 
+# ---------- Balanced 18 picker ----------
 def pick_top18(players: list[dict]) -> list[dict]:
-    """Balanced 18: 2 GK, 6 DF, 6 MF, 4 FW, then best remaining (prefer numbered, lower number)."""
+    """2 GK, 6 DF, 6 MF, 4 FW, then best remaining (prefer numbered, lowest number)."""
     def bucket(p):
         v = (p.get("pos") or "").upper()
         if v.startswith("GK"): return "GK"
@@ -283,8 +320,8 @@ def pick_top18(players: list[dict]) -> list[dict]:
 
     def sort_key(p):
         num = p.get("number")
-        has = 0 if (num and num.isdigit()) else 1
-        numv = int(num) if (num and num.isdigit()) else 999
+        has = 0 if (num and str(num).isdigit()) else 1
+        numv = int(num) if (num and str(num).isdigit()) else 999
         return (has, numv, p.get("name",""))
 
     for k in buckets:
@@ -312,6 +349,7 @@ def pick_top18(players: list[dict]) -> list[dict]:
             break
     return out
 
+# ---------- Main ----------
 def main():
     out_path = pathlib.Path("data/players.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
