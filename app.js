@@ -1,5 +1,8 @@
 // Football Club Spinner — app.js
-// Updated: fix ensureRevealStyles (broken CSS string), ensure history images are sized & classed.
+// Extra leagues are hidden until "Show more" is clicked.
+// "All" selects only visible leagues. EPL is selected on first load.
+// UI is locked while spinning. Name > Stadium styling, aligned block.
+// Dynamic thresholds: when both Name+Stadium are on, text/logos hide earlier for legibility.
 
 let TEAMS = [];
 let currentAngle = 0; // radians
@@ -24,7 +27,7 @@ const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 const optName = document.getElementById('optName');
 const optLogo = document.getElementById('optLogo');
 const optStadium = document.getElementById('optStadium');
-const optLeague = document.getElementById('optLeague');
+const optLeague = document.getElementById('optLeague'); // NEW
 
 const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
@@ -108,7 +111,6 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// text color utils omitted for brevity (keeps original implementations)...
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
   hex = hex.replace('#','');
@@ -216,6 +218,7 @@ function renderChips() {
   toggleMore.classList.remove('disabled');
 }
 
+// Only select visible league codes (Top 5 by default; plus extras when shown)
 function visibleCodes() {
   const codes = Array.from(chipsTop.querySelectorAll('input[type="checkbox"]')).map(i => i.value);
   if (!chipsMore.hidden) {
@@ -250,18 +253,13 @@ function renderHistory() {
   if (history.length === 0) {
     historyEl.setAttribute('aria-live', 'polite');
     historyEl.innerHTML = '<div class="item">Spin the wheel to start your club journey</div>';
-    return;
   }
   history.forEach(item => {
     const div = document.createElement('div');
     div.className = 'item';
     const i = document.createElement('img');
-    i.src = item.logo_url || '';
+    i.src = item.logo_url;
     i.alt = `${item.team_name} logo`;
-    // Assign class & size to avoid giant natural images breaking layout
-    i.className = 'history-logo';
-    i.width = 38;
-    i.height = 38;
     i.onerror = () => { i.src = ''; i.alt = 'No image'; };
     const s = document.createElement('span');
     const full = LEAGUE_LABELS[item.league_code] || item.league_code;
@@ -271,30 +269,16 @@ function renderHistory() {
   });
 }
 
-// -------------------- Modal reveal helpers --------------------
+// -------------------- Modal reveal helpers (no logo masking) --------------------
 function ensureRevealStyles() {
   if (document.getElementById('reveal-style')) return;
   const s = document.createElement('style');
   s.id = 'reveal-style';
   s.textContent = `
-    .reveal-btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      margin-top:8px;
-      margin-left:10px;
-      padding:8px 12px;
-      border-radius:10px;
-      border:1px solid rgba(90,161,255,.6);
-      background:#152036;
-      color:#fff;
-      font-weight:800;
-      cursor:pointer;
-    }
-    .reveal-btn:hover{ transform: translateY(-1px); }
-    #mHead + .reveal-btn{ display:inline-block; margin-left:0; }
-    .reveal-wrap{ position:relative; display:inline-block; z-index:0; }
-    .reveal-overlay{ position:absolute; inset:0; border-radius:inherit; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); background:transparent; pointer-events:none; z-index:2; }
+    .reveal-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;margin-left:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;user-select:none;z-index:3;position:relative;white-space:nowrap}
+    #mHead + .reveal-btn{display:inline-block;margin-left:0}
+    .reveal-wrap{position:relative;display:inline-block;z-index:0}
+    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none;z-index:2}
   `;
   document.head.appendChild(s);
 }
@@ -308,42 +292,11 @@ function ensureWrapped(el){
   wrap.appendChild(el);
   return wrap;
 }
-function addOverlay(el){
-  const wrap = ensureWrapped(el);
-  if(!wrap) return;
-  if(!wrap.querySelector('.reveal-overlay')) {
-    const ov = document.createElement('span');
-    ov.className = 'reveal-overlay';
-    wrap.appendChild(ov);
-  }
-}
-function removeOverlay(el){
-  if(!el || !el.parentElement) return;
-  const wrap = el.parentElement;
-  if(wrap.classList.contains('reveal-wrap')){
-    const ov = wrap.querySelector('.reveal-overlay');
-    if(ov) ov.remove();
-  }
-}
-function blurElement(el){
-  if(!el) return;
-  el.style.setProperty('filter','blur(14px) saturate(0.9)','important');
-  el.style.setProperty('-webkit-filter','blur(14px) saturate(0.9)','important');
-  addOverlay(el);
-  el.setAttribute('aria-hidden', 'true');
-}
-function unblurElement(el){
-  if(!el) return;
-  el.style.removeProperty('filter');
-  el.style.removeProperty('-webkit-filter');
-  el.style.pointerEvents = '';
-  removeOverlay(el);
-  el.removeAttribute('aria-hidden');
-}
-function placeButtonAfter(el,btn){
-  const host = el?.parentElement?.classList?.contains('reveal-wrap') ? el.parentElement : el;
-  if(host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn);
-}
+function addOverlay(el){ const wrap=ensureWrapped(el); if(!wrap) return; if(!wrap.querySelector('.reveal-overlay')){ const ov=document.createElement('span'); ov.className='reveal-overlay'; wrap.appendChild(ov); } }
+function removeOverlay(el){ if(!el||!el.parentElement) return; const wrap=el.parentElement; if(wrap.classList.contains('reveal-wrap')){ const ov=wrap.querySelector('.reveal-overlay'); if(ov) ov.remove(); } }
+function blurElement(el){ if(!el) return; el.style.setProperty('filter','blur(14px) saturate(0.9)','important'); el.style.setProperty('-webkit-filter','blur(14px) saturate(0.9)','important'); el.style.pointerEvents='none'; addOverlay(el); }
+function unblurElement(el){ if(!el) return; el.style.removeProperty('filter'); el.style.removeProperty('-webkit-filter'); el.style.pointerEvents=''; removeOverlay(el); el.setAttribute('aria-hidden','false'); }
+function placeButtonAfter(el,btn){ const host=el?.parentElement?.classList.contains('reveal-wrap') ? el.parentElement : el; if (host?.insertAdjacentElement) host.insertAdjacentElement('afterend', btn); }
 
 function applyRevealByKey(key, el, enabled, btnId, labelText) {
   if (!el) return;
@@ -367,7 +320,7 @@ function updateModalRevealFromToggles() {
   applyRevealByKey('logo',    mLogo,    !!optLogo?.checked,    'revealLogoBtn',    'logo');
   applyRevealByKey('name',    mHead,    !!optName?.checked,    'revealNameBtn',    'name');
   applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
-  applyRevealByKey('league',  mSub,     !!optLeague?.checked,  'revealLeagueBtn',  'league');
+  applyRevealByKey('league',  mSub,     !!optLeague?.checked,  'revealLeagueBtn',  'league'); // NEW
 }
 
 // -------------------- Preload selected team logo for instant modal display --------------------
@@ -466,13 +419,15 @@ function drawWheel(){
     return;
   }
 
+  // DYNAMIC THRESHOLDS for better legibility when both text lines are enabled
   const bothTextOn = !!optName?.checked && !!optStadium?.checked;
-  const hideTextThresholdDyn  = bothTextOn ? 55 : PERF.hideTextThreshold;
+  const hideTextThresholdDyn  = bothTextOn ? 55 : PERF.hideTextThreshold; // earlier cutoff when both lines visible
   const hideLogosThresholdDyn = bothTextOn ? Math.min(55, PERF.hideLogosThreshold) : PERF.hideLogosThreshold;
 
   const hideLogos = N >= hideLogosThresholdDyn;
   const hideText  = N >= hideTextThresholdDyn;
 
+  // Do NOT auto-uncheck toggles; keep UI available regardless of density.
   updateSelectionBanner();
 
   ctx.imageSmoothingEnabled = !hideText;
@@ -689,16 +644,14 @@ function setResult(idx){
   const leagueLabel = LEAGUE_LABELS[t.league_code] || t.league_code;
 
   if (currentText) currentText.textContent = `${t.team_name} · ${leagueLabel}`;
-  if (currentLogo) {
-    currentLogo.src = t.logo_url || "";
-    currentLogo.alt = (t.team_name || 'Club') + ' logo';
-  }
+  if (currentLogo) currentLogo.src = t.logo_url || "";
 
   history.unshift(t);
   if (history.length > 50) history = history.slice(0,50);
   saveHistory();
   renderHistory();
 
+  // Preload and decode the modal logo first so it shows instantly
   if (t.logo_url) preloadModalLogo(t.logo_url, () => openModal(t));
   else openModal(t);
 }
@@ -740,6 +693,7 @@ function spin(){
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
 
+      // Snap the chosen slice center under the pointer
       const centerAngle = idx * slice + slice/2;
       const snapDelta = mod(centerAngle - offset, TAU);
       currentAngle = mod(currentAngle + snapDelta, TAU);
@@ -827,7 +781,7 @@ function setupEventListeners() {
   optName?.addEventListener('change', onWheelToggleChange);
   optLogo?.addEventListener('change', onWheelToggleChange);
   optStadium?.addEventListener('change', onWheelToggleChange);
-  optLeague?.addEventListener('change', onWheelToggleChange);
+  optLeague?.addEventListener('change', onWheelToggleChange); // NEW
 
   // Spin actions
   spinBtn.onclick = spin;
