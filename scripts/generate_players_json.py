@@ -1,5 +1,5 @@
-python3 - <<'PY'
-import requests, json, pathlib, time, random
+# scripts/generate_players_json.py
+import requests, json, pathlib
 
 SPARQL = """
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -32,34 +32,36 @@ SELECT ?player ?playerLabel ?team ?teamLabel ?start ?end WHERE {
 """
 
 ENDPOINT = "https://query.wikidata.org/sparql"
-UA = {"User-Agent":"footballspinner-fetch/1.0 (players.json generator)"}
+UA = {"User-Agent": "footballspinner-fetch/1.0 (players.json generator)"}
 
-r = requests.get(ENDPOINT, params={"query": SPARQL, "format":"json"}, headers=UA, timeout=90)
-r.raise_for_status()
-rows = r.json()["results"]["bindings"]
+def main():
+    r = requests.get(ENDPOINT, params={"query": SPARQL, "format": "json"}, headers=UA, timeout=90)
+    r.raise_for_status()
+    rows = r.json()["results"]["bindings"]
 
-def val(b, k):
-    return b.get(k,{}).get("value")
+    def val(b, k): return b.get(k, {}).get("value")
 
-players = []
-seen = set()
-for b in rows:
-    qid  = val(b,"player").rsplit("/",1)[-1]
-    name = val(b,"playerLabel")
-    team = val(b,"teamLabel")
-    key = (qid, team)
-    if key in seen: 
-        continue
-    seen.add(key)
-    players.append({
-        "qid": qid,
-        "name": name,
-        "club": team,
-        "season": "2025–26 Premier League"
-    })
+    players = []
+    seen = set()
+    for b in rows:
+        qid  = val(b, "player").rsplit("/", 1)[-1]
+        name = val(b, "playerLabel")
+        team = val(b, "teamLabel")
+        key = (qid, team)
+        if key in seen:
+            continue
+        seen.add(key)
+        players.append({
+            "qid": qid,
+            "name": name,
+            "club": team,
+            "season": "2025–26 Premier League"
+        })
 
-out = pathlib.Path("/Users/mzahariev/footballspinner/data/players.json")
-out.parent.mkdir(parents=True, exist_ok=True)
-out.write_text(json.dumps(players, ensure_ascii=False, indent=2), encoding="utf-8")
-print(f"Wrote {len(players)} players to {out}")
-PY
+    out = pathlib.Path("data/players.json").resolve()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(players, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Wrote {len(players)} players to {out}")
+
+if __name__ == "__main__":
+    main()
