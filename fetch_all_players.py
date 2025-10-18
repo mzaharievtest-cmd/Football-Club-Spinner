@@ -117,7 +117,6 @@ def enrich_players_from_file(input_json, out_dir, width, csv_path=None, out_play
             if qid:
                 record = player_image_by_qid(qid, width=width)
             else:
-                # try to find qid by name first
                 qid_search = wikidata_id_for(name) if name else None
                 if qid_search:
                     record = player_image_by_qid(qid_search, width=width)
@@ -201,12 +200,6 @@ def fetch_via_teams_and_sparql(teams_json, out_dir, width, csv_path=None, max_to
     print("Done. total saved:", total)
     return all_rows
 
-# helper to write JSON (exists above)
-def write_json(obj, path):
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
-
 def main():
     parser = argparse.ArgumentParser(description="Fetch player images (file mode or clubs mode)")
     parser.add_argument("--input-json", help="Path to players.json to enrich (file mode)")
@@ -223,9 +216,7 @@ def main():
 
     if args.input_json:
         print("Running in file mode (enrich players.json)...")
-        enrich_players_from_file = enrich_players_from_file  # placeholder to reference function name
-        # call the actual function
-        records = enrich_players_from_file(args.input_json, args.out, args.width, args.csv, args.out_json, max_total=args.max_total)  # type: ignore
+        records = enrich_players_from_file(args.input_json, args.out, args.width, args.csv, args.out_json, max_total=args.max_total)  # call function directly
     else:
         print("Running in clubs/SPARQL mode (Premier League clubs from teams.json)...")
         records = fetch_via_teams_and_sparql(args.teams_json, args.out, args.width, args.csv, max_total=args.max_total, per_club=per_club)
