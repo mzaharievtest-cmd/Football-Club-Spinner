@@ -1,1 +1,2494 @@
-
+[
+  {
+    "name": "1.86 m [ 137 ] (6 ft 1 in)",
+    "club": "Arsenal",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Gabriel Magalhães ( 3rd captain )",
+    "club": "Arsenal",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "£34.3m [ 150 ] (initial fee)",
+    "club": "Arsenal",
+    "number": "12",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "1.89 m [ 224 ] (6 ft 2 in)",
+    "club": "Arsenal",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "£30.0m [ 229 ] (initial fee)",
+    "club": "Arsenal",
+    "number": "17",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "£33.6m [ 154 ] (initial fee)",
+    "club": "Arsenal",
+    "number": "33",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "1.92 m [ 127 ] (6 ft 4 in)",
+    "club": "Arsenal",
+    "number": "2",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "1.78 m [ 198 ] (5 ft 10 in)",
+    "club": "Arsenal",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "£21.0m [ 210 ] (initial fee)",
+    "club": "Arsenal",
+    "number": "19",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "£29.9m [ 234 ] (initial fee)",
+    "club": "Arsenal",
+    "number": "21",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "1.76 m [ 172 ] (5 ft 9 in)",
+    "club": "Arsenal",
+    "number": "22",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "£27.4m [ 177 ] (initial fee)",
+    "club": "Arsenal",
+    "number": "23",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "£13.0m [ 50 ] (initial fee)",
+    "club": "Arsenal",
+    "number": "3",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bukayo Saka ( vice-captain ) (HG, CT)",
+    "club": "Arsenal",
+    "number": "7",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "1.75 m [ 193 ] (5 ft 9 in)",
+    "club": "Arsenal",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Gabriel Martinelli (HG, CT)",
+    "club": "Arsenal",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "£55.0m [ 53 ] (initial fee)",
+    "club": "Arsenal",
+    "number": "14",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "£10.0m [ 44 ] (initial fee)",
+    "club": "Arsenal",
+    "number": "16",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-07-04 ) 4 July 2000 (age 25)",
+    "club": "Aston Villa",
+    "number": "18",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1992-09-02 ) 2 September 1992 (age 33)",
+    "club": "Aston Villa",
+    "number": "23",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2005-01-19 ) 19 January 2005 (age 20)",
+    "club": "Aston Villa",
+    "number": "0",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-08-07 ) 7 August 1997 (age 28)",
+    "club": "Aston Villa",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1994-07-17 ) 17 July 1994 (age 31)",
+    "club": "Aston Villa",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-10-23 ) 23 October 1997 (age 27)",
+    "club": "Aston Villa",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1993-03-13 ) 13 March 1993 (age 32)",
+    "club": "Aston Villa",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1993-07-20 ) 20 July 1993 (age 32)",
+    "club": "Aston Villa",
+    "number": "12",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1993-12-05 ) 5 December 1993 (age 31)",
+    "club": "Aston Villa",
+    "number": "6",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1994-10-18 ) 18 October 1994 (age 31)",
+    "club": "Aston Villa",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-05-07 ) 7 May 1997 (age 28)",
+    "club": "Aston Villa",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-12-25 ) 25 December 1996 (age 28)",
+    "club": "Aston Villa",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2003-04-10 ) 10 April 2003 (age 22)",
+    "club": "Aston Villa",
+    "number": "19",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2006-10-02 ) 2 October 2006 (age 19)",
+    "club": "Aston Villa",
+    "number": "20",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1995-12-30 ) 30 December 1995 (age 29)",
+    "club": "Aston Villa",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-01-19 ) 19 January 1999 (age 26)",
+    "club": "Aston Villa",
+    "number": "17",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2005-12-16 ) 16 December 2005 (age 19)",
+    "club": "Aston Villa",
+    "number": "20",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-07-26 ) 26 July 2002 (age 23)",
+    "club": "Aston Villa",
+    "number": "27",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Đorđe Petrović",
+    "club": "AFC Bournemouth",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Will Dennis",
+    "club": "AFC Bournemouth",
+    "number": "40",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Julián Araujo",
+    "club": "AFC Bournemouth",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adrien Truffert",
+    "club": "AFC Bournemouth",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marcos Senesi",
+    "club": "AFC Bournemouth",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Julio Soler",
+    "club": "AFC Bournemouth",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adam Smith ( captain )",
+    "club": "AFC Bournemouth",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bafodé Diakité",
+    "club": "AFC Bournemouth",
+    "number": "18",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lewis Cook ( vice-captain )",
+    "club": "AFC Bournemouth",
+    "number": "4",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "David Brooks",
+    "club": "AFC Bournemouth",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alex Scott",
+    "club": "AFC Bournemouth",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ryan Christie",
+    "club": "AFC Bournemouth",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tyler Adams",
+    "club": "AFC Bournemouth",
+    "number": "12",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marcus Tavernier",
+    "club": "AFC Bournemouth",
+    "number": "16",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Evanilson",
+    "club": "AFC Bournemouth",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ben Gannon-Doak",
+    "club": "AFC Bournemouth",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Justin Kluivert",
+    "club": "AFC Bournemouth",
+    "number": "19",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Eli Junior Kroupi",
+    "club": "AFC Bournemouth",
+    "number": "22",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-11-23 ) 23 November 1998 (aged 26)",
+    "club": "Brentford",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-10-13 ) 13 October 2001 (aged 23)",
+    "club": "Brentford",
+    "number": "12",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-06-10 ) 10 June 2002 (aged 23)",
+    "club": "Brentford",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-07-08 ) 8 July 1997 (aged 28)",
+    "club": "Brentford",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-12-20 ) 20 December 2001 (aged 23)",
+    "club": "Brentford",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1993-05-29 ) 29 May 1993 (aged 32)",
+    "club": "Brentford",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-04-30 ) 30 April 2001 (aged 24)",
+    "club": "Brentford",
+    "number": "22",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-02-22 ) 22 February 2001 (aged 24)",
+    "club": "Brentford",
+    "number": "23",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1990-06-17 ) 17 June 1990 (aged 35)",
+    "club": "Brentford",
+    "number": "6",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-01-01 ) 1 January 1996 (aged 29)",
+    "club": "Brentford",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-08-30 ) 30 August 2002 (aged 22)",
+    "club": "Brentford",
+    "number": "14",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-01-01 ) 1 January 1998 (aged 27)",
+    "club": "Brentford",
+    "number": "15",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2005-03-03 ) 3 March 2005 (aged 20)",
+    "club": "Brentford",
+    "number": "17",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2004-03-01 ) 1 March 2004 (aged 21)",
+    "club": "Brentford",
+    "number": "18",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-11-27 ) 27 November 2001 (aged 23)",
+    "club": "Brentford",
+    "number": "7",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-06-26 ) 26 June 2001 (aged 24)",
+    "club": "Brentford",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-09-03 ) 3 September 1996 (aged 28)",
+    "club": "Brentford",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-04-17 ) 17 April 1998 (aged 27)",
+    "club": "Brentford",
+    "number": "20",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bart Verbruggen",
+    "club": "Brighton & Hove Albion",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jason Steele",
+    "club": "Brighton & Hove Albion",
+    "number": "23",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "No. Pos. Nation Player 1 GK NED Bart Verbruggen 4 DF ENG Adam Webster 5 DF ENG Lewis Dunk ( captain ) 6 DF NED Jan Paul van Hecke 7 MF ENG Solly March 8 MF GER Brajan Gruda 9 FW GRE Stefanos Tzimas 10 FW FRA Georginio Rutter 11 MF GAM Yankuba Minteh 13 MF ENG Jack Hinshelwood 14 MF ENG Tom Watson 17 MF CMR Carlos Baleba 18 FW ENG Danny Welbeck",
+    "club": "Brighton & Hove Albion",
+    "number": "1",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adam Webster",
+    "club": "Brighton & Hove Albion",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lewis Dunk ( captain )",
+    "club": "Brighton & Hove Albion",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jan Paul van Hecke",
+    "club": "Brighton & Hove Albion",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Olivier Boscagli",
+    "club": "Brighton & Hove Albion",
+    "number": "21",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ferdi Kadıoğlu",
+    "club": "Brighton & Hove Albion",
+    "number": "24",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Solly March",
+    "club": "Brighton & Hove Albion",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Brajan Gruda",
+    "club": "Brighton & Hove Albion",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yankuba Minteh",
+    "club": "Brighton & Hove Albion",
+    "number": "11",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jack Hinshelwood",
+    "club": "Brighton & Hove Albion",
+    "number": "13",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tom Watson",
+    "club": "Brighton & Hove Albion",
+    "number": "14",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Carlos Baleba",
+    "club": "Brighton & Hove Albion",
+    "number": "17",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Stefanos Tzimas",
+    "club": "Brighton & Hove Albion",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Georginio Rutter",
+    "club": "Brighton & Hove Albion",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Danny Welbeck",
+    "club": "Brighton & Hove Albion",
+    "number": "18",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Charalampos Kostoulas",
+    "club": "Brighton & Hove Albion",
+    "number": "19",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Robert Sánchez",
+    "club": "Chelsea",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Filip Jörgensen",
+    "club": "Chelsea",
+    "number": "12",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marc Cucurella",
+    "club": "Chelsea",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tosin Adarabioyo",
+    "club": "Chelsea",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Benoît Badiashile",
+    "club": "Chelsea",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Levi Colwill",
+    "club": "Chelsea",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jorrel Hato",
+    "club": "Chelsea",
+    "number": "21",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Trevoh Chalobah",
+    "club": "Chelsea",
+    "number": "23",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Enzo Fernández ( vice-captain )",
+    "club": "Chelsea",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cole Palmer",
+    "club": "Chelsea",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dário Essugo",
+    "club": "Chelsea",
+    "number": "14",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Andrey Santos",
+    "club": "Chelsea",
+    "number": "17",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Moisés Caicedo ( 3rd captain )",
+    "club": "Chelsea",
+    "number": "25",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Roméo Lavia",
+    "club": "Chelsea",
+    "number": "45",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Pedro Neto",
+    "club": "Chelsea",
+    "number": "7",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Liam Delap",
+    "club": "Chelsea",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jamie Gittens",
+    "club": "Chelsea",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "João Pedro",
+    "club": "Chelsea",
+    "number": "20",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dean Henderson",
+    "club": "Crystal Palace",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Remi Matthews",
+    "club": "Crystal Palace",
+    "number": "31",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Daniel Muñoz",
+    "club": "Crystal Palace",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tyrick Mitchell",
+    "club": "Crystal Palace",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Maxence Lacroix",
+    "club": "Crystal Palace",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marc Guéhi ( captain )",
+    "club": "Crystal Palace",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nathaniel Clyne",
+    "club": "Crystal Palace",
+    "number": "17",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jaydee Canvot",
+    "club": "Crystal Palace",
+    "number": "23",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jefferson Lerma",
+    "club": "Crystal Palace",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yéremy Pino",
+    "club": "Crystal Palace",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Daichi Kamada",
+    "club": "Crystal Palace",
+    "number": "18",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Will Hughes",
+    "club": "Crystal Palace",
+    "number": "19",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adam Wharton",
+    "club": "Crystal Palace",
+    "number": "20",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cheick Doucouré",
+    "club": "Crystal Palace",
+    "number": "28",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ismaïla Sarr",
+    "club": "Crystal Palace",
+    "number": "7",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Eddie Nketiah",
+    "club": "Crystal Palace",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jean-Philippe Mateta",
+    "club": "Crystal Palace",
+    "number": "14",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Romain Esse",
+    "club": "Crystal Palace",
+    "number": "21",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jordan Pickford ( 3rd captain )",
+    "club": "Everton",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mark Travers",
+    "club": "Everton",
+    "number": "12",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nathan Patterson",
+    "club": "Everton",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Michael Keane",
+    "club": "Everton",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "James Tarkowski ( vice-captain )",
+    "club": "Everton",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jake O'Brien",
+    "club": "Everton",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Vitaliy Mykolenko",
+    "club": "Everton",
+    "number": "16",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Séamus Coleman ( captain )",
+    "club": "Everton",
+    "number": "23",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kiernan Dewsbury-Hall",
+    "club": "Everton",
+    "number": "22",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Carlos Alcaraz",
+    "club": "Everton",
+    "number": "24",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Idrissa Gueye",
+    "club": "Everton",
+    "number": "27",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "James Garner",
+    "club": "Everton",
+    "number": "37",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tim Iroegbunam",
+    "club": "Everton",
+    "number": "42",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dwight McNeil",
+    "club": "Everton",
+    "number": "7",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Beto",
+    "club": "Everton",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Iliman Ndiaye",
+    "club": "Everton",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Thierno Barry",
+    "club": "Everton",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tyler Dibling",
+    "club": "Everton",
+    "number": "20",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bernd Leno ( vice-captain )",
+    "club": "Fulham",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Benjamin Lecomte",
+    "club": "Fulham",
+    "number": "23",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kenny Tete",
+    "club": "Fulham",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Calvin Bassey",
+    "club": "Fulham",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joachim Andersen",
+    "club": "Fulham",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jorge Cuenca",
+    "club": "Fulham",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Timothy Castagne",
+    "club": "Fulham",
+    "number": "21",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Issa Diop",
+    "club": "Fulham",
+    "number": "31",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harrison Reed",
+    "club": "Fulham",
+    "number": "6",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harry Wilson",
+    "club": "Fulham",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tom Cairney ( captain ) [ 105 ]",
+    "club": "Fulham",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Sander Berge",
+    "club": "Fulham",
+    "number": "16",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alex Iwobi",
+    "club": "Fulham",
+    "number": "17",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Saša Lukić",
+    "club": "Fulham",
+    "number": "20",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Raúl Jiménez",
+    "club": "Fulham",
+    "number": "7",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Rodrigo Muniz",
+    "club": "Fulham",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adama Traoré",
+    "club": "Fulham",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kevin",
+    "club": "Fulham",
+    "number": "22",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-08-10 ) 10 August 1996 (age 29)",
+    "club": "Ipswich Town",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-09-15 ) 15 September 2002 (age 23)",
+    "club": "Ipswich Town",
+    "number": "13",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-03-02 ) 2 March 2001 (age 24)",
+    "club": "Ipswich Town",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-12-31 ) 31 December 1999 (age 25)",
+    "club": "Ipswich Town",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1985-07-09 ) 9 July 1985 (age 40)",
+    "club": "Ipswich Town",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-01-24 ) 24 January 2000 (age 25)",
+    "club": "Ipswich Town",
+    "number": "18",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1995-10-31 ) 31 October 1995 (age 29)",
+    "club": "Ipswich Town",
+    "number": "19",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1993-03-04 ) 4 March 1993 (age 32)",
+    "club": "Ipswich Town",
+    "number": "22",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-04-28 ) 28 April 1998 (age 27)",
+    "club": "Ipswich Town",
+    "number": "5",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-06-23 ) 23 June 1998 (age 27)",
+    "club": "Ipswich Town",
+    "number": "14",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-03-01 ) 1 March 2002 (age 23)",
+    "club": "Ipswich Town",
+    "number": "16",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1995-09-24 ) 24 September 1995 (age 30)",
+    "club": "Ipswich Town",
+    "number": "23",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2003-10-30 ) 30 October 2003 (age 21)",
+    "club": "Ipswich Town",
+    "number": "30",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-03-01 ) 1 March 2000 (age 25)",
+    "club": "Ipswich Town",
+    "number": "32",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1994-11-23 ) 23 November 1994 (age 30)",
+    "club": "Ipswich Town",
+    "number": "7",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2006-06-21 ) 21 June 2006 (age 19)",
+    "club": "Ipswich Town",
+    "number": "8",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-02-15 ) 15 February 1999 (age 26)",
+    "club": "Ipswich Town",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-02-16 ) 16 February 1997 (age 28)",
+    "club": "Ipswich Town",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lucas Perri",
+    "club": "Leeds United",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Illan Meslier",
+    "club": "Leeds United",
+    "number": "16",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jayden Bogle",
+    "club": "Leeds United",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Gabriel Gudmundsson",
+    "club": "Leeds United",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Pascal Struijk",
+    "club": "Leeds United",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joe Rodon",
+    "club": "Leeds United",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jaka Bijol",
+    "club": "Leeds United",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Sebastiaan Bornauw",
+    "club": "Leeds United",
+    "number": "23",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "No. Pos. Nation Player 1 GK BRA Lucas Perri 2 DF ENG Jayden Bogle 3 DF SWE Gabriel Gudmundsson 4 MF WAL Ethan Ampadu ( captain ) 5 DF NED Pascal Struijk 6 DF WAL Joe Rodon 7 MF WAL Daniel James 8 MF ENG Sean Longstaff 9 FW ENG Dominic Calvert-Lewin 10 FW NED Joël Piroe 11 MF USA Brenden Aaronson 14 FW GER Lukas Nmecha 15 DF SVN Jaka Bijol",
+    "club": "Leeds United",
+    "number": "1",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ethan Ampadu ( captain )",
+    "club": "Leeds United",
+    "number": "4",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Daniel James",
+    "club": "Leeds United",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Sean Longstaff",
+    "club": "Leeds United",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Brenden Aaronson",
+    "club": "Leeds United",
+    "number": "11",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Anton Stach",
+    "club": "Leeds United",
+    "number": "18",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dominic Calvert-Lewin",
+    "club": "Leeds United",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joël Piroe",
+    "club": "Leeds United",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lukas Nmecha",
+    "club": "Leeds United",
+    "number": "14",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Noah Okafor",
+    "club": "Leeds United",
+    "number": "19",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-05-07 ) 7 May 1999 (age 26)",
+    "club": "Leicester City",
+    "number": "13",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1987-06-20 ) 20 June 1987 (age 38)",
+    "club": "Leicester City",
+    "number": "31",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-04-03 ) 3 April 1998 (age 27)",
+    "club": "Leicester City",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2004-03-18 ) 18 March 2004 (age 21)",
+    "club": "Leicester City",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-07-13 ) 13 July 2001 (age 24)",
+    "club": "Leicester City",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-10-22 ) 22 October 1998 (age 26)",
+    "club": "Leicester City",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1993-10-06 ) 6 October 1993 (age 32)",
+    "club": "Leicester City",
+    "number": "21",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-05-26 ) 26 May 1999 (age 26)",
+    "club": "Leicester City",
+    "number": "26",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2004-03-08 ) 8 March 2004 (age 21)",
+    "club": "Leicester City",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-02-02 ) 2 February 1996 (age 29)",
+    "club": "Leicester City",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2004-05-10 ) 10 May 2004 (age 21)",
+    "club": "Leicester City",
+    "number": "11",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-10-01 ) 1 October 1997 (age 28)",
+    "club": "Leicester City",
+    "number": "17",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-09-16 ) 16 September 2000 (age 25)",
+    "club": "Leicester City",
+    "number": "22",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-02-27 ) 27 February 1999 (age 26)",
+    "club": "Leicester City",
+    "number": "24",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-12-19 ) 19 December 2000 (age 24)",
+    "club": "Leicester City",
+    "number": "1",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1991-09-11 ) 11 September 1991 (age 34)",
+    "club": "Leicester City",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-05-31 ) 31 May 1998 (age 27)",
+    "club": "Leicester City",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1993-02-02 ) 2 February 1993 (age 32)",
+    "club": "Leicester City",
+    "number": "14",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-05-25 ) 25 May 1999 (age 26)",
+    "club": "Liverpool",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-10-25 ) 25 October 2000 (age 24)",
+    "club": "Liverpool",
+    "number": "8",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1991-07-08 ) 8 July 1991 (age 34)",
+    "club": "Liverpool",
+    "number": "4",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1992-06-15 ) 15 June 1992 (age 33)",
+    "club": "Liverpool",
+    "number": "11",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-09-29 ) 29 September 2000 (age 25)",
+    "club": "Liverpool",
+    "number": "25",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-03-04 ) 4 March 1997 (age 28)",
+    "club": "Liverpool",
+    "number": "28",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-02-03 ) 3 February 2001 (age 24)",
+    "club": "Liverpool",
+    "number": "46",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2003-07-31 ) 31 July 2003 (age 22)",
+    "club": "Liverpool",
+    "number": "47",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1993-02-09 ) 9 February 1993 (age 32)",
+    "club": "Liverpool",
+    "number": "3",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-09-21 ) 21 September 1999 (age 26)",
+    "club": "Liverpool",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-12-24 ) 24 December 1998 (age 26)",
+    "club": "Liverpool",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2004-10-22 ) 22 October 2004 (age 20)",
+    "club": "Liverpool",
+    "number": "43",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2008-08-29 ) 29 August 2008 (age 17)",
+    "club": "Liverpool",
+    "number": "73",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Date of birth (age)",
+    "club": "Liverpool",
+    "number": null,
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1992-05-24 ) 24 May 1992 (age 33)",
+    "club": "Manchester City",
+    "number": "13",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-02-25 ) 25 February 1999 (age 26)",
+    "club": "Manchester City",
+    "number": "25",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-05-14 ) 14 May 1997 (age 28)",
+    "club": "Manchester City",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1995-02-18 ) 18 February 1995 (age 30)",
+    "club": "Manchester City",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-06-06 ) 6 June 2001 (age 24)",
+    "club": "Manchester City",
+    "number": "21",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-01-23 ) 23 January 2002 (age 23)",
+    "club": "Manchester City",
+    "number": "24",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-08-27 ) 27 August 1998 (age 27)",
+    "club": "Manchester City",
+    "number": "27",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2005-03-21 ) 21 March 2005 (age 20)",
+    "club": "Manchester City",
+    "number": "33",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-10-10 ) 10 October 2002 (age 23)",
+    "club": "Manchester City",
+    "number": "1",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-07-29 ) 29 July 1998 (age 27)",
+    "club": "Manchester City",
+    "number": "4",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-02-07 ) 7 February 1999 (age 26)",
+    "club": "Manchester City",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1994-05-06 ) 6 May 1994 (age 31)",
+    "club": "Manchester City",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2003-08-17 ) 17 August 2003 (age 22)",
+    "club": "Manchester City",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-01-03 ) 3 January 2002 (age 23)",
+    "club": "Manchester City",
+    "number": "14",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1994-05-28 ) 28 May 1994 (age 31)",
+    "club": "Manchester City",
+    "number": "5",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-07-21 ) 21 July 2000 (age 25)",
+    "club": "Manchester City",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-05-27 ) 27 May 2002 (age 23)",
+    "club": "Manchester City",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1992-11-06 ) 6 November 1992 (age 32)",
+    "club": "Manchester City",
+    "number": "18",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Altay Bayındır",
+    "club": "Manchester United",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "No. Pos. Nation Player 1 GK TUR Altay Bayındır 2 DF POR Diogo Dalot 3 DF MAR Noussair Mazraoui 4 DF NED Matthijs de Ligt 5 DF ENG Harry Maguire 6 DF ARG Lisandro Martínez 7 MF ENG Mason Mount 8 MF POR Bruno Fernandes ( captain ) 10 FW BRA Matheus Cunha 11 FW NED Joshua Zirkzee 12 DF NED Tyrell Malacia 13 DF DEN Patrick Dorgu 15 DF FRA Leny Yoro",
+    "club": "Manchester United",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Diogo Dalot",
+    "club": "Manchester United",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Noussair Mazraoui",
+    "club": "Manchester United",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Matthijs de Ligt",
+    "club": "Manchester United",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harry Maguire",
+    "club": "Manchester United",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lisandro Martínez",
+    "club": "Manchester United",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tyrell Malacia",
+    "club": "Manchester United",
+    "number": "12",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mason Mount",
+    "club": "Manchester United",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bruno Fernandes ( captain )",
+    "club": "Manchester United",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Casemiro",
+    "club": "Manchester United",
+    "number": "18",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Manuel Ugarte",
+    "club": "Manchester United",
+    "number": "25",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kobbie Mainoo",
+    "club": "Manchester United",
+    "number": "37",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Matheus Cunha",
+    "club": "Manchester United",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joshua Zirkzee",
+    "club": "Manchester United",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Amad Diallo",
+    "club": "Manchester United",
+    "number": "16",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bryan Mbeumo",
+    "club": "Manchester United",
+    "number": "19",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Patrick Dorgu",
+    "club": "Manchester United",
+    "number": "13",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1992-04-19 ) 19 April 1992 (aged 34)",
+    "club": "Newcastle United",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1986-10-24 ) 24 October 1986 (aged 39)",
+    "club": "Newcastle United",
+    "number": "26",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1990-09-19 ) 19 September 1990 (aged 35)",
+    "club": "Newcastle United",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2004-09-08 ) 8 September 2004 (aged 21)",
+    "club": "Newcastle United",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-01-12 ) 12 January 2000 (aged 26)",
+    "club": "Newcastle United",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1991-12-20 ) 20 December 1991 (aged 34)",
+    "club": "Newcastle United",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-08-08 ) 8 August 2001 (aged 24)",
+    "club": "Newcastle United",
+    "number": "12",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1995-09-18 ) 18 September 1995 (aged 30)",
+    "club": "Newcastle United",
+    "number": "13",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1993-11-11 ) 11 November 1993 (aged 32)",
+    "club": "Newcastle United",
+    "number": "6",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-08-16 ) 16 August 1996 (aged 29)",
+    "club": "Newcastle United",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-05-08 ) 8 May 2000 (aged 26)",
+    "club": "Newcastle United",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2001-02-24 ) 24 February 2001 (aged 25)",
+    "club": "Newcastle United",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2003-08-04 ) 4 August 2003 (aged 22)",
+    "club": "Newcastle United",
+    "number": "18",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-11-12 ) 12 November 2002 (aged 23)",
+    "club": "Newcastle United",
+    "number": "21",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-09-03 ) 3 September 1996 (aged 29)",
+    "club": "Newcastle United",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-12-09 ) 9 December 1997 (aged 28)",
+    "club": "Newcastle United",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-04-27 ) 27 April 2002 (aged 24)",
+    "club": "Newcastle United",
+    "number": "20",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2005-03-10 ) 10 March 2005 (aged 21)",
+    "club": "Newcastle United",
+    "number": "40",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "John Victor",
+    "club": "Nottingham Forest",
+    "number": "13",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Angus Gunn",
+    "club": "Nottingham Forest",
+    "number": "18",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Neco Williams",
+    "club": "Nottingham Forest",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Morato",
+    "club": "Nottingham Forest",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Murillo",
+    "club": "Nottingham Forest",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jair Cunha",
+    "club": "Nottingham Forest",
+    "number": "23",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Willy Boly",
+    "club": "Nottingham Forest",
+    "number": "30",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nikola Milenković",
+    "club": "Nottingham Forest",
+    "number": "31",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ibrahim Sangaré",
+    "club": "Nottingham Forest",
+    "number": "6",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Elliot Anderson",
+    "club": "Nottingham Forest",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Morgan Gibbs-White ( vice-captain )",
+    "club": "Nottingham Forest",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nicolás Domínguez",
+    "club": "Nottingham Forest",
+    "number": "16",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ryan Yates ( captain )",
+    "club": "Nottingham Forest",
+    "number": "22",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "James McAtee",
+    "club": "Nottingham Forest",
+    "number": "24",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Callum Hudson-Odoi",
+    "club": "Nottingham Forest",
+    "number": "7",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Taiwo Awoniyi",
+    "club": "Nottingham Forest",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Chris Wood",
+    "club": "Nottingham Forest",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dan Ndoye",
+    "club": "Nottingham Forest",
+    "number": "14",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alex McCarthy",
+    "club": "Southampton",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "George Long",
+    "club": "Southampton",
+    "number": "25",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mads Roerslev",
+    "club": "Southampton",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ryan Manning",
+    "club": "Southampton",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jack Stephens",
+    "club": "Southampton",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Taylor Harwood-Bellis",
+    "club": "Southampton",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ronnie Edwards",
+    "club": "Southampton",
+    "number": "12",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nathan Wood",
+    "club": "Southampton",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Flynn Downes",
+    "club": "Southampton",
+    "number": "4",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joe Aribo",
+    "club": "Southampton",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Finn Azaz",
+    "club": "Southampton",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Léo Scienza",
+    "club": "Southampton",
+    "number": "13",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mateus Fernandes",
+    "club": "Southampton",
+    "number": "18",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Caspar Jander",
+    "club": "Southampton",
+    "number": "20",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adam Armstrong",
+    "club": "Southampton",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ross Stewart",
+    "club": "Southampton",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tom Fellows",
+    "club": "Southampton",
+    "number": "18",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cameron Archer",
+    "club": "Southampton",
+    "number": "19",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-10-07 ) 7 October 1996 (age 29)",
+    "club": "Tottenham Hotspur",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2003-03-13 ) 13 March 2003 (age 22)",
+    "club": "Tottenham Hotspur",
+    "number": "31",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-02-03 ) 3 February 2002 (age 23)",
+    "club": "Tottenham Hotspur",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-09-19 ) 19 September 1998 (age 27)",
+    "club": "Tottenham Hotspur",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2007-02-24 ) 24 February 2007 (age 18)",
+    "club": "Tottenham Hotspur",
+    "number": "16",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1999-09-13 ) 13 September 1999 (age 26)",
+    "club": "Tottenham Hotspur",
+    "number": "23",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2000-08-09 ) 9 August 2000 (age 25)",
+    "club": "Tottenham Hotspur",
+    "number": "24",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2004-09-04 ) 4 September 2004 (age 21)",
+    "club": "Tottenham Hotspur",
+    "number": "25",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1995-07-09 ) 9 July 1995 (age 30)",
+    "club": "Tottenham Hotspur",
+    "number": "6",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2003-04-21 ) 21 April 2003 (age 22)",
+    "club": "Tottenham Hotspur",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-08-30 ) 30 August 1996 (age 29)",
+    "club": "Tottenham Hotspur",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1996-11-23 ) 23 November 1996 (age 28)",
+    "club": "Tottenham Hotspur",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2006-03-12 ) 12 March 2006 (age 19)",
+    "club": "Tottenham Hotspur",
+    "number": "14",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2006-02-02 ) 2 February 2006 (age 19)",
+    "club": "Tottenham Hotspur",
+    "number": "15",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1997-04-10 ) 10 April 1997 (age 28)",
+    "club": "Tottenham Hotspur",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2005-04-27 ) 27 April 2005 (age 20)",
+    "club": "Tottenham Hotspur",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 2002-11-28 ) 28 November 2002 (age 22)",
+    "club": "Tottenham Hotspur",
+    "number": "13",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "( 1998-04-27 ) 27 April 1998 (age 27)",
+    "club": "Tottenham Hotspur",
+    "number": "17",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "José Sá",
+    "club": "Wolverhampton Wanderers",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dan Bentley",
+    "club": "Wolverhampton Wanderers",
+    "number": "25",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Matt Doherty ( vice-captain )",
+    "club": "Wolverhampton Wanderers",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Hugo Bueno ( 6th captain )",
+    "club": "Wolverhampton Wanderers",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Santiago Bueno",
+    "club": "Wolverhampton Wanderers",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "David Møller Wolfe",
+    "club": "Wolverhampton Wanderers",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Emmanuel Agbadou",
+    "club": "Wolverhampton Wanderers",
+    "number": "12",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yerson Mosquera",
+    "club": "Wolverhampton Wanderers",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marshall Munetsi",
+    "club": "Wolverhampton Wanderers",
+    "number": "5",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "André",
+    "club": "Wolverhampton Wanderers",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "João Gomes ( 4th captain )",
+    "club": "Wolverhampton Wanderers",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jean‐Ricner Bellegarde",
+    "club": "Wolverhampton Wanderers",
+    "number": "27",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Fer López",
+    "club": "Wolverhampton Wanderers",
+    "number": "28",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jørgen Strand Larsen ( 5th captain )",
+    "club": "Wolverhampton Wanderers",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jhon Arias",
+    "club": "Wolverhampton Wanderers",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Hwang Hee-chan ( 3rd captain )",
+    "club": "Wolverhampton Wanderers",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tolu Arokodare",
+    "club": "Wolverhampton Wanderers",
+    "number": "14",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Rodrigo Gomes",
+    "club": "Wolverhampton Wanderers",
+    "number": "21",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  }
+]
