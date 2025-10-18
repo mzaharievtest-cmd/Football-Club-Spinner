@@ -107,6 +107,13 @@
 
           <div class="history-title">History</div>
           <div class="history" id="history"></div>
+
+          <!-- Current selection display (added to prevent layout jumps and missing-ID errors) -->
+          <div id="currentDisplay" class="mt-4" aria-live="polite">
+            <img id="currentLogo" class="current-logo" src="" alt="" style="display:block; width:96px; height:96px; object-fit:contain; margin: 12px 0;">
+            <div id="currentText" class="current-text" style="color:var(--text); font-weight:700;">&nbsp;</div>
+          </div>
+
         </section>
 
         <!-- Right: wheel -->
