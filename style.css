@@ -1,6 +1,7 @@
 /* Main stylesheet for Football Spinner
-   (Full file replaced/updated where needed.)
-   Below is the complete stylesheet including safety fixes for the history/modal image sizing.
+   - Dark theme, responsive grid cards, chip UI, wheel, modal
+   - Includes clean details/summary (accordion) and content section styling (#content)
+   - Inter font is loaded via <link> in index.html (no @import here for better performance)
 */
 
 /* =========================
@@ -9,6 +10,7 @@
 :root {
   color-scheme: dark;
 
+  /* Base palette */
   --bg-0: #05070f;
   --bg-1: #08101e;
   --bg-2: #0e1526;
@@ -17,35 +19,47 @@
   --text: #eaf0fb;
   --muted: #a9b9d6;
 
-  --accent: #64a8ff;
-  --accent-2: #22d3ee;
-  --accent-3: #9b6bff;
+  /* Accents */
+  --accent: #64a8ff;    /* blue */
+  --accent-2: #22d3ee;  /* cyan */
+  --accent-3: #9b6bff;  /* purple */
 
+  /* Radii and shadows */
   --radius: 20px;
   --shadow-1: 0 8px 30px rgba(0,0,0,.25);
   --shadow-2: 0 24px 80px rgba(18,30,52,0.42);
 
+  /* Gradients */
+  --grad-ui: conic-gradient(from 180deg at 50% 50%, #2f4a91, #1f2e5e, #142247, #0e1a39, #142247, #1f2e5e, #2f4a91);
+  --grad-brand: linear-gradient(135deg, #2b68ff, #22d3ee 50%, #9b6bff);
   --grad-chip: linear-gradient(135deg, rgba(18,28,52,.96), rgba(10,16,30,.92));
   --grad-card: linear-gradient(180deg, rgba(18,27,48,.9), rgba(10,16,30,.86));
 
+  /* Borders */
   --line: rgba(120,160,255,.18);
   --line-strong: rgba(120,160,255,.32);
 
+  /* Motion */
   --ease: cubic-bezier(.2,.7,.1,1);
   --ease-out: cubic-bezier(.16,1,.3,1);
 }
 
+/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   :root { --ease: linear; --ease-out: linear; }
   * { animation: none !important; transition: none !important; }
 }
 
+/* Ensure anything with the hidden attribute stays hidden */
 [hidden] { display: none !important; }
 
-/* Base */
+/* =========================
+   Base / Background
+   ========================= */
 *,
 *::before,
 *::after { box-sizing: border-box; }
+
 html, body { height: 100%; }
 
 body {
@@ -60,7 +74,28 @@ body {
   overflow-x: hidden;
 }
 
-/* Header */
+/* Subtle moving grid glow */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20vmax;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(60,120,255,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat,
+              radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat;
+  filter: blur(40px);
+  opacity: .8;
+  pointer-events: none;
+  z-index: 0;
+  animation: bg-drift 34s linear infinite;
+}
+@keyframes bg-drift {
+  0% { transform: translate3d(0,0,0) rotate(0deg); }
+  50%{ transform: translate3d(1.5%, -1.5%, 0) rotate(180deg); }
+  100%{ transform: translate3d(0,0,0) rotate(360deg); }
+}
+
+/* =========================
+   Header (glass + brand)
+   ========================= */
 header {
   padding: 16px clamp(16px,3vw,36px);
   display: flex;
@@ -75,7 +110,195 @@ header {
   z-index: 20;
 }
 
-/* (Keep rest of original stylesheet here — full styles preserved) */
+header h1 {
+  margin: 0;
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-weight: 900;
+  letter-spacing: .01em;
+  text-shadow: 0 1px 0 rgba(0,0,0,.3);
+}
+
+.season-tag {
+  margin-top: 2px;
+  font-size: 12px;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: rgba(197,212,235,.76);
+}
+
+/* Brand cluster */
+header .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-img {
+  width: clamp(30px, 3.3vw, 44px);
+  height: clamp(30px, 3.3vw, 44px);
+  border-radius: 12px;
+  object-fit: cover;
+  display: inline-block;
+  position: relative;
+  z-index: 0;
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.28),
+    inset 0 0 0 1px rgba(255,255,255,.05);
+  background: #0b1220;
+  border: 1px solid rgba(100,160,255,.45);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
+}
+.brand-img:hover {
+  transform: translateY(-1px) scale(1.03);
+  border-color: rgba(120,190,255,.8);
+  box-shadow:
+    0 10px 30px rgba(32,80,200,.35),
+    0 0 0 6px rgba(80,160,255,.08),
+    inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+/* =========================
+   Mode switch (Team / Player)
+   ========================= */
+.mode-switch-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px;
+  background: transparent;
+}
+.mode-switch {
+  display: inline-flex;
+  gap: 6px;
+  background: rgba(255,255,255,0.02);
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.mode-btn {
+  background: transparent;
+  color: #dbeafe;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background .14s ease, transform .12s ease;
+}
+.mode-btn:hover { background: rgba(255,255,255,0.03); transform: translateY(-1px); }
+.mode-btn:focus { outline: none; box-shadow: 0 0 0 4px rgba(34,211,238,0.12); border-radius: 999px; }
+.mode-btn-active { background: linear-gradient(90deg, rgba(34,211,238,0.14), rgba(34,211,238,0.06)); color: #e6f9ff; }
+
+/* team/player view helpers */
+.team-only { display: block; }
+.player-only { display: none; }
+.player-only:not(.hidden) { display: block; }
+
+/* =========================
+   Page grid / cards
+   ========================= */
+.container {
+  max-width: 1200px;
+  margin: 20px auto 48px;
+  padding: 0 clamp(12px,4vw,36px);
+  display: grid;
+  gap: 22px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 980px) {
+  .container { grid-template-columns: 380px 1fr; }
+}
+@media (max-width: 979.98px) {
+  .container { display: block; }
+  .card { margin-bottom: 16px; }
+}
+
+/* Card */
+.card {
+  position: relative;
+  background: var(--grad-card);
+  border-radius: var(--radius);
+  padding: 18px clamp(14px,3vw,26px);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+  overflow: clip;
+  transform: translateY(8px);
+  opacity: 0;
+  animation: card-in .6s var(--ease-out) forwards;
+}
+@keyframes card-in {
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.section-title {
+  font-size: 12px;
+  letter-spacing: .36em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+/* =========================
+   Quick picks / chips
+   ========================= */
+.quick-picks {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+button, .chip-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(22,34,64,.96), rgba(12,18,34,.92));
+  color: #f4f7ff;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+button:hover, .chip-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-2);
+  box-shadow: 0 10px 30px rgba(34,211,238,.16);
+}
+button:active { transform: translateY(0); }
+button:disabled { opacity: .6; cursor: wait; }
+
+/* Button shine */
+button::after, .chip-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(255,255,255,.08), transparent 30% 70%, rgba(255,255,255,.08));
+  transform: translateX(-100%);
+  transition: transform .7s var(--ease-out);
+  pointer-events: none;
+}
+button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
+
+.chip-btn.active {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 2px rgba(34,211,238,.20) inset, 0 12px 26px rgba(34,211,238,.12);
+  background: linear-gradient(180deg, rgba(32,46,88,.96), rgba(14,24,48,.92));
+}
+
+/* Ghost variant for “Show more” */
+.chip-btn.ghost {
+  background: linear-gradient(180deg, rgba(18,22,36,.86), rgba(10,14,26,.82));
+  border-style: dashed;
+}
+
+/* (rest of original stylesheet preserved...) */
 
 /* ----------------------------
    Important: history & modal image sizing fixes
