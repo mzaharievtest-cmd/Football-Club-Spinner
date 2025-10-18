@@ -56,7 +56,7 @@
   </div>
 
   <main>
-    <!-- Team view -->
+    <!-- Team view (existing site UI) -->
     <div id="teamView" class="team-only">
       <div class="container">
         <!-- Left: controls -->
@@ -70,16 +70,19 @@
             <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
           </div>
 
-          <!-- League chips -->
+          <!-- League chips (Top 5 visible; more hidden until toggled) -->
           <div id="chips">
             <div id="chipsTop" class="chips"></div>
+
             <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">
               Show more leagues
             </button>
+
             <div id="chipsMore" class="chips" hidden></div>
           </div>
 
           <div class="section-title">Show on wheel</div>
+          <!-- Show-on-wheel options -->
           <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
             <label class="chip">
               <input type="checkbox" id="optName" checked aria-label="Name" />
@@ -110,6 +113,7 @@
             <img id="currentLogo" class="current-logo" src="" alt="" style="display:block; width:96px; height:96px; object-fit:contain; margin: 12px 0;">
             <div id="currentText" class="current-text" style="color:var(--text); font-weight:700;">&nbsp;</div>
           </div>
+
         </section>
 
         <!-- Right: wheel -->
@@ -124,27 +128,26 @@
           </div>
         </section>
 
-        <!-- Content block -->
+        <!-- Content block (keep your existing content here) -->
         <section id="content" style="grid-column: 1 / -1" class="scroll-smooth">
-          <!-- TOC & content (unchanged) -->
-          [CONTENT OMITTED FOR BREVITY — keep your current content/accordions here]
+          <!-- keep existing accordions / content -->
         </section>
       </div>
     </div>
 
-    <!-- Player view -->
+    <!-- Player view (initially hidden) -->
     <div id="playerView" class="player-only hidden">
       <section class="card" aria-labelledby="player-title">
         <div class="section-title" id="player-title">Player</div>
         <div class="panel p-6">
           <h2 class="text-2xl font-semibold mb-3">Player — Coming soon</h2>
-          <p>We’re building the player mode. Check back soon — or use Team spinner to get started.</p>
+          <p class="text-[15px] md:text-base leading-7 md:leading-8">We’re building the player mode. This will let you explore players, stats, and quizzes focused on individuals rather than teams. Check back soon — or try the Team spinner to get started.</p>
         </div>
       </section>
     </div>
   </main>
 
-  <!-- Modal -->
+  <!-- Modal (unchanged) -->
   <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mHead">
     <div id="modal" class="modal">
       <div id="mHead" class="m-head">Team</div>
@@ -164,7 +167,7 @@
     </div>
   </div>
 
-  <!-- Compiled client script only -->
+  <!-- Keep client script includes to compiled JS only -->
   <script src="/app.js" defer></script>
 </body>
 </html>
