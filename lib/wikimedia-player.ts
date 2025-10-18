@@ -11,9 +11,9 @@ export type PlayerImg = {
   source: 'player' | 'club' | 'fallback';
   name?: string;
   qid?: string;
-  imageFile?: string;
-  imageUrl: string;
-  filePageUrl?: string;
+  imageFile?: string;      // Commons file name
+  imageUrl: string;        // Direct FilePath URL (resizable)
+  filePageUrl?: string;    // Commons file page (for attribution)
   author?: string;
   license?: string;
 };
@@ -24,6 +24,7 @@ const COMMONS_API = 'https://commons.wikimedia.org/w/api.php';
 
 const SILHOUETTE = '/img/silhouette-player.png'; // fallback asset path
 
+// Simple in-memory caches
 const cacheQid = new Map<string, { value: any; ts: number }>();
 const cacheEntity = new Map<string, { value: any; ts: number }>();
 const cacheCommons = new Map<string, { value: any; ts: number }>();
@@ -46,6 +47,7 @@ function joinUrl(base: string, params: Record<string, string>): string {
   Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
   return u.toString();
 }
+
 function normalizeFileName(fn: string): string { return fn.replace(/^File:/i, '').trim(); }
 function filePathUrl(fileName: string, width = 800): string {
   const fn = normalizeFileName(fileName).replace(/ /g, '_');
@@ -56,6 +58,10 @@ function stripHtml(html?: string): string | undefined {
   const tmp = html.replace(/<\/?[^>]+(>|$)/g, '').trim();
   return tmp.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"');
 }
+
+/* ------------------------------
+   Wikidata helpers
+   ------------------------------ */
 
 export async function wikidataIdFor(name: string): Promise<string> {
   const cacheKey = `qid:${name.toLowerCase()}`;
@@ -95,6 +101,10 @@ export async function wikidataEntity(qid: string): Promise<any> {
   return entity;
 }
 
+/* ------------------------------
+   Commons helpers
+   ------------------------------ */
+
 export async function commonsImageMeta(fileName: string): Promise<{ filePageUrl: string; author?: string; license?: string }> {
   const fnNorm = normalizeFileName(fileName);
   const cacheKey = `commons:${fnNorm}`;
@@ -132,6 +142,10 @@ export async function commonsImageMeta(fileName: string): Promise<{ filePageUrl:
   setCache(cacheCommons, cacheKey, meta);
   return meta;
 }
+
+/* ------------------------------
+   Primary resolvers
+   ------------------------------ */
 
 function getP18FromEntity(entity: any): string | undefined {
   try {
