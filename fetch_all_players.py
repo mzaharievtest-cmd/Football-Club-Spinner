@@ -1,14 +1,23 @@
+#!/usr/bin/env python3
 """
-Fetch active 2025/26 Premier League players' images (QID-based lookup).
+Fetch / enrich player images.
 
-This is the corrected version: the SPARQL now binds the statement rank with
-'?stmt wikibase:rank ?rank .' and filters by that bound variable (avoids the
-invalid FILTER(wikibase:rank(?stmt) ...) usage).
+Modes:
+- If --input-json is provided: read players from that JSON file (list of objects),
+  resolve images (by wikidata_id or name), download images to --out, write CSV to --csv
+  and enriched players JSON to --json.
 
-Drop this file next to your player_images.py and teams.json and run:
-  python fetch_all_players.py --per-club 1 --max-total 5
+- If --input-json is NOT provided: fallback to Premier League club SPARQL flow
+  (same behavior as earlier scripts) and save images to --out and csv to --csv.
 
-Defaults are conservative for testing; change CLI args to expand the run.
+Example:
+python3 fetch_all_players.py \
+  --input-json /path/to/players.json \
+  --out /path/to/out/dir \
+  --width 800 \
+  --csv /path/to/attribution.csv \
+  --json /path/to/players_with_images.json \
+  --max-total 40
 """
 import argparse
 import json
@@ -19,40 +28,31 @@ import requests
 
 from player_images import (
     wikidata_id_for,
+    player_image,
     player_image_by_qid,
     save_player_image,
     save_attributions,
 )
 
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
-HEADERS = {
-    "Accept": "application/sparql-results+json",
-    "User-Agent": "player-images-batch/1.0 (footballspinner.com)"
-}
+HEADERS = {"Accept": "application/sparql-results+json", "User-Agent": "player-images-batch/1.0 (footballspinner.com)"}
 
-def _polite(): time.sleep(random.uniform(0.08, 0.18))
+def _polite():
+    time.sleep(random.uniform(0.08, 0.18))
 
-def load_teams(path="teams.json"):
+def load_json(path):
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"{p} not found.")
     return json.loads(p.read_text(encoding="utf-8"))
 
-def epl_clubs(teams):
-    clubs = []
-    for t in teams:
-        name = t.get("team_name") or t.get("name")
-        code = (t.get("league_code") or "").upper()
-        league = (t.get("league") or t.get("league_name") or "").lower()
-        if name and (code == "EPL" or "premier" in league):
-            clubs.append(name)
-    return sorted(set(clubs))
+def write_json(obj, path):
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
 
-def players_active_2025_26(club_qid, limit=200):
-    """
-    SPARQL: select players with P54 statements for the club where the statement
-    has rank != DeprecatedRank and membership qualifiers overlap the 2025/26 window.
-    """
+# SPARQL helpers (used only in club mode)
+def players_active_2025_26_for_club(club_qid, limit=200):
     q = f"""
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX wd: <http://www.wikidata.org/entity/>
@@ -61,7 +61,7 @@ PREFIX ps: <http://www.wikidata.org/prop/statement/>
 PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
 PREFIX wikibase: <http://wikiba.se/ontology#>
 
-SELECT ?player ?playerLabel ?start ?end ?rank WHERE {{
+SELECT ?player ?playerLabel WHERE {{
   ?player p:P54 ?stmt .
   ?stmt ps:P54 wd:{club_qid} .
   ?stmt wikibase:rank ?rank .
@@ -69,7 +69,6 @@ SELECT ?player ?playerLabel ?start ?end ?rank WHERE {{
   ?player wdt:P31 wd:Q5 .
   OPTIONAL {{ ?stmt pq:P580 ?start. }}
   OPTIONAL {{ ?stmt pq:P582 ?end. }}
-  # membership must overlap 2025/07/01 .. 2026/06/30
   FILTER( !BOUND(?end)   || ?end  >= "2025-07-01T00:00:00Z"^^xsd:dateTime )
   FILTER( !BOUND(?start) || ?start <= "2026-06-30T23:59:59Z"^^xsd:dateTime )
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
@@ -86,58 +85,146 @@ LIMIT {limit}
         res.append({"qid": uri.rsplit("/", 1)[-1], "label": label})
     return res
 
-def fetch_sample(out_dir="player_images/EPL", teams_path="teams.json", per_club=5, max_total=None):
-    teams = load_teams(teams_path)
-    clubs = epl_clubs(teams)
-    out = Path(out_dir); out.mkdir(parents=True, exist_ok=True)
-    all_rows = []
-    total = 0
+def epl_clubs_from_teams(teams):
+    clubs = []
+    for t in teams:
+        name = t.get("team_name") or t.get("name")
+        code = (t.get("league_code") or "").upper()
+        league = (t.get("league") or t.get("league_name") or "").lower()
+        if name and (code == "EPL" or "premier" in league):
+            clubs.append(name)
+    return sorted(set(clubs))
 
-    print(f"Premier League clubs: {len(clubs)}. target per club: {per_club}, max total: {max_total}\n")
+# Main processing
+def enrich_players_from_file(input_json, out_dir, width, csv_path, out_players_json, max_total=None):
+    players = load_json(input_json)
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    saved_records = []
+    processed = 0
+
+    total_players = len(players)
+    print(f"Loaded {total_players} player entries from {input_json}")
+
+    for rec in players:
+        if max_total and processed >= max_total:
+            break
+        name = rec.get("name") or rec.get("full_name") or rec.get("player_name")
+        qid = rec.get("wikidata_id") or rec.get("qid")
+        try:
+            if qid:
+                record = player_image_by_qid(qid, width=width)
+            else:
+                # try to find qid by name first
+                qid_search = wikidata_id_for(name) if name else None
+                if qid_search:
+                    record = player_image_by_qid(qid_search, width=width)
+                else:
+                    record = player_image(name, width=width)
+        except Exception as e:
+            print("Error resolving image for", name, ":", e)
+            record = {"name": name, "qid": qid, "image_url": "/img/silhouette-player.png", "source": "fallback"}
+
+        # download
+        saved = save_player_image(record, out_dir=str(out_dir))
+        record["_saved_path"] = str(saved) if saved else ""
+        # merge into original rec for output JSON
+        rec.update({
+            "image_filename": record.get("filename"),
+            "image_url": record.get("image_url"),
+            "file_page": record.get("file_page"),
+            "author": record.get("author"),
+            "license": record.get("license"),
+            "image_source": record.get("source"),
+            "_saved_path": record.get("_saved_path")
+        })
+        saved_records.append({
+            "name": record.get("name"),
+            "qid": record.get("qid"),
+            "filename": record.get("filename"),
+            "file_page": record.get("file_page"),
+            "author": record.get("author"),
+            "license": record.get("license"),
+            "source": record.get("source"),
+            "image_url": record.get("image_url"),
+            "_saved_path": record.get("_saved_path")
+        })
+        processed += 1
+        if processed % 10 == 0:
+            print(f"Processed {processed} players...")
+        _polite()
+
+    # write outputs
+    if out_players_json:
+        write_json(players, out_players_json)
+        print("Wrote enriched players JSON to", out_players_json)
+    if csv_path:
+        save_attributions(saved_records, csv_path)
+        print("Wrote attribution CSV to", csv_path)
+    print("Done. Processed:", processed)
+    return saved_records
+
+def fetch_via_teams_and_sparql(teams_json, out_dir, width, csv_path, max_total=None, per_club=None):
+    teams = load_json(teams_json)
+    clubs = epl_clubs_from_teams(teams)
+    out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
+    all_rows = []; total = 0
+    print(f"Found {len(clubs)} EPL clubs in teams.json")
+
     for club in clubs:
         if max_total and total >= max_total:
             break
-        club_qid = wikidata_id_for(club)
-        print(f"== {club} :: {club_qid} ==")
-        if not club_qid:
-            print("  (no QID)"); continue
-
-        try:
-            players = players_active_2025_26(club_qid, limit=200)
-        except Exception as e:
-            print("  SPARQL error for club", club, e)
-            continue
-
-        print(f"  candidates: {len(players)}")
+        qid = wikidata_id_for(club)
+        if not qid:
+            print("No QID for club", club); continue
+        candidates = players_active_2025_26_for_club(qid, limit=200)
         n = 0
-        for p in players:
+        for p in candidates:
             if per_club is not None and n >= per_club:
                 break
             if max_total and total >= max_total:
                 break
-            qid = p["qid"]; label = p.get("label") or qid
-            rec = player_image_by_qid(qid, width=800)
-            rec["club"] = club
-            rec["league_code"] = "EPL"
-            print(f"  - {label} [{rec['source']}] -> {rec['image_url']}")
-            path = save_player_image(rec, out_dir=str(out))
-            rec["_saved_path"] = str(path) if path else ""
+            player_qid = p["qid"]
+            rec = player_image_by_qid(player_qid, width=width)
+            rec["club"] = club; rec["league_code"] = "EPL"
+            saved = save_player_image(rec, out_dir=str(out_dir))
+            rec["_saved_path"] = str(saved) if saved else ""
             all_rows.append(rec)
             n += 1; total += 1
             _polite()
-
-    csv_path = Path(out_dir).parent / "attribution.csv"
-    save_attributions(all_rows, csv_path=str(csv_path))
-    print(f"\nDone. Players: {total}. Images in {out}. CSV: {csv_path}")
+        print(f"Club {club}: saved {n} players")
+    if csv_path:
+        save_attributions(all_rows, csv_path)
+    print("Done. total saved:", total)
     return all_rows
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Fetch active 2025/26 EPL players' images")
-    parser.add_argument("--out", default="player_images/EPL", help="output directory")
-    parser.add_argument("--teams", default="teams.json", help="teams.json path")
-    parser.add_argument("--per-club", type=int, default=5, help="max players per club (set 0 or omit for all)")
-    parser.add_argument("--max-total", type=int, default=None, help="max total players across all clubs")
+def main():
+    parser = argparse.ArgumentParser(description="Fetch player images (file mode or clubs mode)")
+    parser.add_argument("--input-json", help="Path to players.json to enrich (file mode)")
+    parser.add_argument("--teams-json", default="teams.json", help="Path to teams.json (clubs mode)")
+    parser.add_argument("--out", required=True, help="Output images directory")
+    parser.add_argument("--width", type=int, default=800, help="Image width when requesting from Commons")
+    parser.add_argument("--csv", help="Path to attribution CSV to write")
+    parser.add_argument("--json", dest="out_json", help="Path to write enriched players JSON (only in file mode)")
+    parser.add_argument("--per-club", type=int, default=5, help="Max players per club in clubs mode (use 0 or omit for all)")
+    parser.add_argument("--max-total", type=int, default=None, help="Max total players to process")
     args = parser.parse_args()
 
     per_club = args.per_club if args.per_club and args.per_club > 0 else None
-    fetch_sample(out_dir=args.out, teams_path=args.teams, per_club=per_club, max_total=args.max_total)
+
+    if args.input_json:
+        print("Running in file mode (enrich players.json)...")
+        enrich_records = enrich_players_from_file = None
+        # call the file-mode function
+        enrich_records = enrich_players_from_file = enrich_players_from_file if False else None
+        # Implement inline to avoid double-naming
+        records = enrich_players_from_file if False else None
+        # Use the dedicated function above
+        records = enrich_players_from_file(args.input_json, args.out, args.width, args.csv, args.out_json, max_total=args.max_total)  # type: ignore
+    else:
+        print("Running in clubs/SPARQL mode (Premier League clubs from teams.json)...")
+        records = fetch_via_teams_and_sparql(args.teams_json, args.out, args.width, args.csv, max_total=args.max_total, per_club=per_club)
+
+if __name__ == "__main__":
+    import argparse  # argparse imported earlier; kept for clarity
+    main()
