@@ -1,1 +1,2522 @@
-
+[
+  {
+    "name": "↑ White graduated from Brighton & Hove Albion's academy .",
+    "club": "Arsenal",
+    "number": null,
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Flags indicate national team as defined under FIFA eligibility rules . Players may change their FIFA nationalities after the 2025–26 season, and may hold more than one non-FIFA nationality.",
+    "club": "Arsenal",
+    "number": null,
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "↑ Madueke graduated from Tottenham Hotspur's academy .",
+    "club": "Arsenal",
+    "number": null,
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "↑ Rice graduated from West Ham United's academy .",
+    "club": "Arsenal",
+    "number": null,
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Aaron Ramsdale",
+    "club": "Arsenal",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "William Saliba",
+    "club": "Arsenal",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cristhian Mosquera *",
+    "club": "Arsenal",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kieran Tierney",
+    "club": "Arsenal",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ben White (, AT) [ b ]",
+    "club": "Arsenal",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Thomas Partey",
+    "club": "Arsenal",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Gabriel Magalhães",
+    "club": "Arsenal",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bukayo Saka",
+    "club": "Arsenal",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Gabriel Jesus",
+    "club": "Arsenal",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Eberechi Eze *",
+    "club": "Arsenal",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Emile Smith Rowe",
+    "club": "Arsenal",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Gabriel Martinelli",
+    "club": "Arsenal",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jurriën Timber",
+    "club": "Arsenal",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kepa Arrizabalaga *",
+    "club": "Arsenal",
+    "number": "13",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joe Gauci",
+    "club": "Aston Villa",
+    "number": "18",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Emiliano Martínez",
+    "club": "Aston Villa",
+    "number": "23",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Matty Cash",
+    "club": "Aston Villa",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Victor Lindelöf",
+    "club": "Aston Villa",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ezri Konsa",
+    "club": "Aston Villa",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tyrone Mings",
+    "club": "Aston Villa",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lucas Digne",
+    "club": "Aston Villa",
+    "number": "12",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Pau Torres",
+    "club": "Aston Villa",
+    "number": "14",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ross Barkley",
+    "club": "Aston Villa",
+    "number": "6",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "John McGinn",
+    "club": "Aston Villa",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Youri Tielemans",
+    "club": "Aston Villa",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Emiliano Buendía",
+    "club": "Aston Villa",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jamaldeen Jimoh-Aloba",
+    "club": "Aston Villa",
+    "number": "20",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Enzo Barrenechea",
+    "club": "Aston Villa",
+    "number": "21",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ollie Watkins",
+    "club": "Aston Villa",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Donyell Malen",
+    "club": "Aston Villa",
+    "number": "17",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Samuel Iling-Junior",
+    "club": "Aston Villa",
+    "number": "19",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Morgan Rogers",
+    "club": "Aston Villa",
+    "number": "27",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Đorđe Petrović",
+    "club": "AFC Bournemouth",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Julián Araujo",
+    "club": "AFC Bournemouth",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adrien Truffert",
+    "club": "AFC Bournemouth",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lewis Cook",
+    "club": "AFC Bournemouth",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marcos Senesi",
+    "club": "AFC Bournemouth",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Julio Soler",
+    "club": "AFC Bournemouth",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "David Brooks",
+    "club": "AFC Bournemouth",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alex Scott",
+    "club": "AFC Bournemouth",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Evanilson",
+    "club": "AFC Bournemouth",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ryan Christie",
+    "club": "AFC Bournemouth",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ben Gannon-Doak",
+    "club": "AFC Bournemouth",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tyler Adams",
+    "club": "AFC Bournemouth",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alex Paulsen",
+    "club": "AFC Bournemouth",
+    "number": "13",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adam Smith",
+    "club": "AFC Bournemouth",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marcus Tavernier",
+    "club": "AFC Bournemouth",
+    "number": "16",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bafodé Diakité",
+    "club": "AFC Bournemouth",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Justin Kluivert",
+    "club": "AFC Bournemouth",
+    "number": "19",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Amine Adli",
+    "club": "AFC Bournemouth",
+    "number": "21",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Caoimhín Kelleher",
+    "club": "Brentford",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Aaron Hickey",
+    "club": "Brentford",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Rico Henry",
+    "club": "Brentford",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Sepp van den Berg",
+    "club": "Brentford",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ethan Pinnock",
+    "club": "Brentford",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jordan Henderson",
+    "club": "Brentford",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kevin Schade",
+    "club": "Brentford",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mathias Jensen",
+    "club": "Brentford",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Igor Thiago",
+    "club": "Brentford",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Hákon Valdimarsson",
+    "club": "Brentford",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Matthew Cox",
+    "club": "Brentford",
+    "number": "13",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Fábio Carvalho",
+    "club": "Brentford",
+    "number": "14",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Frank Onyeka",
+    "club": "Brentford",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Antoni Milambo",
+    "club": "Brentford",
+    "number": "17",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yehor Yarmolyuk",
+    "club": "Brentford",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dango Ouattara",
+    "club": "Brentford",
+    "number": "19",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kristoffer Ajer",
+    "club": "Brentford",
+    "number": "20",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nathan Collins",
+    "club": "Brentford",
+    "number": "22",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bart Verbruggen",
+    "club": "Brighton & Hove Albion",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adam Webster",
+    "club": "Brighton & Hove Albion",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lewis Dunk",
+    "club": "Brighton & Hove Albion",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jan Paul van Hecke",
+    "club": "Brighton & Hove Albion",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Solly March",
+    "club": "Brighton & Hove Albion",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Brajan Gruda",
+    "club": "Brighton & Hove Albion",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Stefanos Tzimas",
+    "club": "Brighton & Hove Albion",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Georginio Rutter",
+    "club": "Brighton & Hove Albion",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yankuba Minteh",
+    "club": "Brighton & Hove Albion",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jack Hinshelwood",
+    "club": "Brighton & Hove Albion",
+    "number": "13",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tom Watson",
+    "club": "Brighton & Hove Albion",
+    "number": "14",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Carlos Baleba",
+    "club": "Brighton & Hove Albion",
+    "number": "17",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Danny Welbeck",
+    "club": "Brighton & Hove Albion",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Charalampos Kostoulas",
+    "club": "Brighton & Hove Albion",
+    "number": "19",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "James Milner",
+    "club": "Brighton & Hove Albion",
+    "number": "20",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Olivier Boscagli",
+    "club": "Brighton & Hove Albion",
+    "number": "21",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kaoru Mitoma",
+    "club": "Brighton & Hove Albion",
+    "number": "22",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jason Steele",
+    "club": "Brighton & Hove Albion",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Robert Sánchez",
+    "club": "Chelsea",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marc Cucurella",
+    "club": "Chelsea",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tosin Adarabioyo",
+    "club": "Chelsea",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Benoît Badiashile",
+    "club": "Chelsea",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Levi Colwill",
+    "club": "Chelsea",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Pedro Neto",
+    "club": "Chelsea",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Enzo Fernández",
+    "club": "Chelsea",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Liam Delap",
+    "club": "Chelsea",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cole Palmer",
+    "club": "Chelsea",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jamie Gittens",
+    "club": "Chelsea",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Filip Jörgensen",
+    "club": "Chelsea",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dário Essugo",
+    "club": "Chelsea",
+    "number": "14",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Andrey Santos",
+    "club": "Chelsea",
+    "number": "17",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "João Pedro",
+    "club": "Chelsea",
+    "number": "20",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jorrel Hato",
+    "club": "Chelsea",
+    "number": "21",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Trevoh Chalobah",
+    "club": "Chelsea",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Reece James",
+    "club": "Chelsea",
+    "number": "24",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Moisés Caicedo",
+    "club": "Chelsea",
+    "number": "25",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dean Henderson",
+    "club": "Crystal Palace",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Daniel Muñoz",
+    "club": "Crystal Palace",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tyrick Mitchell",
+    "club": "Crystal Palace",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Maxence Lacroix",
+    "club": "Crystal Palace",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marc Guéhi",
+    "club": "Crystal Palace",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ismaïla Sarr",
+    "club": "Crystal Palace",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jefferson Lerma",
+    "club": "Crystal Palace",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Eddie Nketiah",
+    "club": "Crystal Palace",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yéremy Pino",
+    "club": "Crystal Palace",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jean-Philippe Mateta",
+    "club": "Crystal Palace",
+    "number": "14",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nathaniel Clyne",
+    "club": "Crystal Palace",
+    "number": "17",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Daichi Kamada",
+    "club": "Crystal Palace",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Will Hughes",
+    "club": "Crystal Palace",
+    "number": "19",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adam Wharton",
+    "club": "Crystal Palace",
+    "number": "20",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Romain Esse",
+    "club": "Crystal Palace",
+    "number": "21",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jaydee Canvot",
+    "club": "Crystal Palace",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Borna Sosa",
+    "club": "Crystal Palace",
+    "number": "24",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Chris Richards",
+    "club": "Crystal Palace",
+    "number": "26",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jordan Pickford",
+    "club": "Everton",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nathan Patterson",
+    "club": "Everton",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Michael Keane",
+    "club": "Everton",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "James Tarkowski",
+    "club": "Everton",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dwight McNeil",
+    "club": "Everton",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Beto",
+    "club": "Everton",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Iliman Ndiaye",
+    "club": "Everton",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Thierno Barry",
+    "club": "Everton",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mark Travers",
+    "club": "Everton",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jake O'Brien",
+    "club": "Everton",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Vitaliy Mykolenko",
+    "club": "Everton",
+    "number": "16",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tyler Dibling",
+    "club": "Everton",
+    "number": "20",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kiernan Dewsbury-Hall",
+    "club": "Everton",
+    "number": "22",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Séamus Coleman",
+    "club": "Everton",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Carlos Alcaraz",
+    "club": "Everton",
+    "number": "24",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Idrissa Gueye",
+    "club": "Everton",
+    "number": "27",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tom King",
+    "club": "Everton",
+    "number": "31",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jarrad Branthwaite",
+    "club": "Everton",
+    "number": "32",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bernd Leno",
+    "club": "Fulham",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kenny Tete",
+    "club": "Fulham",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Calvin Bassey",
+    "club": "Fulham",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joachim Andersen",
+    "club": "Fulham",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harrison Reed",
+    "club": "Fulham",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Raúl Jiménez",
+    "club": "Fulham",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harry Wilson",
+    "club": "Fulham",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Rodrigo Muniz",
+    "club": "Fulham",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tom Cairney",
+    "club": "Fulham",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adama Traoré",
+    "club": "Fulham",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jorge Cuenca",
+    "club": "Fulham",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Sander Berge",
+    "club": "Fulham",
+    "number": "16",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alex Iwobi",
+    "club": "Fulham",
+    "number": "17",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Saša Lukić",
+    "club": "Fulham",
+    "number": "20",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Timothy Castagne",
+    "club": "Fulham",
+    "number": "21",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kevin",
+    "club": "Fulham",
+    "number": "22",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Benjamin Lecomte",
+    "club": "Fulham",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Josh King",
+    "club": "Fulham",
+    "number": "24",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alex Palmer",
+    "club": "Ipswich Town",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cieran Slicker",
+    "club": "Ipswich Town",
+    "number": "13",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harry Clarke",
+    "club": "Ipswich Town",
+    "number": "2",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Leif Davis",
+    "club": "Ipswich Town",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ashley Young",
+    "club": "Ipswich Town",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ben Johnson",
+    "club": "Ipswich Town",
+    "number": "18",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Darnell Furlong",
+    "club": "Ipswich Town",
+    "number": "19",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Conor Townsend",
+    "club": "Ipswich Town",
+    "number": "22",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Azor Matusiwa",
+    "club": "Ipswich Town",
+    "number": "5",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jack Taylor",
+    "club": "Ipswich Town",
+    "number": "14",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cameron Humphreys",
+    "club": "Ipswich Town",
+    "number": "30",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marcelino Núñez",
+    "club": "Ipswich Town",
+    "number": "32",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Wes Burns",
+    "club": "Ipswich Town",
+    "number": "7",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Sindre Walle Egeli",
+    "club": "Ipswich Town",
+    "number": "8",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "George Hirst",
+    "club": "Ipswich Town",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Conor Chaplin",
+    "club": "Ipswich Town",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jaden Philogene",
+    "club": "Ipswich Town",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ali Al-Hamadi",
+    "club": "Ipswich Town",
+    "number": "16",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lucas Perri",
+    "club": "Leeds United",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jayden Bogle",
+    "club": "Leeds United",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Gabriel Gudmundsson",
+    "club": "Leeds United",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ethan Ampadu",
+    "club": "Leeds United",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Pascal Struijk",
+    "club": "Leeds United",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joe Rodon",
+    "club": "Leeds United",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Daniel James",
+    "club": "Leeds United",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Sean Longstaff",
+    "club": "Leeds United",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dominic Calvert-Lewin",
+    "club": "Leeds United",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joël Piroe",
+    "club": "Leeds United",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Brenden Aaronson",
+    "club": "Leeds United",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lukas Nmecha",
+    "club": "Leeds United",
+    "number": "14",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jaka Bijol",
+    "club": "Leeds United",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Illan Meslier",
+    "club": "Leeds United",
+    "number": "16",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Anton Stach",
+    "club": "Leeds United",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Noah Okafor",
+    "club": "Leeds United",
+    "number": "19",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jack Harrison",
+    "club": "Leeds United",
+    "number": "20",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alex Cairns",
+    "club": "Leeds United",
+    "number": "21",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jakub Stolarczyk",
+    "club": "Leicester City",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Fran Vieites",
+    "club": "Leicester City",
+    "number": "13",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Wout Faes",
+    "club": "Leicester City",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ben Nelson",
+    "club": "Leicester City",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Caleb Okoli",
+    "club": "Leicester City",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harry Souttar",
+    "club": "Leicester City",
+    "number": "15",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Victor Kristiansen",
+    "club": "Leicester City",
+    "number": "16",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Hamza Choudhury",
+    "club": "Leicester City",
+    "number": "17",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Abdul Fatawu",
+    "club": "Leicester City",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harry Winks",
+    "club": "Leicester City",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bilal El Khannouss",
+    "club": "Leicester City",
+    "number": "11",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Oliver Skipp",
+    "club": "Leicester City",
+    "number": "22",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Boubakary Soumaré",
+    "club": "Leicester City",
+    "number": "24",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Louis Page",
+    "club": "Leicester City",
+    "number": "25",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jordan Ayew",
+    "club": "Leicester City",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Stephy Mavididi",
+    "club": "Leicester City",
+    "number": "10",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bobby De Cordova-Reid",
+    "club": "Leicester City",
+    "number": "14",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Patson Daka",
+    "club": "Leicester City",
+    "number": "20",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alisson Becker",
+    "club": "Liverpool",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joe Gomez",
+    "club": "Liverpool",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Wataru Endo",
+    "club": "Liverpool",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Virgil van Dijk",
+    "club": "Liverpool",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ibrahima Konaté",
+    "club": "Liverpool",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Milos Kerkez",
+    "club": "Liverpool",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Florian Wirtz",
+    "club": "Liverpool",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dominik Szoboszlai",
+    "club": "Liverpool",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alexander Isak",
+    "club": "Liverpool",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alexis Mac Allister",
+    "club": "Liverpool",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mohamed Salah",
+    "club": "Liverpool",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Conor Bradley",
+    "club": "Liverpool",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Federico Chiesa",
+    "club": "Liverpool",
+    "number": "14",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Giovanni Leoni",
+    "club": "Liverpool",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Curtis Jones",
+    "club": "Liverpool",
+    "number": "17",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cody Gakpo",
+    "club": "Liverpool",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Hugo Ekitike",
+    "club": "Liverpool",
+    "number": "22",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Giorgi Mamardashvili",
+    "club": "Liverpool",
+    "number": "25",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "James Trafford",
+    "club": "Manchester City",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marcus Bettinelli",
+    "club": "Manchester City",
+    "number": "13",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Rúben Dias",
+    "club": "Manchester City",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "John Stones",
+    "club": "Manchester City",
+    "number": "5",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nathan Aké",
+    "club": "Manchester City",
+    "number": "6",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Rayan Aït-Nouri",
+    "club": "Manchester City",
+    "number": "21",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joško Gvardiol",
+    "club": "Manchester City",
+    "number": "24",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Matheus Nunes",
+    "club": "Manchester City",
+    "number": "27",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tijjani Reijnders",
+    "club": "Manchester City",
+    "number": "4",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Omar Marmoush",
+    "club": "Manchester City",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mateo Kovačić",
+    "club": "Manchester City",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Rayan Cherki",
+    "club": "Manchester City",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nico González",
+    "club": "Manchester City",
+    "number": "14",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Rodri",
+    "club": "Manchester City",
+    "number": "16",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Erling Haaland",
+    "club": "Manchester City",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jérémy Doku",
+    "club": "Manchester City",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Savinho",
+    "club": "Manchester City",
+    "number": "26",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Oscar Bobb",
+    "club": "Manchester City",
+    "number": "52",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Altay Bayındır",
+    "club": "Manchester United",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Diogo Dalot",
+    "club": "Manchester United",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Noussair Mazraoui",
+    "club": "Manchester United",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Matthijs de Ligt",
+    "club": "Manchester United",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harry Maguire",
+    "club": "Manchester United",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lisandro Martínez",
+    "club": "Manchester United",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mason Mount",
+    "club": "Manchester United",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bruno Fernandes",
+    "club": "Manchester United",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Matheus Cunha",
+    "club": "Manchester United",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joshua Zirkzee",
+    "club": "Manchester United",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tyrell Malacia",
+    "club": "Manchester United",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Patrick Dorgu",
+    "club": "Manchester United",
+    "number": "13",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Leny Yoro",
+    "club": "Manchester United",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Amad Diallo",
+    "club": "Manchester United",
+    "number": "16",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Casemiro",
+    "club": "Manchester United",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Bryan Mbeumo",
+    "club": "Manchester United",
+    "number": "19",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tom Heaton",
+    "club": "Manchester United",
+    "number": "22",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Luke Shaw",
+    "club": "Manchester United",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "↑ Vlachodimos was born in Stuttgart , Germany.",
+    "club": "Newcastle United",
+    "number": null,
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nick Pope",
+    "club": "Newcastle United",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kieran Trippier",
+    "club": "Newcastle United",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lewis Hall [ a ]",
+    "club": "Newcastle United",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Sven Botman",
+    "club": "Newcastle United",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Fabian Schär",
+    "club": "Newcastle United",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jamaal Lascelles",
+    "club": "Newcastle United",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joelinton",
+    "club": "Newcastle United",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Sandro Tonali",
+    "club": "Newcastle United",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yoane Wissa",
+    "club": "Newcastle United",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Anthony Gordon",
+    "club": "Newcastle United",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Harvey Barnes",
+    "club": "Newcastle United",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Malick Thiaw",
+    "club": "Newcastle United",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Emil Krafth",
+    "club": "Newcastle United",
+    "number": "17",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "William Osula",
+    "club": "Newcastle United",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Anthony Elanga",
+    "club": "Newcastle United",
+    "number": "20",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tino Livramento",
+    "club": "Newcastle United",
+    "number": "21",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jacob Murphy",
+    "club": "Newcastle United",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Neco Williams",
+    "club": "Nottingham Forest",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Morato",
+    "club": "Nottingham Forest",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Murillo",
+    "club": "Nottingham Forest",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ibrahim Sangaré",
+    "club": "Nottingham Forest",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Callum Hudson-Odoi",
+    "club": "Nottingham Forest",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Elliot Anderson",
+    "club": "Nottingham Forest",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Taiwo Awoniyi",
+    "club": "Nottingham Forest",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Morgan Gibbs-White",
+    "club": "Nottingham Forest",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Chris Wood",
+    "club": "Nottingham Forest",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "John Victor",
+    "club": "Nottingham Forest",
+    "number": "13",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dan Ndoye",
+    "club": "Nottingham Forest",
+    "number": "14",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Arnaud Kalimuendo",
+    "club": "Nottingham Forest",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nicolás Domínguez",
+    "club": "Nottingham Forest",
+    "number": "16",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Angus Gunn",
+    "club": "Nottingham Forest",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Igor Jesus",
+    "club": "Nottingham Forest",
+    "number": "19",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Omari Hutchinson",
+    "club": "Nottingham Forest",
+    "number": "21",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ryan Yates",
+    "club": "Nottingham Forest",
+    "number": "22",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jair Cunha",
+    "club": "Nottingham Forest",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Alex McCarthy",
+    "club": "Southampton",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mads Roerslev",
+    "club": "Southampton",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ryan Manning",
+    "club": "Southampton",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Flynn Downes",
+    "club": "Southampton",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jack Stephens",
+    "club": "Southampton",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Taylor Harwood-Bellis",
+    "club": "Southampton",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joe Aribo",
+    "club": "Southampton",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Adam Armstrong",
+    "club": "Southampton",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Finn Azaz",
+    "club": "Southampton",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ross Stewart",
+    "club": "Southampton",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Ronnie Edwards",
+    "club": "Southampton",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Léo Scienza",
+    "club": "Southampton",
+    "number": "13",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Nathan Wood",
+    "club": "Southampton",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Joshua Quarshie",
+    "club": "Southampton",
+    "number": "17",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tom Fellows",
+    "club": "Southampton",
+    "number": "18",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cameron Archer",
+    "club": "Southampton",
+    "number": "19",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Caspar Jander",
+    "club": "Southampton",
+    "number": "20",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Samuel Edozie",
+    "club": "Southampton",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Guglielmo Vicario",
+    "club": "Tottenham Hotspur",
+    "number": "1",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Antonín Kinský",
+    "club": "Tottenham Hotspur",
+    "number": "31",
+    "pos": "GK",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Radu Drăgușin",
+    "club": "Tottenham Hotspur",
+    "number": "3",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Kevin Danso",
+    "club": "Tottenham Hotspur",
+    "number": "4",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Destiny Udogie",
+    "club": "Tottenham Hotspur",
+    "number": "13",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Luka Vušković",
+    "club": "Tottenham Hotspur",
+    "number": "16",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Cristian Romero",
+    "club": "Tottenham Hotspur",
+    "number": "17",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Pedro Porro",
+    "club": "Tottenham Hotspur",
+    "number": "23",
+    "pos": "DF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "João Palhinha",
+    "club": "Tottenham Hotspur",
+    "number": "6",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Xavi Simons",
+    "club": "Tottenham Hotspur",
+    "number": "7",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yves Bissouma",
+    "club": "Tottenham Hotspur",
+    "number": "8",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "James Maddison",
+    "club": "Tottenham Hotspur",
+    "number": "10",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Archie Gray",
+    "club": "Tottenham Hotspur",
+    "number": "14",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Lucas Bergvall",
+    "club": "Tottenham Hotspur",
+    "number": "15",
+    "pos": "MF",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Richarlison",
+    "club": "Tottenham Hotspur",
+    "number": "9",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Mathys Tel",
+    "club": "Tottenham Hotspur",
+    "number": "11",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yang Min-hyeok",
+    "club": "Tottenham Hotspur",
+    "number": "18",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dominic Solanke",
+    "club": "Tottenham Hotspur",
+    "number": "19",
+    "pos": "FW",
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "José Sá",
+    "club": "Wolverhampton Wanderers",
+    "number": "1",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Matt Doherty",
+    "club": "Wolverhampton Wanderers",
+    "number": "2",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Hugo Bueno",
+    "club": "Wolverhampton Wanderers",
+    "number": "3",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Santiago Bueno",
+    "club": "Wolverhampton Wanderers",
+    "number": "4",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Marshall Munetsi",
+    "club": "Wolverhampton Wanderers",
+    "number": "5",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "David Møller Wolfe",
+    "club": "Wolverhampton Wanderers",
+    "number": "6",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "André",
+    "club": "Wolverhampton Wanderers",
+    "number": "7",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "João Gomes",
+    "club": "Wolverhampton Wanderers",
+    "number": "8",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jørgen Strand Larsen",
+    "club": "Wolverhampton Wanderers",
+    "number": "9",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Jhon Arias",
+    "club": "Wolverhampton Wanderers",
+    "number": "10",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Hwang Hee-chan",
+    "club": "Wolverhampton Wanderers",
+    "number": "11",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Emmanuel Agbadou",
+    "club": "Wolverhampton Wanderers",
+    "number": "12",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tolu Arokodare",
+    "club": "Wolverhampton Wanderers",
+    "number": "14",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Yerson Mosquera",
+    "club": "Wolverhampton Wanderers",
+    "number": "15",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Rodrigo Gomes",
+    "club": "Wolverhampton Wanderers",
+    "number": "21",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Tawanda Chirewa",
+    "club": "Wolverhampton Wanderers",
+    "number": "23",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Toti Gomes",
+    "club": "Wolverhampton Wanderers",
+    "number": "24",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  },
+  {
+    "name": "Dan Bentley",
+    "club": "Wolverhampton Wanderers",
+    "number": "25",
+    "pos": null,
+    "season": "2025–26 Premier League"
+  }
+]
