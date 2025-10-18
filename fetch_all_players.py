@@ -1,16 +1,16 @@
 """
-Fetch a small sample of players' images for testing.
-
-This is a trimmed version of the full pipeline that stops after
-`limit_total_players` images have been processed (default: 5) so you can
-verify the flow quickly.
+Fetch a small sample of players' images for testing — limited to Premier League clubs.
 
 Place this script next to player_images.py and teams.json, then run:
   python fetch_all_players.py
 
 Outputs:
-- player_images/<league_code>/<player image files>
+- player_images/EPL/<player image files>
 - player_images/attribution.csv
+
+Behavior:
+- Only clubs from the Premier League are considered (league_code == "EPL" or league name contains "Premier").
+- Stops after `limit_total_players` processed (default 5) so you can verify quickly.
 """
 import json
 import time
@@ -38,15 +38,21 @@ def load_teams(path="teams.json"):
     with p.open("r", encoding="utf-8") as f:
         return json.load(f)
 
-def clubs_by_league(teams):
-    by = {}
+def premier_league_clubs(teams):
+    """
+    Return sorted list of club names that are in the Premier League.
+    Accepts either league_code == 'EPL' or league name containing 'premier'.
+    """
+    clubs = set()
     for t in teams:
-        code = t.get("league_code") or t.get("league") or "UNKNOWN"
+        code = (t.get("league_code") or "").upper()
+        lname = (t.get("league") or t.get("league_name") or "").lower()
         name = t.get("team_name") or t.get("name")
         if not name:
             continue
-        by.setdefault(code, set()).add(name)
-    return by
+        if code == "EPL" or "premier" in lname:
+            clubs.add(name)
+    return sorted(clubs)
 
 def players_for_club_qid(club_qid, limit=50):
     query = f"""
@@ -71,59 +77,54 @@ def players_for_club_qid(club_qid, limit=50):
         results.append({"qid": qid, "label": label})
     return results
 
-def fetch_sample(out_root="player_images", teams_path="teams.json", limit_total_players=5):
+def fetch_sample_premier(out_root="player_images", teams_path="teams.json", limit_total_players=5):
     teams = load_teams(teams_path)
-    by_league = clubs_by_league(teams)
+    clubs = premier_league_clubs(teams)
     out_root = Path(out_root)
     out_root.mkdir(parents=True, exist_ok=True)
     all_records = []
     processed = 0
 
-    for league_code, clubs in sorted(by_league.items()):
+    print(f"Found {len(clubs)} Premier League clubs (using teams.json). Processing up to {limit_total_players} players total.\n")
+
+    for club in clubs:
         if processed >= limit_total_players:
             break
-        print(f"\n=== League {league_code}: {len(clubs)} clubs ===")
-        league_dir = out_root / league_code
-        league_dir.mkdir(parents=True, exist_ok=True)
+        print(f"-- Club: {club}")
+        club_qid = wikidata_id_for(club)
+        print("  club qid:", club_qid)
+        if not club_qid:
+            print("  -> club QID not found; skipping club.")
+            continue
 
-        for club in sorted(clubs):
+        try:
+            players = players_for_club_qid(club_qid, limit=20)
+        except Exception as e:
+            print("  SPARQL error for club", club, e)
+            continue
+
+        print(f"  players found (sample): {len(players)}")
+        for p in players:
             if processed >= limit_total_players:
                 break
-            print(f"\n-- Club: {club}")
-            club_qid = wikidata_id_for(club)
-            print("  club qid:", club_qid)
-            if not club_qid:
-                print("  -> club QID not found; skipping club.")
-                continue
-
-            try:
-                players = players_for_club_qid(club_qid, limit=20)
-            except Exception as e:
-                print("  SPARQL error for club", club, e)
-                continue
-
-            print(f"  players found (sample): {len(players)}")
-            for p in players:
-                if processed >= limit_total_players:
-                    break
-                name = p["label"]
-                print("    player:", name)
-                rec = player_image(name, width=800)
-                rec['league_code'] = league_code
-                rec['club'] = club
-                print("      source:", rec.get("source"), "->", rec.get("image_url"))
-                saved_path = save_player_image(rec, out_dir=str(out_root / league_code))
-                print("      saved:", saved_path)
-                rec['_saved_path'] = str(saved_path) if saved_path else ""
-                all_records.append(rec)
-                processed += 1
-                _polite_sleep()
+            name = p["label"]
+            print("    player:", name)
+            rec = player_image(name, width=800)
+            rec['league_code'] = "EPL"
+            rec['club'] = club
+            print("      source:", rec.get("source"), "->", rec.get("image_url"))
+            saved_path = save_player_image(rec, out_dir=str(out_root / "EPL"))
+            print("      saved:", saved_path)
+            rec['_saved_path'] = str(saved_path) if saved_path else ""
+            all_records.append(rec)
+            processed += 1
+            _polite_sleep()
 
     csv_path = out_root / "attribution.csv"
     save_attributions(all_records, csv_path=str(csv_path))
-    print("\nDone. Processed:", processed, "attributions written to:", csv_path)
+    print("\nDone. Processed:", processed, "— attribution CSV written to:", csv_path)
     return all_records
 
 if __name__ == "__main__":
-    # Quick test: only 5 players in total
-    fetch_sample(out_root="player_images", teams_path="teams.json", limit_total_players=5)
+    # Quick test: only 5 players in total from Premier League clubs
+    fetch_sample_premier(out_root="player_images", teams_path="teams.json", limit_total_players=5)
