@@ -1,11 +1,13 @@
 # scripts/generate_players_json.py
-# Build data/players.json by scraping Wikipedia for each PL club (season page -> fallback to club page).
-# Robust parsing:
-# - Uses Wikipedia REST HTML for stability
-# - Finds First-team/Current squad section; skips Academy/Loans/etc.
+# Build data/players.json by scraping Wikipedia for each PL club (season page + club page).
+# Key features:
+# - Uses Wikipedia REST HTML
+# - Aggregates ALL blocks in the squad section (tables/lists)
+# - Skips Academy/Loans/etc. subsections
 # - Reads ONLY the Player/Name column from tables (via header map)
 # - Accepts full-word positions (maps to GK/DF/MF/FW)
 # - Cleans names (removes refs, captain tags, heights/fees/DOB lines)
+# - If season page yields < 10 players, MERGE with club page before picking
 # - Picks a balanced 18 per club (2 GK, 6 DF, 6 MF, 4 FW, then best remaining)
 
 from __future__ import annotations
@@ -195,7 +197,6 @@ def header_map(tbl) -> dict:
         if row:
             heads = [th.get_text(" ", strip=True).lower() for th in row.find_all("th")]
     if not heads:
-        # fallback: collect top-row THs
         heads = [th.get_text(" ", strip=True).lower() for th in tbl.find_all("th")]
 
     norm = []
@@ -287,19 +288,27 @@ def extract_from_list(lst) -> list[dict]:
     return players
 
 def parse_squad(soup: BeautifulSoup, heading_needles: list[str]) -> list[dict]:
+    """
+    Collect ALL tables/lists under the target section (until next h2/h3),
+    skipping excluded subsections, then return the combined rows.
+    """
     h = find_heading(soup, heading_needles)
     if not h:
         return []
+    combined = []
     for block in iter_section_blocks(soup, h):
         if block.name == "table":
-            got = extract_rows_from_table(block)
-            if got:
-                return got
-        elif block.name in ("ul","ol"):
-            got = extract_from_list(block)
-            if got:
-                return got
-    return []
+            combined.extend(extract_rows_from_table(block))
+        elif block.name in ("ul", "ol"):
+            combined.extend(extract_from_list(block))
+    # de-dup by (name,pos)
+    out, seen = [], set()
+    for p in combined:
+        key = ((p.get("name") or "").strip().lower(), p.get("pos"))
+        if key not in seen and p.get("name"):
+            seen.add(key)
+            out.append(p)
+    return out
 
 # ---------- Balanced 18 picker ----------
 def pick_top18(players: list[dict]) -> list[dict]:
@@ -358,33 +367,54 @@ def main():
     total_clubs = 0
 
     for club, season_title in SEASON_TITLES.items():
-        got = []
-
+        # --- primary: season page ---
+        got_season = []
         html = get_html(season_title)
         if html:
             soup = BeautifulSoup(html, "lxml")
-            got = parse_squad(soup, SQUAD_HEADINGS_SEASON)
-            if got:
-                got = pick_top18(got)
-                total_clubs += 1
-                print(f"[ok] {club}: {len(got)} players (season page)")
+            got_season = parse_squad(soup, SQUAD_HEADINGS_SEASON)
 
-        if not got:
-            base = CLUB_TITLES[club]
-            html2 = get_html(base)
-            if html2:
-                soup2 = BeautifulSoup(html2, "lxml")
-                got = parse_squad(soup2, SQUAD_HEADINGS_CLUB)
-                if got:
-                    got = pick_top18(got)
-                    total_clubs += 1
-                    print(f"[ok] {club}: {len(got)} players (club page)")
-                else:
-                    print(f"[warn] {club}: squad not found on club page")
-            else:
-                print(f"[skip] {club}: page not found")
+        # --- secondary: club page (merge if season < 10 or empty) ---
+        got_club = []
+        base = CLUB_TITLES[club]
+        html2 = get_html(base)
+        if html2:
+            soup2 = BeautifulSoup(html2, "lxml")
+            got_club = parse_squad(soup2, SQUAD_HEADINGS_CLUB)
 
-        for p in got:
+        # Merge logic
+        merged = []
+        def _merge_into(dst, src):
+            seen = {(d["name"].strip().lower(), d.get("pos")) for d in dst if d.get("name")}
+            for p in src:
+                if not p.get("name"):
+                    continue
+                k = (p["name"].strip().lower(), p.get("pos"))
+                if k not in seen:
+                    dst.append(p); seen.add(k)
+
+        if got_season and len(got_season) >= 10:
+            merged = got_season
+            source_label = "season page"
+        elif got_season or got_club:
+            if got_season:
+                _merge_into(merged, got_season)
+            if got_club:
+                _merge_into(merged, got_club)
+            source_label = "season+club merge" if (got_season and got_club) else ("season page" if got_season else "club page")
+        else:
+            merged = []
+            source_label = "not found"
+
+        if merged:
+            picked = pick_top18(merged)
+            total_clubs += 1
+            print(f"[ok] {club}: {len(picked)} players ({source_label})")
+        else:
+            print(f"[warn] {club}: squad not found on season or club page")
+            picked = []
+
+        for p in picked:
             all_players.append({
                 "name": p["name"],
                 "club": club,
