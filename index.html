@@ -56,7 +56,7 @@
   </div>
 
   <main>
-    <!-- Team view (existing site UI) -->
+    <!-- Team view -->
     <div id="teamView" class="team-only">
       <div class="container">
         <!-- Left: controls -->
@@ -70,19 +70,16 @@
             <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
           </div>
 
-          <!-- League chips (Top 5 visible; more hidden until toggled) -->
+          <!-- League chips -->
           <div id="chips">
             <div id="chipsTop" class="chips"></div>
-
             <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">
               Show more leagues
             </button>
-
             <div id="chipsMore" class="chips" hidden></div>
           </div>
 
           <div class="section-title">Show on wheel</div>
-          <!-- Show-on-wheel options -->
           <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
             <label class="chip">
               <input type="checkbox" id="optName" checked aria-label="Name" />
@@ -110,27 +107,29 @@
 
           <!-- Current selection display (prevents missing-ID errors) -->
           <div id="currentDisplay" class="mt-4" aria-live="polite">
-            <img id="currentLogo" class="current-logo" src="" alt="" style="display:block; width:96px; height:96px; object-fit:contain; margin: 12px 0;">
+            <img id="currentLogo" class="current-logo" src="/img/silhouette-club.png" alt="" style="display:block; width:96px; height:96px; object-fit:contain; margin: 12px 0;">
             <div id="currentText" class="current-text" style="color:var(--text); font-weight:700;">&nbsp;</div>
           </div>
-
         </section>
 
         <!-- Right: wheel -->
         <section class="card" aria-labelledby="wheel-title">
           <div class="section-title" id="wheel-title">Club Wheel</div>
           <div id="perfTip" class="perf-tip" aria-live="polite">0 teams selected</div>
+
           <div class="wheel-wrap">
             <div class="pointer" aria-hidden="true"></div>
+            <!-- SPIN floating action button (visible on top of the wheel) -->
             <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
+
             <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
             <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
           </div>
         </section>
 
-        <!-- Content block (keep your existing content here) -->
+        <!-- Content block -->
         <section id="content" style="grid-column: 1 / -1" class="scroll-smooth">
-          <!-- keep existing accordions / content -->
+          <!-- Keep your existing content / accordions here -->
         </section>
       </div>
     </div>
@@ -141,20 +140,20 @@
         <div class="section-title" id="player-title">Player</div>
         <div class="panel p-6">
           <h2 class="text-2xl font-semibold mb-3">Player — Coming soon</h2>
-          <p class="text-[15px] md:text-base leading-7 md:leading-8">We’re building the player mode. This will let you explore players, stats, and quizzes focused on individuals rather than teams. Check back soon — or try the Team spinner to get started.</p>
+          <p class="text-[15px] md:text-base leading-7 md:leading-8">We’re building player mode. Check back soon.</p>
         </div>
       </section>
     </div>
   </main>
 
-  <!-- Modal (unchanged) -->
+  <!-- Modal -->
   <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mHead">
     <div id="modal" class="modal">
       <div id="mHead" class="m-head">Team</div>
       <div class="m-body">
         <div class="m-sub" id="mSub">League</div>
         <div class="m-row">
-          <img id="mLogo" class="m-logo" alt="" />
+          <img id="mLogo" class="m-logo" src="/img/silhouette-club.png" alt="" />
         </div>
         <div class="m-row" style="margin-top:12px">
           <strong style="min-width:84px">Stadium</strong>
@@ -167,7 +166,7 @@
     </div>
   </div>
 
-  <!-- Keep client script includes to compiled JS only -->
+  <!-- Compiled client script only -->
   <script src="/app.js" defer></script>
 </body>
 </html>
