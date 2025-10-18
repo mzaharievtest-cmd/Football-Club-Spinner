@@ -1,221 +1,188 @@
-# scripts/generate_players_json.py
-# Build data/players.json with all players active in the 2025/26 Premier League.
-# Strategy:
-#   1) Try season item Q132674557 to collect teams (via P1923 and P1344).
-#   2) If none found, fall back to teams.json (your EPL club names) and resolve QIDs.
-#   3) For each team QID, select players with P54 membership overlapping 2025-07-01 .. 2026-06-30.
-# Output: data/players.json  (array of { qid, name, club, season })
+# scripts/generate_players_from_wikipedia.py
+# Build data/players.json from Wikipedia "2025–26 {Club} F.C. season" pages.
+# Uses the MediaWiki REST API to fetch page HTML and parses the "First-team squad" table(s).
 
-from __future__ import annotations
-import argparse, json, pathlib, time, random
-from typing import List, Dict, Any, Tuple
-
+import json, re, time, random, pathlib
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+from bs4 import BeautifulSoup
 
-SEASON_QID = "Q132674557"  # 2025–26 Premier League (Wikidata)
-ENDPOINT = "https://query.wikidata.org/sparql"
-UA = "footballspinner-fetch/1.0 (players.json generator)"
+# Wikipedia REST HTML (official)
+# Docs: https://en.wikipedia.org/w/rest.php/v1/page/{Title}/html  and https://api.wikimedia.org/core/v1/wikipedia/en/page/{Title}/html
+REST_HTML = "https://en.wikipedia.org/w/rest.php/v1/page/{title}/html"
+UA = {"User-Agent": "footballspinner/1.0 (first-team fetcher)"}
 
-# ------- HTTP session with retries -------
-retry = Retry(
-    total=3,
-    backoff_factor=0.4,
-    status_forcelist=[429, 500, 502, 503, 504],
-    respect_retry_after_header=True,
-)
-session = requests.Session()
-session.headers.update({"User-Agent": UA})
-session.mount("https://", HTTPAdapter(max_retries=retry))
-session.mount("http://", HTTPAdapter(max_retries=retry))
+# 20 PL clubs (update if promoted/relegated change)
+CLUB_TITLES = [
+    # Title format must match enwiki page title
+    "2025–26_Arsenal_F.C._season",
+    "2025–26_Aston_Villa_F.C._season",
+    "2025–26_Bournemouth_F.C._season",
+    "2025–26_Brentford_F.C._season",
+    "2025–26_Brighton_%26_Hove_Albion_F.C._season",
+    "2025–26_Chelsea_F.C._season",
+    "2025–26_Crystal_Palace_F.C._season",
+    "2025–26_Everton_F.C._season",
+    "2025–26_Fulham_F.C._season",
+    "2025–26_Ipswich_Town_F.C._season",
+    "2025–26_Leeds_United_F.C._season",
+    "2025–26_Leicester_City_F.C._season",
+    "2025–26_Liverpool_F.C._season",
+    "2025–26_Manchester_City_F.C._season",
+    "2025–26_Manchester_United_F.C._season",
+    "2025–26_Newcastle_United_F.C._season",
+    "2025–26_Nottingham_Forest_F.C._season",
+    "2025–26_Southampton_F.C._season",
+    "2025–26_Tottenham_Hotspur_F.C._season",
+    "2025–26_Wolverhampton_Wanderers_F.C._season",
+]
 
-def _polite() -> None:
-    time.sleep(random.uniform(0.08, 0.18))
+def _polite():
+    time.sleep(random.uniform(0.15, 0.35))
 
-def write_json(path: pathlib.Path, rows: List[Dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+def get_html(title: str) -> str | None:
+    url = REST_HTML.format(title=title)
+    r = requests.get(url, headers=UA, timeout=30)
+    if r.status_code != 200:
+        return None
+    return r.text
 
-# ------- Step 1: Teams from season (two modeling patterns) -------
-def season_team_qids() -> List[str]:
-    """
-    Return team QIDs participating in the 2025–26 EPL season by either:
-      - season (Q132674557) -> P1923 -> team
-      - team -> P1344 -> season (Q132674557)
-    """
-    q = f"""
-PREFIX wd:  <http://www.wikidata.org/entity/>
-PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-SELECT DISTINCT ?team WHERE {{
-  {{ VALUES ?season {{ wd:{SEASON_QID} }} ?season wdt:P1923 ?team. }}
-  UNION
-  {{ VALUES ?season {{ wd:{SEASON_QID} }} ?team wdt:P1344 ?season. }}
-}}
-"""
-    _polite()
-    r = session.get(ENDPOINT, params={"query": q, "format": "json"}, timeout=90)
-    r.raise_for_status()
-    return [b["team"]["value"].rsplit("/", 1)[-1] for b in r.json()["results"]["bindings"]]
+def next_elements_until_section(start):
+    """Yield siblings until the next H2/H3 section starts."""
+    for sib in start.find_all_next():
+        if sib.name in ("h2", "h3") and sib is not start:
+            break
+        yield sib
 
-def labels_for_qids(qids: List[str]) -> Dict[str, str]:
-    if not qids:
-        return {}
-    # Chunk to avoid very long VALUES
-    out: Dict[str, str] = {}
-    for i in range(0, len(qids), 40):
-        chunk = qids[i : i + 40]
-        q = f"""
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX wd:   <http://www.wikidata.org/entity/>
-SELECT ?item ?label WHERE {{
-  VALUES ?item {{ {' '.join('wd:'+q for q in chunk)} }}
-  ?item rdfs:label ?label .
-  FILTER(LANG(?label)='en')
-}}
-"""
-        _polite()
-        r = session.get(ENDPOINT, params={"query": q, "format": "json"}, timeout=90)
-        r.raise_for_status()
-        for b in r.json()["results"]["bindings"]:
-            out[b["item"]["value"].rsplit("/", 1)[-1]] = b["label"]["value"]
-    return out
+def extract_first_team(html: str) -> list[dict]:
+    """Parse 'First-team squad' section; return list of players with fields."""
+    soup = BeautifulSoup(html, "html.parser")
+    players = []
 
-# ------- Step 2 (fallback): Read clubs from teams.json and resolve QIDs -------
-def teams_from_file(path: pathlib.Path) -> List[str]:
-    if not path.exists():
-        return []
-    teams = json.loads(path.read_text(encoding="utf-8"))
-    out: List[str] = []
-    for t in teams:
-        name = t.get("team_name") or t.get("name")
-        code = (t.get("league_code") or "").upper()
-        league = (t.get("league") or t.get("league_name") or "").lower()
-        if name and (code == "EPL" or "premier" in league):
-            out.append(name)
-    return sorted(set(out))
+    # Find heading that contains text like "First-team squad" (case-insensitive)
+    heading = None
+    for h in soup.find_all(["h2", "h3"]):
+        txt = (h.get_text(" ", strip=True) or "").lower()
+        if "first-team" in txt and "squad" in txt:
+            heading = h
+            break
+        if "current squad" in txt:
+            heading = h
+            break
+        if "first team squad" in txt:
+            heading = h
+            break
+    if not heading:
+        return players
 
-def wbsearch_qid(label: str) -> str | None:
-    """Resolve a human-readable club label to QID using Wikidata wbsearchentities."""
-    _polite()
-    r = session.get(
-        "https://www.wikidata.org/w/api.php",
-        params={
-            "action": "wbsearchentities",
-            "format": "json",
-            "language": "en",
-            "type": "item",
-            "limit": 1,
-            "search": label,
-        },
-        timeout=20,
-    )
-    r.raise_for_status()
-    js = r.json()
-    return js["search"][0]["id"] if js.get("search") else None
-
-def resolve_club_qids_from_labels(labels: List[str]) -> Dict[str, str]:
-    out: Dict[str, str] = {}
-    for lbl in labels:
-        qid = wbsearch_qid(lbl)
-        if qid:
-            out[qid] = lbl
-    return out
-
-# ------- Step 3: Players with P54 overlapping 2025/26 -------
-def players_active_2025_26_for_club(club_qid: str, limit: int = 500) -> List[Tuple[str, str]]:
-    """
-    Return list of (player_qid, player_label) for people whose membership at club_qid
-    overlaps 2025-07-01 .. 2026-06-30. Excludes deprecated statements.
-    """
-    q = f"""
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX wd:  <http://www.wikidata.org/entity/>
-PREFIX p:   <http://www.wikidata.org/prop/>
-PREFIX ps:  <http://www.wikidata.org/prop/statement/>
-PREFIX pq:  <http://www.wikidata.org/prop/qualifier/>
-PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-PREFIX wikibase: <http://wikiba.se/ontology#>
-
-SELECT ?player ?playerLabel ?start ?end WHERE {{
-  ?player p:P54 ?stmt .
-  ?stmt ps:P54 wd:{club_qid} ;
-        wikibase:rank ?rank .
-  FILTER(?rank != wikibase:DeprecatedRank)
-
-  OPTIONAL {{ ?stmt pq:P580 ?start. }}   # start time
-  OPTIONAL {{ ?stmt pq:P582 ?end. }}     # end time
-
-  FILTER( !BOUND(?end)   || ?end  >= "2025-07-01T00:00:00Z"^^xsd:dateTime )
-  FILTER( !BOUND(?start) || ?start <= "2026-06-30T23:59:59Z"^^xsd:dateTime )
-
-  ?player wdt:P31 wd:Q5 .                # human
-  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
-}}
-LIMIT {limit}
-"""
-    _polite()
-    r = session.get(ENDPOINT, params={"query": q, "format": "json"}, timeout=120)
-    r.raise_for_status()
-    rows = r.json()["results"]["bindings"]
-    out: List[Tuple[str, str]] = []
-    for b in rows:
-        uri = b["player"]["value"]
-        label = b.get("playerLabel", {}).get("value", "")
-        out.append((uri.rsplit("/", 1)[-1], label))
-    return out
-
-# ------- Orchestration -------
-def build_players_json(teams_json_path: pathlib.Path, out_path: pathlib.Path) -> Tuple[int, int]:
-    # Try season first
-    team_qids = season_team_qids()
-    clubs_by_qid: Dict[str, str] = {}
-
-    if team_qids:
-        clubs_by_qid = labels_for_qids(team_qids)
-
-    # Fallback if season has no teams yet
-    if not clubs_by_qid:
-        labels = teams_from_file(teams_json_path)
-        if labels:
-            clubs_by_qid = resolve_club_qids_from_labels(labels)
-
-    players: List[Dict[str, Any]] = []
-    seen: set[Tuple[str, str]] = set()
-
-    for club_qid, club_label in clubs_by_qid.items():
-        try:
-            people = players_active_2025_26_for_club(club_qid)
-        except Exception as e:
-            print("SPARQL error for club", club_label, club_qid, e)
-            continue
-        for player_qid, player_label in people:
-            key = (player_qid, club_qid)
-            if key in seen:
+    # Within this section, parse tables or lists that look like squad tables
+    for el in next_elements_until_section(heading):
+        # Stop early if we roamed too far
+        if el.name in ("h2", "h3"):
+            break
+        # Prefer tables with headers including "No" and "Player"
+        if el.name == "table":
+            ths = [th.get_text(" ", strip=True).lower() for th in el.find_all("th")]
+            if not ths:
                 continue
-            seen.add(key)
-            players.append({
-                "qid": player_qid,
-                "name": player_label or player_qid,
-                "club": club_label,
-                "season": "2025–26 Premier League",
-            })
+            header_text = " ".join(ths)
+            if ("no" in header_text or "number" in header_text) and "player" in header_text:
+                # parse rows
+                for tr in el.find_all("tr"):
+                    tds = tr.find_all(["td","th"])
+                    if len(tds) < 2:
+                        continue
+                    row_text = [td.get_text(" ", strip=True) for td in tds]
+                    # heuristics to pick fields
+                    shirt = None
+                    pos = None
+                    name = None
 
-    write_json(out_path, players)
-    return (len(clubs_by_qid), len(players))
+                    # try to find "Player" cell by link text
+                    a = tr.find("a")
+                    if a and a.get("href","").startswith("/wiki/"):
+                        name = a.get_text(" ", strip=True)
+
+                    # fallback: guess last significant cell as name
+                    if not name:
+                        # pick the longest cell text as name-ish
+                        longest = max(row_text, key=len, default="")
+                        name = longest
+
+                    # shirt number: first numeric-ish cell
+                    for cell in row_text:
+                        if re.fullmatch(r"[0-9]{1,3}", cell):
+                            shirt = cell
+                            break
+
+                    # position: look for typical position abbreviations
+                    pos_guess = None
+                    for cell in row_text:
+                        c = cell.upper()
+                        if re.fullmatch(r"(GK|DF|MF|FW|GKP|DEF|MID|FWD)", c):
+                            pos_guess = c
+                            break
+                    pos = pos_guess
+
+                    # basic sanity
+                    if name and not any(kw in name.lower() for kw in ["player", "no.", "no "]):
+                        players.append({"name": name, "number": shirt, "pos": pos})
+        # Some club pages use bullet lists
+        if el.name in ("ul","ol"):
+            for li in el.find_all("li"):
+                # expect something like '7 – Bukayo Saka (MF)'
+                text = li.get_text(" ", strip=True)
+                m = re.match(r"^\s*(\d{1,3})\s*[–-]\s*(.+?)\s*(\((GK|DF|MF|FW).*\))?\s*$", text, flags=re.I)
+                if m:
+                    players.append({"name": m.group(2), "number": m.group(1), "pos": (m.group(4) or None)})
+                else:
+                    # last resort: take first bolded link
+                    a = li.find("a")
+                    if a and a.get("href","").startswith("/wiki/"):
+                        players.append({"name": a.get_text(" ", strip=True), "number": None, "pos": None})
+
+    # de-duplicate by player name
+    uniq = []
+    seen = set()
+    for p in players:
+        key = p["name"].lower()
+        if key in seen: continue
+        seen.add(key)
+        uniq.append(p)
+    return uniq
 
 def main():
-    ap = argparse.ArgumentParser(description="Generate data/players.json for 2025/26 Premier League")
-    ap.add_argument("--teams", default="teams.json", help="Path to teams.json (fallback list of EPL clubs)")
-    ap.add_argument("--out", default="data/players.json", help="Output JSON path")
-    args = ap.parse_args()
+    out_path = pathlib.Path("data/players.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    repo_root = pathlib.Path.cwd()
-    teams_json = (repo_root / args.teams).resolve()
-    out_path = (repo_root / args.out).resolve()
+    all_players = []
+    total_clubs = 0
 
-    clubs, players = build_players_json(teams_json, out_path)
-    print(f"Teams considered: {clubs} • Wrote {players} players to {out_path}")
+    for title in CLUB_TITLES:
+        _polite()
+        html = get_html(title)
+        club_name = title.replace("2025–26_", "").replace("_F.C._season", "").replace("_", " ")
+        if not html:
+            print(f"[skip] {club_name}: page not found")
+            continue
+
+        squad = extract_first_team(html)
+        if not squad:
+            print(f"[warn] {club_name}: first-team squad not found yet")
+            continue
+
+        total_clubs += 1
+        for p in squad:
+            all_players.append({
+                "name": p["name"],
+                "club": club_name.replace("%26", "&"),
+                "number": p.get("number"),
+                "pos": p.get("pos"),
+                "season": "2025–26 Premier League"
+            })
+        print(f"[ok] {club_name}: {len(squad)} players")
+
+    out_path.write_text(json.dumps(all_players, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\nClubs parsed: {total_clubs} • Players written: {len(all_players)} → {out_path}")
 
 if __name__ == "__main__":
     main()
