@@ -154,7 +154,7 @@
           <p class="mt-2">Optimized for phones and tablets — change leagues anytime to narrow or broaden the pool.</p>
         </div>
 
-        <!-- Accordions -->
+        <!-- Accordions (unchanged) -->
         <details id="leagues" aria-label="Leagues we cover">
           <summary><h3>Leagues We Cover</h3><span class="chev" aria-hidden="true"></span></summary>
           <div class="panel">
@@ -276,7 +276,8 @@
             #content details > .panel, #content details > summary .chev::after { transition: none; }
           }
 
-          /* small spacing tweak is already applied in style.css (toc margin) */
+          /* Limit line length for readability */
+          #content .text-wrap { max-width: 58rem; } /* ~928px within the 880–960px target */
         </style>
       </section>
     </div>
@@ -294,17 +295,15 @@
   </div>
 </main>
 
-<!-- Modal -->
+<!-- Modal (unchanged) -->
 <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mHead">
   <div id="modal" class="modal">
     <div id="mHead" class="m-head">Team</div>
     <div class="m-body">
       <div class="m-sub" id="mSub">League</div>
-
       <div class="m-row">
         <img id="mLogo" class="m-logo" alt="" />
       </div>
-
       <div class="m-row" style="margin-top:12px">
         <strong style="min-width:84px">Stadium</strong>
         <span id="mStadium" class="m-sub"></span>
@@ -316,45 +315,7 @@
   </div>
 </div>
 
-<!-- Tiny script to toggle Team / Player modes -->
-<script>
-  (function () {
-    const btnTeam = document.getElementById('modeTeam');
-    const btnPlayer = document.getElementById('modePlayer');
-    const teamView = document.getElementById('teamView');
-    const playerView = document.getElementById('playerView');
-
-    function showTeam(save) {
-      btnTeam.classList.add('mode-btn-active');
-      btnTeam.setAttribute('aria-pressed', 'true');
-      btnPlayer.classList.remove('mode-btn-active');
-      btnPlayer.setAttribute('aria-pressed', 'false');
-      teamView.classList.remove('hidden');
-      playerView.classList.add('hidden');
-      if (save) localStorage.setItem('fs_mode', 'team');
-    }
-    function showPlayer(save) {
-      btnPlayer.classList.add('mode-btn-active');
-      btnPlayer.setAttribute('aria-pressed', 'true');
-      btnTeam.classList.remove('mode-btn-active');
-      btnTeam.setAttribute('aria-pressed', 'false');
-      teamView.classList.add('hidden');
-      playerView.classList.remove('hidden');
-      if (save) localStorage.setItem('fs_mode', 'player');
-    }
-
-    btnTeam.addEventListener('click', () => showTeam(true));
-    btnPlayer.addEventListener('click', () => showPlayer(true));
-
-    // Restore last mode
-    try {
-      const saved = localStorage.getItem('fs_mode');
-      if (saved === 'player') showPlayer(false);
-      else showTeam(false);
-    } catch (e) { showTeam(false); }
-  })();
-</script>
-
-<script src="app.js"></script>
+<!-- Keep client script includes to compiled JS only -->
+<script src="app.js" defer></script>
 </body>
 </html>
