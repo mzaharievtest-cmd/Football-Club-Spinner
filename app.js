@@ -108,7 +108,7 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// text color utils
+// text color utils omitted for brevity (keeps original implementations)...
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
   hex = hex.replace('#','');
@@ -123,7 +123,7 @@ function luminance(hex){
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
 
-// fitSingleLine
+// -------- Single-line fitting --------
 function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx = 9, maxPx = 28, weight = 800, fontFamily = 'Inter, system-ui, sans-serif' }) {
   let px = clamp(minPx, Math.round(targetPx), maxPx);
   ctx.font = `${weight} ${px}px ${fontFamily}`;
@@ -181,7 +181,7 @@ function lockUI(lock) {
 }
 
 // -------------------- Chips / History --------------------
-const TOP5 = ['EPL','SA','BUN','L1','LLA'];
+const TOP5 = ['EPL','SA','BUN','L1','LLA']; // Premier League, Serie A, Bundesliga, Ligue 1, LaLiga
 
 function makeChip(code, checked) {
   const full = LEAGUE_LABELS[code] || code;
@@ -202,9 +202,13 @@ function renderChips() {
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
 
+  // Top 5 — EPL checked by default
   topCodes.forEach(code => chipsTop.appendChild(makeChip(code, code === 'EPL')));
+
+  // Extra leagues — populated but hidden until the user clicks the button
   moreCodes.forEach(code => chipsMore.appendChild(makeChip(code, false)));
 
+  // Ensure hidden on initial render
   chipsMore.hidden = true;
   toggleMore.textContent = 'Show more leagues';
   toggleMore.setAttribute('aria-expanded', 'false');
@@ -552,6 +556,7 @@ function drawWheel(){
       const canShowStadium = !hideText && optStadium?.checked && t.stadium && maxTextWidth >= PERF.minTextWidth;
       const canShowLogo    = !hideLogos && optLogo?.checked && t.logo_url && (logoHalf * 2) >= PERF.minLogoBox;
 
+      // Unified typography & alignment for Name + Stadium
       if (canShowName || canShowStadium) {
         ctx.save();
         ctx.textAlign = 'left';
@@ -561,6 +566,7 @@ function drawWheel(){
         const strokeCol = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.65)';
         const fillCol = fg;
 
+        // Fit name first (bigger)
         let namePx = 0, stadPx = 0;
         let nameFit = { text: '', fontPx: 0 };
         let stadFit = { text: '', fontPx: 0 };
@@ -576,6 +582,7 @@ function drawWheel(){
           namePx = nameFit.fontPx;
         }
 
+        // Stadium ~82% of fitted name size when both present
         const stadTarget = (canShowName && namePx) ? Math.max(8, Math.round(namePx * 0.82)) : stadiumTargetPx;
         if (canShowStadium) {
           stadFit = fitSingleLine(ctx, t.stadium || '', {
@@ -588,10 +595,12 @@ function drawWheel(){
           stadPx = stadFit.fontPx;
         }
 
+        // Vertical layout: center combined block
         const gap = (canShowName && canShowStadium) ? 3 : 0;
         const totalH = (canShowName ? namePx : 0) + (canShowStadium ? stadPx : 0) + gap;
         let yCursor = -totalH / 2;
 
+        // Draw Name
         if (canShowName) {
           yCursor += namePx / 2;
           ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
@@ -603,6 +612,7 @@ function drawWheel(){
           yCursor += namePx / 2 + gap;
         }
 
+        // Draw Stadium (same design, slight alpha to de-emphasize)
         if (canShowStadium) {
           yCursor += stadPx / 2;
           ctx.font = `700 ${stadPx}px Inter, system-ui, sans-serif`;
@@ -750,6 +760,7 @@ function spin(){
 
 // -------------------- Events / Boot --------------------
 function setupEventListeners() {
+  // helper: quick-pick active state
   function setActive(btn) {
     [qpAll, qpNone, qpTop5].forEach(b => b?.classList?.toggle('active', b === btn));
   }
@@ -769,6 +780,7 @@ function setupEventListeners() {
     else setActive(null);
   }
 
+  // Leagues toggles
   chipsWrap.addEventListener('change', () => {
     if (spinning) return;
     selectedIdx = -1;
@@ -781,6 +793,7 @@ function setupEventListeners() {
     updateQuickPickActive();
   });
 
+  // "Show more leagues" toggle
   toggleMore.addEventListener('click', () => {
     if (spinning) return;
     const hidden = chipsMore.hidden;
@@ -796,6 +809,7 @@ function setupEventListeners() {
     updateQuickPickActive();
   });
 
+  // Quick picks
   qpAll.onclick  = () => { if (spinning) return; setCheckedCodes(visibleCodes()); setActive(qpAll); };
   qpNone.onclick = () => { if (spinning) return; setCheckedCodes([]); setActive(qpNone); };
   qpTop5.onclick = () => {
@@ -804,6 +818,7 @@ function setupEventListeners() {
     setActive(qpTop5);
   };
 
+  // Show-on-wheel toggles — immediate redraw
   const onWheelToggleChange = () => {
     if (spinning) return;
     drawWheel();
@@ -814,14 +829,17 @@ function setupEventListeners() {
   optStadium?.addEventListener('change', onWheelToggleChange);
   optLeague?.addEventListener('change', onWheelToggleChange);
 
+  // Spin actions
   spinBtn.onclick = spin;
   spinFab.onclick = spin;
 
+  // History and modal
   resetHistoryBtn.addEventListener('click', () => { if (!spinning) resetHistory(); });
   mClose.onclick = () => { if (!spinning) closeModal(); };
   backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
 
+  // Debounced resize redraw
   let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
