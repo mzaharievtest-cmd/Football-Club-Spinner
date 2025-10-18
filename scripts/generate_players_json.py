@@ -1,12 +1,10 @@
 # scripts/generate_players_from_wikipedia.py
 # Build data/players.json by scraping Wikipedia for each PL club (season page -> fallback to club page).
-# Tight "first-team" heuristics + balanced 18 picker:
-#   - Require shirt number (1..99) AND a position (GK/DF/MF/FW) where possible
-#   - Skip youth/loan sections (U21/U23/Academy/B team/Reserves/Loans)
-#   - Exclude rows mentioning "loan"
-#   - Prefer first valid squad table under the First-team/Current squad heading
-#   - pick_top18: 2 GK, 6 DF, 6 MF, 4 FW, then best remaining (by numbered, low number)
-# Output: data/players.json
+# Improved parsing:
+#  - Accept full-word positions and map to GK/DF/MF/FW
+#  - Number is optional (prefer if present)
+#  - Skip excluded sections instead of aborting; don't stop the whole page
+#  - Balanced pick_top18 (2 GK, 6 DF, 6 MF, 4 FW, then best remaining)
 
 from __future__ import annotations
 import json, re, time, random, pathlib
@@ -16,7 +14,6 @@ from bs4 import BeautifulSoup
 REST_HTML = "https://en.wikipedia.org/w/rest.php/v1/page/{title}/html"
 UA = {"User-Agent": "footballspinner/1.0 (first-team fetcher)"}
 
-# 20 PL clubs (adjust if the league changes)
 SEASON_TITLES = {
     "Arsenal": "2025–26_Arsenal_F.C._season",
     "Aston Villa": "2025–26_Aston_Villa_F.C._season",
@@ -62,13 +59,27 @@ CLUB_TITLES = {
     "Wolverhampton Wanderers": "Wolverhampton_Wanderers_F.C.",
 }
 
-# Heuristics and patterns
 SQUAD_HEADINGS_SEASON = ["first-team squad", "first team squad", "squad"]
 SQUAD_HEADINGS_CLUB   = ["current squad", "first-team squad", "first team", "squad"]
 EXCLUDE_SECTION_KEYS  = ["out on loan", "loans", "academy", "under-21", "under 21", "u21",
                          "under-23", "under 23", "u23", "development", "reserves", "b team"]
-POS_PATTERN = re.compile(r"^(GK|DF|MF|FW|GKP|DEF|MID|FWD)$", re.I)
-NUM_PATTERN = re.compile(r"^\d{1,2}$")  # 1..99
+
+# position normalization
+POS_ABBR_RX = re.compile(r"^(GK|DF|MF|FW|GKP|DEF|MID|FWD)$", re.I)
+POS_WORDS = {
+    "goalkeeper": "GK",
+    "keeper": "GK",
+    "defender": "DF",
+    "centre-back": "DF", "center-back": "DF", "center back": "DF", "centre back": "DF", "cb": "DF",
+    "full-back": "DF", "fullback": "DF", "left-back": "DF", "right-back": "DF", "lb": "DF", "rb": "DF",
+    "wing-back": "DF", "wingback": "DF", "lwb": "DF", "rwb": "DF",
+    "midfielder": "MF",
+    "defensive midfielder": "MF", "central midfielder": "MF", "attacking midfielder": "MF",
+    "left midfielder": "MF", "right midfielder": "MF", "cm": "MF", "dm": "MF", "am": "MF",
+    "forward": "FW", "striker": "FW", "winger": "FW", "left winger": "FW", "right winger": "FW",
+    "lw": "FW", "rw": "FW", "st": "FW", "cf": "FW",
+}
+NUM_RX = re.compile(r"^\d{1,2}$")   # 1..99
 ROW_LOAN_RX = re.compile(r"\bloan(ed)?\b", re.I)
 
 def _polite():
@@ -80,137 +91,170 @@ def get_html(title: str) -> str | None:
         return None
     return r.text
 
-def next_until_next_section(h):
-    for sib in h.find_all_next():
-        if sib.name in ("h2", "h3") and sib is not h:
-            break
-        yield sib
+def is_excluded_heading(txt: str) -> bool:
+    t = txt.lower()
+    return any(k in t for k in EXCLUDE_SECTION_KEYS)
 
 def find_heading(soup: BeautifulSoup, needles: list[str]) -> BeautifulSoup | None:
+    # find the first heading that matches a needle
     for h in soup.find_all(["h2", "h3"]):
         txt = (h.get_text(" ", strip=True) or "").lower()
-        if any(x in txt for x in EXCLUDE_SECTION_KEYS):
-            return None
         if any(n in txt for n in needles):
             return h
     return None
 
-def parse_first_valid_table(container: BeautifulSoup) -> list[dict]:
-    """Find the first table that looks like the first-team squad (has 'player' and number/position headers)."""
-    for tbl in container.find_all("table"):
-        ths = [th.get_text(" ", strip=True).lower() for th in tbl.find_all("th")]
-        if not ths:
+def iter_section_blocks(soup: BeautifulSoup, start_heading: BeautifulSoup):
+    """Yield blocks (tables/lists) within the section until next h2/h3, skipping excluded subsections."""
+    if not start_heading:
+        return
+    for el in start_heading.find_all_next():
+        if el.name in ("h2", "h3") and el is not start_heading:
+            # stop when the next section starts
+            break
+        if el.name in ("h2", "h3") and is_excluded_heading(el.get_text(" ", strip=True)):
+            # skip excluded subsection entirely
+            for _ in el.find_all_next():
+                if _.name in ("h2", "h3") and _ is not el:
+                    # resume scanning after excluded section ends
+                    break
             continue
-        head = " ".join(ths)
-        if "player" in head and ("no" in head or "number" in head or "pos" in head or "position" in head):
-            players = []
-            for tr in tbl.find_all("tr"):
-                cells = [td.get_text(" ", strip=True) for td in tr.find_all(["td", "th"])]
-                if len(cells) < 2:
-                    continue
-                row_text = " ".join(cells)
-                if ROW_LOAN_RX.search(row_text):
-                    continue
-                number = next((c for c in cells if NUM_PATTERN.fullmatch(c)), None)
-                pos = next((c.upper() for c in cells if POS_PATTERN.fullmatch(c)), None)
-                if not number or not pos:
-                    continue
-                a = tr.find("a")
-                name = a.get_text(" ", strip=True) if (a and a.get("href", "").startswith("/wiki/")) else None
-                if not name:
-                    nonnums = [c for c in cells if not NUM_PATTERN.fullmatch(c)]
-                    name = max(nonnums, key=len, default="").strip()
-                if not name or "player" in name.lower():
-                    continue
-                players.append({"name": name, "number": number, "pos": pos})
-            if players:
-                return players
-    return []
+        if el.name in ("table", "ul", "ol"):
+            yield el
+
+def normalize_pos(text: str | None) -> str | None:
+    if not text: return None
+    t = text.strip().lower()
+    # abbr?
+    m = POS_ABBR_RX.fullmatch(t.upper())
+    if m: 
+        code = m.group(1).upper()
+        return {"GKP":"GK", "DEF":"DF", "MID":"MF", "FWD":"FW"}.get(code, code)
+    # words: test longer keys first
+    for key in sorted(POS_WORDS.keys(), key=len, reverse=True):
+        if key in t:
+            return POS_WORDS[key]
+    return None
+
+def extract_rows_from_table(tbl) -> list[dict]:
+    ths = [th.get_text(" ", strip=True).lower() for th in tbl.find_all("th")]
+    if not ths: 
+        return []
+    if "player" not in " ".join(ths).lower():
+        return []
+    players = []
+    for tr in tbl.find_all("tr"):
+        cells = [td.get_text(" ", strip=True) for td in tr.find_all(["td","th"])]
+        if len(cells) < 2:
+            continue
+        row_text = " ".join(cells)
+        if ROW_LOAN_RX.search(row_text):
+            continue
+
+        # number (optional)
+        number = next((c for c in cells if NUM_RX.fullmatch(c)), None)
+
+        # position: from any cell
+        pos_raw = None
+        for c in cells:
+            p = normalize_pos(c)
+            if p:
+                pos_raw = p
+                break
+
+        # name
+        a = tr.find("a")
+        name = a.get_text(" ", strip=True) if (a and a.get("href","").startswith("/wiki/")) else None
+        if not name:
+            nonnums = [c for c in cells if not NUM_RX.fullmatch(c)]
+            name = max(nonnums, key=len, default="").strip()
+
+        if not name or not pos_raw:
+            continue
+
+        players.append({"name": name, "number": number, "pos": pos_raw})
+    return players
+
+def extract_from_list(lst) -> list[dict]:
+    players = []
+    for li in lst.find_all("li"):
+        text = li.get_text(" ", strip=True)
+        if ROW_LOAN_RX.search(text):
+            continue
+        # try patterns like: "7 – Bukayo Saka (Right winger)"
+        m = re.match(r"^\s*(\d{1,2})\s*[–-]\s*(.+?)\s*(\((.+?)\))?\s*$", text)
+        if m:
+            num = m.group(1)
+            name = m.group(2).strip()
+            pos = normalize_pos(m.group(4))
+            if name and pos:
+                players.append({"name": name, "number": num, "pos": pos})
+            continue
+        # fallback: bold/link first name with a position somewhere
+        a = li.find("a")
+        pos = normalize_pos(text)
+        if a and a.get("href","").startswith("/wiki/") and pos:
+            players.append({"name": a.get_text(" ", strip=True), "number": None, "pos": pos})
+    return players
 
 def parse_squad(soup: BeautifulSoup, heading_needles: list[str]) -> list[dict]:
-    """Prefer the first matching table after the heading; strict list fallback."""
     h = find_heading(soup, heading_needles)
     if not h:
         return []
-    # 1) Prefer a valid table right under the section
-    for el in next_until_next_section(h):
-        if el.name in ("h2", "h3"):
-            break
-        if el.name == "table":
-            got = parse_first_valid_table(el)
+    # scan only inside this section; skip excluded subsections
+    for block in iter_section_blocks(soup, h):
+        if block.name == "table":
+            got = extract_rows_from_table(block)
             if got:
                 return got
-    # 2) Strict list fallback
-    players = []
-    for el in next_until_next_section(h):
-        if el.name in ("h2", "h3"):
-            break
-        if el.name in ("ul", "ol"):
-            for li in el.find_all("li"):
-                text = li.get_text(" ", strip=True)
-                if ROW_LOAN_RX.search(text):
-                    continue
-                m = re.match(r"^\s*(\d{1,2})\s*[–-]\s*(.+?)\s*(\((GK|DF|MF|FW).*\))?\s*$", text, flags=re.I)
-                if m:
-                    players.append({"name": m.group(2), "number": m.group(1), "pos": (m.group(4) or None)})
-                else:
-                    a = li.find("a")
-                    if a and a.get("href", "").startswith("/wiki/"):
-                        players.append({"name": a.get_text(" ", strip=True), "number": None, "pos": None})
-    # de-duplicate by name
-    uniq, seen = [], set()
-    for p in players:
-        key = (p.get("name") or "").strip().lower()
-        if key and key not in seen:
-            seen.add(key)
-            uniq.append(p)
-    return uniq
+        elif block.name in ("ul","ol"):
+            got = extract_from_list(block)
+            if got:
+                return got
+    return []
 
 def pick_top18(players: list[dict]) -> list[dict]:
-    """Balanced 18: 2 GK, 6 DF, 6 MF, 4 FW, then best remaining by wearing number/lowest number."""
-    def norm_pos(p):
+    """Balanced 18: 2 GK, 6 DF, 6 MF, 4 FW, then best remaining (prefer numbered, lower number)."""
+    def bucket(p):
         v = (p.get("pos") or "").upper()
-        if v.startswith("GK"):  return "GK"
-        if v.startswith("DF") or v.startswith("DEF"): return "DF"
-        if v.startswith("MF") or v.startswith("MID"): return "MF"
-        if v.startswith("FW") or v.startswith("FWD"): return "FW"
+        if v.startswith("GK"): return "GK"
+        if v.startswith("DF"): return "DF"
+        if v.startswith("MF"): return "MF"
+        if v.startswith("FW"): return "FW"
         return None
 
     buckets = {"GK": [], "DF": [], "MF": [], "FW": [], None: []}
     for p in players:
-        buckets[norm_pos(p)].append(p)
+        buckets[bucket(p)].append(p)
 
     target = {"GK": 2, "DF": 6, "MF": 6, "FW": 4}
 
     def sort_key(p):
         num = p.get("number")
-        has = 0 if (num and num.isdigit()) else 1    # prefer numbered
+        has = 0 if (num and num.isdigit()) else 1
         numv = int(num) if (num and num.isdigit()) else 999
-        return (has, numv, p.get("name", ""))
+        return (has, numv, p.get("name",""))
 
     for k in buckets:
         buckets[k].sort(key=sort_key)
 
     picked = []
-    # 1) fill by targets
-    for pos in ("GK", "DF", "MF", "FW"):
+    for pos in ("GK","DF","MF","FW"):
         take = min(target[pos], len(buckets[pos]))
         picked.extend(buckets[pos][:take])
         buckets[pos] = buckets[pos][take:]
 
-    # 2) top up to 18 from remaining
     rest = buckets["GK"] + buckets["DF"] + buckets["MF"] + buckets["FW"] + buckets[None]
     rest.sort(key=sort_key)
     need = 18 - len(picked)
     if need > 0:
         picked.extend(rest[:need])
 
-    # ensure max 18 + de-dup by name
+    # de-dup and clamp to 18
     out, seen = [], set()
     for p in picked:
-        name = (p.get("name") or "").strip().lower()
-        if name and name not in seen:
-            seen.add(name)
+        key = (p.get("name") or "").strip().lower()
+        if key and key not in seen:
+            seen.add(key)
             out.append(p)
         if len(out) >= 18:
             break
@@ -224,10 +268,9 @@ def main():
     total_clubs = 0
 
     for club, season_title in SEASON_TITLES.items():
-        club_name = club
         got = []
 
-        # 1) Try season page
+        # season page
         html = get_html(season_title)
         if html:
             soup = BeautifulSoup(html, "lxml")
@@ -235,9 +278,9 @@ def main():
             if got:
                 got = pick_top18(got)
                 total_clubs += 1
-                print(f"[ok] {club_name}: {len(got)} players (season page)")
+                print(f"[ok] {club}: {len(got)} players (season page)")
 
-        # 2) Fallback to base club page
+        # fallback: club page
         if not got:
             base = CLUB_TITLES[club]
             html2 = get_html(base)
@@ -247,16 +290,16 @@ def main():
                 if got:
                     got = pick_top18(got)
                     total_clubs += 1
-                    print(f"[ok] {club_name}: {len(got)} players (club page)")
+                    print(f"[ok] {club}: {len(got)} players (club page)")
                 else:
-                    print(f"[warn] {club_name}: squad not found on club page")
+                    print(f"[warn] {club}: squad not found on club page")
             else:
-                print(f"[skip] {club_name}: page not found")
+                print(f"[skip] {club}: page not found")
 
         for p in got:
             all_players.append({
                 "name": p["name"],
-                "club": club_name,
+                "club": club,
                 "number": p.get("number"),
                 "pos": p.get("pos"),
                 "season": "2025–26 Premier League",
