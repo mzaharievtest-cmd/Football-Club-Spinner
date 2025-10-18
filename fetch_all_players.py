@@ -3,14 +3,14 @@
 Fetch / enrich player images.
 
 Modes:
-- If --input-json is provided: read players from that JSON file (list of objects),
+- File mode (--input-json): read players from that JSON file (list of objects),
   resolve images (by wikidata_id or name), download images to --out, write CSV to --csv
   and enriched players JSON to --json.
 
-- If --input-json is NOT provided: fallback to Premier League club SPARQL flow
-  (same behavior as earlier scripts) and save images to --out and csv to --csv.
+- Clubs/SPARQL mode (no --input-json): read teams.json, find EPL clubs and
+  fetch players active in 2025/26 via SPARQL, resolve images by QID and save.
 
-Example:
+Example (file mode):
 python3 fetch_all_players.py \
   --input-json /path/to/players.json \
   --out /path/to/out/dir \
@@ -18,12 +18,15 @@ python3 fetch_all_players.py \
   --csv /path/to/attribution.csv \
   --json /path/to/players_with_images.json \
   --max-total 40
+
+Example (clubs mode):
+python3 fetch_all_players.py --out player_images/EPL --per-club 2 --max-total 40
 """
+from pathlib import Path
 import argparse
 import json
 import time
 import random
-from pathlib import Path
 import requests
 
 from player_images import (
@@ -51,7 +54,7 @@ def write_json(obj, path):
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
 
-# SPARQL helpers (used only in club mode)
+# SPARQL helpers
 def players_active_2025_26_for_club(club_qid, limit=200):
     q = f"""
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -95,16 +98,15 @@ def epl_clubs_from_teams(teams):
             clubs.append(name)
     return sorted(set(clubs))
 
-# Main processing
-def enrich_players_from_file(input_json, out_dir, width, csv_path, out_players_json, max_total=None):
+# --- File-mode enrichment ---
+def enrich_players_from_file(input_json, out_dir, width, csv_path=None, out_players_json=None, max_total=None):
     players = load_json(input_json)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     saved_records = []
     processed = 0
 
-    total_players = len(players)
-    print(f"Loaded {total_players} player entries from {input_json}")
+    print(f"Loaded {len(players)} player entries from {input_json}")
 
     for rec in players:
         if max_total and processed >= max_total:
@@ -164,7 +166,8 @@ def enrich_players_from_file(input_json, out_dir, width, csv_path, out_players_j
     print("Done. Processed:", processed)
     return saved_records
 
-def fetch_via_teams_and_sparql(teams_json, out_dir, width, csv_path, max_total=None, per_club=None):
+# --- Clubs/SPARQL mode ---
+def fetch_via_teams_and_sparql(teams_json, out_dir, width, csv_path=None, max_total=None, per_club=None):
     teams = load_json(teams_json)
     clubs = epl_clubs_from_teams(teams)
     out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
@@ -198,6 +201,12 @@ def fetch_via_teams_and_sparql(teams_json, out_dir, width, csv_path, max_total=N
     print("Done. total saved:", total)
     return all_rows
 
+# helper to write JSON (exists above)
+def write_json(obj, path):
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch player images (file mode or clubs mode)")
     parser.add_argument("--input-json", help="Path to players.json to enrich (file mode)")
@@ -214,17 +223,12 @@ def main():
 
     if args.input_json:
         print("Running in file mode (enrich players.json)...")
-        enrich_records = enrich_players_from_file = None
-        # call the file-mode function
-        enrich_records = enrich_players_from_file = enrich_players_from_file if False else None
-        # Implement inline to avoid double-naming
-        records = enrich_players_from_file if False else None
-        # Use the dedicated function above
+        enrich_players_from_file = enrich_players_from_file  # placeholder to reference function name
+        # call the actual function
         records = enrich_players_from_file(args.input_json, args.out, args.width, args.csv, args.out_json, max_total=args.max_total)  # type: ignore
     else:
         print("Running in clubs/SPARQL mode (Premier League clubs from teams.json)...")
         records = fetch_via_teams_and_sparql(args.teams_json, args.out, args.width, args.csv, max_total=args.max_total, per_club=per_club)
 
 if __name__ == "__main__":
-    import argparse  # argparse imported earlier; kept for clarity
     main()
