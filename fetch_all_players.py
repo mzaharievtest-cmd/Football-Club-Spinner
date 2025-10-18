@@ -1,21 +1,16 @@
 """
-Fetch a small sample of active 2025/26 players from Premier League clubs.
+Fetch active 2025/26 Premier League players' images (QID-based lookup).
 
-This script:
-- reads teams.json (to find Premier League clubs)
-- for each club retrieves players whose P54 (member of sports team) statement
-  has qualifiers indicating the membership overlaps the 2025/26 season
-  (i.e. either no end date or end >= 2025-07-01, and either no start or start <= 2026-06-30)
-- uses the player_images module to resolve image metadata and download images
-- stops after `limit_total_players` (default 5) so you can validate quickly
+This is the corrected version: the SPARQL now binds the statement rank with
+'?stmt wikibase:rank ?rank .' and filters by that bound variable (avoids the
+invalid FILTER(wikibase:rank(?stmt) ...) usage).
 
-Place this file next to player_images.py and teams.json and run:
-  python fetch_all_players.py
+Drop this file next to your player_images.py and teams.json and run:
+  python fetch_all_players.py --per-club 1 --max-total 5
 
-Outputs:
-- player_images/EPL/<downloaded files>
-- player_images/attribution.csv
+Defaults are conservative for testing; change CLI args to expand the run.
 """
+import argparse
 import json
 import time
 import random
@@ -24,7 +19,7 @@ import requests
 
 from player_images import (
     wikidata_id_for,
-    player_image,
+    player_image_by_qid,
     save_player_image,
     save_attributions,
 )
@@ -32,134 +27,117 @@ from player_images import (
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 HEADERS = {
     "Accept": "application/sparql-results+json",
-    "User-Agent": "player-images-batch/1.0 (mzaharievtest-cmd)"
+    "User-Agent": "player-images-batch/1.0 (footballspinner.com)"
 }
 
-def _polite_sleep():
-    time.sleep(random.uniform(0.08, 0.18))
+def _polite(): time.sleep(random.uniform(0.08, 0.18))
 
 def load_teams(path="teams.json"):
     p = Path(path)
     if not p.exists():
-        raise FileNotFoundError(f"{p} not found. Place teams.json next to this script.")
-    with p.open("r", encoding="utf-8") as f:
-        return json.load(f)
+        raise FileNotFoundError(f"{p} not found.")
+    return json.loads(p.read_text(encoding="utf-8"))
 
-def premier_league_clubs(teams):
-    """
-    Return sorted list of club names that are in the Premier League.
-    Accepts either league_code == 'EPL' or league name containing 'premier'.
-    """
-    clubs = set()
+def epl_clubs(teams):
+    clubs = []
     for t in teams:
-        code = (t.get("league_code") or "").upper()
-        lname = (t.get("league") or t.get("league_name") or "").lower()
         name = t.get("team_name") or t.get("name")
-        if not name:
-            continue
-        if code == "EPL" or "premier" in lname:
-            clubs.add(name)
-    return sorted(clubs)
+        code = (t.get("league_code") or "").upper()
+        league = (t.get("league") or t.get("league_name") or "").lower()
+        if name and (code == "EPL" or "premier" in league):
+            clubs.append(name)
+    return sorted(set(clubs))
 
-def players_for_club_qid_active(club_qid, limit=50):
+def players_active_2025_26(club_qid, limit=200):
     """
-    Query Wikidata SPARQL for players who have P54 = club_qid and whose membership
-    qualifiers overlap the 2025/26 season.
-
-    Logic (approximate):
-      - include if no end qualifier (pq:P582) OR end >= 2025-07-01
-      - include if no start qualifier (pq:P580) OR start <= 2026-06-30
-
-    Returns list of dicts: [{'qid': 'Qxxx', 'label': 'Player Name'}, ...]
+    SPARQL: select players with P54 statements for the club where the statement
+    has rank != DeprecatedRank and membership qualifiers overlap the 2025/26 window.
     """
-    query = f"""
+    q = f"""
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX wd: <http://www.wikidata.org/entity/>
-PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 PREFIX p: <http://www.wikidata.org/prop/>
 PREFIX ps: <http://www.wikidata.org/prop/statement/>
 PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+PREFIX wikibase: <http://wikiba.se/ontology#>
 
-SELECT ?player ?playerLabel ?start ?end WHERE {{
+SELECT ?player ?playerLabel ?start ?end ?rank WHERE {{
   ?player p:P54 ?stmt .
   ?stmt ps:P54 wd:{club_qid} .
+  ?stmt wikibase:rank ?rank .
+  FILTER(?rank != wikibase:DeprecatedRank)
   ?player wdt:P31 wd:Q5 .
   OPTIONAL {{ ?stmt pq:P580 ?start. }}
   OPTIONAL {{ ?stmt pq:P582 ?end. }}
-  # include if membership covers (or overlaps) the 2025/26 season window:
-  FILTER( !bound(?end) || ?end >= "2025-07-01T00:00:00Z"^^xsd:dateTime )
-  FILTER( !bound(?start) || ?start <= "2026-06-30T23:59:59Z"^^xsd:dateTime )
+  # membership must overlap 2025/07/01 .. 2026/06/30
+  FILTER( !BOUND(?end)   || ?end  >= "2025-07-01T00:00:00Z"^^xsd:dateTime )
+  FILTER( !BOUND(?start) || ?start <= "2026-06-30T23:59:59Z"^^xsd:dateTime )
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
 }}
 LIMIT {limit}
 """
-    _polite_sleep()
-    r = requests.get(SPARQL_ENDPOINT, params={"query": query}, headers=HEADERS, timeout=60)
+    _polite()
+    r = requests.get(SPARQL_ENDPOINT, params={"query": q}, headers=HEADERS, timeout=90)
     r.raise_for_status()
-    data = r.json()
-    results = []
-    for binding in data.get("results", {}).get("bindings", []):
-        player_uri = binding.get("player", {}).get("value")
-        label = binding.get("playerLabel", {}).get("value")
-        if not player_uri or not label:
-            continue
-        qid = player_uri.rsplit("/", 1)[-1]
-        results.append({"qid": qid, "label": label})
-    return results
+    res = []
+    for b in r.json().get("results", {}).get("bindings", []):
+        uri = b["player"]["value"]
+        label = b.get("playerLabel", {}).get("value")
+        res.append({"qid": uri.rsplit("/", 1)[-1], "label": label})
+    return res
 
-def fetch_premier_active_sample(out_root="player_images", teams_path="teams.json", limit_total_players=5):
-    """
-    Fetch up to `limit_total_players` images for active (2025/26) players
-    from Premier League clubs listed in teams.json.
-    """
+def fetch_sample(out_dir="player_images/EPL", teams_path="teams.json", per_club=5, max_total=None):
     teams = load_teams(teams_path)
-    clubs = premier_league_clubs(teams)
-    out_root = Path(out_root)
-    out_root.mkdir(parents=True, exist_ok=True)
-    all_records = []
-    processed = 0
+    clubs = epl_clubs(teams)
+    out = Path(out_dir); out.mkdir(parents=True, exist_ok=True)
+    all_rows = []
+    total = 0
 
-    print(f"Found {len(clubs)} Premier League clubs (using teams.json). Will process up to {limit_total_players} players.\n")
-
+    print(f"Premier League clubs: {len(clubs)}. target per club: {per_club}, max total: {max_total}\n")
     for club in clubs:
-        if processed >= limit_total_players:
+        if max_total and total >= max_total:
             break
-        print(f"-- Club: {club}")
         club_qid = wikidata_id_for(club)
-        print("  club qid:", club_qid)
+        print(f"== {club} :: {club_qid} ==")
         if not club_qid:
-            print("  -> club QID not found; skipping club.")
-            continue
+            print("  (no QID)"); continue
 
         try:
-            players = players_for_club_qid_active(club_qid, limit=20)
+            players = players_active_2025_26(club_qid, limit=200)
         except Exception as e:
             print("  SPARQL error for club", club, e)
             continue
 
-        print(f"  active players found (sample): {len(players)}")
+        print(f"  candidates: {len(players)}")
+        n = 0
         for p in players:
-            if processed >= limit_total_players:
+            if per_club is not None and n >= per_club:
                 break
-            name = p["label"]
-            print("    player:", name)
-            # use the label from SPARQL; if you prefer exact QID resolution we can extend player_images with a qid-based function
-            rec = player_image(name, width=800)
-            rec['league_code'] = "EPL"
-            rec['club'] = club
-            print("      source:", rec.get("source"), "->", rec.get("image_url"))
-            saved_path = save_player_image(rec, out_dir=str(out_root / "EPL"))
-            print("      saved:", saved_path)
-            rec['_saved_path'] = str(saved_path) if saved_path else ""
-            all_records.append(rec)
-            processed += 1
-            _polite_sleep()
+            if max_total and total >= max_total:
+                break
+            qid = p["qid"]; label = p.get("label") or qid
+            rec = player_image_by_qid(qid, width=800)
+            rec["club"] = club
+            rec["league_code"] = "EPL"
+            print(f"  - {label} [{rec['source']}] -> {rec['image_url']}")
+            path = save_player_image(rec, out_dir=str(out))
+            rec["_saved_path"] = str(path) if path else ""
+            all_rows.append(rec)
+            n += 1; total += 1
+            _polite()
 
-    csv_path = out_root / "attribution.csv"
-    save_attributions(all_records, csv_path=str(csv_path))
-    print("\nDone. Processed:", processed, "— attribution CSV written to:", csv_path)
-    return all_records
+    csv_path = Path(out_dir).parent / "attribution.csv"
+    save_attributions(all_rows, csv_path=str(csv_path))
+    print(f"\nDone. Players: {total}. Images in {out}. CSV: {csv_path}")
+    return all_rows
 
 if __name__ == "__main__":
-    # Quick test: only 5 players in total from Premier League clubs
-    fetch_premier_active_sample(out_root="player_images", teams_path="teams.json", limit_total_players=5)
+    parser = argparse.ArgumentParser(description="Fetch active 2025/26 EPL players' images")
+    parser.add_argument("--out", default="player_images/EPL", help="output directory")
+    parser.add_argument("--teams", default="teams.json", help="teams.json path")
+    parser.add_argument("--per-club", type=int, default=5, help="max players per club (set 0 or omit for all)")
+    parser.add_argument("--max-total", type=int, default=None, help="max total players across all clubs")
+    args = parser.parse_args()
+
+    per_club = args.per_club if args.per_club and args.per_club > 0 else None
+    fetch_sample(out_dir=args.out, teams_path=args.teams, per_club=per_club, max_total=args.max_total)
