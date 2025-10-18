@@ -1,5 +1,6 @@
+// Next.js API route to expose playerImage server-side
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { playerImage } from '../../lib/wikimedia-player'; // adjust path if you put lib elsewhere
+import { playerImage } from '../../lib/wikimedia-player';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -8,6 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const width = Number(req.query.width || req.body?.width) || 800;
     const img = await playerImage(q, width);
+
     return res.status(200).json(img);
   } catch (err: any) {
     console.error('player-image error', err);
