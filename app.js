@@ -1,16 +1,21 @@
 /**
  * app.js
- * Football Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
+ * Football Spinner — main UI logic
  *
- * - Loads TEAMS from teams.json
- * - Loads players from /data/players.json (with fallbacks) and normalizes to the "team-shaped" objects the wheel expects
- * - Robust image loader with fallback and safe canvas drawing to avoid InvalidStateError
- * - Keeps UI, chips, modal, history and wheel logic identical between TEAM and PLAYER modes
- * - Shows/hides Name/Logo/Stadium/League on the wheel based on live DOM controls
- * - Draw order: text first, logos afterwards so logos remain visible
+ * This is a complete app.js that:
+ * - Reads show-on-wheel toggles live from the DOM (robust selectors + fallback)
+ * - Uses delegated change handling (and a MutationObserver) so toggles always trigger redraw
+ * - Ensures drawWheel reads the show flags each frame and draws TEXT first then LOGO
+ * - Protects against missing DOM nodes and image draw errors
+ *
+ * Overwrite your deployed app.js with this file, hard-refresh the page (Ctrl/Cmd+Shift+R)
+ * and test toggling Name / Logo / Stadium / League. If you still see issues, paste the
+ * console output from the browser's DevTools and I'll iterate quickly.
  */
 
 'use strict';
+
+const DEBUG = false;
 
 // -------------------- App state --------------------
 let TEAMS = [];
@@ -35,6 +40,7 @@ const spinBtn = document.getElementById('spinBtn');
 const spinFab = document.getElementById('spinFab');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 
+// Note: we still reference these top-level nodes if present, but getShowOptions prefers live queries
 const optName = document.getElementById('optName');
 const optLogo = document.getElementById('optLogo');
 const optStadium = document.getElementById('optStadium');
@@ -65,7 +71,7 @@ const perfTip = document.getElementById('perfTip');
 
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
-const showOnWheelEl = document.getElementById('showOnWheel');
+const showOnWheelEl = document.getElementById('showOnWheel'); // container for the toggles
 
 // -------------------- Constants & Utils --------------------
 const TAU = Math.PI * 2;
@@ -174,34 +180,50 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// -------------------- "Show on wheel" UI read helper --------------------
+// -------------------- Show options (robust live read) --------------------
 function getShowOptions() {
-  // Read live from DOM (preferred) to avoid relying on possibly stale references.
-  const readById = (id) => {
-    const el = document.getElementById(id);
-    if (!el) return null;
-    return !!el.checked;
+  // Prefer reading from the showOnWheel container if present
+  try {
+    const container = document.getElementById('showOnWheel') || document.querySelector('.showopts');
+    if (container) {
+      const read = (selList) => {
+        for (const sel of selList) {
+          const el = container.querySelector(sel);
+          if (el) return !!el.checked;
+        }
+        return false;
+      };
+      return {
+        name: read(['#optName', 'input[data-show="name"]', 'input[name="show-name"]']),
+        logo: read(['#optLogo', 'input[data-show="logo"]', 'input[name="show-logo"]']),
+        stadium: read(['#optStadium', 'input[data-show="stadium"]', 'input[name="show-stadium"]']),
+        league: read(['#optLeague', 'input[data-show="league"]', 'input[name="show-league"]'])
+      };
+    }
+  } catch (e) {
+    // continue to fallback
+  }
+
+  // Fallback: try the top-level captured nodes (may be null) or global selectors
+  const byId = (id) => {
+    try {
+      const el = document.getElementById(id);
+      if (el && typeof el.checked !== 'undefined') return !!el.checked;
+    } catch (e) {}
+    return null;
   };
-
-  const name = readById('optName');
-  const logo = readById('optLogo');
-  const stadium = readById('optStadium');
-  const league = readById('optLeague');
-
-  if (name !== null || logo !== null || stadium !== null || league !== null) {
+  const nameId = byId('optName'), logoId = byId('optLogo'), stadId = byId('optStadium'), leagueId = byId('optLeague');
+  if (nameId !== null || logoId !== null || stadId !== null || leagueId !== null) {
     return {
-      name: !!name,
-      logo: !!logo,
-      stadium: !!stadium,
-      league: !!league
+      name: !!nameId,
+      logo: !!logoId,
+      stadium: !!stadId,
+      league: !!leagueId
     };
   }
 
-  // fallback selectors
-  const q = (sel) => {
-    const el = document.querySelector(sel);
-    return !!(el && (el.checked || el.getAttribute('aria-checked') === 'true'));
-  };
+  // Last resort: query some likely selectors across the document
+  const q = (sel) => { const el = document.querySelector(sel); return !!(el && (el.checked || el.getAttribute('aria-checked') === 'true')); };
   return {
     name: q('input[data-show="name"], input[name="show-name"], input#optName'),
     logo: q('input[data-show="logo"], input[name="show-logo"], input#optLogo'),
@@ -210,7 +232,7 @@ function getShowOptions() {
   };
 }
 
-// -------------------- Mode handling (toggle buttons) --------------------
+// -------------------- Mode handling --------------------
 function setMode(newMode) {
   if (newMode === MODE) return;
   MODE = newMode;
@@ -289,12 +311,12 @@ async function tryFetchPlayers() {
     try {
       const res = await fetch(url, { cache: 'no-store' });
       if (res.ok) {
-        console.info('Found players.json at', url);
+        if (DEBUG) console.info('Found players.json at', url);
         return { res, url };
       }
-      console.warn('players.json fetch failed for', url, res.status);
+      if (DEBUG) console.warn('players.json fetch failed for', url, res.status);
     } catch (err) {
-      console.warn('players.json fetch error for', url, err);
+      if (DEBUG) console.warn('players.json fetch error for', url, err);
     }
   }
   return { res: null, url: null };
@@ -343,8 +365,7 @@ async function loadPlayers() {
       };
     }) : [];
 
-    console.info(`loadPlayers() → loaded ${PLAYERS.length} player records (normalized)`);
-    if (PLAYERS.length) console.debug('players[0..2] (normalized):', PLAYERS.slice(0,3));
+    if (DEBUG) console.info(`loadPlayers() → loaded ${PLAYERS.length} player records (normalized)`);
     renderPlayerListPreview();
     requestAnimationFrame(drawWheel);
     return PLAYERS;
@@ -435,6 +456,7 @@ function drawGradientIdle(ctx, W, H) {
   ctx.restore();
 }
 
+// (drawWheel kept as earlier: draws TEXT first then LOGO on top)
 function drawWheel(){
   const data = getCurrentData();
   const N = data.length;
@@ -528,7 +550,7 @@ function drawWheel(){
     let xLogo = sign * (radius * 0.74);
     let xText = sign * (radius * 0.48);
     const logoInner = xLogo - sign * (logoHalf + basePad);
-    const minGap = 12;
+    const minGap = 16; // Slightly larger gap to avoid overlap
     if (show.logo && show.name) {
       const gap = Math.abs(logoInner - xText);
       if (gap < (logoHalf + minGap)) {
@@ -538,9 +560,8 @@ function drawWheel(){
     }
 
     const xBoxLeft = Math.min(xText, logoInner);
-    const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
-
-    const namePx = Math.max(10, Math.min(18, Math.round(sliceArc * 0.06)));
+    const maxTextWidth = Math.max(60, Math.abs(logoInner - xText));
+    const namePx = Math.max(10, Math.min(16, Math.round(sliceArc * 0.06)));
     const nameFont = `700 ${namePx}px Inter, system-ui, sans-serif`;
 
     // Draw text first (ellipsize if needed)
@@ -906,22 +927,37 @@ function setupEventListeners() {
   }
 
   // Delegated listener for show-on-wheel controls (single handler)
-  if (showOnWheelEl) {
-    showOnWheelEl.addEventListener('change', (e) => {
-      if (spinning) return;
-      // redraw immediately with current DOM states
-      drawWheel();
-      // update spin availability & perfTip
-      const n = getCurrentData().length;
-      if (spinBtn) spinBtn.disabled = n === 0;
-      if (spinFab) spinFab.disabled = n === 0;
-      if (perfTip) perfTip.textContent = `${n} ${MODE === 'player' ? 'players' : 'teams'} selected`;
-    });
-  } else {
-    // Fallback: attach to individual controls if container not present
-    [optName, optLogo, optStadium, optLeague].forEach(el => {
-      if (el) el.addEventListener('change', () => { if (!spinning) { drawWheel(); const n = getCurrentData().length; if (spinBtn) spinBtn.disabled = n === 0; if (spinFab) spinFab.disabled = n === 0; if (perfTip) perfTip.textContent = `${n} ${MODE === 'player' ? 'players' : 'teams'} selected`; } });
-    });
+  // Listen on document for robustness (works even if showOnWheelEl is added later)
+  const showChangeHandler = (e) => {
+    const target = e.target;
+    if (!target) return;
+    // only react to checkboxes in the showOnWheel area
+    if (!(target.matches && (target.matches('#showOnWheel input[type="checkbox"]') || target.closest && target.closest('#showOnWheel') || target.closest && target.closest('.showopts')))) {
+      return;
+    }
+    if (spinning) return;
+    if (DEBUG) console.log('showOnWheel change ->', getShowOptions());
+    drawWheel();
+    const n = getCurrentData().length;
+    if (spinBtn) spinBtn.disabled = n === 0;
+    if (spinFab) spinFab.disabled = n === 0;
+    if (perfTip) perfTip.textContent = `${n} ${MODE === 'player' ? 'players' : 'teams'} selected`;
+  };
+
+  document.addEventListener('change', showChangeHandler, { capture: false });
+
+  // MutationObserver: if the #showOnWheel area is replaced dynamically, re-draw when children change
+  try {
+    const container = document.getElementById('showOnWheel') || document.querySelector('.showopts');
+    if (container) {
+      const mo = new MutationObserver(() => {
+        if (DEBUG) console.log('showOnWheel mutated -> redraw');
+        drawWheel();
+      });
+      mo.observe(container, { childList: true, subtree: true, attributes: true });
+    }
+  } catch (e) {
+    /* ignore */
   }
 
   if (spinBtn) spinBtn.onclick = spin;
