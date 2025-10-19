@@ -47,6 +47,7 @@
   * { animation: none !important; transition: none !important; }
 }
 
+/* Ensure anything with the hidden attribute stays hidden */
 [hidden] { display: none !important; }
 
 /* =========================
