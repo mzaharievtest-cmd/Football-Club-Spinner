@@ -1,13 +1,16 @@
 /**
  * app.js
- * Football Spinner — main UI logic
+ * Football Spinner — main UI logic (PLAYER mode uses identical UI & logic as TEAM)
  *
- * - TEAM / PLAYER mode toggle
- * - TEAM mode uses TEAMS loaded from teams.json (existing behavior)
- * - PLAYER mode loads /players/players.json and normalizes records to the same "team" shape
- * - Wheel drawing, spinning, modal, history, chips, and controls
+ * Changes summary:
+ * - PLAYER mode now normalizes players into the exact "team-shaped" objects the wheel expects:
+ *     { team_name, logo_url, primary_color, league_code, stadium, meta, name, image_url, qid, club }
+ * - PLAYER mode applies the same league chip filtering as TEAM mode (so chips, quick-picks, and per-club filters behave identically).
+ * - When a player's record lacks league_code, we try to infer it from the player's club by matching against loaded TEAMS (case-insensitive).
+ * - renderHistory writes into both the team history container (#history) and the optional player history (#historyPlayers) so the UI remains identical.
+ * - No other UI layout or wheel logic changed.
  *
- * Keep in sync with index.html IDs and style.css.
+ * Install: overwrite your current app.js with this file, hard-refresh the page and switch to PLAYER mode.
  */
 
 'use strict';
@@ -41,6 +44,7 @@ const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
 
 const historyEl = document.getElementById('history');
+const historyPlayersEl = document.getElementById('historyPlayers'); // optional per-PLAYER history element
 
 const modeTeamBtn = document.getElementById('modeTeam');
 const modePlayerBtn = document.getElementById('modePlayer');
@@ -93,6 +97,8 @@ function deviceDPR() { return Math.max(1, window.devicePixelRatio || 1); }
 
 function _polite() { return new Promise(r => setTimeout(r, 40 + Math.random()*110)); }
 
+function normalizeString(s){ return (s||'').toString().trim().toLowerCase().replace(/\s+/g,' '); }
+
 // -------------------- Image cache --------------------
 const IMG_CACHE = new Map();
 function getLogo(url, onLoad) {
@@ -123,12 +129,13 @@ function setMode(newMode) {
     teamView.classList.add('hidden');
     playerView.classList.remove('hidden');
     if (!PLAYERS) {
+      // players normalized will attempt to map clubs -> league_code by using TEAMS
       loadPlayers().then(() => {
         selectedIdx = -1;
         drawWheel();
       }).catch(err => {
         console.error('Failed to load players.json', err);
-        drawWheel(); // fallback
+        drawWheel(); // fallback (empty)
       });
     } else {
       selectedIdx = -1;
@@ -136,7 +143,6 @@ function setMode(newMode) {
     }
   }
 }
-
 modeTeamBtn && modeTeamBtn.addEventListener('click', () => setMode('team'));
 modePlayerBtn && modePlayerBtn.addEventListener('click', () => setMode('player'));
 
@@ -147,18 +153,45 @@ async function loadPlayers() {
     if (!res.ok) throw new Error('players.json fetch failed: ' + res.status);
     const data = await res.json();
 
+    // Map of normalized team_name -> league_code for quick lookup
+    const teamNameToLeague = {};
+    TEAMS.forEach(t => {
+      if (t && t.team_name && t.league_code) {
+        teamNameToLeague[normalizeString(t.team_name)] = t.league_code;
+      }
+    });
+
     PLAYERS = Array.isArray(data) ? data.map(p => {
       const name = p.name || p.player_name || p.full_name || p.displayName || 'Player';
       const img = p.image_url || p.file_url || p.image || p.imageUrl || '/img/silhouette-player.png';
-      const league_code = p.league_code || p.league || p.comp || 'PLAYER';
+
+      // Determine league_code:
+      // 1) prefer explicit p.league_code
+      // 2) else try p.league or p.comp
+      // 3) else try to map p.club/team name to TEAMS' league_code (best-effort)
+      // 4) else fallback to 'PLAYER' (so it won't match league chips unless you toggle them)
+      let league_code = p.league_code || p.league || p.comp || null;
+      if (!league_code && p.club) {
+        const clubNorm = normalizeString(p.club);
+        if (teamNameToLeague[clubNorm]) league_code = teamNameToLeague[clubNorm];
+      }
+      if (!league_code && p.team) {
+        const clubNorm = normalizeString(p.team);
+        if (teamNameToLeague[clubNorm]) league_code = teamNameToLeague[clubNorm];
+      }
+      league_code = league_code || 'PLAYER';
+
       const primary_color = p.primary_color || p.color || '#163058';
       return {
+        // team-shaped fields used by drawWheel, modal, history
         team_name: name,
         logo_url: img,
         primary_color,
         league_code,
         stadium: p.stadium || '',
+        // original metadata
         meta: p,
+        // canonical player fields
         name,
         image_url: img,
         qid: p.wikidata_id || p.qid || p.QID || null,
@@ -166,9 +199,9 @@ async function loadPlayers() {
       };
     }) : [];
 
-    console.log(`loadPlayers(): loaded ${PLAYERS.length} player records`);
+    console.log(`loadPlayers(): loaded ${PLAYERS.length} player records (normalized)`);
     renderPlayerListPreview();
-
+    return PLAYERS;
   } catch (e) {
     console.error('Failed to load players.json', e);
     throw e;
@@ -202,8 +235,15 @@ function getFiltered() {
 
 function getCurrentData() {
   if (MODE === 'player') {
-    // Return normalized PLAYERS; leave filtering disabled by default for players
-    return PLAYERS && PLAYERS.length ? PLAYERS : [];
+    if (!PLAYERS || PLAYERS.length === 0) return [];
+    // Apply same chip filters as teams: if no chips checked, we default to currently checked set (setCheckedCodes controls this)
+    const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
+    if (active.length === 0) {
+      // No active chips => return all players
+      return PLAYERS;
+    }
+    // Filter players by league_code using same codes as team chips
+    return PLAYERS.filter(p => active.includes(p.league_code));
   } else {
     return getFiltered();
   }
@@ -391,7 +431,7 @@ function drawWheel(){
         ctx.restore();
       }
 
-    } else { // PLAYER MODE
+    } else { // PLAYER MODE (uses identical UI logic)
       const playerName = t.name || t.team_name || 'Player';
       const playerImgUrl = t.image_url || t.logo_url || '';
 
@@ -428,15 +468,19 @@ function drawWheel(){
         ctx.restore();
       }
 
-      ctx.save();
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      const namePx = Math.max(10, Math.round(sliceArc * 0.08));
-      ctx.font = `700 ${Math.min(20, namePx)}px Inter, system-ui, sans-serif`;
-      ctx.fillStyle = '#fff';
-      const yText = logoHalf + 8;
-      ctx.fillText(playerName, xBoxLeft, yText);
-      ctx.restore();
+      // Name rendering follows same checks (optName) as teams
+      const canShowName = optName?.checked && playerName && maxTextWidth >= PERF.minTextWidth;
+      if (canShowName) {
+        ctx.save();
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const namePx = Math.max(10, Math.round(sliceArc * 0.08));
+        ctx.font = `700 ${Math.min(20, namePx)}px Inter, system-ui, sans-serif`;
+        ctx.fillStyle = '#fff';
+        const yText = logoHalf + 8;
+        ctx.fillText(playerName, xBoxLeft, yText);
+        ctx.restore();
+      }
     }
 
     ctx.restore();
@@ -600,27 +644,35 @@ function setCheckedCodes(codes = []) {
 }
 
 function renderHistory() {
-  historyEl.innerHTML = '';
-  if (history.length === 0) {
-    historyEl.setAttribute('aria-live', 'polite');
-    historyEl.innerHTML = '<div class="item">Spin the wheel to start your club journey</div>';
-    return;
+  // Render into main history panel
+  if (historyEl) {
+    historyEl.innerHTML = '';
+    if (history.length === 0) {
+      historyEl.setAttribute('aria-live', 'polite');
+      historyEl.innerHTML = '<div class="item">Spin the wheel to start your club journey</div>';
+    } else {
+      history.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        const i = document.createElement('img');
+        i.src = item.logo_url || item.image_url || '';
+        i.alt = `${item.team_name || item.name || 'Item'} image`;
+        i.className = 'history-logo';
+        i.width = 38; i.height = 38;
+        i.onerror = () => { i.src = ''; i.alt = 'No image'; };
+        const s = document.createElement('span');
+        const label = item.team_name || item.name || (LEAGUE_LABELS[item.league_code] || item.league_code) || '—';
+        s.textContent = `${label}`;
+        div.append(i, s);
+        historyEl.append(div);
+      });
+    }
   }
-  history.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    const i = document.createElement('img');
-    i.src = item.logo_url || item.image_url || '';
-    i.alt = `${item.team_name || item.name || 'Item'} image`;
-    i.className = 'history-logo';
-    i.width = 38; i.height = 38;
-    i.onerror = () => { i.src = ''; i.alt = 'No image'; };
-    const s = document.createElement('span');
-    const label = item.team_name || item.name || (LEAGUE_LABELS[item.league_code] || item.league_code) || '—';
-    s.textContent = `${label}`;
-    div.append(i, s);
-    historyEl.append(div);
-  });
+
+  // Also mirror to player-specific history panel if exists
+  if (historyPlayersEl) {
+    historyPlayersEl.innerHTML = historyEl ? historyEl.innerHTML : '';
+  }
 }
 
 // -------------------- Modal helpers --------------------
@@ -633,7 +685,6 @@ function openModal({ team_name = '', league_code = '', logo_url = '' } = {}) {
   mStadium.textContent = '';
   backdrop.style.display = 'flex';
   requestAnimationFrame(() => modalEl.classList.add('show'));
-  // trap focus briefly
   mClose.focus();
 }
 
@@ -728,7 +779,7 @@ fetch(`./teams.json?v=${Date.now()}`)
     renderChips();
     renderHistory();
     sizeCanvas();
-    setCheckedCodes(['EPL']);
+    setCheckedCodes(['EPL']);   // keep the same default selection
     drawWheel();
     setupEventListeners();
     modeTeamBtn && modeTeamBtn.addEventListener('click', () => setMode('team'));
@@ -739,5 +790,5 @@ fetch(`./teams.json?v=${Date.now()}`)
     if (currentText) currentText.textContent = 'Failed to load teams.';
   });
 
-// Expose a couple helpers for console debugging
-window.__fs = { drawWheel, spin, setMode, loadPlayers, TEAMS, PLAYERS };
+// Expose helpers for debugging
+window.__fs = { drawWheel, spin, setMode, loadPlayers, TEAMS, PLAYERS, getCurrentData };
