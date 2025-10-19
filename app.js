@@ -2,12 +2,11 @@
  * app.js
  * Football Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
  *
- * - TEAM mode: uses TEAMS loaded from teams.json (existing behavior)
- * - PLAYER mode: loads /players/players.json and normalizes each record to the same "team" shape
- * - Wheel drawing, spinning, modal, history, chips and controls are unchanged and work for both modes
+ * Updated: loadPlayers now looks for players JSON at /data/players.json first,
+ * then falls back to /players/players.json and a relative ./players/players.json.
  *
  * Drop this file into your project (replace the existing app.js), hard-refresh the browser,
- * then switch to PLAYER mode. Player records are expected at /players/players.json.
+ * then switch to PLAYER mode. Player records are expected at /data/players.json on the server.
  */
 
 'use strict';
@@ -118,7 +117,6 @@ function getLogo(url, onLoad) {
       img.onerror = () => {
         onLoad && onLoad(new Error('img load error'), img);
       };
-      // setting src last helps some browsers start loading immediately
       img.src = url;
       return img;
     } catch (e) {
@@ -126,49 +124,34 @@ function getLogo(url, onLoad) {
     }
   }
 
-  // First attempt with crossOrigin
   let img = createImg(true);
   IMG_CACHE.set(url, { img, retried: false });
 
-  // If it fails, we'll detect via onLoad callback; set a fallback handler
   const fallbackCheck = (err, workedImg) => {
     const entry = IMG_CACHE.get(url) || {};
-    // if original errored and not retried, create fallback without crossOrigin
     if (err && !entry.retried) {
       const fallback = createImg(false);
       IMG_CACHE.set(url, { img: fallback, retried: true });
-      // schedule a draw when fallback finishes or errors
       fallback.onload = () => requestAnimationFrame(drawWheel);
       fallback.onerror = () => requestAnimationFrame(drawWheel);
-      // notify caller on fallback result via onLoad when it completes
       fallback.onload = () => onLoad && onLoad(null, fallback);
       fallback.onerror = () => onLoad && onLoad(new Error('fallback load failed'), fallback);
     }
   };
 
-  // Wrap original onload/onerror so we can fallback automatically
   const wrapOnLoad = (err, image) => {
     fallbackCheck(err, image);
-    // force redraw
     requestAnimationFrame(drawWheel);
   };
 
-  // attach temporary handlers: if caller provided onLoad, call that too
-  // We return the provisional img immediately; callbacks above will update cache
-  // and schedule redraws.
-  // Hook a lite monitoring by assigning a combined handler:
   const origOnLoad = onLoad;
-  // Replace onLoad with combined handler that also performs fallback
   const combined = (err, image) => {
     wrapOnLoad(err, image);
     if (typeof origOnLoad === 'function') origOnLoad(err, image);
   };
 
-  // Bind combined handler through a small proxy on the image (we rely on createImg to call onLoad)
-  // Since createImg used the provided onLoad directly, we re-create the img with our combined handler:
   img = createImg(true);
   IMG_CACHE.set(url, { img, retried: false });
-  // Attach temporary listeners via new Image object's events for additional fallback detection
   img.addEventListener('error', () => combined(new Error('img error'), img));
   img.addEventListener('load', () => combined(null, img));
 
@@ -206,11 +189,38 @@ function setMode(newMode) {
 modeTeamBtn && modeTeamBtn.addEventListener('click', () => setMode('team'));
 modePlayerBtn && modePlayerBtn.addEventListener('click', () => setMode('player'));
 
+// -------------------- Helper: tryFetchPlayers --------------------
+async function tryFetchPlayers() {
+  // Prefer /data/players.json (user indicated that's the right location),
+  // but keep fallbacks for other setups.
+  const candidates = [
+    '/data/players.json',
+    '/players/players.json',
+    new URL('./players/players.json', location.href).toString()
+  ];
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) {
+        console.info('Found players.json at', url);
+        return { res, url };
+      }
+      // if not ok, log and try next
+      console.warn('players.json fetch failed for', url, res.status);
+    } catch (err) {
+      console.warn('players.json fetch error for', url, err);
+    }
+  }
+  // none succeeded
+  return { res: null, url: null };
+}
+
 // -------------------- Load players.json (normalized to team-shape) --------------------
 async function loadPlayers() {
   try {
-    const res = await fetch('/players/players.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('players.json fetch failed: ' + res.status);
+    const { res, url } = await tryFetchPlayers();
+    if (!res) throw new Error('players.json not found in known locations');
     const data = await res.json();
 
     // Build quick map from normalized team name -> league_code for inference
@@ -226,10 +236,6 @@ async function loadPlayers() {
       const img = p.image_url || p.file_url || p.image || p.file || '/img/silhouette-player.png';
 
       // Determine league_code:
-      // 1) prefer explicit p.league_code
-      // 2) else try p.league or p.comp
-      // 3) else try to map p.club/team name to TEAMS' league_code (best-effort)
-      // 4) else fallback to 'PLAYER'
       let league_code = p.league_code || p.league || p.comp || null;
       if (!league_code) {
         const clubCandidates = [p.club, p.team, p.current_club, p.club_name].filter(Boolean);
@@ -242,15 +248,12 @@ async function loadPlayers() {
 
       const primary_color = p.primary_color || p.color || '#163058';
       return {
-        // team-shaped fields used by drawWheel, modal, history
         team_name: name,
         logo_url: img,
         primary_color,
         league_code,
         stadium: p.stadium || '',
-        // original metadata
         meta: p,
-        // canonical player fields
         name,
         image_url: img,
         qid: p.wikidata_id || p.qid || p.QID || null,
@@ -297,7 +300,6 @@ function getFiltered() {
 function getCurrentData() {
   if (MODE === 'player') {
     if (!PLAYERS || PLAYERS.length === 0) return [];
-    // Apply same chip filters as teams: if no chips checked we return all players
     const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
     if (active.length === 0) return PLAYERS;
     return PLAYERS.filter(p => active.includes(p.league_code));
