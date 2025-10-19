@@ -1,16 +1,13 @@
 /**
  * app.js
- * Football Spinner — main UI logic (PLAYER mode uses identical UI & logic as TEAM)
+ * Football Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
  *
- * Changes summary:
- * - PLAYER mode now normalizes players into the exact "team-shaped" objects the wheel expects:
- *     { team_name, logo_url, primary_color, league_code, stadium, meta, name, image_url, qid, club }
- * - PLAYER mode applies the same league chip filtering as TEAM mode (so chips, quick-picks, and per-club filters behave identically).
- * - When a player's record lacks league_code, we try to infer it from the player's club by matching against loaded TEAMS (case-insensitive).
- * - renderHistory writes into both the team history container (#history) and the optional player history (#historyPlayers) so the UI remains identical.
- * - No other UI layout or wheel logic changed.
+ * - TEAM mode: uses TEAMS loaded from teams.json (existing behavior)
+ * - PLAYER mode: loads /players/players.json and normalizes each record to the same "team" shape
+ * - Wheel drawing, spinning, modal, history, chips and controls are unchanged and work for both modes
  *
- * Install: overwrite your current app.js with this file, hard-refresh the page and switch to PLAYER mode.
+ * Drop this file into your project (replace the existing app.js), hard-refresh the browser,
+ * then switch to PLAYER mode. Player records are expected at /players/players.json.
  */
 
 'use strict';
@@ -44,7 +41,7 @@ const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
 
 const historyEl = document.getElementById('history');
-const historyPlayersEl = document.getElementById('historyPlayers'); // optional per-PLAYER history element
+const historyPlayersEl = document.getElementById('historyPlayers');
 
 const modeTeamBtn = document.getElementById('modeTeam');
 const modePlayerBtn = document.getElementById('modePlayer');
@@ -94,23 +91,87 @@ const PERF = {
 };
 
 function deviceDPR() { return Math.max(1, window.devicePixelRatio || 1); }
-
 function _polite() { return new Promise(r => setTimeout(r, 40 + Math.random()*110)); }
-
 function normalizeString(s){ return (s||'').toString().trim().toLowerCase().replace(/\s+/g,' '); }
 
-// -------------------- Image cache --------------------
+// -------------------- Image cache & loader --------------------
 const IMG_CACHE = new Map();
+
+/* Resilient image loader:
+   - Try crossOrigin='anonymous' first (for Commons / CDN)
+   - If it errors, retry without crossOrigin so image still displays on the wheel
+   - Calls onLoad(err, img) when load/error happens so UI can refresh
+*/
 function getLogo(url, onLoad) {
   if (!url) return null;
   const cached = IMG_CACHE.get(url);
-  if (cached) return cached.img;
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = url;
-  img.onload = () => { onLoad && onLoad(); };
-  img.onerror = () => { onLoad && onLoad(); };
-  IMG_CACHE.set(url, { img });
+  if (cached && cached.img) return cached.img;
+
+  function createImg(useCrossOrigin) {
+    try {
+      const img = new Image();
+      if (useCrossOrigin) img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        IMG_CACHE.set(url, { img, retried: useCrossOrigin ? false : true });
+        onLoad && onLoad(null, img);
+      };
+      img.onerror = () => {
+        onLoad && onLoad(new Error('img load error'), img);
+      };
+      // setting src last helps some browsers start loading immediately
+      img.src = url;
+      return img;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // First attempt with crossOrigin
+  let img = createImg(true);
+  IMG_CACHE.set(url, { img, retried: false });
+
+  // If it fails, we'll detect via onLoad callback; set a fallback handler
+  const fallbackCheck = (err, workedImg) => {
+    const entry = IMG_CACHE.get(url) || {};
+    // if original errored and not retried, create fallback without crossOrigin
+    if (err && !entry.retried) {
+      const fallback = createImg(false);
+      IMG_CACHE.set(url, { img: fallback, retried: true });
+      // schedule a draw when fallback finishes or errors
+      fallback.onload = () => requestAnimationFrame(drawWheel);
+      fallback.onerror = () => requestAnimationFrame(drawWheel);
+      // notify caller on fallback result via onLoad when it completes
+      fallback.onload = () => onLoad && onLoad(null, fallback);
+      fallback.onerror = () => onLoad && onLoad(new Error('fallback load failed'), fallback);
+    }
+  };
+
+  // Wrap original onload/onerror so we can fallback automatically
+  const wrapOnLoad = (err, image) => {
+    fallbackCheck(err, image);
+    // force redraw
+    requestAnimationFrame(drawWheel);
+  };
+
+  // attach temporary handlers: if caller provided onLoad, call that too
+  // We return the provisional img immediately; callbacks above will update cache
+  // and schedule redraws.
+  // Hook a lite monitoring by assigning a combined handler:
+  const origOnLoad = onLoad;
+  // Replace onLoad with combined handler that also performs fallback
+  const combined = (err, image) => {
+    wrapOnLoad(err, image);
+    if (typeof origOnLoad === 'function') origOnLoad(err, image);
+  };
+
+  // Bind combined handler through a small proxy on the image (we rely on createImg to call onLoad)
+  // Since createImg used the provided onLoad directly, we re-create the img with our combined handler:
+  img = createImg(true);
+  IMG_CACHE.set(url, { img, retried: false });
+  // Attach temporary listeners via new Image object's events for additional fallback detection
+  img.addEventListener('error', () => combined(new Error('img error'), img));
+  img.addEventListener('load', () => combined(null, img));
+
   return img;
 }
 
@@ -129,7 +190,6 @@ function setMode(newMode) {
     teamView.classList.add('hidden');
     playerView.classList.remove('hidden');
     if (!PLAYERS) {
-      // players normalized will attempt to map clubs -> league_code by using TEAMS
       loadPlayers().then(() => {
         selectedIdx = -1;
         drawWheel();
@@ -153,7 +213,7 @@ async function loadPlayers() {
     if (!res.ok) throw new Error('players.json fetch failed: ' + res.status);
     const data = await res.json();
 
-    // Map of normalized team_name -> league_code for quick lookup
+    // Build quick map from normalized team name -> league_code for inference
     const teamNameToLeague = {};
     TEAMS.forEach(t => {
       if (t && t.team_name && t.league_code) {
@@ -162,22 +222,21 @@ async function loadPlayers() {
     });
 
     PLAYERS = Array.isArray(data) ? data.map(p => {
-      const name = p.name || p.player_name || p.full_name || p.displayName || 'Player';
-      const img = p.image_url || p.file_url || p.image || p.imageUrl || '/img/silhouette-player.png';
+      const name = p.name || p.player_name || p.full_name || p.displayName || p.team_name || 'Player';
+      const img = p.image_url || p.file_url || p.image || p.file || '/img/silhouette-player.png';
 
       // Determine league_code:
       // 1) prefer explicit p.league_code
       // 2) else try p.league or p.comp
       // 3) else try to map p.club/team name to TEAMS' league_code (best-effort)
-      // 4) else fallback to 'PLAYER' (so it won't match league chips unless you toggle them)
+      // 4) else fallback to 'PLAYER'
       let league_code = p.league_code || p.league || p.comp || null;
-      if (!league_code && p.club) {
-        const clubNorm = normalizeString(p.club);
-        if (teamNameToLeague[clubNorm]) league_code = teamNameToLeague[clubNorm];
-      }
-      if (!league_code && p.team) {
-        const clubNorm = normalizeString(p.team);
-        if (teamNameToLeague[clubNorm]) league_code = teamNameToLeague[clubNorm];
+      if (!league_code) {
+        const clubCandidates = [p.club, p.team, p.current_club, p.club_name].filter(Boolean);
+        for (const c of clubCandidates) {
+          const clubNorm = normalizeString(c);
+          if (teamNameToLeague[clubNorm]) { league_code = teamNameToLeague[clubNorm]; break; }
+        }
       }
       league_code = league_code || 'PLAYER';
 
@@ -199,12 +258,14 @@ async function loadPlayers() {
       };
     }) : [];
 
-    console.log(`loadPlayers(): loaded ${PLAYERS.length} player records (normalized)`);
+    console.info(`loadPlayers() → loaded ${PLAYERS.length} player records (normalized)`);
+    if (PLAYERS.length) console.debug('players[0..2] (normalized):', PLAYERS.slice(0,3));
     renderPlayerListPreview();
+    requestAnimationFrame(drawWheel);
     return PLAYERS;
-  } catch (e) {
-    console.error('Failed to load players.json', e);
-    throw e;
+  } catch (err) {
+    console.error('loadPlayers() error:', err);
+    throw err;
   }
 }
 
@@ -215,7 +276,7 @@ function renderPlayerListPreview(limit = 40) {
   slice.forEach(p => {
     const it = document.createElement('div');
     it.className = 'player-item';
-    it.innerHTML = `<img class="player-thumb" src="${p.image_url || '/img/silhouette-player.png'}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" width="48" height="48"><div class="player-meta"><div class="player-name">${escapeHtml(p.name)}</div></div>`;
+    it.innerHTML = `<img class="player-thumb" src="${escapeHtml(p.image_url || '/img/silhouette-player.png')}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" width="48" height="48"><div class="player-meta"><div class="player-name">${escapeHtml(p.name)}</div></div>`;
     playerListContainer.appendChild(it);
   });
 }
@@ -236,13 +297,9 @@ function getFiltered() {
 function getCurrentData() {
   if (MODE === 'player') {
     if (!PLAYERS || PLAYERS.length === 0) return [];
-    // Apply same chip filters as teams: if no chips checked, we default to currently checked set (setCheckedCodes controls this)
+    // Apply same chip filters as teams: if no chips checked we return all players
     const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
-    if (active.length === 0) {
-      // No active chips => return all players
-      return PLAYERS;
-    }
-    // Filter players by league_code using same codes as team chips
+    if (active.length === 0) return PLAYERS;
     return PLAYERS.filter(p => active.includes(p.league_code));
   } else {
     return getFiltered();
@@ -431,7 +488,7 @@ function drawWheel(){
         ctx.restore();
       }
 
-    } else { // PLAYER MODE (uses identical UI logic)
+    } else { // PLAYER MODE (identical UI logic)
       const playerName = t.name || t.team_name || 'Player';
       const playerImgUrl = t.image_url || t.logo_url || '';
 
@@ -468,7 +525,6 @@ function drawWheel(){
         ctx.restore();
       }
 
-      // Name rendering follows same checks (optName) as teams
       const canShowName = optName?.checked && playerName && maxTextWidth >= PERF.minTextWidth;
       if (canShowName) {
         ctx.save();
@@ -514,13 +570,11 @@ function setResult(idx) {
   const openRec = t;
   if (openRec && (openRec.image_url || openRec.logo_url)) {
     setTimeout(() => {
-      if (openRec && (openRec.image_url || openRec.logo_url)) {
-        openModal({
-          team_name: MODE === 'team' ? (openRec.team_name || '') : (openRec.name || ''),
-          league_code: MODE === 'team' ? openRec.league_code : '',
-          logo_url: MODE === 'team' ? openRec.logo_url : (openRec.image_url || '')
-        });
-      }
+      openModal({
+        team_name: MODE === 'team' ? (openRec.team_name || '') : (openRec.name || ''),
+        league_code: MODE === 'team' ? openRec.league_code : '',
+        logo_url: MODE === 'team' ? openRec.logo_url : (openRec.image_url || '')
+      });
     }, 160);
   }
 }
@@ -644,7 +698,6 @@ function setCheckedCodes(codes = []) {
 }
 
 function renderHistory() {
-  // Render into main history panel
   if (historyEl) {
     historyEl.innerHTML = '';
     if (history.length === 0) {
@@ -669,7 +722,6 @@ function renderHistory() {
     }
   }
 
-  // Also mirror to player-specific history panel if exists
   if (historyPlayersEl) {
     historyPlayersEl.innerHTML = historyEl ? historyEl.innerHTML : '';
   }
