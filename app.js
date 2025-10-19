@@ -1,23 +1,13 @@
 /**
  * app.js
- * Football Club Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
+ * Football Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
  *
- * Changes in this revision (addresses your 3 items):
- * 1) TEAM / PLAYER are now implemented as a proper two-option toggle:
- *    - Buttons behave like a single-choice switch, with aria-pressed updates and keyboard accessibility.
- * 2) Improved label/logo layout calculations so names and logos don't overlap:
- *    - Text and logo positions are computed with overlap checks and automatic offsets.
- *    - Uses safeDrawImage to avoid drawing broken images.
- * 3) "Show on wheel" (Name / Logo / Stadium / League) is fixed:
- *    - Uses a single read-from-DOM function getShowOptions() so toggles always reflect UI state.
- *    - Player mode correctly respects the same toggles as Team mode.
+ * - Loads TEAMS from teams.json
+ * - Loads players from /data/players.json (with fallbacks) and normalizes to the "team-shaped" objects the wheel expects
+ * - Robust image loader with fallback and safe canvas drawing to avoid InvalidStateError
+ * - Keeps UI, chips, modal, history and wheel logic identical between TEAM and PLAYER modes
  *
- * Also includes robust image loader and placeholder fallback (tries /players, then inline SVG).
- *
- * Replace your existing app.js with this file, hard-refresh (Cmd/Ctrl+Shift+R) and test:
- * - Toggle TEAM / PLAYER in the header using keyboard or mouse (it behaves as a single toggle).
- * - Turn Show on wheel options on/off and confirm names/logos/stadium/league show/hide.
- * - If anything still misbehaves, paste console output and I will iterate.
+ * Replace your existing app.js with this file, hard-refresh the page, then switch to PLAYER mode.
  */
 
 'use strict';
@@ -38,10 +28,6 @@ const chipsTop = document.getElementById('chipsTop');
 const chipsMore = document.getElementById('chipsMore');
 const toggleMore = document.getElementById('toggleMore');
 
-// Header mode buttons (toggle)
-const modeTeamBtn = document.getElementById('modeTeam');
-const modePlayerBtn = document.getElementById('modePlayer');
-
 const spinBtn = document.getElementById('spinBtn');
 const spinFab = document.getElementById('spinFab');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -56,6 +42,9 @@ const currentLogo = document.getElementById('currentLogo');
 
 const historyEl = document.getElementById('history');
 const historyPlayersEl = document.getElementById('historyPlayers');
+
+const modeTeamBtn = document.getElementById('modeTeam');
+const modePlayerBtn = document.getElementById('modePlayer');
 
 const teamView = document.getElementById('teamView');
 const playerView = document.getElementById('playerView');
@@ -106,11 +95,16 @@ function _polite() { return new Promise(r => setTimeout(r, 40 + Math.random()*11
 function normalizeString(s){ return (s||'').toString().trim().toLowerCase().replace(/\s+/g,' '); }
 
 // -------------------- Image fallback path --------------------
+// Your images live in public/players; use that as the fallback path.
 const FALLBACK_SILHOUETTE = '/players/silhouette-player.png';
 
 // -------------------- Image cache & loader --------------------
 const IMG_CACHE = new Map();
 
+/**
+ * createInlinePlaceholder(size)
+ * Returns a small SVG data URL placeholder to guarantee a valid image when network ones fail.
+ */
 function createInlinePlaceholder(size = 256) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     <rect width="100%" height="100%" fill="#071022"/>
@@ -122,6 +116,10 @@ function createInlinePlaceholder(size = 256) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
+/**
+ * safeDrawImage(ctx, img, ...args)
+ * Draws image only if it's valid (avoids InvalidStateError).
+ */
 function safeDrawImage(ctx, img, ...args) {
   try {
     if (!img) return false;
@@ -135,6 +133,13 @@ function safeDrawImage(ctx, img, ...args) {
   }
 }
 
+/**
+ * getLogo(url, onLoad)
+ * Robust loader:
+ * - tries crossOrigin first (for Commons/CDN)
+ * - on error removes broken cache and attempts fallback image or inline placeholder
+ * - always calls onLoad(err, image) to allow redraw
+ */
 function getLogo(url, onLoad) {
   if (!url) return null;
   const cached = IMG_CACHE.get(url);
@@ -150,6 +155,8 @@ function getLogo(url, onLoad) {
   img.onerror = () => {
     console.warn('Image failed to load:', url);
     IMG_CACHE.delete(url);
+
+    // If we haven't tried the fallback yet, attempt fallback image file under /players
     if (url !== FALLBACK_SILHOUETTE) {
       const fallbackImg = new Image();
       fallbackImg.crossOrigin = 'anonymous';
@@ -159,6 +166,7 @@ function getLogo(url, onLoad) {
         requestAnimationFrame(drawWheel);
       };
       fallbackImg.onerror = () => {
+        // fallback also failed — use inline placeholder
         const placeholder = new Image();
         placeholder.src = createInlinePlaceholder(256);
         IMG_CACHE.set(url, { img: placeholder, ok: false });
@@ -169,6 +177,7 @@ function getLogo(url, onLoad) {
       IMG_CACHE.set(url, { img: fallbackImg, ok: false });
       return fallbackImg;
     } else {
+      // fallback itself failed; use inline placeholder
       const placeholder = new Image();
       placeholder.src = createInlinePlaceholder(256);
       IMG_CACHE.set(url, { img: placeholder, ok: false });
@@ -182,37 +191,20 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// -------------------- "Show on wheel" UI read helper --------------------
-function getShowOptions() {
-  return {
-    name: !!(optName && optName.checked),
-    logo: !!(optLogo && optLogo.checked),
-    stadium: !!(optStadium && optStadium.checked),
-    league: !!(optLeague && optLeague.checked)
-  };
-}
-
-// -------------------- Mode handling (toggle buttons) --------------------
+// -------------------- Mode handling --------------------
 function setMode(newMode) {
   if (newMode === MODE) return;
   MODE = newMode;
-
-  // Manage toggle visual state and accessible attributes
-  if (modeTeamBtn && modePlayerBtn) {
-    modeTeamBtn.classList.toggle('mode-btn-active', MODE === 'team');
-    modePlayerBtn.classList.toggle('mode-btn-active', MODE === 'player');
-
-    modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true' : 'false');
-    modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true' : 'false');
-  }
+  modeTeamBtn.classList.toggle('mode-btn-active', MODE === 'team');
+  modePlayerBtn.classList.toggle('mode-btn-active', MODE === 'player');
 
   if (MODE === 'team') {
-    teamView && teamView.classList.remove('hidden');
-    playerView && playerView.classList.add('hidden');
+    teamView.classList.remove('hidden');
+    playerView.classList.add('hidden');
     drawWheel();
   } else {
-    teamView && teamView.classList.add('hidden');
-    playerView && playerView.classList.remove('hidden');
+    teamView.classList.add('hidden');
+    playerView.classList.remove('hidden');
     if (!PLAYERS) {
       loadPlayers().then(() => {
         selectedIdx = -1;
@@ -227,31 +219,13 @@ function setMode(newMode) {
     }
   }
 }
-
-// Setup accessible toggle behavior (keyboard + mouse)
-if (modeTeamBtn && modePlayerBtn) {
-  // set roles and initial aria states for accessibility
-  modeTeamBtn.setAttribute('role', 'button');
-  modePlayerBtn.setAttribute('role', 'button');
-  modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true' : 'false');
-  modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true' : 'false');
-
-  modeTeamBtn.addEventListener('click', () => setMode('team'));
-  modePlayerBtn.addEventListener('click', () => setMode('player'));
-
-  // keyboard support
-  [modeTeamBtn, modePlayerBtn].forEach(btn => {
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        btn.click();
-      }
-    });
-  });
-}
+modeTeamBtn && modeTeamBtn.addEventListener('click', () => setMode('team'));
+modePlayerBtn && modePlayerBtn.addEventListener('click', () => setMode('player'));
 
 // -------------------- Helper: tryFetchPlayers --------------------
 async function tryFetchPlayers() {
+  // Prefer /data/players.json (user confirmed this is correct).
+  // Keep fallbacks for other setups (root and relative).
   const candidates = [
     '/data/players.json',
     '/players/players.json',
@@ -452,9 +426,6 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // Get current show options
-  const show = getShowOptions();
-
   // Content (logos/text)
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
@@ -465,7 +436,7 @@ function drawWheel(){
 
     const logoSize = clamp(28, 0.40 * sliceArc, 64);
     const logoHalf = logoSize / 2;
-    const basePad = 10;
+    const pad = 10;
 
     ctx.save();
     ctx.beginPath();
@@ -479,37 +450,24 @@ function drawWheel(){
     if (needFlip) ctx.rotate(Math.PI);
     const sign = needFlip ? -1 : 1;
 
-    // Compute logo & text positions with overlap avoidance.
-    let xLogo = sign * (radius * 0.74);
-    let xText = sign * (radius * 0.48); // moved slightly inward to avoid collision
-    const logoInner = xLogo - sign * (logoHalf + basePad);
-    const minGap = 12; // minimal gap between logo and text in px (visual)
-    // If both logo and name will be shown and they would overlap, push text inward
-    if (show.logo && show.name) {
-      const gap = Math.abs(logoInner - xText);
-      if (gap < (logoHalf + minGap)) {
-        const shift = (logoHalf + minGap) - gap;
-        xText = xText - sign * shift;
-      }
-    }
-
+    const xLogo = sign * (radius * 0.74);
+    const xText = sign * (radius * 0.42);
+    const logoInner = xLogo - sign * (logoHalf + pad);
     const xBoxLeft = Math.min(xText, logoInner);
     const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
-    // TEAM mode drawing
     if (MODE === 'team') {
-      const canShowName    = show.name && t.team_name && maxTextWidth >= PERF.minTextWidth;
-      const canShowStadium = show.stadium && t.stadium && maxTextWidth >= PERF.minTextWidth;
-      const canShowLogo    = show.logo && t.logo_url && logoHalf*2 >= PERF.minLogoBox;
+      const canShowName    = optName?.checked && t.team_name && maxTextWidth >= PERF.minTextWidth;
+      const canShowStadium = optStadium?.checked && t.stadium && maxTextWidth >= PERF.minTextWidth;
+      const canShowLogo    = optLogo?.checked && t.logo_url && logoHalf*2 >= PERF.minLogoBox;
 
       if (canShowName || canShowStadium) {
         ctx.save();
-        ctx.textAlign = needFlip ? 'right' : 'left';
+        ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         const strokeCol = 'rgba(12,16,28,0.65)';
         const fillCol = '#fff';
-        let namePx = Math.min(14, Math.max(10, Math.round(sliceArc * 0.05)));
-        let stadPx = Math.min(12, Math.max(9, Math.round(sliceArc * 0.04)));
+        let namePx = 14, stadPx = 12;
         if (canShowName) {
           ctx.font = `800 ${namePx}px Inter, system-ui, sans-serif`;
           ctx.lineWidth = Math.max(1, Math.round(namePx / 10));
@@ -528,7 +486,7 @@ function drawWheel(){
         ctx.restore();
       }
 
-      if (canShowLogo) {
+      if (optLogo?.checked && t.logo_url) {
         ctx.save();
         ctx.translate(xLogo, 0);
         ctx.beginPath();
@@ -557,14 +515,11 @@ function drawWheel(){
         ctx.restore();
       }
 
-    } else { // PLAYER mode (same logic, uses image_url)
+    } else { // PLAYER MODE (identical UI logic)
       const playerName = t.name || t.team_name || 'Player';
       const playerImgUrl = t.image_url || t.logo_url || FALLBACK_SILHOUETTE;
 
-      const canShowName = show.name && playerName && maxTextWidth >= PERF.minTextWidth;
-      const canShowLogo = show.logo && playerImgUrl && logoHalf*2 >= PERF.minLogoBox;
-
-      if (canShowLogo) {
+      if (playerImgUrl) {
         ctx.save();
         ctx.translate(xLogo, 0);
         ctx.beginPath();
@@ -593,11 +548,12 @@ function drawWheel(){
         ctx.restore();
       }
 
+      const canShowName = optName?.checked && playerName && maxTextWidth >= PERF.minTextWidth;
       if (canShowName) {
         ctx.save();
-        ctx.textAlign = needFlip ? 'right' : 'left';
+        ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        const namePx = Math.max(10, Math.round(sliceArc * 0.06));
+        const namePx = Math.max(10, Math.round(sliceArc * 0.08));
         ctx.font = `700 ${Math.min(20, namePx)}px Inter, system-ui, sans-serif`;
         ctx.fillStyle = '#fff';
         const yText = logoHalf + 8;
@@ -619,31 +575,30 @@ function setResult(idx) {
   selectedIdx = idx;
   drawWheel();
 
-  if (t) {
-    if (MODE === 'team') {
-      const leagueLabel = (t && (t.league_code && (LEAGUE_LABELS[t.league_code] || t.league_code))) || '';
-      if (currentText) currentText.textContent = `${t.team_name} · ${leagueLabel}`;
-      if (currentLogo) { currentLogo.src = t.logo_url || ""; currentLogo.alt = (t.team_name || 'Club') + ' logo'; }
-      history.unshift(t);
-    } else {
-      if (currentText) currentText.textContent = `${t.name || t.team_name || 'Player'}`;
-      if (currentLogo) { currentLogo.src = t.image_url || t.logo_url || ""; currentLogo.alt = (t.name || 'Player') + ' photo'; }
-      history.unshift(t);
-    }
+  if (MODE === 'team') {
+    const leagueLabel = (t && (t.league_code && (LEAGUE_LABELS[t.league_code] || t.league_code))) || '';
+    if (currentText) currentText.textContent = `${t.team_name} · ${leagueLabel}`;
+    if (currentLogo) { currentLogo.src = t.logo_url || ""; currentLogo.alt = (t.team_name || 'Club') + ' logo'; }
+    history.unshift(t);
+  } else {
+    if (currentText) currentText.textContent = `${t.name || t.team_name || 'Player'}`;
+    if (currentLogo) { currentLogo.src = t.image_url || t.logo_url || ""; currentLogo.alt = (t.name || 'Player') + ' photo'; }
+    history.unshift(t);
+  }
 
-    if (history.length > 50) history = history.slice(0,50);
-    localStorage.setItem('clubHistory', JSON.stringify(history));
-    renderHistory();
+  if (history.length > 50) history = history.slice(0,50);
+  localStorage.setItem('clubHistory', JSON.stringify(history));
+  renderHistory();
 
-    if (t && (t.image_url || t.logo_url)) {
-      setTimeout(() => {
-        openModal({
-          team_name: MODE === 'team' ? (t.team_name || '') : (t.name || ''),
-          league_code: MODE === 'team' ? t.league_code : '',
-          logo_url: MODE === 'team' ? t.logo_url : (t.image_url || '')
-        });
-      }, 160);
-    }
+  const openRec = t;
+  if (openRec && (openRec.image_url || openRec.logo_url)) {
+    setTimeout(() => {
+      openModal({
+        team_name: MODE === 'team' ? (openRec.team_name || '') : (openRec.name || ''),
+        league_code: MODE === 'team' ? openRec.league_code : '',
+        logo_url: MODE === 'team' ? openRec.logo_url : (openRec.image_url || '')
+      });
+    }, 160);
   }
 }
 
@@ -840,10 +795,10 @@ function setupEventListeners() {
     }
   });
 
-  // "Show on wheel" inputs should trigger redraw; use delegation to pick up correct elements
-  [optName, optLogo, optStadium, optLeague].forEach(el => {
-    if (el) el.addEventListener('change', () => { if (!spinning) drawWheel(); });
-  });
+  optName?.addEventListener('change', () => { if (!spinning) drawWheel(); });
+  optLogo?.addEventListener('change', () => { if (!spinning) drawWheel(); });
+  optStadium?.addEventListener('change', () => { if (!spinning) drawWheel(); });
+  optLeague?.addEventListener('change', () => { if (!spinning) drawWheel(); });
 
   spinBtn.onclick = spin;
   spinFab.onclick = spin;
@@ -899,9 +854,11 @@ fetch(`./teams.json?v=${Date.now()}`)
     renderChips();
     renderHistory();
     sizeCanvas();
-    setCheckedCodes(['EPL']);
+    setCheckedCodes(['EPL']);   // keep the same default selection
     drawWheel();
     setupEventListeners();
+    modeTeamBtn && modeTeamBtn.addEventListener('click', () => setMode('team'));
+    modePlayerBtn && modePlayerBtn.addEventListener('click', () => setMode('player'));
   })
   .catch(err => {
     console.error('Failed to load teams.json', err);
