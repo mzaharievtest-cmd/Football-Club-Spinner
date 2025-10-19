@@ -2,10 +2,12 @@
  * app.js
  * Football Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
  *
- * Fixes in this revision:
- * - drawWheel() now draws text first and logos afterwards so logos are never
- *   obscured by long labels. All previous layout/fallback/ellipsize logic kept.
- * - Accessible TEAM/PLAYER toggle and other robustness unchanged.
+ * - Loads TEAMS from teams.json
+ * - Loads players from /data/players.json (with fallbacks) and normalizes to the "team-shaped" objects the wheel expects
+ * - Robust image loader with fallback and safe canvas drawing to avoid InvalidStateError
+ * - Keeps UI, chips, modal, history and wheel logic identical between TEAM and PLAYER modes
+ * - Shows/hides Name/Logo/Stadium/League on the wheel based on live DOM controls
+ * - Draw order: text first, logos afterwards so logos remain visible
  */
 
 'use strict';
@@ -63,6 +65,7 @@ const perfTip = document.getElementById('perfTip');
 
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
+const showOnWheelEl = document.getElementById('showOnWheel');
 
 // -------------------- Constants & Utils --------------------
 const TAU = Math.PI * 2;
@@ -173,16 +176,28 @@ function getLogo(url, onLoad) {
 
 // -------------------- "Show on wheel" UI read helper --------------------
 function getShowOptions() {
-  // Prefer explicit DOM ids (optName, optLogo, ...)
-  if (optName || optLogo || optStadium || optLeague) {
+  // Read live from DOM (preferred) to avoid relying on possibly stale references.
+  const readById = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    return !!el.checked;
+  };
+
+  const name = readById('optName');
+  const logo = readById('optLogo');
+  const stadium = readById('optStadium');
+  const league = readById('optLeague');
+
+  if (name !== null || logo !== null || stadium !== null || league !== null) {
     return {
-      name: !!(optName && optName.checked),
-      logo: !!(optLogo && optLogo.checked),
-      stadium: !!(optStadium && optStadium.checked),
-      league: !!(optLeague && optLeague.checked)
+      name: !!name,
+      logo: !!logo,
+      stadium: !!stadium,
+      league: !!league
     };
   }
-  // Fallback: query for inputs with likely selectors (handles varied markup)
+
+  // fallback selectors
   const q = (sel) => {
     const el = document.querySelector(sel);
     return !!(el && (el.checked || el.getAttribute('aria-checked') === 'true'));
@@ -201,13 +216,11 @@ function setMode(newMode) {
   MODE = newMode;
   localStorage.setItem('fsMode', MODE);
 
-  // Update header buttons to behave as a single-toggle
   if (modeTeamBtn && modePlayerBtn) {
     modeTeamBtn.classList.toggle('mode-btn-active', MODE === 'team');
     modePlayerBtn.classList.toggle('mode-btn-active', MODE === 'player');
     modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true' : 'false');
     modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true' : 'false');
-    // reflect in data attributes / visually (for CSS)
     modeTeamBtn.dataset.selected = MODE === 'team' ? '1' : '0';
     modePlayerBtn.dataset.selected = MODE === 'player' ? '1' : '0';
   }
@@ -223,7 +236,6 @@ function setMode(newMode) {
       loadPlayers().then(() => {
         selectedIdx = -1;
         drawWheel();
-        // after first load, ensure spin availability reflects players
         const hasAny = getCurrentData().length > 0;
         if (spinBtn) spinBtn.disabled = !hasAny;
         if (spinFab) spinFab.disabled = !hasAny;
@@ -487,7 +499,7 @@ function drawWheel(){
   // Get current show options
   const show = getShowOptions();
 
-  // Content (TEXT THEN LOGO so logos stay on top)
+  // Content (TEXT First, then LOGO so logos render on top)
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const a0 = i * sliceAngle;
@@ -499,7 +511,6 @@ function drawWheel(){
     const logoHalf = logoSize / 2;
     const basePad = 10;
 
-    // clip wedge
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(0,0);
@@ -507,20 +518,17 @@ function drawWheel(){
     ctx.closePath();
     ctx.clip();
 
-    // rotate to slice middle
     ctx.save();
     ctx.rotate(aMid);
     const needFlip = Math.cos(aMid) < 0;
     if (needFlip) ctx.rotate(Math.PI);
     const sign = needFlip ? -1 : 1;
 
-    // Compute logo & text positions with overlap avoidance.
+    // Compute positions and avoid overlap
     let xLogo = sign * (radius * 0.74);
-    let xText = sign * (radius * 0.48); // moved slightly inward to avoid collision
+    let xText = sign * (radius * 0.48);
     const logoInner = xLogo - sign * (logoHalf + basePad);
-    const minGap = 12; // minimal gap between logo and text in px (visual)
-
-    // If both logo and name will be shown and they would overlap, push text inward
+    const minGap = 12;
     if (show.logo && show.name) {
       const gap = Math.abs(logoInner - xText);
       if (gap < (logoHalf + minGap)) {
@@ -532,11 +540,10 @@ function drawWheel(){
     const xBoxLeft = Math.min(xText, logoInner);
     const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
-    // Pick baseline font sizes (adjust by sliceArc)
     const namePx = Math.max(10, Math.min(18, Math.round(sliceArc * 0.06)));
     const nameFont = `700 ${namePx}px Inter, system-ui, sans-serif`;
 
-    // DRAW TEXT FIRST (ellipsized as needed)
+    // Draw text first (ellipsize if needed)
     if (MODE === 'team') {
       const canShowName    = show.name && t.team_name && maxTextWidth >= PERF.minTextWidth;
       const canShowStadium = show.stadium && t.stadium && maxTextWidth >= PERF.minTextWidth;
@@ -584,7 +591,7 @@ function drawWheel(){
       }
     }
 
-    // THEN DRAW THE LOGO ON TOP
+    // Then draw logo on top
     if (MODE === 'team') {
       const canShowLogo = show.logo && t.logo_url && logoHalf*2 >= PERF.minLogoBox;
       if (canShowLogo) {
@@ -648,7 +655,6 @@ function drawWheel(){
       }
     }
 
-    // restore rotation and clip
     ctx.restore(); // rotation
     ctx.restore(); // clip
   }
@@ -899,10 +905,24 @@ function setupEventListeners() {
     });
   }
 
-  // "Show on wheel" inputs should trigger redraw
-  [optName, optLogo, optStadium, optLeague].forEach(el => {
-    if (el) el.addEventListener('change', () => { if (!spinning) drawWheel(); });
-  });
+  // Delegated listener for show-on-wheel controls (single handler)
+  if (showOnWheelEl) {
+    showOnWheelEl.addEventListener('change', (e) => {
+      if (spinning) return;
+      // redraw immediately with current DOM states
+      drawWheel();
+      // update spin availability & perfTip
+      const n = getCurrentData().length;
+      if (spinBtn) spinBtn.disabled = n === 0;
+      if (spinFab) spinFab.disabled = n === 0;
+      if (perfTip) perfTip.textContent = `${n} ${MODE === 'player' ? 'players' : 'teams'} selected`;
+    });
+  } else {
+    // Fallback: attach to individual controls if container not present
+    [optName, optLogo, optStadium, optLeague].forEach(el => {
+      if (el) el.addEventListener('change', () => { if (!spinning) { drawWheel(); const n = getCurrentData().length; if (spinBtn) spinBtn.disabled = n === 0; if (spinFab) spinFab.disabled = n === 0; if (perfTip) perfTip.textContent = `${n} ${MODE === 'player' ? 'players' : 'teams'} selected`; } });
+    });
+  }
 
   if (spinBtn) spinBtn.onclick = spin;
   if (spinFab) spinFab.onclick = spin;
@@ -949,6 +969,7 @@ function setupEventListeners() {
   window.addEventListener('resize', () => { clearTimeout(resizeTO); resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120); }, { passive: true });
 }
 
+// -------------------- Canvas sizing --------------------
 function sizeCanvas() {
   const rect = (wheel.parentElement || wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width || 640), 1200);
@@ -975,11 +996,9 @@ fetch(`./teams.json?v=${Date.now()}`)
     renderChips();
     renderHistory();
     sizeCanvas();
-    // Default selection if nothing stored; keep user's mode preference
     setCheckedCodes(['EPL']);
-    // Ensure initial mode UI reflects saved MODE
     if (MODE === 'player') {
-      setMode('player'); // will load players and then draw
+      setMode('player');
     } else {
       setMode('team');
     }
