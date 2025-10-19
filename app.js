@@ -458,9 +458,11 @@ function drawGradientIdle(ctx, W, H) {
 
 // (drawWheel kept as earlier: draws TEXT first then LOGO on top)
 function drawWheel(){
+  if (!wheel) return;
+  const ctx = wheel.getContext && wheel.getContext('2d');
+  if (!ctx) return;
   const data = getCurrentData();
   const N = data.length;
-  const ctx = wheel.getContext('2d');
   const DPR = deviceDPR();
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const W = wheel.width / DPR;
@@ -932,7 +934,7 @@ function setupEventListeners() {
     const target = e.target;
     if (!target) return;
     // only react to checkboxes in the showOnWheel area
-    if (!(target.matches && (target.matches('#showOnWheel input[type="checkbox"]') || target.closest && target.closest('#showOnWheel') || target.closest && target.closest('.showopts')))) {
+    if (!(target.matches && (target.matches('#showOnWheel input[type="checkbox"]') || (target.closest && target.closest('#showOnWheel')) || (target.closest && target.closest('.showopts'))))) {
       return;
     }
     if (spinning) return;
@@ -1003,6 +1005,12 @@ function setupEventListeners() {
 
   let resizeTO;
   window.addEventListener('resize', () => { clearTimeout(resizeTO); resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120); }, { passive: true });
+
+  // ensure UI is in sync after event wiring
+  const n = getCurrentData().length;
+  if (spinBtn) spinBtn.disabled = n === 0;
+  if (spinFab) spinFab.disabled = n === 0;
+  if (perfTip) perfTip.textContent = `${n} ${MODE === 'player' ? 'players' : 'teams'} selected`;
 }
 
 // -------------------- Canvas sizing --------------------
