@@ -1,21 +1,11 @@
 /**
  * app.js
- * Football Club Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
+ * Football Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
  *
  * Fixes in this revision:
- * 1) Header TEAM / PLAYER behave as a single-choice toggle with correct aria states,
- *    keyboard support and visual sync (idempotent binding).
- * 2) Improved text/logo layout on the wheel:
- *    - uses ctx.measureText to fit / scale / ellipsize names so they don't overlap logos
- *    - respects flipped slices (text alignment) and enforces a minimum gap
- * 3) Show-on-wheel toggles are read robustly and always applied:
- *    - getShowOptions() reads explicit inputs (optName/optLogo/...)
- *      and falls back to querying the DOM (handles markup variations)
- *    - toggles wired to redraw immediately
- * 4) ✅ Spin button enable/disable logic now uses getCurrentData() in *all* places,
- *    so PLAYER mode isn't blocked by team filters.
- * 5) ✅ Null-safety for perfTip to avoid runtime errors if the node is missing.
- * 6) ♿️ Reduced-motion support & DPR clamp for perf.
+ * - drawWheel() now draws text first and logos afterwards so logos are never
+ *   obscured by long labels. All previous layout/fallback/ellipsize logic kept.
+ * - Accessible TEAM/PLAYER toggle and other robustness unchanged.
  */
 
 'use strict';
@@ -36,7 +26,6 @@ const chipsTop = document.getElementById('chipsTop');
 const chipsMore = document.getElementById('chipsMore');
 const toggleMore = document.getElementById('toggleMore');
 
-// Header mode buttons (toggle)
 const modeTeamBtn = document.getElementById('modeTeam');
 const modePlayerBtn = document.getElementById('modePlayer');
 
@@ -249,27 +238,21 @@ function setMode(newMode) {
   }
 }
 
-// Setup accessible toggle behavior (keyboard + mouse), idempotent
+// Setup accessible toggle behavior (idempotent)
 let __modeToggleBound = false;
 function setupModeToggleAccessibility() {
   if (__modeToggleBound) return;
   if (!modeTeamBtn || !modePlayerBtn) return;
   __modeToggleBound = true;
 
-  // If they're not real <button>, give them roles; otherwise aria-pressed is enough
-  if (modeTeamBtn.tagName !== 'BUTTON') {
-    modeTeamBtn.setAttribute('role', 'button');
-  }
-  if (modePlayerBtn.tagName !== 'BUTTON') {
-    modePlayerBtn.setAttribute('role', 'button');
-  }
+  if (modeTeamBtn.tagName !== 'BUTTON') modeTeamBtn.setAttribute('role', 'button');
+  if (modePlayerBtn.tagName !== 'BUTTON') modePlayerBtn.setAttribute('role', 'button');
   modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true' : 'false');
   modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true' : 'false');
 
   modeTeamBtn.addEventListener('click', () => setMode('team'));
   modePlayerBtn.addEventListener('click', () => setMode('player'));
 
-  // Key handlers only if not native buttons
   [modeTeamBtn, modePlayerBtn].forEach(btn => {
     if (btn.tagName === 'BUTTON') return;
     btn.addEventListener('keydown', (e) => {
@@ -504,7 +487,7 @@ function drawWheel(){
   // Get current show options
   const show = getShowOptions();
 
-  // Content (logos/text)
+  // Content (TEXT THEN LOGO so logos stay on top)
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const a0 = i * sliceAngle;
@@ -516,6 +499,7 @@ function drawWheel(){
     const logoHalf = logoSize / 2;
     const basePad = 10;
 
+    // clip wedge
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(0,0);
@@ -523,6 +507,7 @@ function drawWheel(){
     ctx.closePath();
     ctx.clip();
 
+    // rotate to slice middle
     ctx.save();
     ctx.rotate(aMid);
     const needFlip = Math.cos(aMid) < 0;
@@ -534,6 +519,7 @@ function drawWheel(){
     let xText = sign * (radius * 0.48); // moved slightly inward to avoid collision
     const logoInner = xLogo - sign * (logoHalf + basePad);
     const minGap = 12; // minimal gap between logo and text in px (visual)
+
     // If both logo and name will be shown and they would overlap, push text inward
     if (show.logo && show.name) {
       const gap = Math.abs(logoInner - xText);
@@ -550,12 +536,57 @@ function drawWheel(){
     const namePx = Math.max(10, Math.min(18, Math.round(sliceArc * 0.06)));
     const nameFont = `700 ${namePx}px Inter, system-ui, sans-serif`;
 
-    // TEAM mode drawing
+    // DRAW TEXT FIRST (ellipsized as needed)
     if (MODE === 'team') {
       const canShowName    = show.name && t.team_name && maxTextWidth >= PERF.minTextWidth;
       const canShowStadium = show.stadium && t.stadium && maxTextWidth >= PERF.minTextWidth;
-      const canShowLogo    = show.logo && t.logo_url && logoHalf*2 >= PERF.minLogoBox;
 
+      if (canShowName || canShowStadium) {
+        ctx.save();
+        ctx.textAlign = needFlip ? 'right' : 'left';
+        ctx.textBaseline = 'middle';
+        const strokeCol = 'rgba(12,16,28,0.65)';
+        const fillCol = '#fff';
+        if (canShowName) {
+          const nameToDraw = ellipsizeText(ctx, t.team_name, maxTextWidth, nameFont);
+          ctx.font = nameFont;
+          ctx.lineWidth = Math.max(1, Math.round(namePx / 10));
+          ctx.strokeStyle = strokeCol;
+          ctx.fillStyle = fillCol;
+          ctx.strokeText(nameToDraw, xBoxLeft, 0 - (canShowStadium ? 8 : 0));
+          ctx.fillText(nameToDraw, xBoxLeft, 0 - (canShowStadium ? 8 : 0));
+        }
+        if (canShowStadium) {
+          const stadPx = Math.max(9, Math.round(sliceArc * 0.045));
+          const stadFont = `700 ${stadPx}px Inter, system-ui, sans-serif`;
+          const stadToDraw = ellipsizeText(ctx, t.stadium, maxTextWidth, stadFont);
+          ctx.font = stadFont;
+          ctx.globalAlpha = 0.92;
+          ctx.strokeText(stadToDraw, xBoxLeft, 12);
+          ctx.fillText(stadToDraw, xBoxLeft, 12);
+          ctx.globalAlpha = 1;
+        }
+        ctx.restore();
+      }
+    } else {
+      const playerName = t.name || t.team_name || 'Player';
+      const canShowName = show.name && playerName && maxTextWidth >= PERF.minTextWidth;
+      if (canShowName) {
+        ctx.save();
+        ctx.textAlign = needFlip ? 'right' : 'left';
+        ctx.textBaseline = 'middle';
+        const nameToDraw = ellipsizeText(ctx, playerName, maxTextWidth, nameFont);
+        ctx.font = nameFont;
+        ctx.fillStyle = '#fff';
+        const yText = logoHalf + 8;
+        ctx.fillText(nameToDraw, xBoxLeft, yText);
+        ctx.restore();
+      }
+    }
+
+    // THEN DRAW THE LOGO ON TOP
+    if (MODE === 'team') {
+      const canShowLogo = show.logo && t.logo_url && logoHalf*2 >= PERF.minLogoBox;
       if (canShowLogo) {
         ctx.save();
         ctx.translate(xLogo, 0);
@@ -584,43 +615,9 @@ function drawWheel(){
         ctx.restore();
         ctx.restore();
       }
-
-      if (canShowName || canShowStadium) {
-        ctx.save();
-        ctx.textAlign = needFlip ? 'right' : 'left';
-        ctx.textBaseline = 'middle';
-        const strokeCol = 'rgba(12,16,28,0.65)';
-        const fillCol = '#fff';
-        if (canShowName) {
-          // ellipsize to fit the maxTextWidth
-          const nameToDraw = ellipsizeText(ctx, t.team_name, maxTextWidth, nameFont);
-          ctx.font = nameFont;
-          ctx.lineWidth = Math.max(1, Math.round(namePx / 10));
-          ctx.strokeStyle = strokeCol;
-          ctx.fillStyle = fillCol;
-          ctx.strokeText(nameToDraw, xBoxLeft, 0 - (canShowStadium ? 8 : 0));
-          ctx.fillText(nameToDraw, xBoxLeft, 0 - (canShowStadium ? 8 : 0));
-        }
-        if (canShowStadium) {
-          const stadPx = Math.max(9, Math.round(sliceArc * 0.045));
-          const stadFont = `700 ${stadPx}px Inter, system-ui, sans-serif`;
-          const stadToDraw = ellipsizeText(ctx, t.stadium, maxTextWidth, stadFont);
-          ctx.font = stadFont;
-          ctx.globalAlpha = 0.92;
-          ctx.strokeText(stadToDraw, xBoxLeft, 12);
-          ctx.fillText(stadToDraw, xBoxLeft, 12);
-          ctx.globalAlpha = 1;
-        }
-        ctx.restore();
-      }
-
-    } else { // PLAYER mode (same logic, uses image_url)
-      const playerName = t.name || t.team_name || 'Player';
+    } else {
       const playerImgUrl = t.image_url || t.logo_url || FALLBACK_SILHOUETTE;
-
       const canShowLogo = show.logo && playerImgUrl && logoHalf*2 >= PERF.minLogoBox;
-      const canShowName = show.name && playerName && maxTextWidth >= PERF.minTextWidth;
-
       if (canShowLogo) {
         ctx.save();
         ctx.translate(xLogo, 0);
@@ -649,20 +646,9 @@ function drawWheel(){
         ctx.restore();
         ctx.restore();
       }
-
-      if (canShowName) {
-        ctx.save();
-        ctx.textAlign = needFlip ? 'right' : 'left';
-        ctx.textBaseline = 'middle';
-        const nameToDraw = ellipsizeText(ctx, playerName, maxTextWidth, nameFont);
-        ctx.font = nameFont;
-        ctx.fillStyle = '#fff';
-        const yText = logoHalf + 8;
-        ctx.fillText(nameToDraw, xBoxLeft, yText);
-        ctx.restore();
-      }
     }
 
+    // restore rotation and clip
     ctx.restore(); // rotation
     ctx.restore(); // clip
   }
@@ -941,9 +927,7 @@ function setupEventListeners() {
     qpAll.addEventListener('click', () => {
       chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = true; i.setAttribute('aria-checked', 'true'); });
       selectedIdx = -1; drawWheel();
-      const n = getCurrentData().length;
-      if (spinBtn) spinBtn.disabled = n === 0;
-      if (spinFab) spinFab.disabled = n === 0;
+      const n = getCurrentData().length; if (spinBtn) spinBtn.disabled = n === 0; if (spinFab) spinFab.disabled = n === 0;
       if (perfTip) perfTip.textContent = `${n} ${MODE === 'player' ? 'players' : 'teams'} selected`;
     });
   }
@@ -958,17 +942,11 @@ function setupEventListeners() {
     });
   }
   if (qpTop5) {
-    qpTop5.addEventListener('click', () => {
-      const codes = TOP5;
-      setCheckedCodes(codes);
-    });
+    qpTop5.addEventListener('click', () => { const codes = TOP5; setCheckedCodes(codes); });
   }
 
   let resizeTO;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTO);
-    resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120);
-  }, { passive: true });
+  window.addEventListener('resize', () => { clearTimeout(resizeTO); resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120); }, { passive: true });
 }
 
 function sizeCanvas() {
