@@ -2,16 +2,12 @@
  * app.js
  * Football Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
  *
- * Updates in this version:
- * - Uses /data/players.json (with fallbacks) to find players.json
- * - Fallback image path changed to use /players/silhouette-player.png (your images live in public/players)
- * - Added robust image loader that removes broken cached images and supplies an inline SVG placeholder
- * - Added safeDrawImage() helper and replaced direct ctx.drawImage() calls to avoid InvalidStateError
+ * - Loads TEAMS from teams.json
+ * - Loads players from /data/players.json (with fallbacks) and normalizes to the "team-shaped" objects the wheel expects
+ * - Robust image loader with fallback and safe canvas drawing to avoid InvalidStateError
+ * - Keeps UI, chips, modal, history and wheel logic identical between TEAM and PLAYER modes
  *
- * Drop this file into your project (overwrite existing app.js), hard-refresh the browser,
- * then switch to PLAYER mode. Verify players load from /data/players.json and images are served
- * from /players/ (and that /players/silhouette-player.png exists). If you prefer to place the
- * silhouette in /img, change FALLBACK_SILHOUETTE accordingly.
+ * Replace your existing app.js with this file, hard-refresh the page, then switch to PLAYER mode.
  */
 
 'use strict';
@@ -98,15 +94,16 @@ function deviceDPR() { return Math.max(1, window.devicePixelRatio || 1); }
 function _polite() { return new Promise(r => setTimeout(r, 40 + Math.random()*110)); }
 function normalizeString(s){ return (s||'').toString().trim().toLowerCase().replace(/\s+/g,' '); }
 
-// fallback silhouette — changed to /players because your images live in public/players
+// -------------------- Image fallback path --------------------
+// Your images live in public/players; use that as the fallback path.
 const FALLBACK_SILHOUETTE = '/players/silhouette-player.png';
 
 // -------------------- Image cache & loader --------------------
 const IMG_CACHE = new Map();
 
 /**
- * createInlinePlaceholder()
- * Return a tiny SVG data URL to use as an always-available placeholder.
+ * createInlinePlaceholder(size)
+ * Returns a small SVG data URL placeholder to guarantee a valid image when network ones fail.
  */
 function createInlinePlaceholder(size = 256) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
@@ -120,8 +117,8 @@ function createInlinePlaceholder(size = 256) {
 }
 
 /**
- * safeDrawImage(ctx, img, args...)
- * Draw image only when valid (no InvalidStateError). Returns boolean whether draw happened.
+ * safeDrawImage(ctx, img, ...args)
+ * Draws image only if it's valid (avoids InvalidStateError).
  */
 function safeDrawImage(ctx, img, ...args) {
   try {
@@ -138,9 +135,10 @@ function safeDrawImage(ctx, img, ...args) {
 
 /**
  * getLogo(url, onLoad)
- * - Tries to load with crossOrigin='anonymous' (for Commons/CDN).
- * - On error removes broken cache entry and replaces with an inline placeholder image.
- * - Calls onLoad(err, image) when load/error occurs.
+ * Robust loader:
+ * - tries crossOrigin first (for Commons/CDN)
+ * - on error removes broken cache and attempts fallback image or inline placeholder
+ * - always calls onLoad(err, image) to allow redraw
  */
 function getLogo(url, onLoad) {
   if (!url) return null;
@@ -156,12 +154,10 @@ function getLogo(url, onLoad) {
   };
   img.onerror = () => {
     console.warn('Image failed to load:', url);
-    // remove broken cache to avoid reusing a broken object
     IMG_CACHE.delete(url);
 
-    // try fallback: if original url wasn't the fallback, try fallback path
+    // If we haven't tried the fallback yet, attempt fallback image file under /players
     if (url !== FALLBACK_SILHOUETTE) {
-      // attempt to load fallback from /players first
       const fallbackImg = new Image();
       fallbackImg.crossOrigin = 'anonymous';
       fallbackImg.onload = () => {
@@ -170,7 +166,7 @@ function getLogo(url, onLoad) {
         requestAnimationFrame(drawWheel);
       };
       fallbackImg.onerror = () => {
-        // as a last resort use inline placeholder data URL
+        // fallback also failed — use inline placeholder
         const placeholder = new Image();
         placeholder.src = createInlinePlaceholder(256);
         IMG_CACHE.set(url, { img: placeholder, ok: false });
@@ -178,11 +174,10 @@ function getLogo(url, onLoad) {
         requestAnimationFrame(drawWheel);
       };
       fallbackImg.src = FALLBACK_SILHOUETTE;
-      // store provisional so other callers reuse the attempt
       IMG_CACHE.set(url, { img: fallbackImg, ok: false });
       return fallbackImg;
     } else {
-      // if fallback itself failed, use inline placeholder
+      // fallback itself failed; use inline placeholder
       const placeholder = new Image();
       placeholder.src = createInlinePlaceholder(256);
       IMG_CACHE.set(url, { img: placeholder, ok: false });
@@ -216,7 +211,7 @@ function setMode(newMode) {
         drawWheel();
       }).catch(err => {
         console.error('Failed to load players.json', err);
-        drawWheel(); // fallback (empty)
+        drawWheel();
       });
     } else {
       selectedIdx = -1;
@@ -230,7 +225,7 @@ modePlayerBtn && modePlayerBtn.addEventListener('click', () => setMode('player')
 // -------------------- Helper: tryFetchPlayers --------------------
 async function tryFetchPlayers() {
   // Prefer /data/players.json (user confirmed this is correct).
-  // Keep fallbacks for other setups.
+  // Keep fallbacks for other setups (root and relative).
   const candidates = [
     '/data/players.json',
     '/players/players.json',
@@ -268,7 +263,6 @@ async function loadPlayers() {
 
     PLAYERS = Array.isArray(data) ? data.map(p => {
       const name = p.name || p.player_name || p.full_name || p.displayName || p.team_name || 'Player';
-      // normalize image field: many records use image_url or file_url
       const img = p.image_url || p.file_url || p.image || p.file || FALLBACK_SILHOUETTE;
 
       let league_code = p.league_code || p.league || p.comp || null;
@@ -516,8 +510,6 @@ function drawWheel(){
           const iw = img.naturalWidth || box, ih = img.naturalHeight || box;
           const s = Math.min(box / iw, box / ih);
           safeDrawImage(ctx, img, -iw*s/2, -ih*s/2, iw*s, ih*s);
-        } else {
-          // nothing to draw
         }
         ctx.restore();
         ctx.restore();
@@ -798,4 +790,80 @@ function setupEventListeners() {
       toggleMore.setAttribute('aria-expanded', 'true');
     } else {
       chipsMore.hidden = true;
-      toggleMore.textContent = '
+      toggleMore.textContent = 'Show more leagues';
+      toggleMore.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  optName?.addEventListener('change', () => { if (!spinning) drawWheel(); });
+  optLogo?.addEventListener('change', () => { if (!spinning) drawWheel(); });
+  optStadium?.addEventListener('change', () => { if (!spinning) drawWheel(); });
+  optLeague?.addEventListener('change', () => { if (!spinning) drawWheel(); });
+
+  spinBtn.onclick = spin;
+  spinFab.onclick = spin;
+
+  resetHistoryBtn.addEventListener('click', () => { if (!spinning) { history = []; localStorage.removeItem('clubHistory'); renderHistory(); } });
+  mClose.onclick = () => { if (!spinning) closeModal(); };
+  backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
+  window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
+
+  qpAll?.addEventListener('click', () => {
+    chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = true; i.setAttribute('aria-checked', 'true'); });
+    selectedIdx = -1; drawWheel();
+  });
+  qpNone?.addEventListener('click', () => {
+    chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = false; i.setAttribute('aria-checked', 'false'); });
+    selectedIdx = -1; drawWheel();
+  });
+  qpTop5?.addEventListener('click', () => {
+    const codes = TOP5;
+    setCheckedCodes(codes);
+  });
+
+  let resizeTO;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTO);
+    resizeTO = setTimeout(() => { sizeCanvas(); drawWheel(); }, 120);
+  }, { passive: true });
+}
+
+function sizeCanvas() {
+  const rect = (wheel.parentElement || wheel).getBoundingClientRect();
+  const cssSize = clamp(300, Math.round(rect.width || 640), 1200);
+  const DPR = deviceDPR();
+  wheel.width = Math.round(cssSize * DPR);
+  wheel.height = Math.round(cssSize * DPR);
+  fx.width = wheel.width;
+  fx.height = wheel.height;
+  wheel.style.width = cssSize + 'px';
+  wheel.style.height = cssSize + 'px';
+  fx.style.width = cssSize + 'px';
+  fx.style.height = cssSize + 'px';
+}
+
+// -------------------- Boot --------------------
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+fetch(`./teams.json?v=${Date.now()}`)
+  .then(res => res.json())
+  .then(data => {
+    TEAMS = data;
+    renderChips();
+    renderHistory();
+    sizeCanvas();
+    setCheckedCodes(['EPL']);   // keep the same default selection
+    drawWheel();
+    setupEventListeners();
+    modeTeamBtn && modeTeamBtn.addEventListener('click', () => setMode('team'));
+    modePlayerBtn && modePlayerBtn.addEventListener('click', () => setMode('player'));
+  })
+  .catch(err => {
+    console.error('Failed to load teams.json', err);
+    if (currentText) currentText.textContent = 'Failed to load teams.';
+  });
+
+// Expose helpers for debugging
+window.__fs = { drawWheel, spin, setMode, loadPlayers, TEAMS, PLAYERS, getCurrentData };
