@@ -801,6 +801,146 @@ function setupEventListeners() {
   }, { passive: true });
 }
 
+/* ─────────────────────────────────────────────
+   SAFE PLAYER MODE – drop-in additions
+   ───────────────────────────────────────────── */
+
+const ENABLE_PLAYER = true; // flip to false to hard-disable
+
+// DOM needed for the player view (optional elements -> null safe)
+const modeTeamBtn   = document.getElementById('modeTeam');
+const modePlayerBtn = document.getElementById('modePlayer');
+const teamView      = document.getElementById('teamView');
+const playerView    = document.getElementById('playerView');  // <section> for player UI (can be empty)
+const playerListEl  = document.getElementById('playerList');  // optional preview grid
+
+// App state
+let MODE    = (localStorage.getItem('fsMode') === 'player' && ENABLE_PLAYER) ? 'player' : 'team';
+let PLAYERS = [];  // normalized to your team shape { team_name, logo_url, league_code, stadium, ... }
+
+// Make TEAM the default if player UI is missing
+if (!ENABLE_PLAYER || !modePlayerBtn || !playerView) MODE = 'team';
+
+// Robust event wiring (no crashes if buttons absent)
+modeTeamBtn  && modeTeamBtn.addEventListener('click',  () => setMode('team'));
+modePlayerBtn&& modePlayerBtn.addEventListener('click', () => setMode('player'));
+
+// Centralized mode switch with guards
+function setMode(next) {
+  if (next === MODE) return;
+  if (next === 'player' && (!ENABLE_PLAYER || !playerView)) return; // hard block if not supported
+  MODE = next;
+  localStorage.setItem('fsMode', MODE);
+
+  // Visual toggle (ignore if elements missing)
+  modeTeamBtn   && modeTeamBtn.classList.toggle('mode-btn-active', MODE === 'team');
+  modePlayerBtn && modePlayerBtn.classList.toggle('mode-btn-active', MODE === 'player');
+  modeTeamBtn   && modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true':'false');
+  modePlayerBtn && modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true':'false');
+
+  // Show/Hide panels (ignore if missing)
+  teamView   && teamView.classList.toggle('hidden', MODE === 'player');
+  playerView && playerView.classList.toggle('hidden', MODE === 'team');
+
+  // Ensure data then redraw
+  if (MODE === 'player') {
+    if (!PLAYERS || PLAYERS.length === 0) {
+      loadPlayers()
+        .then(() => { selectedIdx = -1; sizeCanvas(); drawWheel(); updateSpinAvailability(); })
+        .catch(err => {
+          console.warn('players.json unavailable; reverting to TEAM', err);
+          MODE = 'team';
+          setMode('team');
+        });
+    } else {
+      selectedIdx = -1; drawWheel(); updateSpinAvailability();
+    }
+  } else {
+    selectedIdx = -1; drawWheel(); updateSpinAvailability();
+  }
+}
+
+// Helper: set Spin button enabled/disabled for current mode
+function updateSpinAvailability() {
+  const n = getCurrentData().length;
+  const btn  = document.getElementById('spinBtn');
+  const fab  = document.getElementById('spinFab');
+  btn && (btn.disabled = n === 0);
+  fab && (fab.disabled = n === 0);
+}
+
+// Unified “current dataset” for wheel drawing
+function getCurrentData() {
+  if (MODE === 'player') {
+    const active = Array.from(document.querySelectorAll('#chips input:checked')).map(i => i.value);
+    if (!PLAYERS || PLAYERS.length === 0) return [];
+    return active.length ? PLAYERS.filter(p => active.includes(p.league_code)) : PLAYERS;
+  }
+  // TEAM (existing)
+  const active = Array.from(document.querySelectorAll('#chips input:checked')).map(i => i.value);
+  return (window.TEAMS || []).filter(t => active.includes(t.league_code));
+}
+
+// players.json loader (multiple fallbacks, never throws uncaught)
+async function loadPlayers() {
+  const candidates = [
+    '/players/players.json',
+    '/data/players.json',
+    new URL('./players/players.json', location.href).toString()
+  ];
+  let data = null;
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) { data = await res.json(); break; }
+    } catch (_) { /* try next */ }
+  }
+  if (!Array.isArray(data)) throw new Error('players.json not found or invalid');
+
+  // Map to team-like objects the wheel already understands
+  const teamNameToLeague = Object.fromEntries(
+    (window.TEAMS || []).map(t => [String(t.team_name||'').toLowerCase(), t.league_code])
+  );
+
+  PLAYERS = data.map(p => {
+    const name = p.name || p.player_name || p.full_name || 'Player';
+    const img  = p.image_url || p.image || p.file_url || '/players/silhouette-player.png';
+    let league = p.league_code || p.league || p.comp || null;
+    if (!league && p.club) {
+      const k = String(p.club).toLowerCase();
+      league = teamNameToLeague[k] || 'PLAYER';
+    }
+    return {
+      team_name: name,           // ← reusing existing draw code
+      logo_url: img,             //   (wheel treats this as image)
+      league_code: league || 'PLAYER',
+      primary_color: p.primary_color || '#163058',
+      stadium: p.stadium || '',
+      // keep originals if you need them later
+      name,
+      image_url: img,
+      club: p.club || null
+    };
+  });
+
+  // Optional small preview
+  if (playerListEl) {
+    playerListEl.innerHTML = '';
+    PLAYERS.slice(0, 40).forEach(pl => {
+      const el = document.createElement('div');
+      el.className = 'player-item';
+      el.innerHTML = `<img src="${pl.image_url}" alt="${pl.name}" width="40" height="40" style="border-radius:10px;object-fit:cover;margin-right:8px"> ${pl.name}`;
+      playerListEl.appendChild(el);
+    });
+  }
+  return PLAYERS;
+}
+
+// Wheel draw: add a small guard where you read data
+// (Your existing drawWheel can stay the same, but when MODE==='player'
+// use t.team_name for text and t.logo_url for image.)
+
+
 // Boot
 fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
