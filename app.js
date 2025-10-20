@@ -1,4 +1,4 @@
-current: // Football Club Spinner — app.js
+// Football Club Spinner — app.js
 // Extra leagues are hidden until "Show more" is clicked.
 // "All" selects only visible leagues. EPL is selected on first load.
 // UI is locked while spinning. Name > Stadium styling, aligned block.
