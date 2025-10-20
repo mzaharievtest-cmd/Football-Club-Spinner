@@ -1,13 +1,5 @@
 /**
- * Football Club Spinner — app.js (updated, full file)
- *
- * - Robust "Show on wheel" handling (reads live from DOM, supports aria-checked/custom wrappers)
- * - Modal stadium/name/logo/league reveal logic and respects the Show toggles
- * - spin() is a hoisted function declaration so event wiring won't throw
- * - Precise centering of the floating SPIN button using getBoundingClientRect()
- * - Safe image loading with cache, graceful fallbacks
- * - Dynamic thresholds when both Name+Stadium are enabled for better legibility
- * - All previous app behavior preserved (chips, history, player mode placeholder)
+ * Football Club Spinner — app.js (fixed: getFiltered hoisted and consistent)
  *
  * Overwrite your deployed app.js with this file and hard-refresh (Ctrl/Cmd+Shift+R).
  */
@@ -91,6 +83,12 @@ const TOP5 = ['EPL','SA','BUN','L1','LLA']; // Quick picks
 
 /* -------------------- Image cache & loader -------------------- */
 const IMG_CACHE = new Map();
+
+function createInlinePlaceholder(size = 256) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="#071022"/><g transform="translate(${size/2},${size/2})"><circle r="${Math.round(size*0.33)}" fill="#0d2a55" opacity="0.9"/><circle r="${Math.round(size*0.28)}" fill="#071022"/></g></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
 function getLogo(url, onLoad) {
   if (!url) return null;
   const cached = IMG_CACHE.get(url);
@@ -104,7 +102,6 @@ function getLogo(url, onLoad) {
   };
   img.onerror = () => {
     IMG_CACHE.delete(url);
-    // fallback placeholder
     const placeholder = new Image();
     placeholder.src = createInlinePlaceholder(256);
     IMG_CACHE.set(url, { img: placeholder, ok: false });
@@ -114,11 +111,6 @@ function getLogo(url, onLoad) {
   img.src = url;
   IMG_CACHE.set(url, { img, ok: false });
   return img;
-}
-
-function createInlinePlaceholder(size = 256) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="#071022"/><g transform="translate(${size/2},${size/2})"><circle r="${Math.round(size*0.33)}" fill="#0d2a55" opacity="0.9"/><circle r="${Math.round(size*0.28)}" fill="#071022"/></g></svg>`;
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
 /* -------------------- Color helpers -------------------- */
@@ -149,6 +141,15 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx = 9, maxPx = 28, w
   let s = (text || '').trim();
   while (s && ctx.measureText(s + '…').width > maxWidth) s = s.slice(0,-1);
   return { text: (s || '') + '…', fontPx: minPx, truncated: true };
+}
+
+/* -------------------- Data provider: getFiltered (DECLARED EARLY to avoid ReferenceErrors) -------------------- */
+function getFiltered() {
+  // returns currently selected items (TEAMS) based on checked chips
+  if (!chipsWrap) return [];
+  const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
+  if (active.length === 0) return TEAMS.slice();
+  return TEAMS.filter(t => active.includes(t.league_code));
 }
 
 /* -------------------- Canvas sizing & spin FAB centering -------------------- */
@@ -188,7 +189,6 @@ function sizeCanvas() {
   fx.style.width = cssSize + 'px';
   fx.style.height = cssSize + 'px';
 
-  // center the floating SPIN button
   centerSpinFab();
 }
 
@@ -396,66 +396,6 @@ window.closeModal = closeModal;
 function updateSelectionBanner() {
   const N = getFiltered().length;
   perfTip.textContent = `${N} teams selected`;
-}
-
-/* -------------------- Show-options read helper (robust) -------------------- */
-function _readCheckboxLike(el) {
-  if (!el) return false;
-  if (typeof el.checked !== 'undefined') return !!el.checked;
-  const a = el.getAttribute && el.getAttribute('aria-checked');
-  if (a === 'true') return true;
-  if (a === 'false') return false;
-  const input = el.querySelector && el.querySelector('input[type="checkbox"]');
-  if (input) return !!input.checked;
-  return false;
-}
-function getShowOptions() {
-  try {
-    const container = document.getElementById('showOnWheel') || document.querySelector('.showopts');
-    if (container) {
-      const readOne = (selectors) => {
-        for (const sel of selectors) {
-          try {
-            const el = container.querySelector(sel);
-            if (el) return _readCheckboxLike(el);
-          } catch (_) {}
-        }
-        return false;
-      };
-      return {
-        name: readOne(['#optName', 'input[data-show="name"]', 'input[name="show-name"]', '[data-show="name"]']),
-        logo: readOne(['#optLogo', 'input[data-show="logo"]', 'input[name="show-logo"]', '[data-show="logo"]']),
-        stadium: readOne(['#optStadium', 'input[data-show="stadium"]', 'input[name="show-stadium"]', '[data-show="stadium"]']),
-        league: readOne(['#optLeague', 'input[data-show="league"]', 'input[name="show-league"]', '[data-show="league"]'])
-      };
-    }
-  } catch (e) {
-    if (DEBUG) console.warn('getShowOptions container read failed', e);
-  }
-
-  const byId = (id) => {
-    const el = document.getElementById(id);
-    if (el != null) return _readCheckboxLike(el);
-    return null;
-  };
-  const n = byId('optName'), l = byId('optLogo'), s = byId('optStadium'), q = byId('optLeague');
-  if (n !== null || l !== null || s !== null || q !== null) {
-    return { name: !!n, logo: !!l, stadium: !!s, league: !!q };
-  }
-
-  const qf = (selList) => {
-    for (const sel of selList) {
-      const el = document.querySelector(sel);
-      if (el && _readCheckboxLike(el)) return true;
-    }
-    return false;
-  };
-  return {
-    name: qf(['input[data-show="name"]', 'input[name="show-name"]', 'input#optName', '[data-show="name"]']),
-    logo: qf(['input[data-show="logo"]', 'input[name="show-logo"]', 'input#optLogo', '[data-show="logo"]']),
-    stadium: qf(['input[data-show="stadium"]', 'input[name="show-stadium"]', 'input#optStadium', '[data-show="stadium"]']),
-    league: qf(['input[data-show="league"]', 'input[name="show-league"]', 'input#optLeague', '[data-show="league"]'])
-  };
 }
 
 /* -------------------- Drawing helpers -------------------- */
@@ -734,7 +674,6 @@ function setResult(idx){
   saveHistory();
   renderHistory();
 
-  // Preload and show modal with decoded logo for instant display
   if (t.logo_url) preloadModalLogo(t.logo_url, () => openModal(t));
   else openModal(t);
 }
@@ -890,4 +829,4 @@ fetch(`./teams.json?v=${Date.now()}`)
   });
 
 /* -------------------- Debug / helpers exported -------------------- */
-window.__fs = { drawWheel, spin, setMode: (m)=>{ /* compatibility stub */ }, loadPlayers: ()=>{}, TEAMS, getCurrentData: ()=>getFiltered() };
+window.__fs = { drawWheel, spin, TEAMS, getFiltered };
