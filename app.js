@@ -1,9 +1,5 @@
 /**
- * Football Club Spinner — app.js (fixed: ensure _readCheckboxLike is defined before drawWheel)
- *
- * This is the full updated app.js with the _readCheckboxLike / getShowOptions helpers
- * moved above drawWheel so drawWheel (and any boot-time callers) can't hit a
- * ReferenceError for missing helper functions.
+ * Football Club Spinner — app.js (fixed: updateSelectionBanner declared before drawWheel)
  *
  * Overwrite your deployed app.js with this file and hard-refresh (Ctrl/Cmd+Shift+R).
  */
@@ -17,7 +13,6 @@ let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory') || '[]');
 
-// Modal/session state
 let lastModalTeam = null;
 let modalRevealState = { logo: false, name: false, stadium: false, league: false };
 
@@ -46,8 +41,8 @@ const backdrop = document.getElementById('backdrop');
 const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
 const mHead = document.getElementById('mHead');
-const mSub = document.getElementById('mSub');     // League line in modal
-const mLogo = document.getElementById('mLogo');   // <img>
+const mSub = document.getElementById('mSub');
+const mLogo = document.getElementById('mLogo');
 const mStadium = document.getElementById('mStadium');
 
 /* Quick picks and banner */
@@ -62,7 +57,7 @@ const fx = document.getElementById('fx');
 
 /* -------------------- Utils & constants -------------------- */
 const TAU = Math.PI * 2;
-const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
+const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU;
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 const mod = (x, m) => ((x % m) + m) % m;
 const isModalOpen = () => backdrop && backdrop.style.display === 'flex';
@@ -83,7 +78,7 @@ const LEAGUE_LABELS = {
   SUI: "Super League", TUR: "Süper Lig", UKR: "Ukrainian Premier League"
 };
 
-const TOP5 = ['EPL','SA','BUN','L1','LLA']; // Quick picks
+const TOP5 = ['EPL','SA','BUN','L1','LLA'];
 
 /* -------------------- Image cache & loader -------------------- */
 const IMG_CACHE = new Map();
@@ -145,7 +140,7 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx = 9, maxPx = 28, w
   return { text: (s || '') + '…', fontPx: minPx, truncated: true };
 }
 
-/* -------------------- Show-options read helper (DECLARED EARLY) -------------------- */
+/* -------------------- Robust show-option readers -------------------- */
 function _readCheckboxLike(el) {
   if (!el) return false;
   if (typeof el.checked !== 'undefined') return !!el.checked;
@@ -203,12 +198,18 @@ function getShowOptions() {
   };
 }
 
-/* -------------------- Data provider: getFiltered (DECLARED EARLY) -------------------- */
+/* -------------------- Data provider (hoisted) -------------------- */
 function getFiltered() {
   if (!chipsWrap) return TEAMS.slice();
   const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
   if (active.length === 0) return TEAMS.slice();
   return TEAMS.filter(t => active.includes(t.league_code));
+}
+
+/* -------------------- updateSelectionBanner (DECLARED BEFORE drawWheel) -------------------- */
+function updateSelectionBanner() {
+  const N = getFiltered().length;
+  if (perfTip) perfTip.textContent = `${N} teams selected`;
 }
 
 /* -------------------- Canvas sizing & spin FAB centering -------------------- */
@@ -275,7 +276,17 @@ function lockUI(lock) {
   });
 }
 
-/* -------------------- Chips / history -------------------- */
+/* -------------------- renderChips etc -------------------- */
+function makeChip(code, checked) {
+  const full = LEAGUE_LABELS[code] || code;
+  const label = document.createElement('label');
+  label.className = 'chip';
+  label.innerHTML = `
+    <input type="checkbox" value="${code}" ${checked ? 'checked aria-checked="true"' : ''} aria-label="${full}">
+    <span class="chip-text" title="${full}">${full}</span>
+  `;
+  return label;
+}
 function renderChips() {
   const allCodes = [...new Set(TEAMS.map(t => t.league_code))];
   const topCodes = TOP5.filter(c => allCodes.includes(c));
@@ -292,16 +303,6 @@ function renderChips() {
   toggleMore.setAttribute('aria-expanded', 'false');
   toggleMore.disabled = false;
   toggleMore.classList.remove('disabled');
-}
-function makeChip(code, checked) {
-  const full = LEAGUE_LABELS[code] || code;
-  const label = document.createElement('label');
-  label.className = 'chip';
-  label.innerHTML = `
-    <input type="checkbox" value="${code}" ${checked ? 'checked aria-checked="true"' : ''} aria-label="${full}">
-    <span class="chip-text" title="${full}">${full}</span>
-  `;
-  return label;
 }
 function visibleCodes() {
   const codes = Array.from(chipsTop.querySelectorAll('input[type="checkbox"]')).map(i => i.value);
@@ -352,7 +353,7 @@ function renderHistory() {
   });
 }
 
-/* -------------------- Modal reveal helpers -------------------- */
+/* -------------------- Modal reveal / preload -------------------- */
 function ensureRevealStyles() {
   if (document.getElementById('reveal-style')) return;
   const s = document.createElement('style');
@@ -366,15 +367,7 @@ function ensureRevealStyles() {
   document.head.appendChild(s);
 }
 function removeExistingRevealBtn(id){ const old=document.getElementById(id); if(old) old.remove(); }
-function ensureWrapped(el){
-  if(!el||!el.parentElement) return null;
-  if(el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
-  const wrap=document.createElement('span');
-  wrap.className='reveal-wrap';
-  el.parentElement.insertBefore(wrap, el);
-  wrap.appendChild(el);
-  return wrap;
-}
+function ensureWrapped(el){ if(!el||!el.parentElement) return null; if(el.parentElement.classList.contains('reveal-wrap')) return el.parentElement; const wrap=document.createElement('span'); wrap.className='reveal-wrap'; el.parentElement.insertBefore(wrap, el); wrap.appendChild(el); return wrap; }
 function addOverlay(el){ const wrap=ensureWrapped(el); if(!wrap) return; if(!wrap.querySelector('.reveal-overlay')){ const ov=document.createElement('span'); ov.className='reveal-overlay'; wrap.appendChild(ov); } }
 function removeOverlay(el){ if(!el||!el.parentElement) return; const wrap=el.parentElement; if(wrap.classList.contains('reveal-wrap')){ const ov=wrap.querySelector('.reveal-overlay'); if(ov) ov.remove(); } }
 function blurElement(el){ if(!el) return; el.style.setProperty('filter','blur(14px) saturate(0.9)','important'); el.style.setProperty('-webkit-filter','blur(14px) saturate(0.9)','important'); el.style.pointerEvents='none'; addOverlay(el); }
@@ -422,20 +415,6 @@ function preloadModalLogo(url, cb) {
 }
 
 /* -------------------- Drawing helpers -------------------- */
-function ellipsizeText(ctx, text, maxWidth, font) {
-  if (!text) return '';
-  ctx.font = font;
-  if (ctx.measureText(text).width <= maxWidth) return text;
-  let lo = 0, hi = text.length;
-  while (lo < hi) {
-    const mid = Math.floor((lo + hi) / 2);
-    const t = text.slice(0, mid) + '…';
-    if (ctx.measureText(t).width <= maxWidth) lo = mid + 1;
-    else hi = mid;
-  }
-  return text.slice(0, Math.max(0, lo - 1)) + '…';
-}
-
 function drawGradientIdle(ctx, W, H) {
   const DPR = Math.max(1, window.devicePixelRatio || 1);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -463,7 +442,7 @@ function drawGradientIdle(ctx, W, H) {
   ctx.restore();
 }
 
-/* -------------------- Main drawing routine -------------------- */
+/* -------------------- Main drawing routine (drawWheel) -------------------- */
 function drawWheel(){
   const data = getFiltered();
   const N = data.length;
@@ -663,7 +642,7 @@ function drawWheel(){
         ctx.restore();
       }
 
-      ctx.restore(); // wedge clip
+      ctx.restore();
     }
   }
 
@@ -746,7 +725,7 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
-/* -------------------- Event wiring -------------------- */
+/* -------------------- Events / Boot -------------------- */
 function setupEventListeners() {
   function setActive(btn) {
     [qpAll, qpNone, qpTop5].forEach(b => b?.classList?.toggle('active', b === btn));
@@ -832,7 +811,7 @@ fetch(`./teams.json?v=${Date.now()}`)
     renderChips();
     renderHistory();
     sizeCanvas();
-    setCheckedCodes(['EPL']);   // EPL-only on first load
+    setCheckedCodes(['EPL']);
     drawWheel();
     setupEventListeners();
   })
@@ -841,5 +820,5 @@ fetch(`./teams.json?v=${Date.now()}`)
     if (currentText) currentText.textContent = 'Failed to load teams.';
   });
 
-/* -------------------- Debug / helpers exported -------------------- */
+/* -------------------- Expose debug helpers -------------------- */
 window.__fs = { drawWheel, spin, TEAMS, getFiltered };
