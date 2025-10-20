@@ -1,158 +1,211 @@
+#!/usr/bin/env node
 /**
- * add_player_images.js (robust, accepts optional path)
+ * scripts/add_player_images.js
  *
- * Usage:
+ * Adds image_path/image_url to players in players.json by matching files in an images folder.
+ *
+ * Usage examples (run from project root):
  *   node scripts/add_player_images.js
- *   node scripts/add_player_images.js data/players.json
- *
- * - Searches upward for data/players.json if no explicit path provided.
- * - Scans public/players and public/ for images and slug-matches them to player names.
- * - Adds/updates image_url for each player and writes a backup data/players.json.bak.
+ *   node scripts/add_player_images.js --dry-run
+ *   node scripts/add_player_images.js --players data/players.json --images public/players
  */
-const fs = require('fs');
-const path = require('path');
 
-function findUp(startDir, relativePath) {
-  let dir = path.resolve(startDir || process.cwd());
-  const root = path.parse(dir).root;
-  while (true) {
-    const candidate = path.join(dir, relativePath);
-    if (fs.existsSync(candidate)) return candidate;
-    if (dir === root) break;
-    dir = path.dirname(dir);
+const fs = require("fs");
+const fsp = fs.promises;
+const path = require("path");
+
+// ---------- CLI args ----------
+const args = process.argv.slice(2);
+const getArg = (name) => {
+  const i = args.indexOf(name);
+  return i >= 0 ? args[i + 1] : null;
+};
+const DRY = args.includes("--dry-run");
+const CLI_PLAYERS = getArg("--players");
+const CLI_IMAGES = getArg("--images");
+
+// ---------- Path discovery ----------
+const CWD = process.cwd();
+const HERE = __dirname;
+
+// Try a list of candidates for players.json and images dir
+const playerJsonCandidates = [
+  CLI_PLAYERS, // explicit
+  path.join(CWD, "data", "players.json"),
+  path.join(CWD, "players.json"),
+  path.join(HERE, "..", "data", "players.json"),
+  path.join(HERE, "data", "players.json"),
+].filter(Boolean);
+
+const imagesDirCandidates = [
+  CLI_IMAGES, // explicit
+  path.join(CWD, "public", "players"),
+  path.join(CWD, "players"),
+  path.join(HERE, "..", "public", "players"),
+  path.join(HERE, "public", "players"),
+].filter(Boolean);
+
+function pickExisting(paths, isDir = false) {
+  for (const p of paths) {
+    try {
+      const st = fs.statSync(p);
+      if ((isDir && st.isDirectory()) || (!isDir && st.isFile())) return p;
+    } catch {}
   }
   return null;
 }
 
-function slugifyName(n) {
-  return String(n || '')
-    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+const PLAYERS_JSON = pickExisting(playerJsonCandidates, false);
+const IMG_DIR = pickExisting(imagesDirCandidates, true);
+
+if (!PLAYERS_JSON) {
+  console.error("data/players.json not found. Please ensure file exists.");
+  console.error("Looked in:");
+  playerJsonCandidates.forEach((p) => console.error("  -", p));
+  process.exit(1);
 }
-function resolvePublicUrl(p) {
-  if (!p) return '';
-  if (/^https?:\/\//i.test(p)) return p;
-  if (p.startsWith('/')) return p;
-  return '/' + p;
+if (!IMG_DIR) {
+  console.error("Images folder not found. Please ensure public/players (or use --images) exists.");
+  console.error("Looked in:");
+  imagesDirCandidates.forEach((p) => console.error("  -", p));
+  process.exit(1);
 }
 
-const FALLBACK_SILHOUETTE = '/players/silhouette-player.png';
-const PLAYER_IMAGE_MAP = {
-  'bukayo saka': '/players/saka.png'
+console.log("Players JSON:", path.relative(CWD, PLAYERS_JSON));
+console.log("Images dir  :", path.relative(CWD, IMG_DIR));
+if (DRY) console.log("(dry-run) — no files will be written.");
+
+const exts = new Set([".png", ".jpg", ".jpeg", ".webp", ".avif", ".gif"]);
+
+// ---------- Helpers ----------
+function normalize(s = "") {
+  return String(s)
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/['’`]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+const tokenize = (s) => normalize(s).split(" ").filter(Boolean);
+const slugContains = (a, b) =>
+  (" " + normalize(a) + " ").includes(" " + normalize(b) + " ");
+const tokenOverlap = (a, b) => {
+  const setB = new Set(b);
+  let c = 0;
+  for (const t of a) if (setB.has(t)) c++;
+  return c;
 };
-
-const argPath = process.argv[2];
-
-const SCRIPT_DIR = __dirname;
-const CANDIDATE_REL = path.join('data', 'players.json');
-
-let DATA_PLAYERS = null;
-if (argPath) {
-  DATA_PLAYERS = path.resolve(argPath);
-  if (!fs.existsSync(DATA_PLAYERS)) {
-    console.error('Explicit path provided but file not found:', DATA_PLAYERS);
-    process.exit(1);
+function scoreMatch({ fileBase, fileTokens, fileName, playerName, playerTokens, club }) {
+  let score = 0;
+  if (slugContains(fileBase, playerName) || slugContains(playerName, fileBase)) score += 60;
+  score += 6 * tokenOverlap(playerTokens, fileTokens);
+  if (club) {
+    const clubNorm = normalize(club);
+    if (slugContains(fileBase, clubNorm)) score += 18;
+    else score += 2 * tokenOverlap(tokenize(clubNorm), fileTokens);
   }
-} else {
-  DATA_PLAYERS = findUp(SCRIPT_DIR, CANDIDATE_REL) || findUp(process.cwd(), CANDIDATE_REL);
-  if (!DATA_PLAYERS) {
-    console.error('data/players.json not found. Run from repo root or provide explicit path:');
-    console.error('  node scripts/add_player_images.js data/players.json');
-    process.exit(1);
-  }
+  score += Math.max(0, 12 - Math.abs(fileTokens.length - fileTokens.length));
+  const ext = path.extname(fileName).toLowerCase();
+  if (ext === ".png" || ext === ".jpg" || ext === ".jpeg") score += 2;
+  return score;
 }
 
-const BACKUP_PLAYERS = DATA_PLAYERS + '.bak';
-const repoRoot = path.dirname(path.dirname(DATA_PLAYERS)); // .../data -> repo root
-const PUBLIC_PLAYERS_DIR = path.join(repoRoot, 'public', 'players');
-const PUBLIC_ROOT = path.join(repoRoot, 'public');
-
-console.log('Using data file:', DATA_PLAYERS);
-console.log('Repo root:', repoRoot);
-console.log('Looking for images in:', PUBLIC_PLAYERS_DIR, 'and', PUBLIC_ROOT);
-
-function listImageFiles(dir) {
-  try {
-    return fs.readdirSync(dir).filter(f => /\.(png|jpe?g|webp|gif|avif)$/i.test(f));
-  } catch (e) {
-    return [];
-  }
-}
-
-function buildCandidatesMap() {
-  const map = new Map();
-  const playersFiles = listImageFiles(PUBLIC_PLAYERS_DIR);
-  playersFiles.forEach(f => map.set(path.parse(f).name.toLowerCase(), '/players/' + f));
-  const rootFiles = listImageFiles(PUBLIC_ROOT);
-  rootFiles.forEach(f => {
-    const key = path.parse(f).name.toLowerCase();
-    if (!map.has(key)) map.set(key, '/' + f);
-  });
-  return map;
-}
-
-function pickImageForPlayer(player, candidatesMap) {
-  const name = (player.name || player.player_name || player.full_name || player.team_name || '').trim();
-  if (!name) return FALLBACK_SILHOUETTE;
-  const key = name.toLowerCase();
-  if (PLAYER_IMAGE_MAP[key]) return resolvePublicUrl(PLAYER_IMAGE_MAP[key]);
-  const slug = slugifyName(name);
-  if (candidatesMap.has(slug)) return resolvePublicUrl(candidatesMap.get(slug));
-  const alt = [
-    `/players/${slug}.png`,
-    `/players/${slug}.jpg`,
-    `/players/${slug}.webp`,
-    `/${slug}.png`,
-    `/${slug}.jpg`,
-    `/${slug}.webp`
-  ];
-  for (const c of alt) {
-    const fsPath = path.join(repoRoot, 'public', c.replace(/^\//, ''));
-    if (fs.existsSync(fsPath)) return resolvePublicUrl(c);
-  }
-  if (player.image_url) return resolvePublicUrl(player.image_url);
-  if (player.image) return resolvePublicUrl(player.image);
-  if (player.file_url) return resolvePublicUrl(player.file_url);
-  if (player.file) return resolvePublicUrl(player.file);
-  return FALLBACK_SILHOUETTE;
-}
-
-function main() {
-  let raw;
-  try {
-    raw = fs.readFileSync(DATA_PLAYERS, 'utf8');
-  } catch (e) {
-    console.error('Failed to read data file:', DATA_PLAYERS, e.message);
-    process.exit(1);
-  }
-
+// ---------- Main ----------
+(async function main() {
+  // Load players
   let players;
   try {
-    players = JSON.parse(raw);
-    if (!Array.isArray(players)) throw new Error('expected JSON array of players');
+    players = JSON.parse(await fsp.readFile(PLAYERS_JSON, "utf8"));
   } catch (e) {
-    console.error('Failed to parse JSON:', e.message);
+    console.error("Invalid JSON:", PLAYERS_JSON);
+    console.error(e.message);
+    process.exit(1);
+  }
+  if (!Array.isArray(players)) {
+    console.error("players.json must be an array.");
     process.exit(1);
   }
 
-  // backup
-  fs.writeFileSync(BACKUP_PLAYERS, raw, 'utf8');
-  console.log('Backup saved to', BACKUP_PLAYERS);
-
-  const candidatesMap = buildCandidatesMap();
-  console.log('Found candidate image count:', candidatesMap.size);
-
-  let updatedCount = 0;
-  const updated = players.map(p => {
-    const img = pickImageForPlayer(p, candidatesMap);
-    if (p.image_url !== img) updatedCount++;
-    return Object.assign({}, p, { image_url: img });
+  // Scan images
+  const allFiles = (await fsp.readdir(IMG_DIR)).filter((f) =>
+    exts.has(path.extname(f).toLowerCase())
+  );
+  if (!allFiles.length) {
+    console.error("No image files in", IMG_DIR);
+    process.exit(1);
+  }
+  const fileMeta = allFiles.map((fileName) => {
+    const base = path.basename(fileName, path.extname(fileName));
+    return { fileName, fileBase: normalize(base), fileTokens: tokenize(base) };
+    // Example: "Kai Havertz 2025.jpg" -> fileBase "kai havertz 2025"
   });
 
-  fs.writeFileSync(DATA_PLAYERS, JSON.stringify(updated, null, 2) + '\n', 'utf8');
-  console.log(`Updated ${updatedCount} entries in ${DATA_PLAYERS}`);
-  console.log('Example outputs:');
-  console.log(updated.slice(0,6).map(x => ({ name: x.name || x.player_name || x.team_name, image_url: x.image_url })));
-}
+  // Match & update
+  let matched = 0;
+  const unmatched = [];
+  for (const p of players) {
+    // skip already mapped
+    if (p.image_url || p.image_path) continue;
 
-main();
+    const name = p.name || p.player_name || p.full_name || "";
+    const club = p.club || p.team || p.current_team || "";
+    const playerTokens = tokenize(name);
+
+    let best = null;
+    for (const fm of fileMeta) {
+      const s = scoreMatch({
+        fileBase: fm.fileBase,
+        fileTokens: fm.fileTokens,
+        fileName: fm.fileName,
+        playerName: name,
+        playerTokens,
+        club,
+      });
+      if (!best || s > best.score) best = { ...fm, score: s };
+    }
+
+    if (!best || best.score < 20) {
+      unmatched.push({ name, club });
+      continue;
+    }
+
+    // public/players -> served at /players/...
+    const url = "/players/" + best.fileName;
+    p.image_path = url;
+    p.image_url = url;
+    matched++;
+  }
+
+  console.log(`\nScanned images : ${allFiles.length}`);
+  console.log(`Total players  : ${players.length}`);
+  console.log(`Matched        : ${matched}`);
+  if (unmatched.length) {
+    console.log(`Unmatched (${unmatched.length}):`);
+    for (const u of unmatched.slice(0, 50)) {
+      console.log(`  - ${u.name}${u.club ? ` (${u.club})` : ""}`);
+    }
+    if (unmatched.length > 50) {
+      console.log(`  …and ${unmatched.length - 50} more`);
+    }
+  }
+
+  if (DRY) return;
+
+  // Backup then write
+  const backup = PLAYERS_JSON.replace(/\.json$/i, ".backup.json");
+  if (!fs.existsSync(backup)) {
+    await fsp.copyFile(PLAYERS_JSON, backup);
+    console.log(`Backup created : ${path.relative(CWD, backup)}`);
+  } else {
+    console.log(`Backup exists  : ${path.relative(CWD, backup)}`);
+  }
+
+  await fsp.writeFile(PLAYERS_JSON, JSON.stringify(players, null, 2) + "\n", "utf8");
+  console.log(`Updated file   : ${path.relative(CWD, PLAYERS_JSON)}\n`);
+})().catch((e) => {
+  console.error("Unexpected error:", e);
+  process.exit(1);
+});
