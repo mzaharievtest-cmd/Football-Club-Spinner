@@ -200,6 +200,14 @@ header .brand {
   margin: 0 0 10px;
 }
 
+/* keep wheel on the left, players on the right on desktop */
+@media (min-width: 980px) {
+  .container { grid-template-columns: 1fr 420px; } /* big wheel, slimmer sidebar */
+  .wheel-card  { order: 1; }
+  .player-card { order: 2; }
+}
+
+
 /* =========================
    Quick picks / chips
    ========================= */
