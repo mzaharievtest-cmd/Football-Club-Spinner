@@ -1,20 +1,31 @@
-// Football Club Spinner — app.js
-// Extra leagues are hidden until "Show more" is clicked.
-// "All" selects only visible leagues. EPL is selected on first load.
-// UI is locked while spinning. Name > Stadium styling, aligned block.
-// Dynamic thresholds: when both Name+Stadium are on, text/logos hide earlier for legibility.
+/**
+ * Football Club Spinner — app.js (updated, full file)
+ *
+ * - Robust "Show on wheel" handling (reads live from DOM, supports aria-checked/custom wrappers)
+ * - Modal stadium/name/logo/league reveal logic and respects the Show toggles
+ * - spin() is a hoisted function declaration so event wiring won't throw
+ * - Precise centering of the floating SPIN button using getBoundingClientRect()
+ * - Safe image loading with cache, graceful fallbacks
+ * - Dynamic thresholds when both Name+Stadium are enabled for better legibility
+ * - All previous app behavior preserved (chips, history, player mode placeholder)
+ *
+ * Overwrite your deployed app.js with this file and hard-refresh (Ctrl/Cmd+Shift+R).
+ */
 
+'use strict';
+
+/* -------------------- App state -------------------- */
 let TEAMS = [];
 let currentAngle = 0; // radians
 let spinning = false;
 let selectedIdx = -1;
-let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
+let history = JSON.parse(localStorage.getItem('clubHistory') || '[]');
 
 // Modal/session state
 let lastModalTeam = null;
 let modalRevealState = { logo: false, name: false, stadium: false, league: false };
 
-// -------------------- DOM --------------------
+/* -------------------- DOM -------------------- */
 const chipsWrap = document.getElementById('chips');
 const chipsTop = document.getElementById('chipsTop');
 const chipsMore = document.getElementById('chipsMore');
@@ -27,14 +38,14 @@ const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 const optName = document.getElementById('optName');
 const optLogo = document.getElementById('optLogo');
 const optStadium = document.getElementById('optStadium');
-const optLeague = document.getElementById('optLeague'); // NEW
+const optLeague = document.getElementById('optLeague');
 
 const currentText = document.getElementById('currentText');
 const currentLogo = document.getElementById('currentLogo');
 
 const historyEl = document.getElementById('history');
 
-// Modal
+/* Modal */
 const backdrop = document.getElementById('backdrop');
 const modalEl = document.getElementById('modal');
 const mClose = document.getElementById('mClose');
@@ -43,24 +54,23 @@ const mSub = document.getElementById('mSub');     // League line in modal
 const mLogo = document.getElementById('mLogo');   // <img>
 const mStadium = document.getElementById('mStadium');
 
-// Quick picks and banner
+/* Quick picks and banner */
 const qpAll  = document.getElementById('qpAll');
 const qpNone = document.getElementById('qpNone');
 const qpTop5 = document.getElementById('qpTop5');
 const perfTip = document.getElementById('perfTip');
 
-// Canvases
+/* Canvases */
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
 
-// -------------------- Utils --------------------
+/* -------------------- Utils & constants -------------------- */
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
 const clamp = (min, v, max) => Math.max(min, Math.min(max, v));
 const mod = (x, m) => ((x % m) + m) % m;
 const isModalOpen = () => backdrop && backdrop.style.display === 'flex';
 
-// Performance thresholds
 const PERF = {
   hideLogosThreshold: 80,
   hideTextThreshold: 140,
@@ -68,49 +78,50 @@ const PERF = {
   minLogoBox: 28
 };
 
-// Labels (25 leagues)
 const LEAGUE_LABELS = {
-  AUT: "Austrian Bundesliga",
-  BEL: "Jupiler Pro League",
-  BUL: "efbet Liga",
-  CRO: "SuperSport HNL",
-  CZE: "Fortuna Liga",
-  DEN: "Superliga",
-  EPL: "Premier League",
-  L1:  "Ligue 1",
-  BUN: "Bundesliga",
-  GRE: "Super League 1",
-  ISR: "Ligat ha'Al",
-  SA:  "Serie A",
-  NED: "Eredivisie",
-  NOR: "Eliteserien",
-  POL: "PKO BP Ekstraklasa",
-  POR: "Liga Portugal",
-  ROU: "SuperLiga",
-  RUS: "Premier Liga",
-  SCO: "Scottish Premiership",
-  SRB: "Super liga Srbije",
-  LLA: "LaLiga",
-  SWE: "Allsvenskan",
-  SUI: "Super League",
-  TUR: "Süper Lig",
-  UKR: "Ukrainian Premier League"
+  AUT: "Austrian Bundesliga", BEL: "Jupiler Pro League", BUL: "efbet Liga", CRO: "SuperSport HNL",
+  CZE: "Fortuna Liga", DEN: "Superliga", EPL: "Premier League", L1:  "Ligue 1", BUN: "Bundesliga",
+  GRE: "Super League 1", ISR: "Ligat ha'Al", SA:  "Serie A", NED: "Eredivisie", NOR: "Eliteserien",
+  POL: "PKO BP Ekstraklasa", POR: "Liga Portugal", ROU: "SuperLiga", RUS: "Premier Liga",
+  SCO: "Scottish Premiership", SRB: "Super liga Srbije", LLA: "LaLiga", SWE: "Allsvenskan",
+  SUI: "Super League", TUR: "Süper Lig", UKR: "Ukrainian Premier League"
 };
 
-// -------------------- Image cache --------------------
+const TOP5 = ['EPL','SA','BUN','L1','LLA']; // Quick picks
+
+/* -------------------- Image cache & loader -------------------- */
 const IMG_CACHE = new Map();
 function getLogo(url, onLoad) {
   if (!url) return null;
   const cached = IMG_CACHE.get(url);
-  if (cached) return cached.img;
+  if (cached && cached.img) return cached.img;
   const img = new Image();
   img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    IMG_CACHE.set(url, { img, ok: true });
+    onLoad && onLoad(null, img);
+    requestAnimationFrame(drawWheel);
+  };
+  img.onerror = () => {
+    IMG_CACHE.delete(url);
+    // fallback placeholder
+    const placeholder = new Image();
+    placeholder.src = createInlinePlaceholder(256);
+    IMG_CACHE.set(url, { img: placeholder, ok: false });
+    onLoad && onLoad(null, placeholder);
+    requestAnimationFrame(drawWheel);
+  };
   img.src = url;
-  img.onload = () => { onLoad && onLoad(); };
-  IMG_CACHE.set(url, { img });
+  IMG_CACHE.set(url, { img, ok: false });
   return img;
 }
 
+function createInlinePlaceholder(size = 256) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="#071022"/><g transform="translate(${size/2},${size/2})"><circle r="${Math.round(size*0.33)}" fill="#0d2a55" opacity="0.9"/><circle r="${Math.round(size*0.28)}" fill="#071022"/></g></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+/* -------------------- Color helpers -------------------- */
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
   hex = hex.replace('#','');
@@ -125,7 +136,7 @@ function luminance(hex){
   return 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
 }
 
-// -------- Single-line fitting --------
+/* -------------------- Fitting helpers -------------------- */
 function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx = 9, maxPx = 28, weight = 800, fontFamily = 'Inter, system-ui, sans-serif' }) {
   let px = clamp(minPx, Math.round(targetPx), maxPx);
   ctx.font = `${weight} ${px}px ${fontFamily}`;
@@ -140,8 +151,29 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx = 9, maxPx = 28, w
   return { text: (s || '') + '…', fontPx: minPx, truncated: true };
 }
 
-// -------------------- Sizing --------------------
+/* -------------------- Canvas sizing & spin FAB centering -------------------- */
+function centerSpinFab() {
+  try {
+    if (!spinFab || !wheel) return;
+    const parent = wheel.parentElement || wheel.offsetParent || document.body;
+    const parentStyle = window.getComputedStyle(parent);
+    if (parentStyle.position === 'static') parent.style.position = 'relative';
+    const wheelRect = wheel.getBoundingClientRect();
+    const parentRect = parent.getBoundingClientRect();
+    const cx = (wheelRect.left - parentRect.left) + (wheelRect.width / 2);
+    const cy = (wheelRect.top - parentRect.top) + (wheelRect.height / 2);
+    spinFab.style.position = 'absolute';
+    spinFab.style.left = `${Math.round(cx)}px`;
+    spinFab.style.top = `${Math.round(cy)}px`;
+    spinFab.style.transform = 'translate(-50%,-50%)';
+    spinFab.style.zIndex = '5';
+  } catch (err) {
+    if (DEBUG) console.warn('centerSpinFab failed', err);
+  }
+}
+
 function sizeCanvas() {
+  if (!wheel) return;
   const rect = (wheel.parentElement || wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width || 640), 1200);
   const DPR = Math.max(1, window.devicePixelRatio || 1);
@@ -155,9 +187,12 @@ function sizeCanvas() {
   wheel.style.height = cssSize + 'px';
   fx.style.width = cssSize + 'px';
   fx.style.height = cssSize + 'px';
+
+  // center the floating SPIN button
+  centerSpinFab();
 }
 
-// -------------------- Strict UI lock while spinning --------------------
+/* -------------------- UI lock -------------------- */
 const INTERACTIVE_SELECTOR = 'button, input, select, textarea, [role="button"]';
 function lockUI(lock) {
   document.body.classList.toggle('ui-locked', !!lock);
@@ -182,9 +217,7 @@ function lockUI(lock) {
   });
 }
 
-// -------------------- Chips / History --------------------
-const TOP5 = ['EPL','SA','BUN','L1','LLA']; // Premier League, Serie A, Bundesliga, Ligue 1, LaLiga
-
+/* -------------------- Chips / history -------------------- */
 function makeChip(code, checked) {
   const full = LEAGUE_LABELS[code] || code;
   const label = document.createElement('label');
@@ -204,13 +237,9 @@ function renderChips() {
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
 
-  // Top 5 — EPL checked by default
   topCodes.forEach(code => chipsTop.appendChild(makeChip(code, code === 'EPL')));
-
-  // Extra leagues — populated but hidden until the user clicks the button
   moreCodes.forEach(code => chipsMore.appendChild(makeChip(code, false)));
 
-  // Ensure hidden on initial render
   chipsMore.hidden = true;
   toggleMore.textContent = 'Show more leagues';
   toggleMore.setAttribute('aria-expanded', 'false');
@@ -218,7 +247,6 @@ function renderChips() {
   toggleMore.classList.remove('disabled');
 }
 
-// Only select visible league codes (Top 5 by default; plus extras when shown)
 function visibleCodes() {
   const codes = Array.from(chipsTop.querySelectorAll('input[type="checkbox"]')).map(i => i.value);
   if (!chipsMore.hidden) {
@@ -236,16 +264,13 @@ function setCheckedCodes(codes = []) {
   selectedIdx = -1;
   drawWheel();
   const hasAny = getFiltered().length > 0;
-  spinBtn.disabled = !hasAny;
-  spinFab.disabled = !hasAny;
+  if (spinBtn) spinBtn.disabled = !hasAny;
+  if (spinFab) spinFab.disabled = !hasAny;
   if (!hasAny && currentText) currentText.textContent = 'Please select at least one league.';
   updateSelectionBanner();
 }
 
-function getFiltered() {
-  const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
-  return TEAMS.filter(t => active.includes(t.league_code));
-}
+/* -------------------- Simple storage helpers -------------------- */
 function saveHistory() { localStorage.setItem('clubHistory', JSON.stringify(history)); }
 function resetHistory() { history = []; saveHistory(); renderHistory(); }
 function renderHistory() {
@@ -253,13 +278,16 @@ function renderHistory() {
   if (history.length === 0) {
     historyEl.setAttribute('aria-live', 'polite');
     historyEl.innerHTML = '<div class="item">Spin the wheel to start your club journey</div>';
+    return;
   }
   history.forEach(item => {
     const div = document.createElement('div');
     div.className = 'item';
     const i = document.createElement('img');
-    i.src = item.logo_url;
-    i.alt = `${item.team_name} logo`;
+    i.src = item.logo_url || '';
+    i.alt = `${item.team_name || 'Item'} image`;
+    i.className = 'history-logo';
+    i.width = 38; i.height = 38;
     i.onerror = () => { i.src = ''; i.alt = 'No image'; };
     const s = document.createElement('span');
     const full = LEAGUE_LABELS[item.league_code] || item.league_code;
@@ -269,7 +297,7 @@ function renderHistory() {
   });
 }
 
-// -------------------- Modal reveal helpers (no logo masking) --------------------
+/* -------------------- Modal reveal helpers -------------------- */
 function ensureRevealStyles() {
   if (document.getElementById('reveal-style')) return;
   const s = document.createElement('style');
@@ -315,15 +343,16 @@ function applyRevealByKey(key, el, enabled, btnId, labelText) {
   }, { passive: false });
   placeButtonAfter(el, btn);
 }
+
 function updateModalRevealFromToggles() {
   if (!isModalOpen() || !lastModalTeam) return;
-  applyRevealByKey('logo',    mLogo,    !!optLogo?.checked,    'revealLogoBtn',    'logo');
-  applyRevealByKey('name',    mHead,    !!optName?.checked,    'revealNameBtn',    'name');
-  applyRevealByKey('stadium', mStadium, !!optStadium?.checked, 'revealStadiumBtn', 'stadium');
-  applyRevealByKey('league',  mSub,     !!optLeague?.checked,  'revealLeagueBtn',  'league'); // NEW
+  applyRevealByKey('logo',    mLogo,    !!(optLogo && (optLogo.checked || optLogo.getAttribute && optLogo.getAttribute('aria-checked') === 'true')),    'revealLogoBtn',    'logo');
+  applyRevealByKey('name',    mHead,    !!(optName && (optName.checked || optName.getAttribute && optName.getAttribute('aria-checked') === 'true')),    'revealNameBtn',    'name');
+  applyRevealByKey('stadium', mStadium, !!(optStadium && (optStadium.checked || optStadium.getAttribute && optStadium.getAttribute('aria-checked') === 'true')), 'revealStadiumBtn', 'stadium');
+  applyRevealByKey('league',  mSub,     !!(optLeague && (optLeague.checked || optLeague.getAttribute && optLeague.getAttribute('aria-checked') === 'true')),  'revealLeagueBtn',  'league');
 }
 
-// -------------------- Preload selected team logo for instant modal display --------------------
+/* -------------------- Preload modal logo -------------------- */
 function preloadModalLogo(url, cb) {
   if (!url) { cb && cb(); return; }
   const img = getLogo(url, () => done());
@@ -337,7 +366,7 @@ function preloadModalLogo(url, cb) {
   } else { done(); }
 }
 
-// -------------------- Modal open/close --------------------
+/* -------------------- Modal open/close -------------------- */
 function openModal(team){
   ensureRevealStyles();
   lastModalTeam = team;
@@ -363,13 +392,87 @@ function closeModal(){
 window.openModal = openModal;
 window.closeModal = closeModal;
 
-// -------------------- Selection banner --------------------
+/* -------------------- Selection banner -------------------- */
 function updateSelectionBanner() {
   const N = getFiltered().length;
   perfTip.textContent = `${N} teams selected`;
 }
 
-// -------------------- Drawing (wheel) --------------------
+/* -------------------- Show-options read helper (robust) -------------------- */
+function _readCheckboxLike(el) {
+  if (!el) return false;
+  if (typeof el.checked !== 'undefined') return !!el.checked;
+  const a = el.getAttribute && el.getAttribute('aria-checked');
+  if (a === 'true') return true;
+  if (a === 'false') return false;
+  const input = el.querySelector && el.querySelector('input[type="checkbox"]');
+  if (input) return !!input.checked;
+  return false;
+}
+function getShowOptions() {
+  try {
+    const container = document.getElementById('showOnWheel') || document.querySelector('.showopts');
+    if (container) {
+      const readOne = (selectors) => {
+        for (const sel of selectors) {
+          try {
+            const el = container.querySelector(sel);
+            if (el) return _readCheckboxLike(el);
+          } catch (_) {}
+        }
+        return false;
+      };
+      return {
+        name: readOne(['#optName', 'input[data-show="name"]', 'input[name="show-name"]', '[data-show="name"]']),
+        logo: readOne(['#optLogo', 'input[data-show="logo"]', 'input[name="show-logo"]', '[data-show="logo"]']),
+        stadium: readOne(['#optStadium', 'input[data-show="stadium"]', 'input[name="show-stadium"]', '[data-show="stadium"]']),
+        league: readOne(['#optLeague', 'input[data-show="league"]', 'input[name="show-league"]', '[data-show="league"]'])
+      };
+    }
+  } catch (e) {
+    if (DEBUG) console.warn('getShowOptions container read failed', e);
+  }
+
+  const byId = (id) => {
+    const el = document.getElementById(id);
+    if (el != null) return _readCheckboxLike(el);
+    return null;
+  };
+  const n = byId('optName'), l = byId('optLogo'), s = byId('optStadium'), q = byId('optLeague');
+  if (n !== null || l !== null || s !== null || q !== null) {
+    return { name: !!n, logo: !!l, stadium: !!s, league: !!q };
+  }
+
+  const qf = (selList) => {
+    for (const sel of selList) {
+      const el = document.querySelector(sel);
+      if (el && _readCheckboxLike(el)) return true;
+    }
+    return false;
+  };
+  return {
+    name: qf(['input[data-show="name"]', 'input[name="show-name"]', 'input#optName', '[data-show="name"]']),
+    logo: qf(['input[data-show="logo"]', 'input[name="show-logo"]', 'input#optLogo', '[data-show="logo"]']),
+    stadium: qf(['input[data-show="stadium"]', 'input[name="show-stadium"]', 'input#optStadium', '[data-show="stadium"]']),
+    league: qf(['input[data-show="league"]', 'input[name="show-league"]', 'input#optLeague', '[data-show="league"]'])
+  };
+}
+
+/* -------------------- Drawing helpers -------------------- */
+function ellipsizeText(ctx, text, maxWidth, font) {
+  if (!text) return '';
+  ctx.font = font;
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let lo = 0, hi = text.length;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const t = text.slice(0, mid) + '…';
+    if (ctx.measureText(t).width <= maxWidth) lo = mid + 1;
+    else hi = mid;
+  }
+  return text.slice(0, Math.max(0, lo - 1)) + '…';
+}
+
 function drawGradientIdle(ctx, W, H) {
   const DPR = Math.max(1, window.devicePixelRatio || 1);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -403,10 +506,10 @@ function drawGradientIdle(ctx, W, H) {
   ctx.restore();
 }
 
+/* -------------------- Main drawing routine -------------------- */
 function drawWheel(){
   const data = getFiltered();
   const N = data.length;
-
   const ctx = wheel.getContext('2d');
   const DPR = Math.max(1, window.devicePixelRatio || 1);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -419,20 +522,17 @@ function drawWheel(){
     return;
   }
 
-  // DYNAMIC THRESHOLDS for better legibility when both text lines are enabled
-  const bothTextOn = !!optName?.checked && !!optStadium?.checked;
-  const hideTextThresholdDyn  = bothTextOn ? 55 : PERF.hideTextThreshold; // earlier cutoff when both lines visible
+  const bothTextOn = !!_readCheckboxLike(optName) && !!_readCheckboxLike(optStadium);
+  const hideTextThresholdDyn  = bothTextOn ? 55 : PERF.hideTextThreshold;
   const hideLogosThresholdDyn = bothTextOn ? Math.min(55, PERF.hideLogosThreshold) : PERF.hideLogosThreshold;
 
   const hideLogos = N >= hideLogosThresholdDyn;
   const hideText  = N >= hideTextThresholdDyn;
 
-  // Do NOT auto-uncheck toggles; keep UI available regardless of density.
   updateSelectionBanner();
 
   ctx.imageSmoothingEnabled = !hideText;
   ctx.imageSmoothingQuality = hideText ? 'low' : 'high';
-
   ctx.clearRect(0,0,W,H);
   ctx.save();
   ctx.translate(W/2, H/2);
@@ -443,7 +543,7 @@ function drawWheel(){
   const radius = Math.min(W, H) * 0.48;
   const sliceAngle = TAU / N;
 
-  // Wedges
+  // wedges
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const startAngle = i * sliceAngle;
@@ -457,7 +557,7 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // Selected rim stroke
+  // selected rim stroke
   if (!hideText && selectedIdx >= 0 && selectedIdx < N) {
     const a0 = selectedIdx * sliceAngle;
     const a1 = (selectedIdx + 1) * sliceAngle;
@@ -470,11 +570,12 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // Content (logos/text) with perf guards
+  // content
+  const show = getShowOptions();
+
   if (!hideText || !hideLogos) {
     for (let i = 0; i < N; i++) {
       const t = data[i] || {};
-
       const a0 = i * sliceAngle;
       const a1 = (i + 1) * sliceAngle;
       const aMid = (a0 + a1) / 2;
@@ -496,6 +597,7 @@ function drawWheel(){
       ctx.closePath();
       ctx.clip();
 
+      ctx.save();
       ctx.rotate(aMid);
       const needFlip = Math.cos(aMid) < 0;
       if (needFlip) ctx.rotate(Math.PI);
@@ -507,11 +609,10 @@ function drawWheel(){
       const xBoxLeft = Math.min(xText, logoInner);
       const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
-      const canShowName    = !hideText && optName?.checked && t.team_name && maxTextWidth >= PERF.minTextWidth;
-      const canShowStadium = !hideText && optStadium?.checked && t.stadium && maxTextWidth >= PERF.minTextWidth;
-      const canShowLogo    = !hideLogos && optLogo?.checked && t.logo_url && (logoHalf * 2) >= PERF.minLogoBox;
+      const canShowName    = !hideText && show.name && t.team_name && maxTextWidth >= PERF.minTextWidth;
+      const canShowStadium = !hideText && show.stadium && t.stadium && maxTextWidth >= PERF.minTextWidth;
+      const canShowLogo    = !hideLogos && show.logo && t.logo_url && (logoHalf * 2) >= PERF.minLogoBox;
 
-      // Unified typography & alignment for Name + Stadium
       if (canShowName || canShowStadium) {
         ctx.save();
         ctx.textAlign = 'left';
@@ -521,8 +622,6 @@ function drawWheel(){
         const strokeCol = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.65)';
         const fillCol = fg;
 
-        // Fit name first (bigger)
-        let namePx = 0, stadPx = 0;
         let nameFit = { text: '', fontPx: 0 };
         let stadFit = { text: '', fontPx: 0 };
 
@@ -534,11 +633,9 @@ function drawWheel(){
             maxPx: 24,
             weight: heavy ? 900 : 800
           });
-          namePx = nameFit.fontPx;
         }
 
-        // Stadium ~82% of fitted name size when both present
-        const stadTarget = (canShowName && namePx) ? Math.max(8, Math.round(namePx * 0.82)) : stadiumTargetPx;
+        const stadTarget = (canShowName && nameFit.fontPx) ? Math.max(8, Math.round(nameFit.fontPx * 0.82)) : stadiumTargetPx;
         if (canShowStadium) {
           stadFit = fitSingleLine(ctx, t.stadium || '', {
             maxWidth: maxTextWidth,
@@ -547,32 +644,27 @@ function drawWheel(){
             maxPx: 20,
             weight: 700
           });
-          stadPx = stadFit.fontPx;
         }
 
-        // Vertical layout: center combined block
         const gap = (canShowName && canShowStadium) ? 3 : 0;
-        const totalH = (canShowName ? namePx : 0) + (canShowStadium ? stadPx : 0) + gap;
+        const totalH = (canShowName ? nameFit.fontPx : 0) + (canShowStadium ? stadFit.fontPx : 0) + gap;
         let yCursor = -totalH / 2;
 
-        // Draw Name
         if (canShowName) {
-          yCursor += namePx / 2;
-          ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
+          yCursor += nameFit.fontPx / 2;
+          ctx.font = `${heavy ? 900 : 800} ${nameFit.fontPx}px Inter, system-ui, sans-serif`;
+          ctx.lineWidth = Math.max(1, Math.round(nameFit.fontPx / 10));
           ctx.strokeStyle = strokeCol;
-          ctx.lineWidth = Math.max(1, Math.round(namePx / 10));
           ctx.fillStyle = fillCol;
           ctx.strokeText(nameFit.text, xBoxLeft, yCursor);
           ctx.fillText(nameFit.text, xBoxLeft, yCursor);
-          yCursor += namePx / 2 + gap;
+          yCursor += nameFit.fontPx / 2 + gap;
         }
 
-        // Draw Stadium (same design, slight alpha to de-emphasize)
         if (canShowStadium) {
-          yCursor += stadPx / 2;
-          ctx.font = `700 ${stadPx}px Inter, system-ui, sans-serif`;
-          ctx.strokeStyle = strokeCol;
-          ctx.lineWidth = Math.max(1, Math.round(stadPx / 10));
+          yCursor += stadFit.fontPx / 2;
+          ctx.font = `700 ${stadFit.fontPx}px Inter, system-ui, sans-serif`;
+          ctx.lineWidth = Math.max(1, Math.round(stadFit.fontPx / 10));
           ctx.fillStyle = fillCol;
           ctx.save();
           ctx.globalAlpha = 0.92;
@@ -588,14 +680,6 @@ function drawWheel(){
         ctx.save();
         ctx.translate(xLogo, 0);
 
-        if (N < PERF.hideLogosThreshold) {
-          ctx.shadowColor = 'rgba(0,0,0,0.5)';
-          ctx.shadowBlur = 4;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 2;
-        }
-
-        // Logo ring
         ctx.beginPath();
         ctx.arc(0, 0, logoHalf, 0, TAU);
         ctx.closePath();
@@ -605,7 +689,6 @@ function drawWheel(){
         ctx.strokeStyle = 'rgba(255,255,255,0.9)';
         ctx.stroke();
 
-        // Image clip
         ctx.save();
         ctx.beginPath();
         ctx.arc(0, 0, logoHalf - 1, 0, TAU);
@@ -623,8 +706,8 @@ function drawWheel(){
           const ph = (logoHalf - 3) * 2;
           ctx.fillRect(-ph/2, -ph/2, ph, ph);
         }
-        ctx.restore();  // image clip
-        ctx.restore();  // logo translate
+        ctx.restore();
+        ctx.restore();
       }
 
       ctx.restore(); // wedge clip
@@ -634,7 +717,7 @@ function drawWheel(){
   ctx.restore();
 }
 
-// -------------------- Result + Spin --------------------
+/* -------------------- Result + Spin -------------------- */
 function setResult(idx){
   const data = getFiltered();
   const t = data[idx];
@@ -651,7 +734,7 @@ function setResult(idx){
   saveHistory();
   renderHistory();
 
-  // Preload and decode the modal logo first so it shows instantly
+  // Preload and show modal with decoded logo for instant display
   if (t.logo_url) preloadModalLogo(t.logo_url, () => openModal(t));
   else openModal(t);
 }
@@ -673,7 +756,7 @@ function spin(){
   const N = data.length;
   const slice = TAU / N;
 
-  const extraTurns  = 6 + Math.floor(Math.random()*3); // 6..8
+  const extraTurns  = 6 + Math.floor(Math.random()*3);
   const finalOffset = Math.random() * TAU;
   const targetAngle = TAU * extraTurns + finalOffset;
 
@@ -693,7 +776,6 @@ function spin(){
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
 
-      // Snap the chosen slice center under the pointer
       const centerAngle = idx * slice + slice/2;
       const snapDelta = mod(centerAngle - offset, TAU);
       currentAngle = mod(currentAngle + snapDelta, TAU);
@@ -712,9 +794,8 @@ function spin(){
   requestAnimationFrame(anim);
 }
 
-// -------------------- Events / Boot --------------------
+/* -------------------- Event wiring -------------------- */
 function setupEventListeners() {
-  // helper: quick-pick active state
   function setActive(btn) {
     [qpAll, qpNone, qpTop5].forEach(b => b?.classList?.toggle('active', b === btn));
   }
@@ -722,32 +803,28 @@ function setupEventListeners() {
     const vis = new Set(visibleCodes());
     const sel = Array.from(chipsWrap.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value);
     const selVisible = sel.filter(c => vis.has(c));
-
     const allVisibleSelected = selVisible.length === vis.size && Array.from(vis).every(c => selVisible.includes(c));
     const noneSelected = selVisible.length === 0;
     const top5Visible = TOP5.filter(c => vis.has(c));
     const top5SelectedOnly = selVisible.length === top5Visible.length && top5Visible.every(c => selVisible.includes(c));
-
     if (allVisibleSelected) setActive(qpAll);
     else if (noneSelected) setActive(qpNone);
     else if (top5SelectedOnly) setActive(qpTop5);
     else setActive(null);
   }
 
-  // Leagues toggles
   chipsWrap.addEventListener('change', () => {
     if (spinning) return;
     selectedIdx = -1;
     drawWheel();
     const len = getFiltered().length;
-    spinBtn.disabled = len === 0;
-    spinFab.disabled = len === 0;
+    if (spinBtn) spinBtn.disabled = len === 0;
+    if (spinFab) spinFab.disabled = len === 0;
     if (len === 0 && currentText) currentText.textContent = 'Please select at least one league.';
     updateSelectionBanner();
     updateQuickPickActive();
   });
 
-  // "Show more leagues" toggle
   toggleMore.addEventListener('click', () => {
     if (spinning) return;
     const hidden = chipsMore.hidden;
@@ -763,16 +840,10 @@ function setupEventListeners() {
     updateQuickPickActive();
   });
 
-  // Quick picks
   qpAll.onclick  = () => { if (spinning) return; setCheckedCodes(visibleCodes()); setActive(qpAll); };
   qpNone.onclick = () => { if (spinning) return; setCheckedCodes([]); setActive(qpNone); };
-  qpTop5.onclick = () => {
-    if (spinning) return;
-    setCheckedCodes(TOP5.filter(c => visibleCodes().includes(c)));
-    setActive(qpTop5);
-  };
+  qpTop5.onclick = () => { if (spinning) return; setCheckedCodes(TOP5.filter(c => visibleCodes().includes(c))); setActive(qpTop5); };
 
-  // Show-on-wheel toggles — immediate redraw
   const onWheelToggleChange = () => {
     if (spinning) return;
     drawWheel();
@@ -781,19 +852,16 @@ function setupEventListeners() {
   optName?.addEventListener('change', onWheelToggleChange);
   optLogo?.addEventListener('change', onWheelToggleChange);
   optStadium?.addEventListener('change', onWheelToggleChange);
-  optLeague?.addEventListener('change', onWheelToggleChange); // NEW
+  optLeague?.addEventListener('change', onWheelToggleChange);
 
-  // Spin actions
   spinBtn.onclick = spin;
   spinFab.onclick = spin;
 
-  // History and modal
   resetHistoryBtn.addEventListener('click', () => { if (!spinning) resetHistory(); });
   mClose.onclick = () => { if (!spinning) closeModal(); };
   backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
 
-  // Debounced resize redraw
   let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
@@ -801,11 +869,13 @@ function setupEventListeners() {
   }, { passive: true });
 }
 
-// Boot
+/* -------------------- Boot -------------------- */
+function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
 fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
   .then(data => {
-    TEAMS = data;
+    TEAMS = data || [];
     ensureRevealStyles();
     renderChips();
     renderHistory();
@@ -818,3 +888,6 @@ fetch(`./teams.json?v=${Date.now()}`)
     console.error('Failed to load teams.json', err);
     if (currentText) currentText.textContent = 'Failed to load teams.';
   });
+
+/* -------------------- Debug / helpers exported -------------------- */
+window.__fs = { drawWheel, spin, setMode: (m)=>{ /* compatibility stub */ }, loadPlayers: ()=>{}, TEAMS, getCurrentData: ()=>getFiltered() };
