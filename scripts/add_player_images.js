@@ -1,40 +1,34 @@
 /**
- * Add image_url fields to data/players.json using images found in public/players.
+ * add_player_images.js (robust, accepts optional path)
  *
  * Usage:
- *   node add_player_images.js
+ *   node scripts/add_player_images.js
+ *   node scripts/add_player_images.js data/players.json
  *
- * Behavior:
- * - Looks for images in ./public/players (PNG/JPG/JPEG/WebP), and also accepts top-level /public files.
- * - Slugifies player names and attempts to match files like '<slug>.png' or '<slug>.jpg'.
- * - Honors PLAYER_IMAGE_MAP for special case name -> filename mappings (you can extend it).
- * - If no match is found, sets image_url to FALLBACK_SILHOUETTE.
- * - Backups original data/players.json to data/players.json.bak before writing.
+ * - Searches upward for data/players.json if no explicit path provided.
+ * - Scans public/players and public/ for images and slug-matches them to player names.
+ * - Adds/updates image_url for each player and writes a backup data/players.json.bak.
  */
-
 const fs = require('fs');
 const path = require('path');
 
-const DATA_PLAYERS = path.join(__dirname, 'data', 'players.json');
-const BACKUP_PLAYERS = path.join(__dirname, 'data', 'players.json.bak');
-const PUBLIC_PLAYERS_DIR = path.join(__dirname, 'public', 'players');
-const PUBLIC_ROOT = path.join(__dirname, 'public');
-
-const FALLBACK_SILHOUETTE = '/players/silhouette-player.png';
-
-// Special-case map: lowercased player name -> public path (relative to site root)
-const PLAYER_IMAGE_MAP = {
-  'bukayo saka': '/players/saka.png',
-  // add more special mappings here, e.g.
-  // 'kai havertz': '/players/havertz.png'
-};
+function findUp(startDir, relativePath) {
+  let dir = path.resolve(startDir || process.cwd());
+  const root = path.parse(dir).root;
+  while (true) {
+    const candidate = path.join(dir, relativePath);
+    if (fs.existsSync(candidate)) return candidate;
+    if (dir === root) break;
+    dir = path.dirname(dir);
+  }
+  return null;
+}
 
 function slugifyName(n) {
   return String(n || '')
     .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 }
-
 function resolvePublicUrl(p) {
   if (!p) return '';
   if (/^https?:\/\//i.test(p)) return p;
@@ -42,98 +36,112 @@ function resolvePublicUrl(p) {
   return '/' + p;
 }
 
+const FALLBACK_SILHOUETTE = '/players/silhouette-player.png';
+const PLAYER_IMAGE_MAP = {
+  'bukayo saka': '/players/saka.png'
+};
+
+const argPath = process.argv[2];
+
+const SCRIPT_DIR = __dirname;
+const CANDIDATE_REL = path.join('data', 'players.json');
+
+let DATA_PLAYERS = null;
+if (argPath) {
+  DATA_PLAYERS = path.resolve(argPath);
+  if (!fs.existsSync(DATA_PLAYERS)) {
+    console.error('Explicit path provided but file not found:', DATA_PLAYERS);
+    process.exit(1);
+  }
+} else {
+  DATA_PLAYERS = findUp(SCRIPT_DIR, CANDIDATE_REL) || findUp(process.cwd(), CANDIDATE_REL);
+  if (!DATA_PLAYERS) {
+    console.error('data/players.json not found. Run from repo root or provide explicit path:');
+    console.error('  node scripts/add_player_images.js data/players.json');
+    process.exit(1);
+  }
+}
+
+const BACKUP_PLAYERS = DATA_PLAYERS + '.bak';
+const repoRoot = path.dirname(path.dirname(DATA_PLAYERS)); // .../data -> repo root
+const PUBLIC_PLAYERS_DIR = path.join(repoRoot, 'public', 'players');
+const PUBLIC_ROOT = path.join(repoRoot, 'public');
+
+console.log('Using data file:', DATA_PLAYERS);
+console.log('Repo root:', repoRoot);
+console.log('Looking for images in:', PUBLIC_PLAYERS_DIR, 'and', PUBLIC_ROOT);
+
 function listImageFiles(dir) {
   try {
-    const files = fs.readdirSync(dir);
-    return files.filter(f => /\.(png|jpe?g|webp|gif|avif)$/i.test(f));
+    return fs.readdirSync(dir).filter(f => /\.(png|jpe?g|webp|gif|avif)$/i.test(f));
   } catch (e) {
     return [];
   }
 }
 
 function buildCandidatesMap() {
-  const map = new Map(); // slug -> filename (first match)
-  // scan public/players
+  const map = new Map();
   const playersFiles = listImageFiles(PUBLIC_PLAYERS_DIR);
-  playersFiles.forEach(f => {
-    const name = path.parse(f).name;
-    map.set(name.toLowerCase(), '/players/' + f);
-  });
-
-  // also scan public root (some setups keep images directly under /public)
+  playersFiles.forEach(f => map.set(path.parse(f).name.toLowerCase(), '/players/' + f));
   const rootFiles = listImageFiles(PUBLIC_ROOT);
   rootFiles.forEach(f => {
-    const name = path.parse(f).name;
-    // avoid clobbering players/ prefixed entries if already present
-    if (!map.has(name.toLowerCase())) map.set(name.toLowerCase(), '/' + f);
+    const key = path.parse(f).name.toLowerCase();
+    if (!map.has(key)) map.set(key, '/' + f);
   });
-
   return map;
 }
 
 function pickImageForPlayer(player, candidatesMap) {
   const name = (player.name || player.player_name || player.full_name || player.team_name || '').trim();
   if (!name) return FALLBACK_SILHOUETTE;
-
   const key = name.toLowerCase();
   if (PLAYER_IMAGE_MAP[key]) return resolvePublicUrl(PLAYER_IMAGE_MAP[key]);
-
   const slug = slugifyName(name);
-  // common candidate paths
-  const tried = [];
-
-  // first try exact slug match in candidates map
   if (candidatesMap.has(slug)) return resolvePublicUrl(candidatesMap.get(slug));
-
-  // try slug + variants
-  const altCandidates = [
+  const alt = [
     `/players/${slug}.png`,
     `/players/${slug}.jpg`,
+    `/players/${slug}.webp`,
     `/${slug}.png`,
     `/${slug}.jpg`,
-    `/players/${slug}.webp`,
     `/${slug}.webp`
   ];
-  for (const c of altCandidates) {
-    const fsPath = path.join(__dirname, c.replace(/^\//, 'public/'));
-    tried.push(fsPath);
+  for (const c of alt) {
+    const fsPath = path.join(repoRoot, 'public', c.replace(/^\//, ''));
     if (fs.existsSync(fsPath)) return resolvePublicUrl(c);
   }
-
-  // last resort: if player has an explicit image field in JSON, use it
   if (player.image_url) return resolvePublicUrl(player.image_url);
   if (player.image) return resolvePublicUrl(player.image);
   if (player.file_url) return resolvePublicUrl(player.file_url);
   if (player.file) return resolvePublicUrl(player.file);
-
-  // fallback
   return FALLBACK_SILHOUETTE;
 }
 
 function main() {
-  if (!fs.existsSync(DATA_PLAYERS)) {
-    console.error('data/players.json not found. Please ensure file exists.');
+  let raw;
+  try {
+    raw = fs.readFileSync(DATA_PLAYERS, 'utf8');
+  } catch (e) {
+    console.error('Failed to read data file:', DATA_PLAYERS, e.message);
     process.exit(1);
   }
 
-  // read players JSON
-  const raw = fs.readFileSync(DATA_PLAYERS, 'utf8');
   let players;
   try {
     players = JSON.parse(raw);
-    if (!Array.isArray(players)) throw new Error('players.json is not an array');
+    if (!Array.isArray(players)) throw new Error('expected JSON array of players');
   } catch (e) {
-    console.error('Failed to parse data/players.json:', e.message);
+    console.error('Failed to parse JSON:', e.message);
     process.exit(1);
   }
 
   // backup
   fs.writeFileSync(BACKUP_PLAYERS, raw, 'utf8');
-  console.log('Backup written to', BACKUP_PLAYERS);
+  console.log('Backup saved to', BACKUP_PLAYERS);
 
   const candidatesMap = buildCandidatesMap();
+  console.log('Found candidate image count:', candidatesMap.size);
 
-  // update each player
   let updatedCount = 0;
   const updated = players.map(p => {
     const img = pickImageForPlayer(p, candidatesMap);
@@ -141,10 +149,9 @@ function main() {
     return Object.assign({}, p, { image_url: img });
   });
 
-  // write back (pretty)
   fs.writeFileSync(DATA_PLAYERS, JSON.stringify(updated, null, 2) + '\n', 'utf8');
-  console.log(`Updated ${updatedCount} entries in data/players.json (image_url field set).`);
-  console.log('Sample entries:');
+  console.log(`Updated ${updatedCount} entries in ${DATA_PLAYERS}`);
+  console.log('Example outputs:');
   console.log(updated.slice(0,6).map(x => ({ name: x.name || x.player_name || x.team_name, image_url: x.image_url })));
 }
 
