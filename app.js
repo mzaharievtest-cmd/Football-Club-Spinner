@@ -369,6 +369,52 @@ function updateSelectionBanner() {
   perfTip.textContent = `${N} teams selected`;
 }
 
+// MODE handling and wiring for TEAM / PLAYER toggles (add near DOM setup)
+let MODE = 'team';
+
+const modeTeamBtn = document.getElementById('modeTeam');
+const modePlayerBtn = document.getElementById('modePlayer');
+const teamView = document.getElementById('teamView');
+const playerView = document.getElementById('playerView');
+
+function setMode(newMode) {
+  if (!newMode || (newMode !== 'team' && newMode !== 'player')) return;
+  if (MODE === newMode) return;
+  MODE = newMode;
+  if (modeTeamBtn) {
+    modeTeamBtn.classList.toggle('mode-btn-active', MODE === 'team');
+    modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true' : 'false');
+  }
+  if (modePlayerBtn) {
+    modePlayerBtn.classList.toggle('mode-btn-active', MODE === 'player');
+    modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true' : 'false');
+  }
+  if (teamView) teamView.classList.toggle('hidden', MODE !== 'team');
+  if (playerView) playerView.classList.toggle('hidden', MODE !== 'player');
+
+  if (MODE === 'player') {
+    if (typeof loadPlayers === 'function') {
+      loadPlayers().then(() => { selectedIdx = -1; drawWheel(); }).catch(() => drawWheel());
+    } else {
+      drawWheel();
+    }
+  } else {
+    selectedIdx = -1;
+    drawWheel();
+  }
+}
+
+// Wire the UI toggles (idempotent)
+if (modeTeamBtn) modeTeamBtn.addEventListener('click', () => setMode('team'));
+if (modePlayerBtn) modePlayerBtn.addEventListener('click', () => setMode('player'));
+
+// Sync initial visuals
+if (MODE === 'team') {
+  if (modeTeamBtn) { modeTeamBtn.classList.add('mode-btn-active'); modeTeamBtn.setAttribute('aria-pressed','true'); }
+} else {
+  if (modePlayerBtn) { modePlayerBtn.classList.add('mode-btn-active'); modePlayerBtn.setAttribute('aria-pressed','true'); }
+}
+
 // -------------------- Drawing (wheel) --------------------
 function drawGradientIdle(ctx, W, H) {
   const DPR = Math.max(1, window.devicePixelRatio || 1);
