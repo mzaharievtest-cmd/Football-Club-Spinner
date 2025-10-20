@@ -1,5 +1,9 @@
 /**
- * Football Club Spinner — app.js (fixed: getFiltered hoisted and consistent)
+ * Football Club Spinner — app.js (fixed: ensure _readCheckboxLike is defined before drawWheel)
+ *
+ * This is the full updated app.js with the _readCheckboxLike / getShowOptions helpers
+ * moved above drawWheel so drawWheel (and any boot-time callers) can't hit a
+ * ReferenceError for missing helper functions.
  *
  * Overwrite your deployed app.js with this file and hard-refresh (Ctrl/Cmd+Shift+R).
  */
@@ -83,12 +87,10 @@ const TOP5 = ['EPL','SA','BUN','L1','LLA']; // Quick picks
 
 /* -------------------- Image cache & loader -------------------- */
 const IMG_CACHE = new Map();
-
 function createInlinePlaceholder(size = 256) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="#071022"/><g transform="translate(${size/2},${size/2})"><circle r="${Math.round(size*0.33)}" fill="#0d2a55" opacity="0.9"/><circle r="${Math.round(size*0.28)}" fill="#071022"/></g></svg>`;
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
-
 function getLogo(url, onLoad) {
   if (!url) return null;
   const cached = IMG_CACHE.get(url);
@@ -143,10 +145,67 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx = 9, maxPx = 28, w
   return { text: (s || '') + '…', fontPx: minPx, truncated: true };
 }
 
-/* -------------------- Data provider: getFiltered (DECLARED EARLY to avoid ReferenceErrors) -------------------- */
+/* -------------------- Show-options read helper (DECLARED EARLY) -------------------- */
+function _readCheckboxLike(el) {
+  if (!el) return false;
+  if (typeof el.checked !== 'undefined') return !!el.checked;
+  const a = el.getAttribute && el.getAttribute('aria-checked');
+  if (a === 'true') return true;
+  if (a === 'false') return false;
+  const input = el.querySelector && el.querySelector('input[type="checkbox"]');
+  if (input) return !!input.checked;
+  return false;
+}
+function getShowOptions() {
+  try {
+    const container = document.getElementById('showOnWheel') || document.querySelector('.showopts');
+    if (container) {
+      const readOne = (selectors) => {
+        for (const sel of selectors) {
+          try {
+            const el = container.querySelector(sel);
+            if (el) return _readCheckboxLike(el);
+          } catch (_) {}
+        }
+        return false;
+      };
+      return {
+        name: readOne(['#optName', 'input[data-show="name"]', 'input[name="show-name"]', '[data-show="name"]']),
+        logo: readOne(['#optLogo', 'input[data-show="logo"]', 'input[name="show-logo"]', '[data-show="logo"]']),
+        stadium: readOne(['#optStadium', 'input[data-show="stadium"]', 'input[name="show-stadium"]', '[data-show="stadium"]']),
+        league: readOne(['#optLeague', 'input[data-show="league"]', 'input[name="show-league"]', '[data-show="league"]'])
+      };
+    }
+  } catch (e) {
+    /* fallback */
+  }
+  const byId = (id) => {
+    const el = document.getElementById(id);
+    if (el != null) return _readCheckboxLike(el);
+    return null;
+  };
+  const n = byId('optName'), l = byId('optLogo'), s = byId('optStadium'), q = byId('optLeague');
+  if (n !== null || l !== null || s !== null || q !== null) {
+    return { name: !!n, logo: !!l, stadium: !!s, league: !!q };
+  }
+  const qf = (selList) => {
+    for (const sel of selList) {
+      const el = document.querySelector(sel);
+      if (el && _readCheckboxLike(el)) return true;
+    }
+    return false;
+  };
+  return {
+    name: qf(['input[data-show="name"]', 'input[name="show-name"]', 'input#optName', '[data-show="name"]']),
+    logo: qf(['input[data-show="logo"]', 'input[name="show-logo"]', 'input#optLogo', '[data-show="logo"]']),
+    stadium: qf(['input[data-show="stadium"]', 'input[name="show-stadium"]', 'input#optStadium', '[data-show="stadium"]']),
+    league: qf(['input[data-show="league"]', 'input[name="show-league"]', 'input#optLeague', '[data-show="league"]'])
+  };
+}
+
+/* -------------------- Data provider: getFiltered (DECLARED EARLY) -------------------- */
 function getFiltered() {
-  // returns currently selected items (TEAMS) based on checked chips
-  if (!chipsWrap) return [];
+  if (!chipsWrap) return TEAMS.slice();
   const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
   if (active.length === 0) return TEAMS.slice();
   return TEAMS.filter(t => active.includes(t.league_code));
@@ -169,10 +228,9 @@ function centerSpinFab() {
     spinFab.style.transform = 'translate(-50%,-50%)';
     spinFab.style.zIndex = '5';
   } catch (err) {
-    if (DEBUG) console.warn('centerSpinFab failed', err);
+    console.warn('centerSpinFab failed', err);
   }
 }
-
 function sizeCanvas() {
   if (!wheel) return;
   const rect = (wheel.parentElement || wheel).getBoundingClientRect();
@@ -218,17 +276,6 @@ function lockUI(lock) {
 }
 
 /* -------------------- Chips / history -------------------- */
-function makeChip(code, checked) {
-  const full = LEAGUE_LABELS[code] || code;
-  const label = document.createElement('label');
-  label.className = 'chip';
-  label.innerHTML = `
-    <input type="checkbox" value="${code}" ${checked ? 'checked aria-checked="true"' : ''} aria-label="${full}">
-    <span class="chip-text" title="${full}">${full}</span>
-  `;
-  return label;
-}
-
 function renderChips() {
   const allCodes = [...new Set(TEAMS.map(t => t.league_code))];
   const topCodes = TOP5.filter(c => allCodes.includes(c));
@@ -246,7 +293,16 @@ function renderChips() {
   toggleMore.disabled = false;
   toggleMore.classList.remove('disabled');
 }
-
+function makeChip(code, checked) {
+  const full = LEAGUE_LABELS[code] || code;
+  const label = document.createElement('label');
+  label.className = 'chip';
+  label.innerHTML = `
+    <input type="checkbox" value="${code}" ${checked ? 'checked aria-checked="true"' : ''} aria-label="${full}">
+    <span class="chip-text" title="${full}">${full}</span>
+  `;
+  return label;
+}
 function visibleCodes() {
   const codes = Array.from(chipsTop.querySelectorAll('input[type="checkbox"]')).map(i => i.value);
   if (!chipsMore.hidden) {
@@ -254,7 +310,6 @@ function visibleCodes() {
   }
   return codes;
 }
-
 function setCheckedCodes(codes = []) {
   const set = new Set(codes);
   chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => {
@@ -270,7 +325,7 @@ function setCheckedCodes(codes = []) {
   updateSelectionBanner();
 }
 
-/* -------------------- Simple storage helpers -------------------- */
+/* -------------------- History helpers -------------------- */
 function saveHistory() { localStorage.setItem('clubHistory', JSON.stringify(history)); }
 function resetHistory() { history = []; saveHistory(); renderHistory(); }
 function renderHistory() {
@@ -366,38 +421,6 @@ function preloadModalLogo(url, cb) {
   } else { done(); }
 }
 
-/* -------------------- Modal open/close -------------------- */
-function openModal(team){
-  ensureRevealStyles();
-  lastModalTeam = team;
-  modalRevealState = { logo: false, name: false, stadium: false, league: false };
-
-  const leagueLabel = LEAGUE_LABELS[team.league_code] || team.league_code;
-
-  if (mHead)   mHead.textContent = team.team_name || '—';
-  if (mSub)    mSub.textContent = leagueLabel;
-  if (mLogo)   { mLogo.setAttribute('decoding','sync'); mLogo.setAttribute('loading','eager'); mLogo.src = team.logo_url || ''; mLogo.alt = (team.team_name || 'Club') + ' logo'; }
-  if (mStadium) mStadium.textContent = team.stadium || '—';
-
-  backdrop.style.display = 'flex';
-  requestAnimationFrame(() => {
-    modalEl.classList.add('show');
-    updateModalRevealFromToggles();
-  });
-}
-function closeModal(){
-  modalEl.classList.remove('show');
-  setTimeout(()=> { backdrop.style.display='none'; }, 150);
-}
-window.openModal = openModal;
-window.closeModal = closeModal;
-
-/* -------------------- Selection banner -------------------- */
-function updateSelectionBanner() {
-  const N = getFiltered().length;
-  perfTip.textContent = `${N} teams selected`;
-}
-
 /* -------------------- Drawing helpers -------------------- */
 function ellipsizeText(ctx, text, maxWidth, font) {
   if (!text) return '';
@@ -417,24 +440,19 @@ function drawGradientIdle(ctx, W, H) {
   const DPR = Math.max(1, window.devicePixelRatio || 1);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.clearRect(0,0,W,H);
-
   ctx.save();
   ctx.translate(W/2, H/2);
-
   const radius = Math.min(W, H) * 0.48;
-
   const g = ctx.createRadialGradient(0,0, radius*0.1, 0,0, radius);
   g.addColorStop(0.00, '#1A2C5A');
   g.addColorStop(0.35, '#21386F');
   g.addColorStop(0.65, '#0E2A57');
   g.addColorStop(1.00, '#0B1B38');
-
   ctx.beginPath();
   ctx.arc(0,0, radius, 0, TAU);
   ctx.closePath();
   ctx.fillStyle = g;
   ctx.fill();
-
   ctx.lineWidth = 1;
   ctx.strokeStyle = 'rgba(255,255,255,0.06)';
   for (let i=1;i<=5;i++){
@@ -442,7 +460,6 @@ function drawGradientIdle(ctx, W, H) {
     ctx.arc(0,0, radius*(i/5), 0, TAU);
     ctx.stroke();
   }
-
   ctx.restore();
 }
 
@@ -483,12 +500,10 @@ function drawWheel(){
   const radius = Math.min(W, H) * 0.48;
   const sliceAngle = TAU / N;
 
-  // wedges
   for (let i = 0; i < N; i++) {
     const t = data[i] || {};
     const startAngle = i * sliceAngle;
     const endAngle   = (i + 1) * sliceAngle;
-
     ctx.beginPath();
     ctx.moveTo(0,0);
     ctx.arc(0,0, radius, startAngle, endAngle);
@@ -497,7 +512,6 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // selected rim stroke
   if (!hideText && selectedIdx >= 0 && selectedIdx < N) {
     const a0 = selectedIdx * sliceAngle;
     const a1 = (selectedIdx + 1) * sliceAngle;
@@ -510,7 +524,6 @@ function drawWheel(){
     ctx.restore();
   }
 
-  // content
   const show = getShowOptions();
 
   if (!hideText || !hideLogos) {
