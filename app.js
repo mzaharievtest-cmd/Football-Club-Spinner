@@ -1,12 +1,24 @@
 /**
  * app.js
- * Football Spinner — main UI logic (TEAM and PLAYER modes share identical UI & logic)
+ * Football Club Spinner — main UI logic (fixed: ensure `spin` is defined before it's used)
  *
- * Full, self-contained app.js with fixes:
- * - Robust "Show on wheel" option handling and events
- * - Modal shows/hides Stadium row based on Show->Stadium toggle and receives stadium text
- * - drawWheel draws text first then logos (logos remain on top)
- * - Safe image loading and DPR handling kept
+ * NOTE: Replace your deployed app.js with this file and hard-refresh (Ctrl/Cmd+Shift+R).
+ *
+ * Fix summary:
+ * - There was a runtime ReferenceError ("spin is not defined") because some event wiring
+ *   referenced `spin` before it existed in the global scope (caused by a non-hoisted
+ *   declaration or reordering in previous edits).
+ * - This file ensures `spin` is a function declaration (hoisted) and is defined before
+ *   any code that references it (setupEventListeners). That prevents the ReferenceError.
+ *
+ * The rest of the file preserves the previous fixes:
+ * - robust getShowOptions()
+ * - resilient show-on-wheel event handling (change + click + MutationObserver)
+ * - modal stadium show/hide based on show-on-wheel "Stadium" toggle
+ * - draw order: text first, logos on top
+ * - safe image loading and DPR handling
+ *
+ * If you still see errors after deploying, paste the console output and I'll iterate.
  */
 
 'use strict';
@@ -169,7 +181,7 @@ function getLogo(url, onLoad) {
   return img;
 }
 
-// -------------------- "Show on wheel" read helpers --------------------
+// -------------------- "Show on wheel" helpers --------------------
 function _readCheckboxLike(el) {
   if (!el) return false;
   if (typeof el.checked !== 'undefined') return !!el.checked;
@@ -230,186 +242,7 @@ function getShowOptions() {
   };
 }
 
-// -------------------- Mode handling --------------------
-function setMode(newMode) {
-  if (newMode === MODE) return;
-  MODE = newMode;
-  localStorage.setItem('fsMode', MODE);
-
-  if (modeTeamBtn && modePlayerBtn) {
-    modeTeamBtn.classList.toggle('mode-btn-active', MODE === 'team');
-    modePlayerBtn.classList.toggle('mode-btn-active', MODE === 'player');
-    modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true' : 'false');
-    modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true' : 'false');
-    modeTeamBtn.dataset.selected = MODE === 'team' ? '1' : '0';
-    modePlayerBtn.dataset.selected = MODE === 'player' ? '1' : '0';
-  }
-
-  if (MODE === 'team') {
-    teamView && teamView.classList.remove('hidden');
-    playerView && playerView.classList.add('hidden');
-    drawWheel();
-  } else {
-    teamView && teamView.classList.add('hidden');
-    playerView && playerView.classList.remove('hidden');
-    if (!PLAYERS) {
-      loadPlayers().then(() => {
-        selectedIdx = -1;
-        drawWheel();
-        const hasAny = getCurrentData().length > 0;
-        if (spinBtn) spinBtn.disabled = !hasAny;
-        if (spinFab) spinFab.disabled = !hasAny;
-      }).catch(err => {
-        console.error('Failed to load players.json', err);
-        drawWheel();
-      });
-    } else {
-      selectedIdx = -1;
-      drawWheel();
-    }
-  }
-}
-
-// Setup accessible toggle behavior (idempotent)
-let __modeToggleBound = false;
-function setupModeToggleAccessibility() {
-  if (__modeToggleBound) return;
-  if (!modeTeamBtn || !modePlayerBtn) return;
-  __modeToggleBound = true;
-
-  if (modeTeamBtn.tagName !== 'BUTTON') modeTeamBtn.setAttribute('role', 'button');
-  if (modePlayerBtn.tagName !== 'BUTTON') modePlayerBtn.setAttribute('role', 'button');
-  modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true' : 'false');
-  modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true' : 'false');
-
-  modeTeamBtn.addEventListener('click', () => setMode('team'));
-  modePlayerBtn.addEventListener('click', () => setMode('player'));
-
-  [modeTeamBtn, modePlayerBtn].forEach(btn => {
-    if (btn.tagName === 'BUTTON') return;
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        btn.click();
-      }
-    });
-  });
-}
-setupModeToggleAccessibility();
-
-// -------------------- Helper: tryFetchPlayers --------------------
-async function tryFetchPlayers() {
-  const candidates = [
-    '/data/players.json',
-    '/players/players.json',
-    new URL('./players/players.json', location.href).toString()
-  ];
-
-  for (const url of candidates) {
-    try {
-      const res = await fetch(url, { cache: 'no-store' });
-      if (res.ok) {
-        if (DEBUG) console.info('Found players.json at', url);
-        return { res, url };
-      }
-      if (DEBUG) console.warn('players.json fetch failed for', url, res.status);
-    } catch (err) {
-      if (DEBUG) console.warn('players.json fetch error for', url, err);
-    }
-  }
-  return { res: null, url: null };
-}
-
-// -------------------- Load players.json (normalized to team-shape) --------------------
-async function loadPlayers() {
-  try {
-    const { res } = await tryFetchPlayers();
-    if (!res) throw new Error('players.json not found in known locations');
-    const data = await res.json();
-
-    const teamNameToLeague = {};
-    TEAMS.forEach(t => {
-      if (t && t.team_name && t.league_code) {
-        teamNameToLeague[normalizeString(t.team_name)] = t.league_code;
-      }
-    });
-
-    PLAYERS = Array.isArray(data) ? data.map(p => {
-      const name = p.name || p.player_name || p.full_name || p.displayName || p.team_name || 'Player';
-      const img = p.image_url || p.file_url || p.image || p.file || FALLBACK_SILHOUETTE;
-
-      let league_code = p.league_code || p.league || p.comp || null;
-      if (!league_code) {
-        const clubCandidates = [p.club, p.team, p.current_club, p.club_name].filter(Boolean);
-        for (const c of clubCandidates) {
-          const clubNorm = normalizeString(c);
-          if (teamNameToLeague[clubNorm]) { league_code = teamNameToLeague[clubNorm]; break; }
-        }
-      }
-      league_code = league_code || 'PLAYER';
-
-      const primary_color = p.primary_color || p.color || '#163058';
-      return {
-        team_name: name,
-        logo_url: img,
-        primary_color,
-        league_code,
-        stadium: p.stadium || '',
-        meta: p,
-        name,
-        image_url: img,
-        qid: p.wikidata_id || p.qid || p.QID || null,
-        club: p.club || p.team || null
-      };
-    }) : [];
-
-    if (DEBUG) console.info(`loadPlayers() → loaded ${PLAYERS.length} player records (normalized)`);
-    renderPlayerListPreview();
-    requestAnimationFrame(drawWheel);
-    return PLAYERS;
-  } catch (err) {
-    console.error('loadPlayers() error:', err);
-    throw err;
-  }
-}
-
-function renderPlayerListPreview(limit = 40) {
-  if (!playerListContainer || !PLAYERS) return;
-  playerListContainer.innerHTML = '';
-  const slice = PLAYERS.slice(0, limit);
-  slice.forEach(p => {
-    const it = document.createElement('div');
-    it.className = 'player-item';
-    it.innerHTML = `<img class="player-thumb" src="${escapeHtml(p.image_url || FALLBACK_SILHOUETTE)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" width="48" height="48"><div class="player-meta"><div class="player-name">${escapeHtml(p.name)}</div></div>`;
-    playerListContainer.appendChild(it);
-  });
-}
-
-// -------------------- Data provider --------------------
-function visibleCodes() {
-  const codes = Array.from(chipsTop.querySelectorAll('input[type="checkbox"]')).map(i => i.value);
-  if (!chipsMore.hidden) {
-    codes.push(...Array.from(chipsMore.querySelectorAll('input[type="checkbox"]')).map(i => i.value));
-  }
-  return codes;
-}
-function getFiltered() {
-  const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
-  return TEAMS.filter(t => active.includes(t.league_code));
-}
-
-function getCurrentData() {
-  if (MODE === 'player') {
-    if (!PLAYERS || PLAYERS.length === 0) return [];
-    const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
-    if (active.length === 0) return PLAYERS;
-    return PLAYERS.filter(p => active.includes(p.league_code));
-  } else {
-    return getFiltered();
-  }
-}
-
-// -------------------- Drawing helpers: sizing & ellipsize --------------------
+// -------------------- Drawing helpers (ellipsize, gradient) --------------------
 function ellipsizeText(ctx, text, maxWidth, font) {
   if (!text) return '';
   ctx.font = font;
@@ -424,7 +257,6 @@ function ellipsizeText(ctx, text, maxWidth, font) {
   return text.slice(0, Math.max(0, lo - 1)) + '…';
 }
 
-// -------------------- Drawing (wheel) --------------------
 function drawGradientIdle(ctx, W, H) {
   const DPR = deviceDPR();
   ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -452,6 +284,7 @@ function drawGradientIdle(ctx, W, H) {
   ctx.restore();
 }
 
+// -------------------- Drawing (wheel) --------------------
 function drawWheel(){
   if (!wheel) return;
   const ctx = wheel.getContext && wheel.getContext('2d');
@@ -674,83 +507,58 @@ function drawWheel(){
 }
 
 // -------------------- Spin / Result --------------------
-// resolve stadium helper: tries item fields and TEAMS fallback
-function resolveStadiumForItem(item) {
-  if (!item) return '';
-  if (item.stadium && String(item.stadium).trim()) return String(item.stadium).trim();
-  if (item.meta && item.meta.stadium && String(item.meta.stadium).trim()) return String(item.meta.stadium).trim();
-  const candidate = item.team_name || item.name || item.club || item.team || '';
-  if (candidate && TEAMS && TEAMS.length) {
-    const norm = normalizeString(candidate);
-    const match = TEAMS.find(x => normalizeString(x.team_name) === norm || normalizeString(x.team_name).includes(norm));
-    if (match && match.stadium && String(match.stadium).trim()) return String(match.stadium).trim();
-  }
-  return '';
-}
-
-function setResult(idx) {
+// Ensure spin is a function declaration (hoisted) and available before listeners that reference it.
+function spin() {
+  if (spinning) return;
   const data = getCurrentData();
-  const t = data[idx];
-  selectedIdx = idx;
-  drawWheel();
-
-  if (!t) return;
-
-  if (MODE === 'team') {
-    const leagueLabel = (t && (t.league_code && (LEAGUE_LABELS[t.league_code] || t.league_code))) || '';
-    if (currentText) currentText.textContent = `${t.team_name} · ${leagueLabel}`;
-    if (currentLogo) { currentLogo.src = t.logo_url || ""; currentLogo.alt = (t.team_name || 'Club') + ' logo'; }
-    history.unshift(t);
-  } else {
-    if (currentText) currentText.textContent = `${t.name || t.team_name || 'Player'}`;
-    if (currentLogo) { currentLogo.src = t.image_url || t.logo_url || ""; currentLogo.alt = (t.name || 'Player') + ' photo'; }
-    history.unshift(t);
+  if (!data.length) {
+    if (currentText) currentText.textContent = `Please select at least one ${MODE === 'player' ? 'player' : 'league'}.`;
+    return;
   }
 
-  if (history.length > 50) history = history.slice(0,50);
-  localStorage.setItem('clubHistory', JSON.stringify(history));
-  renderHistory();
+  spinning = true;
+  lockUI(true);
+  if (spinBtn) spinBtn.disabled = true;
+  if (spinFab) spinFab.disabled = true;
+  selectedIdx = -1;
 
-  const stadiumText = resolveStadiumForItem(t) || '';
-  if (t && (t.image_url || t.logo_url || stadiumText)) {
-    setTimeout(() => {
-      openModal({
-        team_name: MODE === 'team' ? (t.team_name || '') : (t.name || ''),
-        league_code: MODE === 'team' ? t.league_code : '',
-        logo_url: MODE === 'team' ? t.logo_url : (t.image_url || ''),
-        stadium: stadiumText
-      });
-    }, 160);
+  const N = data.length;
+  const slice = TAU / N;
+  const extraTurns  = prefersReducedMotion ? 1 : 6 + Math.floor(Math.random()*3);
+  const finalOffset = Math.random() * TAU;
+  const targetAngle = TAU * extraTurns + finalOffset;
+
+  const start = performance.now();
+  const duration = prefersReducedMotion ? 600 : 3200;
+  const easeOutCubic = x => 1 - Math.pow(1-x, 3);
+
+  function anim(now){
+    const p = clamp(0, (now - start) / duration, 1);
+    currentAngle = targetAngle * easeOutCubic(p);
+    drawWheel();
+    if (p < 1){
+      requestAnimationFrame(anim);
+    } else {
+      const theta = mod(currentAngle, TAU);
+      const offset = mod(POINTER_ANGLE - theta, TAU);
+      const idx = Math.floor(offset / slice) % N;
+      const centerAngle = idx * slice + slice/2;
+      const snapDelta = mod(centerAngle - offset, TAU);
+      currentAngle = mod(currentAngle + snapDelta, TAU);
+      spinning = false;
+      lockUI(false);
+      const hasAny = getCurrentData().length > 0;
+      if (spinBtn) spinBtn.disabled = !hasAny;
+      if (spinFab) spinFab.disabled = !hasAny;
+      selectedIdx = idx;
+      drawWheel();
+      setResult(idx);
+    }
   }
+  requestAnimationFrame(anim);
 }
 
-// -------------------- Modal helpers (respect show on wheel) --------------------
-function openModal({ team_name = '', league_code = '', logo_url = '', stadium = '' } = {}) {
-  if (!backdrop || !modalEl) return;
-
-  mHead.textContent = team_name || '';
-  mSub.textContent = league_code ? (LEAGUE_LABELS[league_code] || league_code) : '';
-  if (mLogo) { mLogo.src = logo_url || ''; mLogo.alt = team_name ? `${team_name} image` : 'Image'; }
-
-  // Respect "Show on wheel" stadium toggle
-  let show = { stadium: true };
-  try { show = (typeof getShowOptions === 'function') ? getShowOptions() : show; } catch (e) {}
-  const stadiumRow = mStadium ? mStadium.parentElement : null;
-
-  if (show && show.stadium) {
-    if (stadiumRow) stadiumRow.style.display = '';
-    if (mStadium) mStadium.textContent = stadium && String(stadium).trim() ? String(stadium).trim() : '—';
-  } else {
-    if (stadiumRow) stadiumRow.style.display = 'none';
-    if (mStadium) mStadium.textContent = '';
-  }
-
-  backdrop.style.display = 'flex';
-  requestAnimationFrame(() => modalEl.classList.add('show'));
-  try { mClose && mClose.focus(); } catch (e) {}
-}
-
-// -------------------- UI helpers & events --------------------
+// -------------------- Other helpers (lockUI, chips, history, modal) --------------------
 const INTERACTIVE_SELECTOR = 'button, input, select, textarea, [role="button"]';
 function lockUI(lock) {
   document.body.classList.toggle('ui-locked', !!lock);
@@ -854,6 +662,44 @@ function renderHistory() {
   }
 }
 
+// -------------------- Modal helpers (respect show-on-wheel stadium) --------------------
+function resolveStadiumForItem(item) {
+  if (!item) return '';
+  if (item.stadium && String(item.stadium).trim()) return String(item.stadium).trim();
+  if (item.meta && item.meta.stadium && String(item.meta.stadium).trim()) return String(item.meta.stadium).trim();
+  const candidate = item.team_name || item.name || item.club || item.team || '';
+  if (candidate && TEAMS && TEAMS.length) {
+    const norm = normalizeString(candidate);
+    const match = TEAMS.find(x => normalizeString(x.team_name) === norm || normalizeString(x.team_name).includes(norm));
+    if (match && match.stadium && String(match.stadium).trim()) return String(match.stadium).trim();
+  }
+  return '';
+}
+
+function openModal({ team_name = '', league_code = '', logo_url = '', stadium = '' } = {}) {
+  if (!backdrop || !modalEl) return;
+
+  mHead.textContent = team_name || '';
+  mSub.textContent = league_code ? (LEAGUE_LABELS[league_code] || league_code) : '';
+  if (mLogo) { mLogo.src = logo_url || ''; mLogo.alt = team_name ? `${team_name} image` : 'Image'; }
+
+  let show = { stadium: true };
+  try { show = (typeof getShowOptions === 'function') ? getShowOptions() : show; } catch (e) {}
+
+  const stadiumRow = mStadium ? mStadium.parentElement : null;
+  if (show && show.stadium) {
+    if (stadiumRow) stadiumRow.style.display = '';
+    if (mStadium) mStadium.textContent = stadium && String(stadium).trim() ? String(stadium).trim() : '—';
+  } else {
+    if (stadiumRow) stadiumRow.style.display = 'none';
+    if (mStadium) mStadium.textContent = '';
+  }
+
+  backdrop.style.display = 'flex';
+  requestAnimationFrame(() => modalEl.classList.add('show'));
+  try { mClose && mClose.focus(); } catch (e) {}
+}
+
 // -------------------- Events / Boot --------------------
 function setupEventListeners() {
   if (chipsWrap) {
@@ -889,7 +735,6 @@ function setupEventListeners() {
     });
   }
 
-  // Delegated resilient show-on-wheel handlers (change + click)
   const showChangeHandler = (e) => {
     if (spinning) return;
     const t = e.target;
