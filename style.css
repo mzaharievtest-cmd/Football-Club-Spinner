@@ -486,15 +486,21 @@ canvas#wheel {
   }
 }
 
-/* Spin FAB with animated ring */
+/* Spin FAB with animated ring
+   (centered by JS with left/top; fallback keeps it centered) */
 .spin-fab {
   position: absolute;
   z-index: 5;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inset: 50% auto auto 50%;
+
+  /* Fallback center before JS positions it precisely */
+  left: 50%;
+  top: 50%;
   transform: translate(-50%, -50%);
+
   width: clamp(88px, 14vw, 132px);
   height: clamp(88px, 14vw, 132px);
   border-radius: 999px;
@@ -506,7 +512,9 @@ canvas#wheel {
   text-transform: uppercase;
   box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 0 30px rgba(90,161,255,.15);
   pointer-events: auto;
-  transition: transform .12s var(--ease), box-shadow .12s var(--ease), border-color .12s var(--ease), background .12s var(--ease);
+  transition: transform .12s var(--ease), box-shadow .12s var(--ease),
+              border-color .12s var(--ease), background .12s var(--ease);
+  will-change: left, top, transform;
 }
 .spin-fab::before {
   content: "";
