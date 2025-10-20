@@ -53,6 +53,69 @@ const perfTip = document.getElementById('perfTip');
 const wheel = document.getElementById('wheel');
 const fx = document.getElementById('fx');
 
+// ==================== PLAYER MODE wiring ====================
+const ENABLE_PLAYER = true;
+const modeTeamBtn   = document.getElementById('modeTeam');
+const modePlayerBtn = document.getElementById('modePlayer');
+const teamView      = document.getElementById('teamView');
+const playerView    = document.getElementById('playerView');
+const playerListEl  = document.getElementById('playerList');
+
+let MODE    = (localStorage.getItem('fsMode') === 'player' && ENABLE_PLAYER) ? 'player' : 'team';
+let PLAYERS = [];
+
+if (!ENABLE_PLAYER || !modePlayerBtn || !playerView) MODE = 'team';
+
+modeTeamBtn  && modeTeamBtn.addEventListener('click',  () => setMode('team'));
+modePlayerBtn&& modePlayerBtn.addEventListener('click', () => setMode('player'));
+
+function setMode(next) {
+  if (next === MODE) return;
+  if (next === 'player' && (!ENABLE_PLAYER || !playerView)) return;
+
+  MODE = next;
+  localStorage.setItem('fsMode', MODE);
+
+  modeTeamBtn   && modeTeamBtn.classList.toggle('mode-btn-active', MODE === 'team');
+  modePlayerBtn && modePlayerBtn.classList.toggle('mode-btn-active', MODE === 'player');
+  modeTeamBtn   && modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true':'false');
+  modePlayerBtn && modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true':'false');
+
+  teamView   && teamView.classList.toggle('hidden', MODE === 'player');
+  playerView && playerView.classList.toggle('hidden', MODE === 'team');
+
+  if (MODE === 'player') {
+    if (!PLAYERS.length) {
+      loadPlayers()
+        .then(() => { selectedIdx = -1; sizeCanvas(); drawWheel(); updateSpinAvailability(); })
+        .catch(err => {
+          console.warn('players.json unavailable; reverting to TEAM', err);
+          MODE = 'team';
+          setMode('team');
+        });
+    } else {
+      selectedIdx = -1; drawWheel(); updateSpinAvailability();
+    }
+  } else {
+    selectedIdx = -1; drawWheel(); updateSpinAvailability();
+  }
+}
+
+function getCurrentData() {
+  const active = Array.from(document.querySelectorAll('#chips input:checked')).map(i => i.value);
+  if (MODE === 'player') {
+    if (!PLAYERS.length) return [];
+    return active.length ? PLAYERS.filter(p => active.includes(p.league_code)) : PLAYERS;
+  }
+  return TEAMS.filter(t => active.includes(t.league_code));
+}
+
+function updateSpinAvailability() {
+  const n = getCurrentData().length;
+  spinBtn && (spinBtn.disabled = n === 0);
+  spinFab && (spinFab.disabled = n === 0);
+}
+
 // -------------------- Utils --------------------
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI / 2) + TAU) % TAU; // pointer at 12 o'clock
@@ -94,7 +157,8 @@ const LEAGUE_LABELS = {
   SWE: "Allsvenskan",
   SUI: "Super League",
   TUR: "Süper Lig",
-  UKR: "Ukrainian Premier League"
+  UKR: "Ukrainian Premier League",
+  PLAYER: "Players"
 };
 
 // -------------------- Image cache --------------------
@@ -107,6 +171,7 @@ function getLogo(url, onLoad) {
   img.crossOrigin = 'anonymous';
   img.src = url;
   img.onload = () => { onLoad && onLoad(); };
+  img.onerror = () => { onLoad && onLoad(); };
   IMG_CACHE.set(url, { img });
   return img;
 }
@@ -235,14 +300,14 @@ function setCheckedCodes(codes = []) {
   });
   selectedIdx = -1;
   drawWheel();
-  const hasAny = getFiltered().length > 0;
+  const hasAny = getCurrentData().length > 0;
   spinBtn.disabled = !hasAny;
   spinFab.disabled = !hasAny;
   if (!hasAny && currentText) currentText.textContent = 'Please select at least one league.';
   updateSelectionBanner();
 }
 
-function getFiltered() {
+function getFiltered() { // (kept for team-only internal calls)
   const active = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
   return TEAMS.filter(t => active.includes(t.league_code));
 }
@@ -365,8 +430,8 @@ window.closeModal = closeModal;
 
 // -------------------- Selection banner --------------------
 function updateSelectionBanner() {
-  const N = getFiltered().length;
-  perfTip.textContent = `${N} teams selected`;
+  const N = getCurrentData().length;
+  perfTip.textContent = `${N} ${MODE === 'player' ? 'players' : 'teams'} selected`;
 }
 
 // -------------------- Drawing (wheel) --------------------
@@ -404,7 +469,7 @@ function drawGradientIdle(ctx, W, H) {
 }
 
 function drawWheel(){
-  const data = getFiltered();
+  const data = getCurrentData();
   const N = data.length;
 
   const ctx = wheel.getContext('2d');
@@ -427,7 +492,6 @@ function drawWheel(){
   const hideLogos = N >= hideLogosThresholdDyn;
   const hideText  = N >= hideTextThresholdDyn;
 
-  // Do NOT auto-uncheck toggles; keep UI available regardless of density.
   updateSelectionBanner();
 
   ctx.imageSmoothingEnabled = !hideText;
@@ -511,7 +575,7 @@ function drawWheel(){
       const canShowStadium = !hideText && optStadium?.checked && t.stadium && maxTextWidth >= PERF.minTextWidth;
       const canShowLogo    = !hideLogos && optLogo?.checked && t.logo_url && (logoHalf * 2) >= PERF.minLogoBox;
 
-      // Unified typography & alignment for Name + Stadium
+      // Name + Stadium block
       if (canShowName || canShowStadium) {
         ctx.save();
         ctx.textAlign = 'left';
@@ -521,7 +585,6 @@ function drawWheel(){
         const strokeCol = heavy ? 'rgba(0,0,0,0.35)' : 'rgba(12,16,28,0.65)';
         const fillCol = fg;
 
-        // Fit name first (bigger)
         let namePx = 0, stadPx = 0;
         let nameFit = { text: '', fontPx: 0 };
         let stadFit = { text: '', fontPx: 0 };
@@ -537,7 +600,6 @@ function drawWheel(){
           namePx = nameFit.fontPx;
         }
 
-        // Stadium ~82% of fitted name size when both present
         const stadTarget = (canShowName && namePx) ? Math.max(8, Math.round(namePx * 0.82)) : stadiumTargetPx;
         if (canShowStadium) {
           stadFit = fitSingleLine(ctx, t.stadium || '', {
@@ -550,12 +612,10 @@ function drawWheel(){
           stadPx = stadFit.fontPx;
         }
 
-        // Vertical layout: center combined block
         const gap = (canShowName && canShowStadium) ? 3 : 0;
         const totalH = (canShowName ? namePx : 0) + (canShowStadium ? stadPx : 0) + gap;
         let yCursor = -totalH / 2;
 
-        // Draw Name
         if (canShowName) {
           yCursor += namePx / 2;
           ctx.font = `${heavy ? 900 : 800} ${namePx}px Inter, system-ui, sans-serif`;
@@ -567,7 +627,6 @@ function drawWheel(){
           yCursor += namePx / 2 + gap;
         }
 
-        // Draw Stadium (same design, slight alpha to de-emphasize)
         if (canShowStadium) {
           yCursor += stadPx / 2;
           ctx.font = `700 ${stadPx}px Inter, system-ui, sans-serif`;
@@ -636,7 +695,7 @@ function drawWheel(){
 
 // -------------------- Result + Spin --------------------
 function setResult(idx){
-  const data = getFiltered();
+  const data = getCurrentData();
   const t = data[idx];
   selectedIdx = idx;
   drawWheel();
@@ -651,14 +710,13 @@ function setResult(idx){
   saveHistory();
   renderHistory();
 
-  // Preload and decode the modal logo first so it shows instantly
   if (t.logo_url) preloadModalLogo(t.logo_url, () => openModal(t));
   else openModal(t);
 }
 
 function spin(){
   if (spinning) return;
-  const data = getFiltered();
+  const data = getCurrentData();
   if (!data.length) {
     if (currentText) currentText.textContent = 'Please select at least one league.';
     return;
@@ -700,7 +758,7 @@ function spin(){
 
       spinning = false;
       lockUI(false);
-      const hasAny = getFiltered().length > 0;
+      const hasAny = getCurrentData().length > 0;
       spinBtn.disabled = !hasAny;
       spinFab.disabled = !hasAny;
 
@@ -714,7 +772,6 @@ function spin(){
 
 // -------------------- Events / Boot --------------------
 function setupEventListeners() {
-  // helper: quick-pick active state
   function setActive(btn) {
     [qpAll, qpNone, qpTop5].forEach(b => b?.classList?.toggle('active', b === btn));
   }
@@ -734,20 +791,16 @@ function setupEventListeners() {
     else setActive(null);
   }
 
-  // Leagues toggles
   chipsWrap.addEventListener('change', () => {
     if (spinning) return;
     selectedIdx = -1;
     drawWheel();
-    const len = getFiltered().length;
-    spinBtn.disabled = len === 0;
-    spinFab.disabled = len === 0;
-    if (len === 0 && currentText) currentText.textContent = 'Please select at least one league.';
+    updateSpinAvailability();
+    if (getCurrentData().length === 0 && currentText) currentText.textContent = 'Please select at least one league.';
     updateSelectionBanner();
     updateQuickPickActive();
   });
 
-  // "Show more leagues" toggle
   toggleMore.addEventListener('click', () => {
     if (spinning) return;
     const hidden = chipsMore.hidden;
@@ -763,7 +816,6 @@ function setupEventListeners() {
     updateQuickPickActive();
   });
 
-  // Quick picks
   qpAll.onclick  = () => { if (spinning) return; setCheckedCodes(visibleCodes()); setActive(qpAll); };
   qpNone.onclick = () => { if (spinning) return; setCheckedCodes([]); setActive(qpNone); };
   qpTop5.onclick = () => {
@@ -772,7 +824,6 @@ function setupEventListeners() {
     setActive(qpTop5);
   };
 
-  // Show-on-wheel toggles — immediate redraw
   const onWheelToggleChange = () => {
     if (spinning) return;
     drawWheel();
@@ -781,19 +832,16 @@ function setupEventListeners() {
   optName?.addEventListener('change', onWheelToggleChange);
   optLogo?.addEventListener('change', onWheelToggleChange);
   optStadium?.addEventListener('change', onWheelToggleChange);
-  optLeague?.addEventListener('change', onWheelToggleChange); // NEW
+  optLeague?.addEventListener('change', onWheelToggleChange);
 
-  // Spin actions
   spinBtn.onclick = spin;
   spinFab.onclick = spin;
 
-  // History and modal
   resetHistoryBtn.addEventListener('click', () => { if (!spinning) resetHistory(); });
   mClose.onclick = () => { if (!spinning) closeModal(); };
   backdrop.addEventListener('click', e => { if(!spinning && e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e => { if(!spinning && e.key==='Escape' && isModalOpen()) closeModal(); });
 
-  // Debounced resize redraw
   let resizeTO;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
@@ -802,146 +850,106 @@ function setupEventListeners() {
 }
 
 /* ─────────────────────────────────────────────
-   SAFE PLAYER MODE – drop-in additions
+   PLAYER DATA — public image resolver + loader
    ───────────────────────────────────────────── */
 
-const ENABLE_PLAYER = true; // flip to false to hard-disable
-
-// DOM needed for the player view (optional elements -> null safe)
-const modeTeamBtn   = document.getElementById('modeTeam');
-const modePlayerBtn = document.getElementById('modePlayer');
-const teamView      = document.getElementById('teamView');
-const playerView    = document.getElementById('playerView');  // <section> for player UI (can be empty)
-const playerListEl  = document.getElementById('playerList');  // optional preview grid
-
-// App state
-let MODE    = (localStorage.getItem('fsMode') === 'player' && ENABLE_PLAYER) ? 'player' : 'team';
-let PLAYERS = [];  // normalized to your team shape { team_name, logo_url, league_code, stadium, ... }
-
-// Make TEAM the default if player UI is missing
-if (!ENABLE_PLAYER || !modePlayerBtn || !playerView) MODE = 'team';
-
-// Robust event wiring (no crashes if buttons absent)
-modeTeamBtn  && modeTeamBtn.addEventListener('click',  () => setMode('team'));
-modePlayerBtn&& modePlayerBtn.addEventListener('click', () => setMode('player'));
-
-// Centralized mode switch with guards
-function setMode(next) {
-  if (next === MODE) return;
-  if (next === 'player' && (!ENABLE_PLAYER || !playerView)) return; // hard block if not supported
-  MODE = next;
-  localStorage.setItem('fsMode', MODE);
-
-  // Visual toggle (ignore if elements missing)
-  modeTeamBtn   && modeTeamBtn.classList.toggle('mode-btn-active', MODE === 'team');
-  modePlayerBtn && modePlayerBtn.classList.toggle('mode-btn-active', MODE === 'player');
-  modeTeamBtn   && modeTeamBtn.setAttribute('aria-pressed', MODE === 'team' ? 'true':'false');
-  modePlayerBtn && modePlayerBtn.setAttribute('aria-pressed', MODE === 'player' ? 'true':'false');
-
-  // Show/Hide panels (ignore if missing)
-  teamView   && teamView.classList.toggle('hidden', MODE === 'player');
-  playerView && playerView.classList.toggle('hidden', MODE === 'team');
-
-  // Ensure data then redraw
-  if (MODE === 'player') {
-    if (!PLAYERS || PLAYERS.length === 0) {
-      loadPlayers()
-        .then(() => { selectedIdx = -1; sizeCanvas(); drawWheel(); updateSpinAvailability(); })
-        .catch(err => {
-          console.warn('players.json unavailable; reverting to TEAM', err);
-          MODE = 'team';
-          setMode('team');
-        });
-    } else {
-      selectedIdx = -1; drawWheel(); updateSpinAvailability();
-    }
-  } else {
-    selectedIdx = -1; drawWheel(); updateSpinAvailability();
-  }
+// Public-path helpers
+const FALLBACK_SILHOUETTE = '/players/silhouette-player.png';
+function resolvePublicUrl(p) {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;
+  if (p.startsWith('/')) return p;
+  return '/' + p;
+}
+function slugifyName(n) {
+  return String(n || '')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 }
 
-// Helper: set Spin button enabled/disabled for current mode
-function updateSpinAvailability() {
-  const n = getCurrentData().length;
-  const btn  = document.getElementById('spinBtn');
-  const fab  = document.getElementById('spinFab');
-  btn && (btn.disabled = n === 0);
-  fab && (fab.disabled = n === 0);
+// Map for filenames that don’t match the name slug
+const PLAYER_IMAGE_MAP = {
+  'bukayo saka': '/saka.png',
+  // add more custom mappings here if needed
+};
+
+function imageForPlayerName(name) {
+  const key = String(name || '').trim().toLowerCase();
+  if (PLAYER_IMAGE_MAP[key]) return PLAYER_IMAGE_MAP[key];
+  const slug = slugifyName(name);
+  // try grouped then flat public paths
+  return `/players/${slug}.png`; // wheel will still draw a ring if it 404s
 }
 
-// Unified “current dataset” for wheel drawing
-function getCurrentData() {
-  if (MODE === 'player') {
-    const active = Array.from(document.querySelectorAll('#chips input:checked')).map(i => i.value);
-    if (!PLAYERS || PLAYERS.length === 0) return [];
-    return active.length ? PLAYERS.filter(p => active.includes(p.league_code)) : PLAYERS;
-  }
-  // TEAM (existing)
-  const active = Array.from(document.querySelectorAll('#chips input:checked')).map(i => i.value);
-  return (window.TEAMS || []).filter(t => active.includes(t.league_code));
-}
-
-// players.json loader (multiple fallbacks, never throws uncaught)
-async function loadPlayers() {
+async function tryFetchPlayers() {
+  // Prefer /data/players.json first
   const candidates = [
-    '/players/players.json',
     '/data/players.json',
+    '/players/players.json',
     new URL('./players/players.json', location.href).toString()
   ];
-  let data = null;
   for (const url of candidates) {
     try {
       const res = await fetch(url, { cache: 'no-store' });
-      if (res.ok) { data = await res.json(); break; }
-    } catch (_) { /* try next */ }
+      if (res.ok) return { res, url };
+    } catch {}
   }
-  if (!Array.isArray(data)) throw new Error('players.json not found or invalid');
+  return { res: null, url: null };
+}
 
-  // Map to team-like objects the wheel already understands
-  const teamNameToLeague = Object.fromEntries(
-    (window.TEAMS || []).map(t => [String(t.team_name||'').toLowerCase(), t.league_code])
-  );
+async function loadPlayers() {
+  const { res } = await tryFetchPlayers();
+  if (!res) throw new Error('players.json not found');
+  const raw = await res.json();
 
-  PLAYERS = data.map(p => {
-    const name = p.name || p.player_name || p.full_name || 'Player';
-    const img  = p.image_url || p.image || p.file_url || '/players/silhouette-player.png';
-    let league = p.league_code || p.league || p.comp || null;
-    if (!league && p.club) {
-      const k = String(p.club).toLowerCase();
-      league = teamNameToLeague[k] || 'PLAYER';
+  const teamNameToLeague = {};
+  TEAMS.forEach(t => {
+    if (t?.team_name && t?.league_code) {
+      teamNameToLeague[t.team_name.trim().toLowerCase()] = t.league_code;
     }
+  });
+
+  PLAYERS = (raw || []).map(p => {
+    const name = p.name || p.player_name || 'Player';
+
+    // prefer explicit path from JSON, else derive from name; all resolved to public URL
+    const fromJson = p.image_url || p.image || p.file || p.file_url || '';
+    const img = fromJson ? resolvePublicUrl(fromJson) : imageForPlayerName(name);
+
+    const league_code =
+      p.league_code ||
+      teamNameToLeague[String(p.club || '').trim().toLowerCase()] ||
+      'PLAYER';
+
     return {
-      team_name: name,           // ← reusing existing draw code
-      logo_url: img,             //   (wheel treats this as image)
-      league_code: league || 'PLAYER',
-      primary_color: p.primary_color || '#163058',
-      stadium: p.stadium || '',
-      // keep originals if you need them later
+      team_name: name,               // wheel label
+      logo_url: img,                 // wheel image
+      league_code,
+      primary_color: '#163058',
+      stadium: '',
+      // keep extras
       name,
       image_url: img,
-      club: p.club || null
+      club: p.club || null,
+      meta: p
     };
   });
 
-  // Optional small preview
   if (playerListEl) {
     playerListEl.innerHTML = '';
-    PLAYERS.slice(0, 40).forEach(pl => {
+    PLAYERS.slice(0, 60).forEach(pl => {
       const el = document.createElement('div');
       el.className = 'player-item';
       el.innerHTML = `<img src="${pl.image_url}" alt="${pl.name}" width="40" height="40" style="border-radius:10px;object-fit:cover;margin-right:8px"> ${pl.name}`;
       playerListEl.appendChild(el);
     });
   }
+
+  requestAnimationFrame(drawWheel);
   return PLAYERS;
 }
 
-// Wheel draw: add a small guard where you read data
-// (Your existing drawWheel can stay the same, but when MODE==='player'
-// use t.team_name for text and t.logo_url for image.)
-
-
-// Boot
+// -------------------- Boot --------------------
 fetch(`./teams.json?v=${Date.now()}`)
   .then(res => res.json())
   .then(data => {
@@ -953,6 +961,9 @@ fetch(`./teams.json?v=${Date.now()}`)
     setCheckedCodes(['EPL']);   // EPL-only on first load
     drawWheel();
     setupEventListeners();
+
+    // reflect saved mode choice visually on first load
+    setMode(MODE);
   })
   .catch(err => {
     console.error('Failed to load teams.json', err);
