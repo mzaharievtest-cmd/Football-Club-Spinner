@@ -1,346 +1,133 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 generate_players_json.py
-
-Fetch ONLY Premier League players for the 2025/26 season from the
-PulseLive (premierleague.com) API and write a clean JSON:
-[{name, club, number, pos, season}].
-
-Fix for 404:
-- Get PL team IDs via /football/teams?compSeasons={season_id}&compCode=EN_PR
-  instead of /competitions/.../teams (which 404s).
-
-Usage:
-  pip3 install requests
-  python3 scripts/generate_players_json.py --out data/players.json
+Add an image_url field to each player in data/players.json by fuzzy-matching
+filenames in public/players (and public/). Leaves image_url as "" when no match.
+Creates a backup data/players.json.bak before writing.
 """
-
-from __future__ import annotations
-
+import os
 import json
-import time
-import random
-import argparse
+import unicodedata
+import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Set
+from shutil import copyfile
 
-import requests
+REPO_ROOT = Path(__file__).resolve().parents[1]  # assumes script lives in scripts/
+DATA_FILE = REPO_ROOT / "data" / "players.json"
+BACKUP_FILE = DATA_FILE.with_suffix(DATA_FILE.suffix + ".bak")
+PUBLIC_PLAYERS = REPO_ROOT / "public" / "players"
+PUBLIC_ROOT = REPO_ROOT / "public"
 
-BASE = "https://footballapi.pulselive.com/football"
-SEASON_LABEL = "2025/26"
-COMPETITION_ID = 1        # Premier League
-COMP_CODE = "EN_PR"       # Premier League comp code (defensive filter)
+def normalize_text(s: str) -> str:
+    if not s:
+        return ""
+    # Unicode normalize, remove diacritics
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(ch for ch in s if not unicodedata.combining(ch))
+    # remove leading digits and punctuation
+    s = re.sub(r'^[\d\W_]+', '', s)
+    # remove parenthesized content
+    s = re.sub(r'\(.*?\)', ' ', s)
+    # strip non-alphanumeric to spaces
+    s = re.sub(r'[^a-zA-Z0-9]+', ' ', s)
+    s = s.strip().lower()
+    s = re.sub(r'\s+', ' ', s)
+    return s
 
-HEADERS = {
-    "User-Agent": ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                   "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"),
-    "Origin": "https://www.premierleague.com",
-    "Referer": "https://www.premierleague.com/",
-    "Accept": "application/json",
-}
-SESSION = requests.Session()
-SESSION.headers.update(HEADERS)
-
-
-# ---------- utils ----------
-
-def jitter(min_ms=60, max_ms=140):
-    time.sleep(random.uniform(min_ms/1000.0, max_ms/1000.0))
-
-
-def get_json(url: str, params: Dict[str, Any] | None = None, max_retries: int = 4) -> Any:
-    attempt = 0
-    while True:
-        try:
-            r = SESSION.get(url, params=params, timeout=25)
-            if r.status_code in (429, 502, 503, 504):
-                attempt += 1
-                if attempt > max_retries:
-                    r.raise_for_status()
-                time.sleep(min(1.5 ** attempt, 10.0))
+def build_filename_index():
+    index = []
+    if PUBLIC_PLAYERS.exists() and PUBLIC_PLAYERS.is_dir():
+        for fname in sorted(os.listdir(PUBLIC_PLAYERS)):
+            if fname.startswith('.'):
                 continue
-            r.raise_for_status()
-            return r.json()
-        except requests.RequestException:
-            attempt += 1
-            if attempt > max_retries:
-                raise
-            time.sleep(0.8 * attempt + random.random() * 0.5)
+            index.append({
+                "src": f"/players/{fname}",
+                "file": fname,
+                "norm": normalize_text(fname)
+            })
+    if PUBLIC_ROOT.exists() and PUBLIC_ROOT.is_dir():
+        for fname in sorted(os.listdir(PUBLIC_ROOT)):
+            if fname.startswith('.') or (PUBLIC_PLAYERS.exists() and (PUBLIC_PLAYERS / fname).exists()):
+                continue
+            index.append({
+                "src": f"/{fname}",
+                "file": fname,
+                "norm": normalize_text(fname)
+            })
+    return index
 
-
-def normalize_listish(data: Any, preferred_keys: Tuple[str, ...]) -> List[Dict[str, Any]]:
-    """Return first list-of-dicts found under given keys or the value itself if it's already a list."""
-    if isinstance(data, list):
-        return [x for x in data if isinstance(x, dict)]
-    if isinstance(data, dict):
-        for k in preferred_keys:
-            v = data.get(k)
-            if isinstance(v, list) and (not v or isinstance(v[0], dict)):
-                return [x for x in v if isinstance(x, dict)]
-        for v in data.values():
-            if isinstance(v, list) and v and isinstance(v[0], dict):
-                return v
-    return []
-
-
-# ---------- season & teams ----------
-
-def find_season_id(label_want: str = SEASON_LABEL) -> int:
-    """Resolve compSeason id for the given label (e.g., '2025/26')."""
-    url = f"{BASE}/competitions/{COMPETITION_ID}/compseasons"
-    data = get_json(url)
-    items = normalize_listish(data, ("content", "compSeasons", "seasons", "data"))
-
-    # direct match
-    for s in items:
-        lab = s.get("label") or s.get("name") or s.get("abbr")
-        if lab == label_want:
-            return int(s["id"])
-
-    # nested fallback
-    for s in items:
-        details = s.get("compSeason") or s.get("season") or {}
-        lab = (isinstance(details, dict) and (details.get("label") or details.get("name"))) or None
-        if lab == label_want:
-            return int(s.get("id") or details.get("id"))
-
-    labels = []
-    for s in items:
-        labels.append(
-            s.get("label") or s.get("name") or s.get("abbr")
-            or ((s.get("compSeason") or {}).get("label"))
-            or ((s.get("season") or {}).get("label"))
-        )
-    raise RuntimeError(f"Season '{label_want}' not found. Saw labels: {sorted(set([x for x in labels if x]))}")
-
-
-def fetch_pl_team_map(season_id: int) -> Dict[int, str]:
-    """
-    Return {team_id: team_name} for *Premier League* clubs in that compSeason.
-    Uses /teams?compSeasons={season_id}&compCode=EN_PR&teamType=CLUB
-    """
-    url = f"{BASE}/teams"
-    params = {
-        "compSeasons": season_id,
-        "compCode": COMP_CODE,
-        "pageSize": 100,
-        "page": 0,
-        "teamType": "CLUB",  # defensive
-    }
-    data = get_json(url, params=params)
-    items = normalize_listish(data, ("content", "teams", "data"))
-
-    team_map: Dict[int, str] = {}
-    for t in items:
-        # team id/name may appear in different shapes
-        tid = None
-        for k in ("id",):
-            if k in t:
-                try:
-                    tid = int(t[k])
-                    break
-                except Exception:
-                    pass
-        if tid is None and isinstance(t.get("team"), dict) and "id" in t["team"]:
-            try:
-                tid = int(t["team"]["id"])
-            except Exception:
-                pass
-
-        if tid is None:
-            continue
-
-        name = (
-            t.get("name")
-            or (t.get("team") or {}).get("name")
-            or (t.get("club") or {}).get("name")
-            or t.get("label")
-        )
-        if isinstance(name, str) and name.strip():
-            team_map[tid] = name.strip()
-
-    if not team_map:
-        raise RuntimeError("No PL teams resolved from /teams; endpoint shape may have changed.")
-    return team_map
-
-
-# ---------- field extraction ----------
-
-def pos_to_code(label: Optional[str]) -> Optional[str]:
-    if not label:
+def best_match(player: dict, index: list):
+    name = (player.get("name") or player.get("player_name") or "").strip()
+    if not name:
         return None
-    t = label.strip().lower()
-    if "goalkeeper" in t or t == "gk":
-        return "GK"
-    if "defender" in t or t == "df" or "back" in t:
-        return "DF"
-    if "midfielder" in t or t == "mf" or "midfield" in t:
-        return "MF"
-    if "forward" in t or t == "fw" or "striker" in t or "winger" in t:
-        return "FW"
+    club = str(player.get("club") or player.get("team") or "").strip()
+    norm_name = normalize_text(name)
+    if not norm_name:
+        return None
+    tokens = [t for t in norm_name.split() if t]
+    last = tokens[-1] if tokens else ""
+    first_last = f"{tokens[0]} {last}" if len(tokens) >= 2 else norm_name
+    norm_club = normalize_text(club)
+
+    # 1) full name substring
+    for f in index:
+        if norm_name in f["norm"]:
+            return f["src"]
+    # 2) last name substring
+    if last:
+        for f in index:
+            if last in f["norm"]:
+                return f["src"]
+    # 3) first+last
+    for f in index:
+        if first_last in f["norm"]:
+            return f["src"]
+    # 4) all tokens present (any order)
+    for f in index:
+        if all(tok in f["norm"] for tok in tokens):
+            return f["src"]
+    # 5) club substring
+    if norm_club:
+        for f in index:
+            if norm_club in f["norm"]:
+                return f["src"]
     return None
-
-
-def extract_name(p: Dict[str, Any]) -> str:
-    for key in ("displayName", "name", "label"):
-        v = p.get(key)
-        if isinstance(v, str) and v.strip():
-            return v.strip()
-    try:
-        return p["name"]["display"].strip()
-    except Exception:
-        pass
-    first = (p.get("firstName") or "").strip()
-    last = (p.get("lastName") or "").strip()
-    combo = (first + " " + last).strip()
-    return combo or "Unknown"
-
-
-def extract_club_and_id(p: Dict[str, Any]) -> Tuple[Optional[int], Optional[str]]:
-    ct = p.get("currentTeam") or p.get("team") or {}
-    tid = None
-    tname = None
-    if isinstance(ct, dict):
-        if "id" in ct:
-            try:
-                tid = int(ct["id"])
-            except Exception:
-                pass
-        if tid is None and isinstance(ct.get("club"), dict) and "id" in ct["club"]:
-            try:
-                tid = int(ct["club"]["id"])
-            except Exception:
-                pass
-        for k in ("name", "club", "label"):
-            v = ct.get(k)
-            if isinstance(v, str) and v.strip():
-                tname = v.strip()
-                break
-        if not tname and isinstance(ct.get("club"), dict):
-            v = ct["club"].get("name") or ct["club"].get("label")
-            if isinstance(v, str) and v.strip():
-                tname = v.strip()
-    return tid, tname
-
-
-def extract_number(p: Dict[str, Any]) -> Optional[str]:
-    for k in ("shirtNum", "shirtNumber", "number"):
-        v = p.get(k)
-        if v is not None:
-            return str(v)
-    info = p.get("info")
-    if isinstance(info, dict):
-        v = info.get("shirtNum") or info.get("number")
-        if v is not None:
-            return str(v)
-    return None
-
-
-def extract_position_label(p: Dict[str, Any]) -> Optional[str]:
-    info = p.get("info")
-    if isinstance(info, dict):
-        pos = info.get("position")
-        if isinstance(pos, dict):
-            lab = pos.get("label") or pos.get("name")
-            if isinstance(lab, str) and lab.strip():
-                return lab.strip()
-    pos = p.get("position")
-    if isinstance(pos, dict):
-        lab = pos.get("label") or pos.get("name")
-        if isinstance(lab, str) and lab.strip():
-            return lab.strip()
-    if isinstance(pos, str) and pos.strip():
-        return pos.strip()
-    return None
-
-
-# ---------- main fetch ----------
-
-def fetch_players_for_season_filtered(season_id: int, allowed_team_ids: Set[int], team_name_map: Dict[int, str]) -> List[Dict[str, Any]]:
-    out: List[Dict[str, Any]] = []
-    page = 0
-    page_size = 120  # players endpoint accepts 100–120 comfortably
-
-    while True:
-        params = {
-            "page": page,
-            "pageSize": page_size,
-            "compSeasons": season_id,
-            "compCode": COMP_CODE,
-        }
-        data = get_json(f"{BASE}/players", params=params)
-        items = normalize_listish(data, ("content", "players", "data"))
-        if not items:
-            break
-
-        for p in items:
-            tid, tname = extract_club_and_id(p)
-
-            # Keep only players whose current team is one of the PL teams in this season
-            if tid is None or tid not in allowed_team_ids:
-                continue
-
-            club = team_name_map.get(tid, tname)
-            rec = {
-                "name": extract_name(p),
-                "club": club,
-                "number": extract_number(p),
-                "pos": pos_to_code(extract_position_label(p)),
-                "season": "2025–26 Premier League",
-            }
-            out.append(rec)
-
-        page += 1
-        jitter()
-
-    # De-dup
-    seen: Set[Tuple[str, Optional[str], Optional[str]]] = set()
-    uniq: List[Dict[str, Any]] = []
-    for r in out:
-        key = (r["name"], r.get("club"), r.get("number"))
-        if key in seen:
-            continue
-        seen.add(key)
-        uniq.append(r)
-    return uniq
-
 
 def main():
-    ap = argparse.ArgumentParser(description="Generate 2025/26 Premier League players (PL teams only).")
-    ap.add_argument("--out", default="data/players.json", help="Output JSON path")
-    args = ap.parse_args()
+    if not DATA_FILE.exists():
+        print(f"data/players.json not found at {DATA_FILE}. Aborting.")
+        return
 
-    out_path = Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    # load players
+    with DATA_FILE.open("r", encoding="utf-8") as fh:
+        data = json.load(fh)
+    if not isinstance(data, list):
+        print("Expected players.json to contain a JSON array.")
+        return
 
-    print(f"Resolving compSeason for '{SEASON_LABEL}'…")
-    season_id = find_season_id(SEASON_LABEL)
-    print("season_id:", season_id)
+    # backup
+    copyfile(DATA_FILE, BACKUP_FILE)
+    print(f"Backup written to {BACKUP_FILE}")
 
-    print("Fetching Premier League teams for that season via /teams…")
-    team_map = fetch_pl_team_map(season_id)   # {team_id: name}
-    allowed_ids = set(team_map.keys())
-    print(f"PL teams resolved: {len(allowed_ids)}")
+    index = build_filename_index()
+    print(f"Scanned {len(index)} candidate image files")
 
-    print("Fetching players and filtering by PL teams…")
-    players = fetch_players_for_season_filtered(season_id, allowed_ids, team_map)
-    print(f"Kept {len(players)} players after PL-team filter. Writing file…")
+    updated = []
+    changed = 0
+    for p in data:
+        match = best_match(p, index)
+        image_url = match or ""  # empty string when no confident match (per your choice)
+        if p.get("image_url") != image_url:
+            changed += 1
+        newp = dict(p)
+        newp["image_url"] = image_url
+        updated.append(newp)
 
-    # Sort: club, number (numeric), name
-    def _num_key(v: Optional[str]):
-        if v is None:
-            return (9999, "")
-        try:
-            return (int(v), "")
-        except Exception:
-            return (9998, v)
-
-    players.sort(key=lambda r: ((r.get("club") or "~~~"), _num_key(r.get("number")), (r.get("name") or "")))
-
-    out_path.write_text(json.dumps(players, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Done. Wrote {len(players)} players to {out_path}")
-
+    # write back
+    with DATA_FILE.open("w", encoding="utf-8") as fh:
+        json.dump(updated, fh, indent=2, ensure_ascii=False)
+        fh.write("\n")
+    print(f"Updated {changed} entries in {DATA_FILE}")
 
 if __name__ == "__main__":
     main()
