@@ -1,4 +1,3 @@
-// scripts/fetch_players_apifootball.js
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
@@ -6,8 +5,8 @@ import fetch from 'node-fetch';
 
 const API_KEY   = process.env.APIFOOTBALL_KEY;
 const LEAGUE_ID = process.env.LEAGUE_ID || '39';       // EPL
-// IMPORTANT: API-Football uses the SEASON START YEAR (2024 => 2024/25)
-const SEASON    = Number(process.env.SEASON || 2024);
+// IMPORTANT: API-Football uses the SEASON START YEAR (2025 => 2025/26)
+const SEASON    = Number(process.env.SEASON || 2025);
 const OUT_FILE  = process.env.OUT_FILE || './data/players.json';
 
 const BASE    = 'https://v3.football.api-sports.io';
@@ -87,7 +86,7 @@ async function getPlayersBySeason(teamId, season) {
 /* 4) Orchestrate */
 async function main() {
   console.log(`League: ${LEAGUE_ID}`);
-  console.log(`Season: ${SEASON} (start year → e.g. 2024 = 2024/25)`);
+  console.log(`Season: ${SEASON} (start year → e.g. 2025 = 2025/26)`);
 
   const teams = await getTeamsFromStandings({ leagueId: LEAGUE_ID, season: SEASON });
   console.log(`Teams returned: ${teams.length}`);
@@ -135,7 +134,7 @@ async function main() {
     return true;
   });
 
-  fs.writeFileSync(OUT_FILE, JSON.stringify(unique, null, 2));
+  fs.writeFileSync(OUT_FILE, JSON.stringify(unique, null, 2) + '\n');
   console.log(`Done. Wrote ${unique.length} players to ${OUT_FILE}`);
 }
 
