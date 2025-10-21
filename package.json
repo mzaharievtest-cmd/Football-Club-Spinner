@@ -1,14 +1,15 @@
 {
-  "name": "footballspinner",
+  "name": "football-club-spinner",
+  "private": true,
   "version": "1.0.0",
-  "type": "module",
+  "license": "MIT",
   "scripts": {
+    "stadiums:fill": "node scripts/fill-stadiums.js --write",
+    "stadiums:check": "node scripts/fill-stadiums.js --check --fail-on-missing",
     "fetch:players": "node scripts/fetch_players_sportmonks.js"
   },
   "dependencies": {
-    "axios": "^1.7.0",
-    "dotenv": "^17.2.3",
-    "fs-extra": "^11.2.0",
-    "p-limit": "^5.0.0"
+    "dotenv": "^16.0.0",
+    "node-fetch": "^2.6.9"
   }
 }
