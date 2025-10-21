@@ -5,6 +5,11 @@
   "license": "MIT",
   "scripts": {
     "stadiums:fill": "node scripts/fill-stadiums.js --write",
-    "stadiums:check": "node scripts/fill-stadiums.js --check --fail-on-missing"
+    "stadiums:check": "node scripts/fill-stadiums.js --check --fail-on-missing",
+    "fetch:players": "node scripts/fetch_players_sportmonks.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "node-fetch": "^2.6.9"
   }
 }
