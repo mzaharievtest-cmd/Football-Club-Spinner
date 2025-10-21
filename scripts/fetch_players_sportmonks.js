@@ -1,34 +1,28 @@
+// Replace the top of scripts/fetch_players_sportmonks.js with this block
+
 #!/usr/bin/env node
-/**
- * Fetch EPL players from Sportmonks (v3) squads endpoint and write data/players.json
- *
- * Env:
- *  - SPORTMONKS_TOKEN (required)
- *  - SEASON_ID       (required) -> used in filters=playerstatisticSeasons:{SEASON_ID}
- *  - TEAM_IDS        (required) -> comma-separated Sportmonks team IDs
- *  - OUT_FILE        (optional) -> default: ./data/players.json
- *
- * Usage:
- *  node scripts/fetch_players_sportmonks.js
- *
- * Notes:
- *  - We normalize each player into your app's shape:
- *      { name, club, number, pos, season, image_url, league_code }
- *  - league_code is set to 'EPL' for your wheel filters.
- */
+import 'dotenv/config';
+import fs from 'fs';
+import path from 'path';
+import fetch from 'node-fetch';
 
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config();
+// Accept either SPORTMONKS_KEY or SPORTMONKS_TOKEN
+const SPORTMONKS_KEY = process.env.SPORTMONKS_KEY || process.env.SPORTMONKS_TOKEN;
+// Accept either SEASON_ID or SPORTMONKS_SEASON_ID
+const SEASON_ID = process.env.SEASON_ID || process.env.SPORTMONKS_SEASON_ID;
 
-const TOKEN     = process.env.SPORTMONKS_TOKEN;
-const SEASON_ID = process.env.SEASON_ID;
-const TEAM_IDS  = (process.env.TEAM_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
-const OUT_FILE  = process.env.OUT_FILE || path.resolve(__dirname, '..', 'data', 'players.json');
+const TEAM_IDS = process.env.TEAM_IDS ? process.env.TEAM_IDS.split(',').map(s => s.trim()).filter(Boolean) : null;
+const OUT_FILE = process.env.OUT_FILE || './data/players.json';
+const RATE_DELAY_MS = parseInt(process.env.RATE_DELAY_MS || '200', 10);
+const MAX_RETRIES = parseInt(process.env.MAX_RETRIES || '3', 10);
 
-if (!TOKEN)    exit('Missing SPORTMONKS_TOKEN in .env');
-if (!SEASON_ID) exit('Missing SEASON_ID in .env');
-if (!TEAM_IDS.length) exit('Missing TEAM_IDS in .env (comma-separated IDs)');
+if (!SPORTMONKS_KEY) {
+  console.error('Missing SPORTMONKS_KEY (or SPORTMONKS_TOKEN) in env/.env');
+  process.exit(1);
+}
+if (!SEASON_ID && !TEAM_IDS) {
+  console.error('Missing SEASON_ID (or SPORTMONKS_SEASON_ID) in env/.env (or provide TEAM_IDS). Aborting.');
+  process.exit(1);
 
 const BASE = 'https://api.sportmonks.com/v3/football';
 const INCLUDE = 'team;player.nationality;player.statistics.details.type;player.position';
