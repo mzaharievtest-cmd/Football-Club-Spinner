@@ -1,363 +1,423 @@
-#!/usr/bin/env node
-/**
- * scripts/fetch_players_sportmonks.js (improved fallbacks)
- *
- * - Accepts SPORTMONKS_KEY or SPORTMONKS_TOKEN
- * - Accepts SEASON_ID or SPORTMONKS_SEASON_ID
- * - Tries squads with filters -> squads without filters -> players-by-team -> teams/{id}
- * - Writes debug dumps into tmp/api-dumps for non-200/empty responses
- * - Backups existing data/players.json to data/players.json.bak
- *
- * Usage:
- *   - place .env in repo root with SPORTMONKS_KEY (or SPORTMONKS_TOKEN) and SEASON_ID
- *   - node scripts/fetch_players_sportmonks.js
- */
+// scripts/fetch_players_sportmonks.js
+// Fetch Premier League squads from Sportmonks v3 and normalize to data/players.json
+// - Uses TEAM_IDS from .env when present (recommended).
+// - Otherwise can discover the season using LEAGUE_ID + SEASON_NAME.
+// - Safe retries, rate-limit handling, error dumps, and backups.
 
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config();
+import 'dotenv/config';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const SPORTMONKS_KEY = process.env.SPORTMONKS_KEY || process.env.SPORTMONKS_TOKEN;
-const SEASON_ID = process.env.SEASON_ID || process.env.SPORTMONKS_SEASON_ID;
-const TEAM_IDS = process.env.TEAM_IDS ? process.env.TEAM_IDS.split(',').map(s => s.trim()).filter(Boolean) : null;
-const OUT_FILE = process.env.OUT_FILE || './data/players.json';
-const RATE_DELAY_MS = parseInt(process.env.RATE_DELAY_MS || '200', 10);
-const MAX_RETRIES = parseInt(process.env.MAX_RETRIES || '3', 10);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
 
-if (!SPORTMONKS_KEY) {
-  console.error('Missing SPORTMONKS_KEY (or SPORTMONKS_TOKEN) in environment/.env');
-  process.exit(1);
+// ───────────────────────────────────────────────────────────────────────────────
+// Config
+// ───────────────────────────────────────────────────────────────────────────────
+const {
+  SPORTMONKS_TOKEN,
+  TEAM_IDS,                // comma-separated list of team IDs (preferred)
+  SEASON_ID,               // numeric season id; if missing we can discover via LEAGUE_ID + SEASON_NAME
+  LEAGUE_ID,               // numeric league id (e.g., 8 = EPL) (optional)
+  SEASON_NAME,             // e.g., "2025/2026" (optional, used with LEAGUE_ID)
+  SPORTMONKS_TIMEZONE = 'Europe/London',
+  OUT = 'data/players.json', // output file
+} = process.env;
+
+const API_BASE = 'https://api.sportmonks.com/v3/football';
+
+// Change includes/filters here if your plan requires fewer expansions
+const SQUAD_INCLUDES = [
+  'team',
+  'player.nationality',
+  'player.statistics.details.type',
+  'player.position',
+].join(',');
+
+// Example filter to pin statistics to a season. If SEASON_ID is missing, we skip the filter.
+const makeSeasonFilter = (seasonId) =>
+  seasonId ? `playerstatisticSeasons:${seasonId}` : '';
+
+const OUT_PATH          = path.resolve(process.cwd(), OUT);
+const OUT_DIR           = path.dirname(OUT_PATH);
+const BACKUP_PATH       = `${OUT_PATH}.bak`;
+const DUMPS_DIR         = path.resolve(process.cwd(), 'tmp/api-dumps');
+
+const MAX_RETRIES       = 3;
+const BASE_DELAY_MS     = 600;   // backoff base
+const HARD_RATE_SLEEP   = 4000;  // extra sleep on 429/too-many
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Utils
+// ───────────────────────────────────────────────────────────────────────────────
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function q(params) {
+  const usp = new URLSearchParams(params);
+  return usp.toString();
 }
-if (!SEASON_ID && !TEAM_IDS) {
-  console.error('Missing SEASON_ID (or SPORTMONKS_SEASON_ID) in environment/.env (or provide TEAM_IDS). Aborting.');
-  process.exit(1);
+
+async function ensureDir(p) {
+  await fs.mkdir(p, { recursive: true }).catch(() => {});
 }
 
-let fetchFn = global.fetch;
-if (!fetchFn) {
+async function loadJSONMaybe(file) {
   try {
-    fetchFn = require('node-fetch');
-  } catch (e) {
-    console.error('No global fetch and node-fetch not available. Please run on Node 18+ or install node-fetch.');
-    process.exit(1);
+    const buf = await fs.readFile(file, 'utf8');
+    return JSON.parse(buf);
+  } catch {
+    return null;
   }
 }
 
-const BASE = 'https://api.sportmonks.com/v3/football';
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const ensureDir = d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); };
-
-async function apiRaw(pathname, params = {}) {
-  const url = new URL(`${BASE}${pathname}`);
-  url.searchParams.set('api_token', SPORTMONKS_KEY);
-  Object.entries(params || {}).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, String(v));
-  });
-  const urlStr = url.toString();
-  const res = await fetchFn(urlStr, { headers: { Accept: 'application/json' } });
-  const text = await res.text().catch(() => '');
-  return { status: res.status, text, url: urlStr };
+async function writePrettyJSON(file, data) {
+  await ensureDir(path.dirname(file));
+  await fs.writeFile(file, JSON.stringify(data, null, 2) + '\n', 'utf8');
 }
 
-async function apiJson(pathname, params = {}) {
-  const { status, text, url } = await apiRaw(pathname, params);
-  if (status < 200 || status >= 300) {
-    const err = new Error(`${status} ${url}\n${text}`);
-    err.status = status;
-    err.text = text;
+function logBanner(msg) {
+  const line = '—'.repeat(Math.max(8, msg.length));
+  console.log(line);
+  console.log(msg);
+  console.log(line);
+}
+
+// Minimal wrapper around fetch with retry + basic RL handling
+async function getJson(url, { attempt = 1 } = {}) {
+  const headers = { Accept: 'application/json' };
+  let res;
+  try {
+    res = await fetch(url, { headers });
+  } catch (err) {
+    if (attempt < MAX_RETRIES) {
+      await sleep(BASE_DELAY_MS * attempt);
+      return getJson(url, { attempt: attempt + 1 });
+    }
     throw err;
   }
-  try {
-    return JSON.parse(text || '{}');
-  } catch (e) {
-    throw new Error(`Invalid JSON ${url}: ${e.message}\n${(text||'').slice(0,1000)}`);
-  }
-}
 
-function dumpResponse(teamId, suffix, content) {
-  try {
-    const dir = path.join('tmp', 'api-dumps');
-    ensureDir(dir);
-    const file = path.join(dir, `team-${teamId}-${suffix}.json`);
-    fs.writeFileSync(file, typeof content === 'string' ? content : JSON.stringify(content, null, 2), 'utf8');
-    console.log(`  (dumped API response to ${file})`);
-  } catch (e) {
-    console.warn('  Failed to write dump:', e.message);
-  }
-}
-
-// Discover teams for the season using /teams/season/{season_id}
-async function discoverTeamsBySeason(seasonId) {
-  const path = `/teams/season/${encodeURIComponent(seasonId)}`;
-  const json = await apiJson(path);
-  const teams = [];
-  if (json && Array.isArray(json.data) && json.data.length) {
-    for (const t of json.data) {
-      const id = t.id || (t.team && t.team.data && t.team.data.id);
-      const name = t.name || (t.team && t.team.data && t.team.data.name) || (t.attributes && (t.attributes.name || t.attributes.common_name));
-      const image = t.logo || t.image_path || (t.team && t.team.data && t.team.data.image_path) || '';
-      if (id && name) teams.push({ id: String(id), name: String(name), image_path: image });
-    }
-  }
-  return teams;
-}
-
-// Primary attempt: squads endpoint with filters (season); fallback chain implemented below
-async function fetchSquadForTeamWithFallbacks(teamId, seasonFilterId) {
-  // 1) try squads with filters (as before)
-  const include = [
-    'team',
-    'player.nationality',
-    'player.statistics.details.type',
-    'player.position'
-  ].join(',');
-  const filteredParams = { include, filters: seasonFilterId ? `playerstatisticSeasons:${seasonFilterId}` : '' };
-
-  try {
-    // try filtered squads
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const json = await apiJson(`/squads/teams/${encodeURIComponent(teamId)}`, filteredParams);
-        return { source: 'squads_filtered', json };
-      } catch (err) {
-        // if 404 specifically, break to try alternate endpoints earlier
-        if (err.status === 404) {
-          dumpResponse(teamId, `squads-filter-404-attempt-${attempt}`, { status: err.status, text: err.text || '' });
-          break;
-        }
-        dumpResponse(teamId, `squads-filter-error-attempt-${attempt}`, { status: err.status || 'err', text: err.text || err.message });
-        if (attempt < MAX_RETRIES) await sleep(250 * attempt);
-        else throw err;
-      }
-    }
-  } catch (e) {
-    // swallow here and proceed to fallbacks
-  }
-
-  // 2) try squads without filters (sometimes the filter causes Not Found)
-  try {
-    const paramsNoFilter = { include };
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const json = await apiJson(`/squads/teams/${encodeURIComponent(teamId)}`, paramsNoFilter);
-        return { source: 'squads_unfiltered', json };
-      } catch (err) {
-        dumpResponse(teamId, `squads-unfilter-error-attempt-${attempt}`, { status: err.status || 'err', text: err.text || err.message });
-        if (err.status === 404) break; // not present at all
-        if (attempt < MAX_RETRIES) await sleep(200 * attempt);
-        else throw err;
-      }
-    }
-  } catch (e) {
-    // continue to next fallback
-  }
-
-  // 3) try players-by-team endpoint variants (SportMonks shape varies by plan)
-  // Common possibilities:
-  //   /players/teams/{teamId}
-  //   /players/team/{teamId}  (some APIs)
-  // We'll attempt two variants; dump responses for inspection.
-  const playerPaths = [
-    `/players/teams/${encodeURIComponent(teamId)}`,
-    `/players/team/${encodeURIComponent(teamId)}`,
-    `/players?team_id=${encodeURIComponent(teamId)}` // as a final general attempt
-  ];
-  for (const p of playerPaths) {
-    try {
-      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-        try {
-          const json = await apiJson(p, {}); // no include/filters here
-          return { source: p, json };
-        } catch (err) {
-          dumpResponse(teamId, `players-fallback-${encodeURIComponent(p)}-attempt-${attempt}`, { status: err.status || 'err', text: err.text || err.message });
-          if (attempt < MAX_RETRIES) await sleep(200 * attempt);
-          else break;
-        }
-      }
-    } catch (e) {
-      // try next path
+  // Rate limited?
+  if (res.status === 429) {
+    const ra = parseInt(res.headers.get('retry-after') || '0', 10);
+    const wait = Math.max(HARD_RATE_SLEEP, (isNaN(ra) ? 0 : ra * 1000));
+    console.warn(`429 rate-limit — sleeping ${wait}ms then retrying…`);
+    await sleep(wait);
+    if (attempt < MAX_RETRIES) {
+      return getJson(url, { attempt: attempt + 1 });
     }
   }
 
-  // 4) Last attempt: fetch team resource to see if it carries squad info
-  try {
-    const json = await apiJson(`/teams/${encodeURIComponent(teamId)}`);
-    // return so calling code can inspect json and extract squad if present
-    return { source: 'teams', json };
-  } catch (err) {
-    dumpResponse(teamId, 'teams-endpoint-error', { status: err.status || 'err', text: err.text || err.message });
-  }
-
-  // nothing worked
-  return { source: 'none', json: null };
-}
-
-function findIncludedPlayer(included, playerId) {
-  if (!Array.isArray(included)) return null;
-  const pid = String(playerId);
-  for (const inc of included) {
-    try {
-      const idVal = inc.id || (inc.attributes && (inc.attributes.player_id || inc.attributes.id));
-      const type = inc.type || '';
-      if (String(idVal) === pid && (type === 'player' || type === 'players' || (inc.attributes && (inc.attributes.name || inc.attributes.common_name)))) {
-        return inc;
-      }
-    } catch (e) {}
-  }
-  return null;
-}
-
-function normalizeSquadItem(item, included, teamName) {
-  let player = null;
-  if (item.player && typeof item.player === 'object') player = item.player;
-  else if (item.player && item.player.data) player = item.player.data;
-  else if (item.player_id) {
-    const inc = findIncludedPlayer(included, item.player_id);
-    if (inc) player = inc.attributes || inc;
-    else player = { id: item.player_id };
-  } else if (item.player && item.player.id) player = item.player;
-
-  if (player && player.attributes) player = Object.assign({}, player.attributes, { id: player.id });
-
-  const name = (player && (player.name || player.common_name || player.display_name || player.fullname)) || '';
-  const image = (player && (player.image_path || player.image || player.avatar)) || '';
-  const number = (item.jersey_number != null ? String(item.jersey_number)
-               : item.jerseyNumber != null ? String(item.jerseyNumber)
-               : (player && player.number != null ? String(player.number) : '')) || '';
-  const pos = item.position_name || item.position || (player && (player.position && (player.position.name || player.position))) || '';
-  const club = (item.team && (item.team.name || item.team.data?.name)) || teamName || '';
-
-  return {
-    name: String(name).trim(),
-    club: String(club || '').trim(),
-    number: String(number || '').trim(),
-    pos: String(pos || '').trim(),
-    season: String(SEASON_ID),
-    image_url: image || ''
-  };
-}
-
-async function main() {
-  console.log('SportMonks squad fetcher (with robust fallbacks)');
-  console.log(`Season id: ${SEASON_ID}`);
-  console.log(`Team override (TEAM_IDS): ${TEAM_IDS ? TEAM_IDS.join(',') : '(none)'}`);
-
-  ensureDir(path.dirname(OUT_FILE));
-  ensureDir(path.join('tmp','api-dumps'));
-
-  let teams = [];
-  if (TEAM_IDS && TEAM_IDS.length) {
-    teams = TEAM_IDS.map(id => ({ id: String(id), name: '' }));
-  } else {
-    try {
-      console.log('Discovering teams for season via /teams/season/{season_id} ...');
-      const discovered = await discoverTeamsBySeason(SEASON_ID);
-      if (!discovered || discovered.length === 0) {
-        console.warn('No teams discovered for season. Consider setting TEAM_IDS env.');
-      } else {
-        teams = discovered;
-      }
-    } catch (err) {
-      console.warn('Failed to discover teams:', err.message);
-      console.warn('Set TEAM_IDS env to a comma-separated list of team ids to proceed.');
-      process.exitCode = 1;
-      return;
+  // Other transient server errors
+  if (res.status >= 500 && res.status <= 599) {
+    if (attempt < MAX_RETRIES) {
+      await sleep(BASE_DELAY_MS * attempt);
+      return getJson(url, { attempt: attempt + 1 });
     }
   }
 
-  console.log(`Teams to fetch: ${teams.length}`);
-  const out = [];
+  // Parse body (JSON or text)
+  let bodyText = '';
+  let data = null;
+  try {
+    bodyText = await res.text();
+    data = bodyText ? JSON.parse(bodyText) : null;
+  } catch {
+    // not JSON
+    data = null;
+  }
 
-  for (let i = 0; i < teams.length; i++) {
-    const team = teams[i];
-    process.stdout.write(`[${i+1}/${teams.length}] team=${team.name || team.id} id=${team.id} ... `);
-    try {
-      const res = await fetchSquadForTeamWithFallbacks(team.id, SEASON_ID);
-      if (!res || !res.json) {
-        console.log('! no response');
-        continue;
-      }
-      const { source, json } = res;
+  if (!res.ok) {
+    const e = new Error(`${res.status} ${url}`);
+    e.status = res.status;
+    e.payload = data || bodyText || null;
+    throw e;
+  }
 
-      // Normalize possible data locations
-      let dataArr = [];
-      let included = json.included || json.meta?.included || json.data?.included || json.response?.included || [];
-      if (Array.isArray(json.data) && json.data.length) dataArr = json.data;
-      else if (Array.isArray(json.response) && json.response.length) dataArr = json.response;
-      else if (Array.isArray(json)) dataArr = json;
-      else if (json.data && Array.isArray(json.data.data)) dataArr = json.data.data; // nested shape
+  return data;
+}
 
-      // Special-case: if we hit /teams/{id} and it includes a squad or players field
-      if ((source === 'teams' || source === `/teams/${team.id}`) && (!dataArr || dataArr.length === 0)) {
-        const teamResp = json.data || json.response || json;
-        const squad = teamResp && (teamResp.players || teamResp.squad || teamResp.team?.squad || teamResp.attributes?.players);
-        if (Array.isArray(squad) && squad.length) {
-          dataArr = squad;
-        }
-      }
+// Dump an error payload for later debugging
+async function dumpErrorPayload(fileStem, payload) {
+  await ensureDir(DUMPS_DIR);
+  const file = path.join(DUMPS_DIR, `${fileStem}.json`);
+  const pretty = typeof payload === 'string'
+    ? payload
+    : JSON.stringify(payload, null, 2);
+  await fs.writeFile(file, pretty, 'utf8');
+  console.warn(`  (dumped API response to ${path.relative(process.cwd(), file)})`);
+}
 
-      // If still empty, dump and continue
-      if (!Array.isArray(dataArr) || dataArr.length === 0) {
-        console.log('+ 0 players');
-        dumpResponse(team.id, `no-data-source-${source}`, json);
-        continue;
-      }
+// ───────────────────────────────────────────────────────────────────────────────
+// Discovery helpers (used only if TEAM_IDS not provided)
+// ───────────────────────────────────────────────────────────────────────────────
+async function discoverSeasonId(leagueId, seasonName) {
+  if (!leagueId || !seasonName) {
+    throw new Error('LEAGUE_ID and SEASON_NAME are required to discover a season id.');
+  }
+  const url = `${API_BASE}/seasons?${q({
+    api_token: SPORTMONKS_TOKEN,
+    include: 'league',
+    per_page: 100,
+  })}`;
 
-      let count = 0;
-      for (const item of dataArr) {
-        try {
-          const norm = normalizeSquadItem(item, included, team.name || '');
-          if (!norm.name) continue;
-          // if blank image, attempt included lookup
-          if (!norm.image_url && included && item.player_id) {
-            const inc = findIncludedPlayer(included, item.player_id);
-            if (inc) {
-              const img = (inc.attributes && (inc.attributes.image_path || inc.attributes.image)) || inc.image_path || '';
-              if (img) norm.image_url = img;
-            }
+  const resp = await getJson(url);
+  const seasons = resp?.data || [];
+  const match = seasons.find(s =>
+    String(s?.league_id) === String(leagueId) &&
+    String(s?.name).toLowerCase() === String(seasonName).toLowerCase()
+  );
+
+  if (!match) {
+    const sample = seasons
+      .filter(s => String(s?.league_id) === String(leagueId))
+      .slice(0, 6)
+      .map(s => `${s?.id} → ${s?.name}`)
+      .join(', ');
+    throw new Error(`Could not find season "${seasonName}" for league ${leagueId}. Examples: [${sample}]`);
+  }
+  return match.id;
+}
+
+// If you don’t pass TEAM_IDS, you could discover teams in a season.
+// Depending on your plan you might need a different include/filter.
+// This function is a best-effort helper.
+async function discoverTeamsForSeason(seasonId, leagueId) {
+  // Try stages endpoint → many setups let you traverse from season→stage→teams
+  const url = `${API_BASE}/seasons/${seasonId}?${q({
+    api_token: SPORTMONKS_TOKEN,
+    include: 'stages.rounds.fixtures.participants',
+  })}`;
+
+  const resp = await getJson(url);
+  const stages = resp?.data?.stages || [];
+
+  const teamMap = new Map();
+  for (const st of stages) {
+    const rounds = st?.rounds || [];
+    for (const r of rounds) {
+      const fixtures = r?.fixtures || [];
+      for (const f of fixtures) {
+        const parts = f?.participants || [];
+        for (const p of parts) {
+          if (p?.participant?.id && p?.participant?.name) {
+            // If a leagueId was set, we could filter by that, but participants already belong to the season.
+            teamMap.set(p.participant.id, p.participant.name);
           }
-          if (!norm.club) norm.club = team.name || '';
-          out.push(norm);
-          count++;
-        } catch (e) {
-          dumpResponse(team.id, `item-error-${Date.now()}`, { item, err: e.message });
         }
       }
-
-      console.log(`+ ${count} players (source=${source})`);
-    } catch (err) {
-      console.log(`! error: ${err.message.split('\n')[0]}`);
-      dumpResponse(team.id, 'error-final', { error: err.message || err });
     }
-    await sleep(RATE_DELAY_MS);
+  }
+  if (teamMap.size === 0) {
+    throw new Error('Could not discover any teams from season traversal. Provide TEAM_IDS in .env instead.');
   }
 
-  // Deduplicate
-  const seen = new Set();
-  const unique = [];
-  for (const p of out) {
-    const key = `${p.name}::${p.club || ''}::${p.season || ''}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(p);
-  }
-
-  // Backup old file
-  try {
-    if (fs.existsSync(OUT_FILE)) {
-      fs.copyFileSync(OUT_FILE, `${OUT_FILE}.bak`);
-      console.log(`Backup written to ${OUT_FILE}.bak`);
-    }
-  } catch (e) {
-    console.warn('Failed to write backup:', e.message);
-  }
-
-  // Write JSON
-  fs.writeFileSync(OUT_FILE, JSON.stringify(unique, null, 2) + '\n', 'utf8');
-  console.log(`Done. Wrote ${unique.length} players to ${OUT_FILE}`);
+  return Array.from(teamMap.entries()).map(([id, name]) => ({ id, name }));
 }
 
-main().catch(err => {
-  console.error('Fatal:', err && err.message ? err.message : err);
+// ───────────────────────────────────────────────────────────────────────────────
+// Fetch helpers
+// ───────────────────────────────────────────────────────────────────────────────
+async function fetchTeamName(teamId) {
+  const url = `${API_BASE}/teams/${teamId}?${q({ api_token: SPORTMONKS_TOKEN })}`;
+  try {
+    const js = await getJson(url);
+    return js?.data?.name || `team-${teamId}`;
+  } catch {
+    return `team-${teamId}`;
+  }
+}
+
+async function fetchSquad(teamId, seasonId) {
+  const params = {
+    api_token: SPORTMONKS_TOKEN,
+    include: SQUAD_INCLUDES,
+  };
+  const filter = makeSeasonFilter(seasonId);
+  if (filter) params.filters = filter;
+
+  const url = `${API_BASE}/squads/teams/${teamId}?${q(params)}`;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await getJson(url);
+    } catch (err) {
+      const status = err?.status || 0;
+      const brief = `${status} ${url}`;
+      if (status === 404) {
+        console.warn(`  fetch squad team=${teamId} attempt=${attempt} failed: ${brief}`);
+        await dumpErrorPayload(`team-${teamId}-error`, err.payload ?? {});
+        // 404 is probably final for this team/season → stop retrying
+        throw err;
+      } else {
+        console.warn(`  fetch squad team=${teamId} attempt=${attempt} failed: ${brief}`);
+        if (attempt < MAX_RETRIES) {
+          await sleep(BASE_DELAY_MS * attempt);
+          continue;
+        }
+        await dumpErrorPayload(`team-${teamId}-error`, err.payload ?? {});
+        throw err;
+      }
+    }
+  }
+}
+
+// Normalize a single squad response into a list of player records
+function normalizePlayersFromSquad(squadJson, { teamNameFallback = '', seasonId, seasonName }) {
+  const rows = [];
+  const items = squadJson?.data || [];
+
+  for (const item of items) {
+    // Each "item" represents a squad membership row linking player↔team
+    const team = item?.team;
+    const player = item?.player;
+
+    const team_name = team?.name || teamNameFallback || '';
+    const team_id   = team?.id ?? null;
+
+    const name      = player?.display_name || player?.fullname || player?.name || '';
+    const player_id = player?.id ?? null;
+
+    const nationality = player?.nationality?.name || player?.nationality?.extra?.name || null;
+    const position    = player?.position?.name || player?.position?.data?.name || null;
+
+    // Jersey number can be found directly on membership or across nested stats
+    const jersey =
+      item?.jersey_number ??
+      player?.number ??
+      player?.statistics?.[0]?.number ??
+      null;
+
+    const image_url =
+      player?.image_path ||
+      player?.image ||
+      null;
+
+    // Prefer the exact season id if provided; otherwise keep the name
+    const season = seasonId ? String(seasonId) : (seasonName || null);
+
+    rows.push({
+      // Core fields your app already expects
+      name,
+      club: team_name,
+      number: jersey != null ? String(jersey) : null,
+      pos: position,
+      season,
+
+      // Nice-to-have extras
+      nationality,
+      team_id,
+      player_id,
+      image_url,
+
+      // Keep a hint of where this came from
+      source: 'sportmonks_v3',
+      fetched_at: new Date().toISOString(),
+    });
+  }
+
+  return rows;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Main
+// ───────────────────────────────────────────────────────────────────────────────
+async function main() {
+  if (!SPORTMONKS_TOKEN) {
+    console.error('❌ Missing SPORTMONKS_TOKEN in your local .env');
+    process.exit(1);
+  }
+
+  await ensureDir(OUT_DIR);
+  await ensureDir(DUMPS_DIR);
+
+  // Resolve season id
+  let seasonId = SEASON_ID ? parseInt(SEASON_ID, 10) : null;
+  if (!seasonId && (LEAGUE_ID && SEASON_NAME)) {
+    console.log(`Discovering season id for league=${LEAGUE_ID} name="${SEASON_NAME}"…`);
+    try {
+      seasonId = await discoverSeasonId(LEAGUE_ID, SEASON_NAME);
+      console.log(`  ✔ Found season id = ${seasonId}`);
+    } catch (err) {
+      console.error(`  ✖ ${err.message}`);
+      console.error('  Tip: set SEASON_ID directly in .env to skip discovery.');
+      process.exit(1);
+    }
+  }
+
+  // Build team list
+  let teams = [];
+  if (TEAM_IDS && TEAM_IDS.trim()) {
+    const ids = TEAM_IDS.split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter(Boolean);
+
+    console.log(`Using TEAM_IDS from .env (${ids.length} teams). Resolving names…`);
+    teams = await Promise.all(
+      ids.map(async (id) => ({ id, name: await fetchTeamName(id) }))
+    );
+  } else {
+    if (!seasonId) {
+      console.error('❌ No TEAM_IDS and no SEASON_ID. Provide TEAM_IDS in .env or set SEASON_ID (or LEAGUE_ID + SEASON_NAME).');
+      process.exit(1);
+    }
+    console.log(`Discovering teams for season ${seasonId}…`);
+    try {
+      teams = await discoverTeamsForSeason(seasonId, LEAGUE_ID);
+    } catch (err) {
+      console.error(`  ✖ ${err.message}`);
+      console.error('  Tip: set TEAM_IDS in .env to skip discovery.');
+      process.exit(1);
+    }
+  }
+
+  console.log(`Teams resolved: ${teams.length}`);
+  logBanner('— Team list —');
+  teams.forEach((t, i) => console.log(`[${i + 1}/${teams.length}] ${t.name} (id=${t.id})`));
+  console.log('———————');
+
+  // Backup existing file (if exists)
+  const existing = await loadJSONMaybe(OUT_PATH);
+  if (existing) {
+    await fs.writeFile(BACKUP_PATH, JSON.stringify(existing, null, 2) + '\n', 'utf8');
+    console.log(`Backup written to ${BACKUP_PATH}`);
+  }
+
+  // Fetch squads
+  const allPlayers = [];
+  const seasonNameForRows = SEASON_NAME || null;
+  for (let i = 0; i < teams.length; i++) {
+    const t = teams[i];
+    const prefix = `[${i + 1}/${teams.length}] ${t.name} (id=${t.id}) …`;
+
+    try {
+      const js = await fetchSquad(t.id, seasonId);
+      const rows = normalizePlayersFromSquad(js, {
+        teamNameFallback: t.name,
+        seasonId,
+        seasonName: seasonNameForRows,
+      });
+      allPlayers.push(...rows);
+      console.log(`${prefix} + ${rows.length} players`);
+      // brief courtesy sleep to avoid bursty hits
+      await sleep(180);
+    } catch (err) {
+      const status = err?.status || 0;
+      console.warn(`${prefix} fetch failed: ${status} — continuing`);
+      // already dumped payload in fetchSquad
+    }
+  }
+
+  // Write output
+  await writePrettyJSON(OUT_PATH, allPlayers);
+  console.log(`Done. Wrote ${allPlayers.length} players to ${path.relative(process.cwd(), OUT_PATH)}`);
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+main().catch(async (err) => {
+  console.error('Uncaught error:', err?.message || err);
+  try {
+    await dumpErrorPayload('fatal', { message: err?.message, stack: err?.stack });
+  } catch {}
   process.exit(1);
 });
