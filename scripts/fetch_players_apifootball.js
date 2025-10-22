@@ -1,203 +1,105 @@
+// fetch_players_apifootball.js (CommonJS)
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config();
+const fetch = (...a) => import('node-fetch').then(({default:f}) => f(...a));
 
-const API_KEY   = process.env.FOOTBALL_API_KEY;
-const LEAGUE    = Number(process.env.LEAGUE || 39);     // Premier League
-const SEASON    = Number(process.env.SEASON || 2025);   // season start year
-const OUT_PATH  = process.env.OUT || 'data/players.json';
-const TEAM_IDS  = (process.env.TEAM_IDS || '')
-  .split(',')
-  .map(s => s.trim())
-  .filter(Boolean)
-  .map(n => Number(n));
+const API_KEY = process.env.FOOTBALL_API_KEY;
+const LEAGUE  = process.env.LEAGUE || '39';      // Premier League
+const SEASON  = process.env.SEASON || '2025';
+const OUT     = process.env.OUT || 'data/players.json';
+const TEAM_IDS_ENV = (process.env.TEAM_IDS || '').trim();
 
 if (!API_KEY) {
-  console.error('❌ Missing FOOTBALL_API_KEY in .env');
-  process.exit(1);
+  console.error('Missing FOOTBALL_API_KEY in .env'); process.exit(1);
 }
 
-const BASE = 'https://v3.football.api-sports.io';
-const HEADERS = { 'x-apisports-key': API_KEY, 'Accept': 'application/json' };
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-async function getJSON(url, params = {}, retries = 3) {
-  const qs = new URLSearchParams(params).toString();
-  const full = `${url}?${qs}`;
-  for (let a = 1; a <= retries; a++) {
-    try {
-      const res = await fetch(full, { headers: HEADERS });
-      const remain = res.headers.get('x-ratelimit-requests-remaining');
-      const reset  = res.headers.get('x-ratelimit-requests-reset');
-      if (!res.ok) {
-        const text = await res.text().catch(()=>'');
-        throw new Error(`HTTP ${res.status} ${res.statusText} (remain=${remain}, reset=${reset}) • ${text.slice(0,200)}`);
-      }
-      const json = await res.json();
-      return { json, remain, reset };
-    } catch (e) {
-      if (a === retries) throw e;
-      console.warn(`  ⚠️  ${e.message} — retry ${a}/${retries}`);
-      await sleep(300 * a);
-    }
+async function api(path) {
+  const url = `https://v3.football.api-sports.io${path}`;
+  const res = await fetch(url, { headers: { 'x-apisports-key': API_KEY } });
+  if (!res.ok) {
+    const txt = await res.text().catch(()=>'');
+    throw new Error(`${res.status} ${path}\n${txt.slice(0,400)}`);
   }
+  return res.json();
 }
 
-// Normalize to your wheel’s expected shape
-function normalizeFromPlayers(entry) {
-  const p = entry.player || {};
-  const s = (entry.statistics && entry.statistics[0]) || {};
-  const team = s.team || {};
-  const games = s.games || {};
-  const season = (s.league && s.league.season) || SEASON;
-
-  const name = p.name || [p.firstname, p.lastname].filter(Boolean).join(' ') || 'Player';
-  const img  = p.photo || '';
-
-  return {
-    team_name: name,
-    logo_url: img,
-    league_code: 'PLAYER',
-    primary_color: '#163058',
-    stadium: '',
-
-    player_id: p.id || null,
-    name,
-    club: team.name || null,
-    team_id: team.id || null,
-    number: games.number != null ? String(games.number) : null,
-    pos: games.position || null,
-    season: String(season),
-    image_url: img,
-    nationality: p.nationality || null,
-    age: p.age || null,
-    height: p.height || null,
-    weight: p.weight || null,
-    team_logo: team.logo || null
-  };
-}
-
-function normalizeFromSquad(player, team) {
-  // /players/squads response: { response: [{ team: {...}, players: [...] }] }
-  const name = player.name || 'Player';
-  const img  = player.photo || '';
-  return {
-    team_name: name,
-    logo_url: img,
-    league_code: 'PLAYER',
-    primary_color: '#163058',
-    stadium: '',
-
-    player_id: player.id || null,
-    name,
-    club: team?.name || null,
-    team_id: team?.id || null,
-    number: player.number != null ? String(player.number) : null,
-    pos: player.position || null,
-    season: String(SEASON),
-    image_url: img,
-    nationality: player.nationality || null,
-    age: player.age || null,
-    height: player.height || null,
-    weight: player.weight || null,
-    team_logo: team?.logo || null
-  };
-}
-
-function ensureDir(p) {
-  const d = path.dirname(p);
-  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
-}
-
-function dedupe(players) {
-  const map = new Map();
-  for (const p of players) {
-    const key = p.player_id ?? `${p.name}|${p.club}`;
-    if (!map.has(key)) map.set(key, p);
+async function getTeamIds() {
+  if (TEAM_IDS_ENV) return TEAM_IDS_ENV.split(',').map(s => s.trim()).filter(Boolean);
+  const data = await api(`/teams?league=${LEAGUE}&season=${SEASON}`);
+  const ids = (data.response || []).map(r => r.team?.id).filter(Boolean);
+  if (ids.length !== 20) {
+    console.warn(`Warning: expected 20 PL teams, got ${ids.length}. Proceeding with found IDs.`);
   }
-  return Array.from(map.values());
+  return ids;
 }
 
-async function fetchPlayersByLeagueSeason() {
-  console.log(`→ Fetching /players by league=${LEAGUE} season=${SEASON} (paged)…`);
-  let page = 1;
-  const out = [];
+async function getTeamSquad(teamId) {
+  // players endpoint: /players?team=ID&season=YYYY; iterate pages just in case
+  let page = 1, all = [];
   while (true) {
-    const { json, remain } = await getJSON(`${BASE}/players`, { league: LEAGUE, season: SEASON, page });
-    const list = json.response || [];
-    const paging = json.paging || {};
-    console.log(`  [page ${paging.current || page}/${paging.total || '?'}] +${list.length} (remain=${remain})`);
-    list.forEach(e => out.push(normalizeFromPlayers(e)));
-    if (!paging.total || page >= paging.total) break;
+    const data = await api(`/players?team=${teamId}&season=${SEASON}&page=${page}`);
+    all = all.concat(data.response || []);
+    if (page >= (data.paging?.total || 1)) break;
     page++;
-    await sleep(120); // be gentle
   }
-  return dedupe(out);
+  return all;
 }
 
-async function fetchPlayersBySquads(teamIds) {
-  console.log(`→ Falling back to /players/squads for ${teamIds.length} teams…`);
+function normalizePlayers(teamBlock) {
+  // teamBlock is one entry from /players response
+  // We flatten to your wheel-friendly structure
   const out = [];
-  let idx = 0;
-  for (const id of teamIds) {
-    idx++;
-    try {
-      const { json, remain } = await getJSON(`${BASE}/players/squads`, { team: id });
-      const item = (json.response && json.response[0]) || null;
-      const team = item?.team || null;
-      const players = item?.players || [];
-      console.log(`  [${idx}/${teamIds.length}] team=${id} ${team?.name ? `(${team.name}) `:''}+${players.length} (remain=${remain})`);
-      players.forEach(pl => out.push(normalizeFromSquad(pl, team)));
-      await sleep(120);
-    } catch (e) {
-      console.warn(`  ✖ team=${id} squads error: ${e.message}`);
-    }
+  for (const r of teamBlock) {
+    const p = r.player || {};
+    const t = r.statistics?.[0]?.team || {};
+    out.push({
+      name: p.name || '',
+      firstname: p.firstname || '',
+      lastname: p.lastname || '',
+      age: p.age || null,
+      nationality: p.nationality || '',
+      photo: p.photo || '',                // image URL
+      club: t.name || '',
+      team_id: t.id || null,
+      season: `${SEASON} Premier League`,
+      number: p.number || null,
+      pos: r.statistics?.[0]?.games?.position || null,
+      image_url: p.photo || '',            // <- the field you’ll use in UI
+    });
   }
-  return dedupe(out);
+  return out;
 }
 
 (async () => {
   try {
-    // 1) Try full league-season
-    let players = await fetchPlayersByLeagueSeason();
+    console.log(`Season: ${SEASON}`);
+    const teamIds = await getTeamIds();
+    console.log(`Teams : ${teamIds.length}`);
+    console.log('———————');
 
-    // 2) If empty, try previous season automatically, then squads
-    if (players.length === 0) {
-      console.warn('⚠️ League/season returned 0 players. Trying previous season…');
-      const prevSeason = SEASON - 1;
-      let prev = [];
+    const allPlayers = [];
+    let idx = 0;
+    for (const id of teamIds) {
+      idx++;
+      process.stdout.write(`[${idx}/${teamIds.length}] team=${id} … `);
       try {
-        prev = await (async () => {
-          let page = 1;
-          const out = [];
-          while (true) {
-            const { json } = await getJSON(`${BASE}/players`, { league: LEAGUE, season: prevSeason, page });
-            const list = json.response || [];
-            const paging = json.paging || {};
-            console.log(`  [prev ${paging.current || page}/${paging.total || '?'}] +${list.length}`);
-            list.forEach(e => out.push(normalizeFromPlayers(e)));
-            if (!paging.total || page >= paging.total) break;
-            page++;
-            await sleep(120);
-          }
-          return dedupe(out);
-        })();
-      } catch (_) {}
-      if (prev.length) {
-        console.log(`✅ Using previous season ${prevSeason}: ${prev.length} players`);
-        players = prev;
-      } else if (TEAM_IDS.length) {
-        // 3) Fallback to squads per team
-        players = await fetchPlayersBySquads(TEAM_IDS);
+        const resp = await getTeamSquad(id);
+        const norm = normalizePlayers(resp);
+        allPlayers.push(...norm);
+        console.log(`+ ${norm.length} players`);
+      } catch (e) {
+        console.log(`FAIL (${e.message.split('\n')[0]})`);
       }
     }
 
-    ensureDir(OUT_PATH);
-    if (fs.existsSync(OUT_PATH)) fs.copyFileSync(OUT_PATH, `${OUT_PATH}.bak`);
-    fs.writeFileSync(OUT_PATH, JSON.stringify(players, null, 2));
-    console.log(`\nDone. Wrote ${players.length} players to ${OUT_PATH}`);
+    // Ensure output dir
+    fs.mkdirSync(path.dirname(OUT), { recursive: true });
+    // Write
+    fs.writeFileSync(OUT, JSON.stringify(allPlayers, null, 2));
+    console.log(`Done. Wrote ${allPlayers.length} players to ${OUT}`);
   } catch (e) {
-    console.error('\n❌ Fatal:', e.message);
+    console.error('Fatal:', e.message);
     process.exit(1);
   }
 })();
