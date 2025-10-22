@@ -1,161 +1,84 @@
-// scripts/fetch_players_apifootball.js
-// Node >= 18. Fetches PL 2025 squads with photos → data/players.json
-// Tries /teams first; falls back to /standings if /teams is blocked (403).
+// scripts/fetch_players_apifootball_free.js
+import fetch from "node-fetch";
+import fs from "fs/promises";
 
-const fs = require('fs');
-const path = require('path');
+const KEY    = process.env.APIFOOTBALL_KEY;
+const LEAGUE = process.env.LEAGUE_ID || 39;      // Premier League
+const SEASON = process.env.SEASON   || 2023;     // Free-plan friendly
+const OUT    = process.env.OUT      || "data/players.json";
+if (!KEY) throw new Error("Missing APIFOOTBALL_KEY in env");
 
-const API_BASE = 'https://v3.football.api-sports.io';
-const LEAGUE_ID = 39;   // Premier League
-const SEASON    = 2025; // 2025/26
-const OUTFILE   = path.resolve('data/players.json');
-const DUMP_DIR  = path.resolve('tmp/api-dumps');
+const BASE = "https://v3.football.api-sports.io";
+const H = { "x-apisports-key": KEY };
 
-const API_KEY = process.env.FOOTBALL_API_KEY;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-if (!API_KEY) {
-  console.error('Missing FOOTBALL_API_KEY env var. Run:\n  export FOOTBALL_API_KEY="YOUR_REAL_KEY"\n');
-  process.exit(1);
-}
-
-async function api(pathname, params = {}, attempt = 1) {
-  const usp = new URLSearchParams(params);
-  const url = `${API_BASE}${pathname}?${usp.toString()}`;
-  const res = await fetch(url, { headers: { 'x-apisports-key': API_KEY, 'accept': 'application/json' } });
-
+async function get(path) {
+  const url = `${BASE}${path}`;
+  const res = await fetch(url, { headers: H });
   const text = await res.text();
-  if (!res.ok) {
-    // dump for debugging
-    fs.mkdirSync(DUMP_DIR, { recursive: true });
-    const dumpFile = path.join(DUMP_DIR, `${pathname.replace(/[\/?=&]/g,'_')}-${Date.now()}.json`);
-    fs.writeFileSync(dumpFile, text);
-    // Retry 5xx a couple of times
-    if (res.status >= 500 && attempt < 3) {
-      await new Promise(r => setTimeout(r, 800 * attempt));
-      return api(pathname, params, attempt + 1);
-    }
-    throw new Error(`HTTP ${res.status} for ${pathname}?${usp} :: ${text.slice(0,300)}`);
-  }
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(`Non-JSON response from ${pathname}?${usp}`);
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${path} :: ${text}`);
+  return JSON.parse(text);
 }
 
-/** Primary: /teams?league&season */
-async function getTeamsViaTeams() {
-  const data = await api('/teams', { league: LEAGUE_ID, season: SEASON });
-  return (data.response || []).map(r => ({
-    id: r.team?.id,
-    name: r.team?.name,
-    logo: r.team?.logo
-  })).filter(t => t.id);
+async function listTeams() {
+  const data = await get(`/teams?league=${LEAGUE}&season=${SEASON}`);
+  return data.response.map(r => r.team.id);
 }
 
-/** Fallback: /standings?league&season (extract teams out of standings table) */
-async function getTeamsViaStandings() {
-  const data = await api('/standings', { league: LEAGUE_ID, season: SEASON });
-  // response[0].league.standings is an array-of-arrays (one per group) of team rows
-  const lists = data.response?.[0]?.league?.standings || [];
-  const flat = lists.flat();
-  const teams = flat.map(row => ({
-    id: row.team?.id,
-    name: row.team?.name,
-    logo: row.team?.logo
-  })).filter(t => t.id);
-  // Dedup by id
-  const map = new Map();
-  for (const t of teams) map.set(t.id, t);
-  return Array.from(map.values());
-}
-
-async function getTeams() {
-  try {
-    const t = await getTeamsViaTeams();
-    if (t.length) return t;
-    console.warn('Info: /teams returned 0 — using /standings fallback.');
-    return await getTeamsViaStandings();
-  } catch (e) {
-    if (/HTTP 403/.test(String(e))) {
-      console.warn('Info: /teams blocked (403) — using /standings fallback.');
-      return await getTeamsViaStandings();
-    }
-    throw e;
-  }
-}
-
-/** Paginated: /players?team&season (auto-paginates) */
 async function getPlayersForTeam(teamId) {
-  let page = 1;
+  // /players is paginated. Use per-page=50 and loop.
   const players = [];
-  while (true) {
-    const data = await api('/players', { team: teamId, season: SEASON, page });
-    const batch = data.response || [];
-    for (const r of batch) {
-      const p = r.player || {};
-      const teamName = r.statistics?.[0]?.team?.name || '';
-      players.push({
-        id: p.id,
-        name: [p.firstname, p.lastname].filter(Boolean).join(' ') || p.name || 'Unknown',
-        age: p.age ?? null,
-        nationality: p.nationality || null,
-        height: p.height || null,
-        weight: p.weight || null,
-        number: r.statistics?.[0]?.games?.number ?? null,
-        position: r.statistics?.[0]?.games?.position || null,
-        club: teamName,
-        season: `${SEASON}/${SEASON + 1}`,
-        image_url: p.photo || null
-      });
-    }
-    const current = data.paging?.current ?? page;
-    const total   = data.paging?.total ?? page;
-    if (current >= total) break;
-    page++;
-    await new Promise(r => setTimeout(r, 200));
+  for (let page = 1; page < 50; page++) {
+    const data = await get(`/players?team=${teamId}&season=${SEASON}&page=${page}`);
+    const chunk = (data.response || []).map(p => ({
+      name: p.player?.name,
+      age: p.player?.age,
+      nationality: p.player?.nationality,
+      height: p.player?.height,
+      weight: p.player?.weight,
+      photo: p.player?.photo,    // <- image URL you want
+      team_id: teamId,
+      season: SEASON,
+      position: p.statistics?.[0]?.games?.position || null,
+      number: p.statistics?.[0]?.games?.number || null,
+      club: p.statistics?.[0]?.team?.name || null
+    }));
+    players.push(...chunk);
+    if ((data.response || []).length === 0) break;
+    await sleep(300); // keep it polite for free tier
   }
   return players;
 }
 
 (async () => {
+  console.log(`Season: ${SEASON}`);
+  let teams = [];
   try {
-    console.log(`Season: ${SEASON}`);
-    const teams = await getTeams();
-    console.log(`Teams : ${teams.length}`);
-    if (teams.length !== 20) {
-      console.warn(`Warning: expected 20 PL teams, got ${teams.length}. (This can be plan/coverage related.)`);
-    }
-    console.log('———————');
-
-    const allPlayers = [];
-    for (let i = 0; i < teams.length; i++) {
-      const t = teams[i];
-      console.log(`[${i+1}/${teams.length}] ${t.name} (id=${t.id})`);
-      try {
-        const teamPlayers = await getPlayersForTeam(t.id);
-        console.log(`  + ${teamPlayers.length} players`);
-        allPlayers.push(...teamPlayers);
-      } catch (e) {
-        console.warn(`  ! Failed team=${t.id}: ${e.message}`);
-      }
-      await new Promise(r => setTimeout(r, 300));
-    }
-
-    // Dedup
-    const byId = new Map();
-    for (const p of allPlayers) byId.set(p.id || `${p.name}-${p.club}`, p);
-    const final = Array.from(byId.values());
-
-    fs.mkdirSync(path.dirname(OUTFILE), { recursive: true });
-    if (fs.existsSync(OUTFILE)) {
-      fs.copyFileSync(OUTFILE, `${OUTFILE}.bak`);
-      console.log(`Backup: ${OUTFILE}.bak`);
-    }
-    fs.writeFileSync(OUTFILE, JSON.stringify(final, null, 2));
-    console.log(`Done. Wrote ${final.length} players to ${OUTFILE}`);
-  } catch (err) {
-    console.error('Fatal:', err.message);
-    process.exit(1);
+    teams = await listTeams();
+  } catch (e) {
+    // If teams blocked for the chosen season, suggest switching seasons
+    console.error("Could not list teams for this season on the free plan.");
+    console.error("Tip: set SEASON=2023 in your .env");
+    throw e;
   }
+
+  const all = [];
+  for (let i = 0; i < teams.length; i++) {
+    const id = teams[i];
+    process.stdout.write(`[${i + 1}/${teams.length}] team=${id} … `);
+    try {
+      const players = await getPlayersForTeam(id);
+      console.log(`+${players.length}`);
+      all.push(...players);
+    } catch (e) {
+      console.log("fail");
+      console.error(e.message);
+    }
+    await sleep(300);
+  }
+
+  await fs.mkdir("data", { recursive: true });
+  await fs.writeFile(OUT, JSON.stringify(all, null, 2));
+  console.log(`Done. Wrote ${all.length} players to ${OUT}`);
 })();
