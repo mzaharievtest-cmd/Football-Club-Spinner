@@ -1,7 +1,7 @@
-/* Football Spinner — unified TEAM/PLAYER wheel
-   - PLAYER mode shows faces + names; modal shows #jersey · nationality
-   - TEAM mode hides logos/text when more than 2 distinct leagues are selected
-   - PLAYER filters = Premier League 2025/26 teams (Top 6 + “Show more clubs”)
+/* Football Spinner — TEAM + PLAYER wheel (fixed player rendering, labels, and chips)
+   - PLAYER: Image/Name/Nationality/Jersey Number toggles
+   - TEAM: if >2 leagues selected, wheel hides text/photos
+   - Premier League filters: Top 6 + “Show more/fewer clubs”
 */
 
 let TEAMS = [];
@@ -28,10 +28,10 @@ const spinBtn        = document.getElementById('spinBtn');
 const spinFab        = document.getElementById('spinFab');
 const resetHistoryBtn= document.getElementById('resetHistoryBtn');
 
-const optName   = document.getElementById('optName');
-const optLogo   = document.getElementById('optLogo');
-const optStadium= document.getElementById('optStadium');
-const optLeague = document.getElementById('optLeague'); // affects modal only
+const optName    = document.getElementById('optName');
+const optLogo    = document.getElementById('optLogo');
+const optStadium = document.getElementById('optStadium'); // TEAM: Stadium, PLAYER: Nationality
+const optLeague  = document.getElementById('optLeague');  // TEAM: League (modal only), PLAYER: Jersey
 
 const perfTip     = document.getElementById('perfTip');
 const historyEl   = document.getElementById('history');
@@ -54,7 +54,7 @@ const mClose   = document.getElementById('mClose');
 const mHead    = document.getElementById('mHead');
 const mSub     = document.getElementById('mSub');     // league/club line
 const mLogo    = document.getElementById('mLogo');
-const mStadium = document.getElementById('mStadium'); // stadium or #jersey · nationality
+const mStadium = document.getElementById('mStadium'); // TEAM: stadium; PLAYER: “#Jersey · Nationality”
 
 // -------------------- Utils --------------------
 const TAU = Math.PI * 2;
@@ -80,10 +80,8 @@ const LEAGUE_LABELS = {
   SUI:"Super League", TUR:"Süper Lig", UKR:"Ukrainian Premier League", PLAYER:"Players"
 };
 
-// Premier League Top 6 list (chips for PLAYER mode)
-const PL_TOP6 = [
-  'Chelsea', 'Liverpool', 'Manchester City', 'Manchester United', 'Arsenal', 'Tottenham Hotspur'
-];
+// Premier League Top 6 (keywords; we resolve to actual club strings found in players.json)
+const PL_TOP6_KEYWORDS = ['Chelsea','Liverpool','Manchester City','Manchester United','Arsenal','Tottenham'];
 
 // -------------------- Image cache --------------------
 const IMG_CACHE = new Map();
@@ -290,12 +288,11 @@ window.closeModal = closeModal;
 function updateSelectionBanner() {
   const N = getCurrentData().length;
   perfTip.textContent = `${N} ${MODE === 'player' ? 'players' : 'teams'} selected`;
-  // Optional progress meter fill
   const max = MODE === 'player' ? 600 : 400;
   perfTip.style.setProperty('--pct', Math.min(1, N / max));
 }
 
-// -------------------- Drawing --------------------
+// -------------------- Drawing helpers --------------------
 function drawGradientIdle(ctx, W, H) {
   const DPR = Math.max(1, window.devicePixelRatio || 1);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -329,12 +326,12 @@ function drawGradientIdle(ctx, W, H) {
   ctx.restore();
 }
 
-// Helper: count selected league codes (TEAM mode)
 function selectedLeagueCount() {
   const codes = Array.from(chipsWrap.querySelectorAll('input:checked')).map(i => i.value);
   return new Set(codes).size;
 }
 
+// -------------------- Wheel --------------------
 function drawWheel(){
   const data = getCurrentData();
   const N = data.length;
@@ -351,15 +348,15 @@ function drawWheel(){
     return;
   }
 
-  // DYNAMIC THRESHOLDS
+  // thresholds — don’t suppress players just because there are many
   const bothTextOn = !!optName?.checked && !!optStadium?.checked;
-  const hideTextThresholdDyn  = bothTextOn ? 55 : PERF.hideTextThreshold;
-  const hideLogosThresholdDyn = bothTextOn ? Math.min(55, PERF.hideLogosThreshold) : PERF.hideLogosThreshold;
+  const hideTextThresholdDyn  = MODE === 'player' ? 1e9 : (bothTextOn ? 55 : PERF.hideTextThreshold);
+  const hideLogosThresholdDyn = MODE === 'player' ? 1e9 : (bothTextOn ? Math.min(55, PERF.hideLogosThreshold) : PERF.hideLogosThreshold);
 
   let hideLogos = N >= hideLogosThresholdDyn;
   let hideText  = N >= hideTextThresholdDyn;
 
-  // League-limit rule (TEAM only): if > 2 leagues selected, hide *everything*
+  // TEAM rule: >2 leagues ⇒ hide all text/images
   if (MODE === 'team' && selectedLeagueCount() > 2) {
     hideLogos = true;
     hideText  = true;
@@ -444,8 +441,19 @@ function drawWheel(){
       const xBoxLeft = Math.min(xText, logoInner);
       const maxTextWidth = Math.max(50, Math.abs(logoInner - xText));
 
+      // Compose secondary line for the current mode
+      let secondaryText = '';
+      if (MODE === 'player') {
+        const parts = [];
+        if (optLeague?.checked && t.jersey_number) parts.push(`#${t.jersey_number}`);
+        if (optStadium?.checked && t.nationality)   parts.push(String(t.nationality));
+        secondaryText = parts.join(' · ') || '';
+      } else {
+        secondaryText = t.stadium || '';
+      }
+
       const canShowName    = !hideText && optName?.checked && t.team_name && maxTextWidth >= PERF.minTextWidth;
-      const canShowStadium = !hideText && optStadium?.checked && t.stadium && maxTextWidth >= PERF.minTextWidth; // in PLAYER: #jersey · nationality
+      const canShowStadium = !hideText && secondaryText && maxTextWidth >= PERF.minTextWidth;
       const canShowLogo    = !hideLogos && optLogo?.checked && t.logo_url && (logoHalf * 2) >= PERF.minLogoBox;
 
       // Name + secondary line
@@ -475,7 +483,7 @@ function drawWheel(){
 
         const stadTarget = (canShowName && namePx) ? Math.max(8, Math.round(namePx * 0.82)) : stadiumTargetPx;
         if (canShowStadium) {
-          stadFit = fitSingleLine(ctx, t.stadium || '', {
+          stadFit = fitSingleLine(ctx, secondaryText, {
             maxWidth: maxTextWidth,
             targetPx: stadTarget,
             minPx: 8,
@@ -578,7 +586,6 @@ function setResult(idx){
   saveHistory();
   renderHistory();
 
-  // Preload & open modal
   if (t.logo_url) {
     const img = getLogo(t.logo_url, () => openModal(t));
     if (img && img.complete) openModal(t);
@@ -621,7 +628,6 @@ function spin(){
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
 
-      // Snap the chosen slice center under the pointer
       const centerAngle = idx * slice + slice/2;
       const snapDelta = mod(centerAngle - offset, TAU);
       currentAngle = mod(currentAngle + snapDelta, TAU);
@@ -670,28 +676,34 @@ function renderChipsTeam() {
   toggleMore.disabled = false;
   toggleMore.classList.remove('disabled');
 
-  // Quick-pick labels
   const qpTop = document.getElementById('qpTop5');
   if (qpTop) qpTop.textContent = 'Top 5';
 }
 
 // PLAYER mode chips (by clubs; Top 6 first)
-function allPremierLeagueClubsFromPlayers() {
-  const clubs = [...new Set(PLAYERS.map(p => String(p.club || '').trim()).filter(Boolean))];
-  // keep Top6 first, then the rest sorted
-  const rest = clubs.filter(c => !PL_TOP6.includes(c)).sort((a,b)=>a.localeCompare(b));
-  return [...PL_TOP6.filter(c => clubs.includes(c)), ...rest];
+function clubsFromPlayers() {
+  return [...new Set(PLAYERS.map(p => String(p.club || '').trim()).filter(Boolean))];
+}
+function resolveTop6ClubNames() {
+  const clubs = clubsFromPlayers();
+  const found = [];
+  PL_TOP6_KEYWORDS.forEach(keyword => {
+    const m = clubs.find(c => c.toLowerCase().includes(keyword.toLowerCase()));
+    if (m && !found.includes(m)) found.push(m);
+  });
+  return found;
 }
 function renderChipsPlayer() {
-  const clubs = allPremierLeagueClubsFromPlayers();
+  const clubs = clubsFromPlayers();
+  const resolvedTop6 = resolveTop6ClubNames();
+
+  const rest = clubs.filter(c => !resolvedTop6.includes(c)).sort((a,b)=>a.localeCompare(b));
+
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
 
-  const top = clubs.filter(c => PL_TOP6.includes(c));
-  const more= clubs.filter(c => !PL_TOP6.includes(c));
-
-  top.forEach(c => chipsTop.appendChild(makeChip(c, c, true)));
-  more.forEach(c => chipsMore.appendChild(makeChip(c, c, false)));
+  resolvedTop6.forEach(c => chipsTop.appendChild(makeChip(c, c, true)));
+  rest.forEach(c => chipsMore.appendChild(makeChip(c, c, false)));
 
   chipsMore.hidden = true;
   toggleMore.textContent = 'Show more Premier League clubs';
@@ -699,14 +711,8 @@ function renderChipsPlayer() {
   toggleMore.disabled = false;
   toggleMore.classList.remove('disabled');
 
-  // Quick-pick labels
   const qpTop = document.getElementById('qpTop5');
   if (qpTop) qpTop.textContent = 'Top 6';
-}
-
-function renderChips() {
-  if (MODE === 'player') renderChipsPlayer();
-  else renderChipsTeam();
 }
 
 // Only select visible codes (league codes in TEAM, club names in PLAYER)
@@ -730,14 +736,29 @@ function setCheckedCodes(codes = []) {
   if (getCurrentData().length === 0) perfTip.textContent = MODE === 'player' ? 'Select at least one club.' : 'Please select at least one league.';
 }
 
-// Current dataset (TEAM=by league; PLAYER=by club)
+// Data for the wheel (TEAM=leagues; PLAYER=clubs)
 function getCurrentData() {
   const active = Array.from(document.querySelectorAll('#chips input:checked')).map(i => i.value);
+
   if (MODE === 'player') {
     if (!PLAYERS.length) return [];
-    // active contains club names
-    return active.length ? PLAYERS.filter(p => active.includes(p.club)) : PLAYERS;
+    // Filter by club (active are club strings)
+    const filtered = active.length ? PLAYERS.filter(p => active.includes(p.club)) : PLAYERS;
+    // Normalize into the wheel schema
+    return filtered.map(p => ({
+      isPlayer: true,
+      team_name: p.name || p.player_name || 'Player',
+      logo_url: resolvePublicUrl(p.image_url || p.image || p.file || p.file_url) || imageForPlayerName(p.name),
+      league_code: 'PLAYER',
+      primary_color: '#163058',
+      stadium: '', // computed per-frame
+      // extras
+      club: p.club || p.team || '',
+      nationality: p.nationality || p.country || '',
+      jersey_number: p.jersey_number || p.number || ''
+    }));
   }
+  // TEAM mode
   return TEAMS.filter(t => active.includes(t.league_code));
 }
 
@@ -760,12 +781,7 @@ function slugifyName(n) {
     .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 }
-
-// Optional custom mappings for mismatched filenames
-const PLAYER_IMAGE_MAP = {
-  'bukayo saka': '/players/saka.png'
-};
-
+const PLAYER_IMAGE_MAP = { 'bukayo saka': '/players/saka.png' };
 function imageForPlayerName(name) {
   const key = String(name || '').trim().toLowerCase();
   if (PLAYER_IMAGE_MAP[key]) return PLAYER_IMAGE_MAP[key];
@@ -776,10 +792,7 @@ function imageForPlayerName(name) {
 async function tryFetchPlayers() {
   const candidates = ['/data/players.json', '/players/players.json', new URL('./players/players.json', location.href).toString()];
   for (const url of candidates) {
-    try {
-      const res = await fetch(url, { cache: 'no-store' });
-      if (res.ok) return res;
-    } catch {}
+    try { const res = await fetch(url, { cache: 'no-store' }); if (res.ok) return res; } catch {}
   }
   return null;
 }
@@ -787,41 +800,47 @@ async function tryFetchPlayers() {
 async function loadPlayers() {
   const res = await tryFetchPlayers();
   if (!res) throw new Error('players.json not found');
-
   const raw = await res.json();
 
-  PLAYERS = (raw || []).map(p => {
-    const name = p.name || p.player_name || 'Player';
-    const club = p.club || p.team || '';
-    const fromJson = p.image_url || p.image || p.file || p.file_url || '';
-    const img = resolvePublicUrl(fromJson) || imageForPlayerName(name);
-    const jersey = p.jersey_number || p.number || '';
-    const nationality = p.nationality || p.country || '';
-
-    // Reuse the wheel schema:
-    return {
-      isPlayer: true,
-      team_name: name,        // primary line on wheel
-      logo_url: img,          // photo
-      league_code: 'PLAYER',  // not used for filtering in PLAYER mode
-      primary_color: '#163058',
-      stadium: [jersey ? `#${jersey}` : '', nationality].filter(Boolean).join(' · '), // secondary line on wheel
-      // extras used in modal/history:
-      name, club, image_url: img,
-      jersey_number: jersey,
-      nationality
-    };
-  });
+  // store raw (we’ll normalize on the fly when drawing)
+  PLAYERS = (raw || []).map(p => ({
+    name: p.name || p.player_name || 'Player',
+    club: p.club || p.team || '',
+    image_url: p.image_url || p.image || p.file || p.file_url || '',
+    jersey_number: p.jersey_number || p.number || '',
+    nationality: p.nationality || p.country || ''
+  }));
 
   // Optional preview list
   if (playerListEl) {
     playerListEl.innerHTML = '';
     PLAYERS.slice(0, 80).forEach(pl => {
+      const img = resolvePublicUrl(pl.image_url) || imageForPlayerName(pl.name);
       const el = document.createElement('div');
       el.className = 'player-item';
-      el.innerHTML = `<img src="${pl.logo_url}" alt="${pl.name}" width="40" height="40" style="border-radius:10px;object-fit:cover;margin-right:8px"> ${pl.name} <span style="opacity:.7;margin-left:6px">(${pl.club || ''})</span>`;
+      el.innerHTML = `<img src="${img}" alt="${pl.name}" width="40" height="40" style="border-radius:10px;object-fit:cover;margin-right:8px"> ${pl.name} <span style="opacity:.7;margin-left:6px">(${pl.club || ''})</span>`;
       playerListEl.appendChild(el);
     });
+  }
+}
+
+// -------------------- Labels (Show-on-wheel) --------------------
+function setChipText(inputEl, text) {
+  if (!inputEl) return;
+  const span = inputEl.parentElement?.querySelector('.chip-text');
+  if (span) span.textContent = text;
+}
+function syncShowOnWheelLabels() {
+  if (MODE === 'player') {
+    setChipText(optLogo,   'Image');
+    setChipText(optName,   'Name');
+    setChipText(optStadium,'Nationality');
+    setChipText(optLeague, 'Jersey Number');
+  } else {
+    setChipText(optLogo,   'Logo');
+    setChipText(optName,   'Name');
+    setChipText(optStadium,'Stadium');
+    setChipText(optLeague, 'League');
   }
 }
 
@@ -829,9 +848,7 @@ async function loadPlayers() {
 function setupEventListeners() {
   // Mode switch
   modeTeamBtn?.addEventListener('click', () => setMode('team'));
-  modePlayerBtn?.addEventListener('click', async () => {
-    await setMode('player');
-  });
+  modePlayerBtn?.addEventListener('click', async () => { await setMode('player'); });
 
   // Chips changes
   chipsWrap.addEventListener('change', () => {
@@ -871,11 +888,11 @@ function setupEventListeners() {
   qpTop5.onclick = () => {
     if (spinning) return;
     if (MODE === 'player') {
-      const top = PL_TOP6.filter(c => visibleCodes().includes(c));
-      setCheckedCodes(top);
+      const resolvedTop6 = resolveTop6ClubNames();
+      setCheckedCodes(resolvedTop6.filter(c => visibleCodes().includes(c)));
     } else {
-      const TOP5 = ['EPL','SA','BUN','L1','LLA'];
-      setCheckedCodes(TOP5.filter(c => visibleCodes().includes(c)));
+      const list = ['EPL','SA','BUN','L1','LLA'];
+      setCheckedCodes(list.filter(c => visibleCodes().includes(c)));
     }
     setActive(qpTop5);
   };
@@ -888,7 +905,10 @@ function setupEventListeners() {
     const allVisibleSelected = selVisible.length === vis.size && Array.from(vis).every(c => selVisible.includes(c));
     const noneSelected = selVisible.length === 0;
 
-    let topList = MODE === 'player' ? PL_TOP6.filter(c => vis.has(c)) : ['EPL','SA','BUN','L1','LLA'].filter(c => vis.has(c));
+    let topList = MODE === 'player'
+      ? resolveTop6ClubNames().filter(c => vis.has(c))
+      : ['EPL','SA','BUN','L1','LLA'].filter(c => vis.has(c));
+
     const topSelectedOnly = selVisible.length === topList.length && topList.every(c => selVisible.includes(c));
 
     if (allVisibleSelected) setActive(qpAll);
@@ -906,7 +926,7 @@ function setupEventListeners() {
   optName?.addEventListener('change', onWheelToggleChange);
   optLogo?.addEventListener('change', onWheelToggleChange);
   optStadium?.addEventListener('change', onWheelToggleChange);
-  optLeague?.addEventListener('change', onWheelToggleChange); // modal only
+  optLeague?.addEventListener('change', onWheelToggleChange);
 
   // Spin actions
   spinBtn.onclick = spin;
@@ -940,7 +960,7 @@ async function setMode(next) {
   playerView && playerView.classList.toggle('hidden', MODE === 'team');
 
   if (MODE === 'player') {
-    // Load players once
+    syncShowOnWheelLabels();
     if (!PLAYERS.length) {
       try { await loadPlayers(); }
       catch (e) {
@@ -951,9 +971,11 @@ async function setMode(next) {
       }
     }
     renderChipsPlayer();
-    // Default selection = Top 6 visible
-    setCheckedCodes(PL_TOP6.filter(c => visibleCodes().includes(c)));
+    // Default = resolved Top 6
+    const resolvedTop6 = resolveTop6ClubNames();
+    setCheckedCodes(resolvedTop6.filter(c => visibleCodes().includes(c)));
   } else {
+    syncShowOnWheelLabels();
     renderChipsTeam();
     setCheckedCodes(['EPL']);
   }
@@ -977,9 +999,9 @@ fetch(`./teams.json?v=${Date.now()}`)
     // Default: render TEAM chips, then reflect saved mode
     renderChipsTeam();
     setCheckedCodes(['EPL']);
+    syncShowOnWheelLabels();
     drawWheel();
 
-    // If user previously left in PLAYER mode, switch now
     if (MODE === 'player') await setMode('player');
   })
   .catch(err => {
