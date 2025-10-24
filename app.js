@@ -853,4 +853,3 @@ fetch(`./teams.json?v=${Date.now()}`)
     console.error('Failed to load teams.json', err);
     currentText && (currentText.textContent = 'Failed to load teams.');
   });
-</script>
