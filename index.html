@@ -44,7 +44,7 @@
   <!-- App styles -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Small sticky fix so the left card doesn’t overlap the wheel on scroll -->
+  <!-- Sticky/overflow fixes -->
   <style>
     .sidebar{position:sticky;top:84px;align-self:start;max-height:calc(100vh - 100px);overflow:auto}
     .wheel-wrap{position:relative}
@@ -83,16 +83,18 @@
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <main class="container">
-  <!-- LEFT: dynamic filters / toggles -->
+  <!-- LEFT: filters / toggles -->
   <section class="card sidebar" aria-labelledby="filter-title">
     <div class="section-title" id="filter-title">Leagues (filter)</div>
 
+    <!-- Quick picks (TEAM: Top 5; PLAYER: Top 6) -->
     <div class="quick-picks" role="group" aria-label="Quick selections">
       <button id="qpAll"   class="chip-btn" type="button">All</button>
       <button id="qpNone"  class="chip-btn" type="button">None</button>
       <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
     </div>
 
+    <!-- Dynamic chips (TEAM: leagues; PLAYER: Premier League clubs) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
 
@@ -104,18 +106,42 @@
     </div>
 
     <div class="section-title">Show on wheel</div>
+    <!-- Wheel display toggles (TEAM & PLAYER).
+         TEAM uses: optName, optLogo, optStadium, optLeague
+         PLAYER uses: optName, optLogo (Image), optNation, optJersey -->
     <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
-      <label class="chip"><input type="checkbox" id="optName" checked aria-label="Name"/><span id="lblName"   class="chip-text">Name</span></label>
-      <label class="chip"><input type="checkbox" id="optLogo" checked aria-label="Logo"/><span id="lblLogo"   class="chip-text">Logo</span></label>
-      <label class="chip"><input type="checkbox" id="optStadium"       aria-label="Stadium"/><span id="lblSub1" class="chip-text">Stadium</span></label>
-      <label class="chip"><input type="checkbox" id="optLeague"  checked aria-label="League"/><span id="lblSub2" class="chip-text">League</span></label>
+      <label class="chip">
+        <input type="checkbox" id="optLogo" checked aria-label="Image" />
+        <span class="chip-text">Image</span>
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optName" checked aria-label="Name" />
+        <span class="chip-text">Name</span>
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optNation" aria-label="Nationality" />
+        <span class="chip-text">Nationality</span>
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optJersey" aria-label="Jersey number" />
+        <span class="chip-text">Jersey Number</span>
+      </label>
+
+      <!-- TEAM-only extras (script feature-detects; safe to keep visible) -->
+      <label class="chip">
+        <input type="checkbox" id="optStadium" aria-label="Stadium" />
+        <span class="chip-text">Stadium (team)</span>
+      </label>
+      <label class="chip">
+        <input type="checkbox" id="optLeague" checked aria-label="League" />
+        <span class="chip-text">League (team)</span>
+      </label>
     </div>
 
     <button id="spinBtn" type="button">SPIN</button>
 
     <div class="history-title">History</div>
     <div class="history" id="history"></div>
-    <!-- moved here -->
     <button id="resetHistoryBtn" type="button" style="margin-top:12px">Reset History</button>
   </section>
 
@@ -154,8 +180,13 @@
   <div id="modal" class="modal">
     <div id="mHead" class="m-head">Title</div>
     <div class="m-body">
+      <!-- TEAM: league / PLAYER: club (filled by JS) -->
       <div id="mSub" class="m-sub small"></div>
+
+      <!-- TEAM: club logo / PLAYER: player photo -->
       <img id="mLogo" class="m-logo" alt="" />
+
+      <!-- TEAM: Stadium; PLAYER: separate badges for jersey & nationality -->
       <div class="m-row" style="margin-top:12px">
         <strong style="min-width:84px" id="mFieldLabel">Stadium</strong>
         <span id="mStadium" class="m-sub"></span>
