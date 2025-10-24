@@ -1,4 +1,3 @@
-<script>
 // Football Club Spinner — app.js (TEAM + PLAYER)
 // - PLAYER mode: shows player faces/names; filters by Premier League clubs (Top-6 preset).
 // - Hides all wheel content in PLAYER mode when > 50 players selected.
