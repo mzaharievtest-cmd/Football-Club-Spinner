@@ -1,7 +1,7 @@
 /* Football Spinner — TEAM & PLAYER modes
-   TEAM wheel shows: Logo, Name, Stadium  (League NEVER on wheel)
-   PLAYER wheel shows: Image, Name, Jersey, Nationality, Club
-   >50 selections (teams or players) => hide all content (only wedges)
+   TEAM: wheel shows Logo, Name, Stadium (League never on wheel; modal follows toggle)
+   PLAYER: wheel shows Image, Name, Jersey, Nationality, Club
+   > 50 selections -> draw wedges only (no content)
 */
 
 (() => {
@@ -27,22 +27,22 @@
   const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 
   // show-on-wheel toggles
-  const optLogo   = document.getElementById('optLogo');        // TEAM: Logo, PLAYER: Image
-  const optName   = document.getElementById('optName');        // both
-  const optJersey = document.getElementById('optJersey');      // player
-  const optNat    = document.getElementById('optNationality'); // player
-  const optClub   = document.getElementById('optClub');        // player
-  const optStadium= document.getElementById('optStadium');     // team
-  const optLeague = document.getElementById('optLeague');      // team (modal only; never drawn)
+  const optLogo    = document.getElementById('optLogo');        // TEAM: Logo, PLAYER: Image
+  const optName    = document.getElementById('optName');        // both
+  const optJersey  = document.getElementById('optJersey');      // player
+  const optNat     = document.getElementById('optNationality'); // player
+  const optClub    = document.getElementById('optClub');        // player
+  const optStadium = document.getElementById('optStadium');     // team
+  const optLeague  = document.getElementById('optLeague');      // team (modal only)
 
-  // labels we relabel based on mode (already in HTML)
-  const lblLogo   = document.getElementById('lblLogo');
-  const lblName   = document.getElementById('lblName');
-  const lblJersey = document.getElementById('lblJersey');
-  const lblNation = document.getElementById('lblNationality');
-  const lblClub   = document.getElementById('lblClub');
-  const lblStadium= document.getElementById('lblStadium');
-  const lblLeague = document.getElementById('lblLeague');
+  // labels (already present in HTML)
+  const lblLogo    = document.getElementById('lblLogo');
+  const lblName    = document.getElementById('lblName');
+  const lblJersey  = document.getElementById('lblJersey');
+  const lblNation  = document.getElementById('lblNationality');
+  const lblClub    = document.getElementById('lblClub');
+  const lblStadium = document.getElementById('lblStadium');
+  const lblLeague  = document.getElementById('lblLeague');
 
   const perfTip   = document.getElementById('perfTip');
   const historyEl = document.getElementById('history');
@@ -61,13 +61,13 @@
   const mSub     = document.getElementById('mSub');
   const mLogo    = document.getElementById('mLogo');
 
+  // Player-specific rows (HTML contains these ids)
   const mClubRow = document.getElementById('mClubRow');
   const mClub    = document.getElementById('mClub');
-
   const mFieldLabel = document.getElementById('mFieldLabel');
-  const mStadium    = document.getElementById('mStadium');
-  const mJersey     = document.getElementById('mJersey');
-  const mNation     = document.getElementById('mNation');
+  const mStadium = document.getElementById('mStadium');
+  const mJersey  = document.getElementById('mJersey');
+  const mNation  = document.getElementById('mNation');
 
   // ───────────────────────────── Utils
   const TAU = Math.PI * 2;
@@ -86,16 +86,10 @@
     SUI:"Super League", TUR:"Süper Lig", UKR:"Ukrainian Premier League", PLAYER:"Players"
   };
 
-  // fixed palette for slices (so players look distinct even w/o primary colors)
-  const PAL = [
-    "#f94144","#f3722c","#f8961e","#f9844a","#f9c74f",
-    "#90be6d","#43aa8b","#4d908e","#577590","#277da1",
-    "#a855f7","#22d3ee","#fb7185","#ef4444","#eab308"
-  ];
+  const PAL = ["#f94144","#f3722c","#f8961e","#f9844a","#f9c74f","#90be6d","#43aa8b","#4d908e","#577590","#277da1","#a855f7","#22d3ee","#fb7185","#ef4444","#eab308"];
   const colorForIndex = i => PAL[i % PAL.length];
 
   const TOP6 = ["Manchester City","Liverpool FC","Manchester United","Chelsea FC","Arsenal FC","Tottenham Hotspur"];
-  const TOP6_KEYS = TOP6.map(slug);
 
   function slug(s){return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
   function txtColorFor(hex){ if(!hex||!/^#?[0-9a-f]{6}$/i.test(hex))return'#fff'; hex=hex.replace('#',''); const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16); const L=0.2126*(r/255)**2.2+0.7152*(g/255)**2.2+0.0722*(b/255)**2.2; return L>0.35?'#0b0f17':'#fff';}
@@ -122,11 +116,12 @@
     localStorage.setItem('fsMode', MODE);
 
     relabelForMode();
+
     if (MODE==='player'){
       if (!PLAYERS.length) {
-        loadPlayers().then(()=>{ renderPlayerChips(); sizeCanvas(); selectedIdx=-1; drawWheel(); updateSpinAvailability(); })
+        loadPlayers().then(()=>{ normalizePlayerClubs(); renderPlayerChips(); sizeCanvas(); selectedIdx=-1; drawWheel(); updateSpinAvailability(); })
                      .catch(()=>{ MODE='team'; relabelForMode(); renderTeamChips(); drawWheel(); updateSpinAvailability(); });
-      } else { renderPlayerChips(); selectedIdx=-1; drawWheel(); updateSpinAvailability(); }
+      } else { normalizePlayerClubs(); renderPlayerChips(); selectedIdx=-1; drawWheel(); updateSpinAvailability(); }
     } else {
       renderTeamChips(); selectedIdx=-1; drawWheel(); updateSpinAvailability();
     }
@@ -142,12 +137,12 @@
       lblLogo.textContent='Image'; lblName.textContent='Name';
       lblJersey.textContent='Jersey Number'; lblNation.textContent='Nationality'; lblClub.textContent='Club';
       lblStadium.textContent='Stadium (team)'; lblLeague.textContent='League (team)';
-      document.getElementById('qpTop5').textContent='Top 6';
+      const tp = document.getElementById('qpTop5'); if (tp) tp.textContent='Top 6';
     } else {
       lblLogo.textContent='Logo'; lblName.textContent='Name';
       lblJersey.textContent='Jersey Number'; lblNation.textContent='Nationality'; lblClub.textContent='Club';
       lblStadium.textContent='Stadium'; lblLeague.textContent='League';
-      document.getElementById('qpTop5').textContent='Top 5';
+      const tp = document.getElementById('qpTop5'); if (tp) tp.textContent='Top 5';
     }
   }
 
@@ -178,14 +173,31 @@
     toggleMore.setAttribute('aria-expanded','false');
   }
 
+  function normalizePlayerClubs(){
+    // Ensure every player has a club name & key derived from team_id if missing
+    for (const p of PLAYERS){
+      const teamId = p.team_id ? String(p.team_id) : '';
+      if (!p.club && teamId && TEAM_ID_INDEX[teamId]?.name) p.club = TEAM_ID_INDEX[teamId].name;
+      if (!p.clubKey) p.clubKey = p.club ? slug(p.club) : (teamId ? `id:${teamId}` : '__unknown__');
+      // If club still missing, set readable fallback
+      if (!p.club) p.club = TEAM_ID_INDEX[teamId]?.name || 'Unknown Club';
+    }
+  }
+
   function renderPlayerChips(){
     const clubs = new Map(); // key -> label
-    PLAYERS.forEach(p => { if (p.clubKey && p.club) clubs.set(p.clubKey, p.club); });
-    const top6 = TOP6_KEYS.filter(k=>clubs.has(k));
-    const rest = [...clubs.keys()].filter(k=>!top6.includes(k))
+    PLAYERS.forEach(p => {
+      const label = p.club || (p.team_id && TEAM_ID_INDEX[p.team_id]?.name) || 'Unknown Club';
+      const key   = p.clubKey || slug(label);
+      clubs.set(key, label);
+    });
+
+    const top6Keys = TOP6.map(n => slug(n)).filter(k => clubs.has(k));
+    const rest = [...clubs.keys()].filter(k=>!top6Keys.includes(k))
                   .sort((a,b)=>clubs.get(a).localeCompare(clubs.get(b)));
+
     chipsTop.innerHTML=''; chipsMore.innerHTML='';
-    top6.forEach(k=>chipsTop.appendChild(makeChip(k, true, clubs.get(k))));
+    top6Keys.forEach(k=>chipsTop.appendChild(makeChip(k, true, clubs.get(k))));
     rest.forEach(k=>chipsMore.appendChild(makeChip(k,false, clubs.get(k))));
     chipsMore.hidden=true;
     toggleMore.textContent='Show more Premier League clubs';
@@ -193,7 +205,7 @@
   }
 
   function selectedChipValues() {
-    const topVals = Array.from(chipsTop.querySelectorAll('input:checked')).map(i=>i.value);
+    const topVals  = Array.from(chipsTop.querySelectorAll('input:checked')).map(i=>i.value);
     const moreVals = chipsMore.hidden ? [] : Array.from(chipsMore.querySelectorAll('input:checked')).map(i=>i.value);
     return topVals.concat(moreVals);
   }
@@ -255,10 +267,11 @@
 
     if(N===0){ drawGradientIdle(ctx,W,H); updateSpinAvailability(); return; }
 
-    // Force-hide rule: >50 selections (teams or players) → show wedges only
+    // > 50 selections → hide all content
     const hideAllContent = N > 50;
 
-    // classic thresholds still apply when <=50
+    // TEAM: league is NEVER drawn on the wheel
+    // generic thresholds if <=50
     const hideLogos = hideAllContent || !optLogo.checked || (N >= PERF.hideLogosThreshold);
     const hideText  = hideAllContent || (N >= PERF.hideTextThreshold);
 
@@ -276,7 +289,7 @@
     const radius = Math.min(W,H)*0.48;
     const sliceAngle = TAU/N;
 
-    // Wedges (use per-team color for TEAM, palette for PLAYER)
+    // Wedges (TEAM: color from item; PLAYER: palette)
     for(let i=0;i<N;i++){
       const t=data[i]||{};
       const fill = (MODE==='team')
@@ -306,15 +319,15 @@
         const isPlayer = (MODE==='player');
         const title = isPlayer ? (t.name || t.team_name || 'Player') : (t.team_name || 'Team');
 
-        // TEAM: (League NEVER drawn)
+        // TEAM sub: stadium (league never drawn on wheel)
         const subStadium = (!isPlayer && optStadium.checked) ? (t.stadium || '') : '';
 
-        // PLAYER:
-        const subNat  = isPlayer && optNat.checked    ? (t.nationality||'') : '';
-        const subJsy  = isPlayer && optJersey.checked ? (t.jersey_number?`#${t.jersey_number}`:'') : '';
-        const subClub = isPlayer && optClub.checked   ? (t.club || '') : '';
+        // PLAYER subs
+        const subNat  = isPlayer && optNat    && optNat.checked    ? (t.nationality||'') : '';
+        const subJsy  = isPlayer && optJersey && optJersey.checked ? (t.jersey_number?`#${t.jersey_number}`:'') : '';
+        const subClub = isPlayer && optClub   && optClub.checked   ? (t.club || '') : '';
 
-        const showName = !hideText && optName.checked && title;
+        const showName = !hideText && optName && optName.checked && title;
         const showSubA = !hideText && (!!subStadium || !!subNat);
         const showSubB = !hideText && !!subJsy;
         const showSubC = !hideText && !!subClub;
@@ -325,8 +338,9 @@
         const logoSize     = clamp(28, 0.40*sliceArc, 64);
         const logoHalf=logoSize/2, pad=10;
 
-        const fg = txtColorFor((MODE==='team' ? (t.primary_color||'#1e2b4f') : colorForIndex(i)));
-        const L  = lum((MODE==='team' ? (t.primary_color||'#1e2b4f') : colorForIndex(i)));
+        const baseCol = (MODE==='team' ? (t.primary_color||'#1e2b4f') : colorForIndex(i));
+        const fg = txtColorFor(baseCol);
+        const L  = lum(baseCol);
 
         ctx.save();
         ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,radius-1,a0,a1); ctx.closePath(); ctx.clip();
@@ -338,7 +352,7 @@
         const xText = sign * (radius * 0.42);
         const faceInner = xFace - sign * (logoHalf + pad);
         const xBoxLeft = Math.min(xText, faceInner);
-        const maxTextWidth = Math.max(50, Math.abs(faceInner - xText)); // FIX
+        const maxTextWidth = Math.max(50, Math.abs(faceInner - xText));
 
         // text block
         if ((showName || showSubA || showSubB || showSubC) && maxTextWidth >= PERF.minTextWidth){
@@ -352,8 +366,6 @@
             const fit = fitOneLine(ctx, title, {maxWidth:maxTextWidth, targetPx:nameTargetPx, minPx:9, maxPx:24, weight:800});
             lines.push({txt:fit.text, px:fit.fontPx, w:800});
           }
-
-          // team stadium OR player nationality
           if (showSubA){
             const sub = isPlayer ? subNat : subStadium;
             const base = lines.length ? Math.max(8, Math.round(lines[0].px*0.84)) : subTargetPx;
@@ -464,40 +476,100 @@
     requestAnimationFrame(anim);
   }
 
+  // ───────────────────────────── Modal helpers (Reveal buttons)
+  const revealed = new Set(); // keys revealed for the open modal
+
+  function ensureRevealStyles(){
+    if (document.getElementById('reveal-style')) return;
+    const s=document.createElement('style'); s.id='reveal-style';
+    s.textContent = `
+      .reveal-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;user-select:none;white-space:nowrap}
+      .blurred{filter:blur(14px) saturate(.9);pointer-events:none}
+    `;
+    document.head.appendChild(s);
+  }
+
+  function clearRevealButtons(){
+    document.querySelectorAll('.reveal-btn').forEach(b=>b.remove());
+    revealed.clear();
+  }
+
+  function addReveal(el, key, label){
+    if (!el) return;
+    const visible = revealed.has(key);
+    const enabled = (key==='league')
+      ? (optLeague && optLeague.checked) // TEAM modal-only
+      : (key==='stadium' ? (optStadium && optStadium.checked)
+         : key==='image' ? (optLogo && optLogo.checked)
+         : key==='name'  ? (optName && optName.checked)
+         : key==='jersey'? (optJersey && optJersey.checked)
+         : key==='nation'? (optNat && optNat.checked)
+         : key==='club'  ? (optClub && optClub.checked)
+         : true);
+
+    if (enabled || visible){ el.classList.remove('blurred'); return; }
+
+    el.classList.add('blurred');
+    const btn=document.createElement('button');
+    btn.className='reveal-btn';
+    btn.textContent=`Show ${label}`;
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault(); revealed.add(key); el.classList.remove('blurred'); btn.remove();
+    });
+    // place after element
+    if (el.parentElement) el.parentElement.insertAdjacentElement('beforeend', btn);
+  }
+
   // ───────────────────────────── Modal
   function openModal(item){
+    ensureRevealStyles();
+    clearRevealButtons();
+
     const isPlayer = (MODE==='player');
     const title = isPlayer ? (item.name || 'Player') : (item.team_name || 'Team');
-    const subtitle = isPlayer ? '' : (LEAGUE_LABELS[item.league_code] || item.league_code || '');
+    const subtitleTeam = isPlayer ? '' : (LEAGUE_LABELS[item.league_code] || item.league_code || '');
 
     mHead.textContent = title;
-    mSub.textContent  = subtitle;
     mLogo.src = item.logo_url || '';
     mLogo.alt = title;
 
     if (isPlayer){
-      mClubRow.style.display = 'flex';
-      mClub.textContent = item.club || '—';
+      // Player modal content
+      mSub.textContent = ''; // league hidden in player mode
+      mClubRow && (mClubRow.style.display = 'flex');
+      if (mClub)   mClub.textContent   = item.club || '—';
+      if (mJersey) mJersey.textContent = item.jersey_number ? `#${item.jersey_number}` : '—';
+      if (mNation) mNation.textContent = item.nationality || '—';
+      if (mFieldLabel) mFieldLabel.textContent = 'Details';
+      if (mStadium) mStadium.style.display='none';
 
-      mFieldLabel.textContent = 'Details';
-      mStadium.style.display='none';
-      mJersey.style.display = optJersey.checked ? 'inline-block' : 'none';
-      mNation.style.display = optNat.checked    ? 'inline-block' : 'none';
-      mJersey.textContent   = item.jersey_number ? `#${item.jersey_number}` : '—';
-      mNation.textContent   = item.nationality || '—';
+      // Reveal buttons according to toggles
+      addReveal(mLogo,  'image',  'Image');
+      addReveal(mHead,  'name',   'Name');
+      addReveal(mJersey,'jersey', 'Jersey Number');
+      addReveal(mNation,'nation', 'Nationality');
+      addReveal(mClub,  'club',   'Club');
+
     } else {
-      mClubRow.style.display = 'none';
-      mFieldLabel.textContent = 'Stadium';
-      mStadium.style.display='inline-block';
-      mStadium.textContent = item.stadium || '—';
-      mJersey.style.display='none';
-      mNation.style.display='none';
+      // Team modal content
+      mSub.textContent = subtitleTeam;
+      mClubRow && (mClubRow.style.display = 'none');
+      if (mFieldLabel) mFieldLabel.textContent = 'Stadium';
+      if (mStadium){ mStadium.style.display='inline-block'; mStadium.textContent = item.stadium || '—'; }
+      if (mJersey) mJersey.style.display='none';
+      if (mNation) mNation.style.display='none';
+
+      // Reveal buttons according to toggles
+      addReveal(mLogo,  'image',  'Logo');
+      addReveal(mHead,  'name',   'Name');
+      addReveal(mStadium,'stadium','Stadium');
+      addReveal(mSub,   'league', 'League');
     }
 
     backdrop.style.display='flex';
     requestAnimationFrame(()=>modalEl.classList.add('show'));
   }
-  function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none',150); }
+  function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>{ backdrop.style.display='none'; clearRevealButtons(); },150); }
 
   mClose.addEventListener('click', ()=>{ if(!spinning) closeModal(); });
   backdrop.addEventListener('click', e=>{ if(!spinning && e.target===backdrop) closeModal(); });
@@ -546,7 +618,7 @@
     toggleMore.setAttribute('aria-expanded', hidden ? 'true' : 'false');
   });
 
-  const onToggle = ()=>{ if(spinning) return; drawWheel(); const cur=getCurrentData(); if(backdrop.style.display==='flex' && cur.length){ openModal(cur[Math.max(0,Math.min(selectedIdx,cur.length-1))]); } };
+  const onToggle = ()=>{ if(spinning) return; drawWheel(); if (backdrop.style.display==='flex'){ /* keep modal but honor reveal buttons based on toggles */ openModal(getCurrentData()[Math.max(0, Math.min(selectedIdx, Math.max(0,getCurrentData().length-1)))]); } };
   [optLogo,optName,optJersey,optNat,optClub,optStadium,optLeague].forEach(el=>el && el.addEventListener('change', onToggle));
 
   spinBtn.addEventListener('click', spin);
@@ -580,7 +652,7 @@
       let clubName = explicitClub && explicitClub.trim() ? explicitClub.trim() : '';
       if (!clubName && teamId && TEAM_ID_INDEX[teamId]?.name) clubName = TEAM_ID_INDEX[teamId].name;
 
-      const clubKey = clubName ? slug(clubName) : (teamId ? `id:${teamId}` : '');
+      const clubKey = clubName ? slug(clubName) : (teamId ? `id:${teamId}` : '__unknown__');
 
       const nationality = p.nationality || p.country || p.meta?.nationality || '';
       const jersey = p.jersey_number ?? p.number ?? p.shirt_number ?? p.meta?.jersey_number ?? '';
@@ -590,7 +662,7 @@
         team_name: name,
         logo_url: img,
         league_code: 'PLAYER',
-        primary_color: '', // color handled by palette
+        primary_color: '', // palette drives color for players
         stadium: '',
 
         // player extras
@@ -626,6 +698,7 @@
 
         if (MODE==='player'){
           await loadPlayers().catch(()=>{});
+          normalizePlayerClubs();
           renderPlayerChips();
         } else {
           renderTeamChips();
