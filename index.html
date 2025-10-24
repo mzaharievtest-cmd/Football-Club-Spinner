@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-RK8RD59N8G');
+  </script>
 
-  gtag('config', 'G-RK8RD59N8G');
-</script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -45,14 +45,15 @@
   <link rel="stylesheet" href="style.css">
 
   <!-- Google Tag Manager -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-KS5K7Z4T');</script>
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+      var f=d.getElementsByTagName(s)[0], j=d.createElement(s), dl=l!='dataLayer'?'&l='+l:'';
+      j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl; f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-KS5K7Z4T');
+  </script>
   <!-- End Google Tag Manager -->
-  
 </head>
+
 <body>
 <header>
   <div class="brand">
@@ -64,16 +65,14 @@
   </div>
 
   <div class="header-right">
-    <!-- Mode switch sits below the nav visually; buttons wired by app.js -->
     <div class="mode-switch-wrap">
       <div class="mode-switch" role="tablist" aria-label="View mode">
-        <button id="modeTeam" role="tab" aria-pressed="true" class="mode-btn mode-btn-active">TEAM</button>
+        <button id="modeTeam"   role="tab" aria-pressed="true"  class="mode-btn mode-btn-active">TEAM</button>
         <button id="modePlayer" role="tab" aria-pressed="false" class="mode-btn">PLAYER</button>
       </div>
     </div>
   </div>
 </header>
-
 
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T"
@@ -81,18 +80,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
 <main class="container">
-  <!-- Left: controls (Team mode UI unchanged) -->
-  <section class="card" aria-labelledby="filter-title" id="teamView">
+  <!-- LEFT: Filters / buttons (contents adapt per mode) -->
+  <section class="card sidebar" aria-labelledby="filter-title">
     <div class="section-title" id="filter-title">Leagues (filter)</div>
 
     <!-- Quick picks -->
-    <div class="quick-picks" role="group" aria-label="Quick league selections">
+    <div class="quick-picks" role="group" aria-label="Quick selections">
       <button id="qpAll"   class="chip-btn" type="button">All</button>
       <button id="qpNone"  class="chip-btn" type="button">None</button>
       <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
     </div>
 
-    <!-- League chips (Top 5 visible; more hidden until toggled) -->
+    <!-- Dynamic chips -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
 
@@ -104,24 +103,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 
     <div class="section-title">Show on wheel</div>
-    <!-- Show-on-wheel options -->
     <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
-      <label class="chip">
-        <input type="checkbox" id="optName" checked aria-label="Name" />
-        <span class="chip-text">Name</span>
-      </label>
-      <label class="chip">
-        <input type="checkbox" id="optLogo" checked aria-label="Logo" />
-        <span class="chip-text">Logo</span>
-      </label>
-      <label class="chip">
-        <input type="checkbox" id="optStadium" aria-label="Stadium" />
-        <span class="chip-text">Stadium</span>
-      </label>
-      <label class="chip">
-        <input type="checkbox" id="optLeague" checked aria-label="League" />
-        <span class="chip-text">League</span>
-      </label>
+      <label class="chip"><input type="checkbox" id="optName" checked aria-label="Name"/><span id="lblName"   class="chip-text">Name</span></label>
+      <label class="chip"><input type="checkbox" id="optLogo" checked aria-label="Logo"/><span id="lblLogo"   class="chip-text">Logo</span></label>
+      <label class="chip"><input type="checkbox" id="optStadium"       aria-label="Stadium"/><span id="lblSub1" class="chip-text">Stadium</span></label>
+      <label class="chip"><input type="checkbox" id="optLeague"  checked aria-label="League"/><span id="lblSub2" class="chip-text">League</span></label>
     </div>
 
     <button id="spinBtn" type="button">SPIN</button>
@@ -131,35 +117,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="history" id="history"></div>
   </section>
 
-  <!-- Right: wheel (shared between modes) -->
+  <!-- RIGHT: Wheel canvas (shared for both modes) -->
   <section class="card" aria-labelledby="wheel-title">
     <div class="section-title" id="wheel-title">Club Wheel</div>
     <div id="perfTip" class="perf-tip" aria-live="polite">0 teams selected</div>
     <div class="wheel-wrap">
       <div class="pointer" aria-hidden="true"></div>
       <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
-      <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
-      <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
+      <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
+      <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
     </div>
   </section>
 
-  <!-- Player view (hidden by default, shown when PLAYER mode is active) -->
-  <section id="playerView" class="card player-only hidden" aria-labelledby="player-title">
-    <div class="section-title" id="player-title">Players</div>
-    <div class="player-controls">
-      <p class="small">Switch to PLAYER mode to spin players instead of teams. Images are loaded from /players/players.json.</p>
-    </div>
-
-    <!-- Optional small preview grid/list of players (rendered by app.js) -->
-    <div id="playerList" class="player-list" aria-live="polite"></div>
-
-    <div class="history-title">Player history</div>
-    <div class="history" id="historyPlayers"></div>
-  </section>
-
-  <!-- Content block -->
+  <!-- Content (FAQ etc.) -->
   <section id="content" style="grid-column: 1 / -1" class="scroll-smooth">
-    <!-- (same content as before: TOC, FAQs, etc.) -->
     <nav aria-label="On this page" class="toc">
       <a href="#what-is">What is Football Spinner?</a>
       <a href="#how-it-works">How it works</a>
@@ -172,28 +143,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </nav>
 
     <h2 id="what-is">What is Football Spinner?</h2>
-    <div class="text-wrap">
-      <p>
-        Football Spinner is a free, fan‑made <strong>random football club generator</strong> built for quick fun, discovery, and <strong>football trivia</strong>.
-      </p>
-    </div>
-    <!-- rest of content omitted for brevity -->
+    <p>Football Spinner is a free, fan-made <strong>random football club generator</strong> built for quick fun, discovery, and football trivia.</p>
+    <!-- (rest omitted for brevity) -->
   </section>
 </main>
 
 <!-- Modal -->
-<div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mHead">
-  <div id="modal" class="modal">
-    <div id="mHead" class="m-head">Team</div>
+<div id="backdrop" style="display:none">
+  <div id="modal">
+    <div id="mHead">Title</div>
     <div class="m-body">
-      <div class="m-sub" id="mSub">League</div>
-
-      <div class="m-row">
-        <img id="mLogo" class="m-logo" alt="" />
-      </div>
-
+      <div id="mSub" class="small"></div>
+      <img id="mLogo" alt="" />
       <div class="m-row" style="margin-top:12px">
-        <strong style="min-width:84px">Stadium</strong>
+        <strong style="min-width:84px" id="mFieldLabel">Stadium</strong>
         <span id="mStadium" class="m-sub"></span>
       </div>
     </div>
