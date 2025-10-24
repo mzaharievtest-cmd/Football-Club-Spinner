@@ -165,6 +165,9 @@ header .brand {
   gap: 22px;
   position: relative;
   z-index: 1;
+
+  /* keep columns aligned during scroll */
+  align-items: start;
 }
 
 @media (min-width: 980px) {
@@ -187,6 +190,9 @@ header .brand {
   transform: translateY(8px);
   opacity: 0;
   animation: card-in .6s var(--ease-out) forwards;
+
+  /* keep vertical alignment stable against the wheel card */
+  align-self: start;
 }
 @keyframes card-in {
   to { transform: translateY(0); opacity: 1; }
@@ -443,6 +449,9 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   justify-content: center;
   align-items: center;
   padding: clamp(36px, 5vw, 64px) clamp(10px, 2.5vw, 18px) clamp(10px, 2.5vw, 18px);
+
+  /* keeps layout stable when the wheel shrinks on mobile */
+  min-height: 640px;
 }
 
 canvas#wheel {
