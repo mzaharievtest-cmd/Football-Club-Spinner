@@ -1,150 +1,124 @@
 #!/usr/bin/env node
-/**
- * Fetch Premier League squads from SportMonks and write a flat players list.
- * No fs-extra / axios — only Node built-ins (+ dotenv if installed).
+/* Fetch squads from Sportmonks and write data/players.json
+ * ENV:
+ *  SPORTMONKS_TOKEN=xxxx
+ *  TEAM_IDS=9,14,19,...    (Sportmonks team IDs)
+ *  SEASON_ID=25583         (2025/26)
+ *  OUT=data/players.json
  */
-
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 
-// Optional: load .env if dotenv is available; otherwise do a tiny fallback
-(function loadEnv() {
-  try {
-    require('dotenv').config();
-  } catch {
-    // Fallback: very small .env loader (KEY=VALUE per line)
-    try {
-      const p = path.resolve(process.cwd(), '.env');
-      if (fs.existsSync(p)) {
-        const txt = fs.readFileSync(p, 'utf8');
-        for (const line of txt.split(/\r?\n/)) {
-          const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)\s*$/);
-          if (m) {
-            const k = m[1], v = m[2].replace(/^['"]|['"]$/g, '');
-            if (!process.env[k]) process.env[k] = v;
-          }
-        }
-      }
-    } catch {}
-  }
-})();
-
 const TOKEN = process.env.SPORTMONKS_TOKEN;
-const SEASON_ID = process.env.SEASON_ID || '25583';
-const TEAM_IDS = (process.env.TEAM_IDS || '')
-  .split(',')
-  .map(s => s.trim())
-  .filter(Boolean);
-const OUT = process.env.OUT || 'data/players.json';
+const TEAM_IDS = (process.env.TEAM_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+const SEASON_ID = process.env.SEASON_ID || '25583'; // 2025/26
+const OUT = process.env.OUT || path.join('data', 'players.json');
 
 if (!TOKEN) {
-  console.error('❌ Missing SPORTMONKS_TOKEN in .env');
+  console.error('Missing SPORTMONKS_TOKEN in env');
   process.exit(1);
 }
-if (TEAM_IDS.length === 0) {
-  console.error('❌ TEAM_IDS is empty. Add comma-separated team IDs to .env');
+if (!TEAM_IDS.length) {
+  console.error('Provide TEAM_IDS in env (comma-separated Sportmonks team IDs).');
   process.exit(1);
 }
 
-const BASE = 'https://api.sportmonks.com/v3/football';
-const delay = (ms) => new Promise(r => setTimeout(r, ms));
-
-async function getJSON(url) {
-  const res = await fetch(url, { headers: { accept: 'application/json' } });
+async function fetchJson(url, params) {
+  const u = new URL(url);
+  for (const [k, v] of Object.entries(params || {})) {
+    u.searchParams.set(k, v);
+  }
+  const res = await fetch(u, { headers: { Accept: 'application/json' } });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    const slim = body && body.length > 600 ? body.slice(0,600)+'…' : body;
-    throw new Error(`HTTP ${res.status} for ${url}\n${slim}`);
+    throw new Error(`HTTP ${res.status} for ${u.pathname} :: ${body.slice(0,200)}`);
   }
   return res.json();
 }
 
-function normArray(x) {
-  if (Array.isArray(x)) return x;
-  if (x && Array.isArray(x.data)) return x.data;
-  return [];
+function normPlayer(row, teamName, teamId) {
+  // In this endpoint, each row is a "squad membership" with .player and .team expanded
+  const p = row.player || {};
+  const pos = (p.position && p.position.name) || null;
+  const nationality = (p.nationality && p.nationality.name) || null;
+
+  // Your wheel expects fields like team_name, logo_url, league_code, stadium
+  // For players mode we map name->team_name, image_path->logo_url, club->team label.
+  return {
+    // Wheel-compatible fields:
+    team_name: p.display_name || p.common_name || p.name || 'Player',
+    logo_url: p.image_path || '', // usually full https URL from Sportmonks
+    league_code: 'PLAYER',
+    primary_color: '#163058',
+    stadium: teamName || '',
+
+    // Keep raw Player info too if you need it later:
+    name: p.display_name || p.common_name || p.name || 'Player',
+    image_url: p.image_path || '',
+    club: teamName || '',
+    club_id: teamId || null,
+    position: pos,
+    nationality
+  };
 }
 
-async function fetchSquad(teamId) {
-  const url =
-    `${BASE}/squads/teams/${encodeURIComponent(teamId)}`
-    + `?api_token=${encodeURIComponent(TOKEN)}`
-    + `&include=team;player.nationality;player.position`;
-  try {
-    const json = await getJSON(url);
-    const rows = normArray(json);
-    // some tenants return an object with team field at array[0], sometimes per row
-    const teamName =
-      (rows[0]?.team?.name) ||
-      (json?.team?.name) ||
-      `team-${teamId}`;
+async function run() {
+  await fsp.mkdir(path.dirname(OUT), { recursive: true });
 
-    const players = rows.map(row => {
-      const pl = row.player || {};
-      const nat = pl.nationality?.name || null;
-      const pos = pl.position?.name || null;
-
-      return {
-        id: pl.id ?? null,
-        name: pl.display_name || pl.name || 'Player',
-        club: teamName,
-        nationality: nat,
-        number: row.jersey_number ?? null,
-        position: pos,
-        image_url: pl.image_path || null,
-        season: SEASON_ID
-      };
-    }).filter(p => p.name);
-
-    console.log(`✅ ${teamName} — ${players.length} players`);
-    return players;
-  } catch (err) {
-    console.warn(`⚠️  team ${teamId} failed: ${err.message.split('\n')[0]}`);
-    return [];
-  }
-}
-
-async function ensureDir(p) {
-  await fsp.mkdir(path.dirname(p), { recursive: true });
-}
-
-async function main() {
   console.log(`Season: ${SEASON_ID}`);
   console.log(`Teams : ${TEAM_IDS.length}`);
   console.log('———————');
 
-  const all = [];
+  const allPlayers = [];
   for (let i = 0; i < TEAM_IDS.length; i++) {
     const id = TEAM_IDS[i];
-    console.log(`[${i+1}/${TEAM_IDS.length}] team=${id}`);
-    const players = await fetchSquad(id);
-    all.push(...players);
-    // be nice to the API
-    await delay(350);
+    process.stdout.write(`[${i+1}/${TEAM_IDS.length}] team=${id}\n`);
+    try {
+      const data = await fetchJson(`https://api.sportmonks.com/v3/football/squads/teams/${id}`, {
+        api_token: TOKEN,
+        include: 'team;player;player.nationality;player.position',
+        filters: `playerstatisticSeasons:${SEASON_ID}`, // affects player.statistics if included
+      });
+
+      // Docs: this endpoint returns an array of squad entries.
+      // Some SDKs return {data: [...]}; raw v3 often yields an array directly.
+      const rows = Array.isArray(data) ? data
+                 : Array.isArray(data.data) ? data.data
+                 : [];
+
+      if (!rows.length) {
+        console.warn(`  ⚠️  team ${id}: empty response or not in your project`);
+        continue;
+      }
+
+      const teamName = rows[0]?.team?.name || '';
+      const normalized = rows
+        .filter(r => r && r.player) // keep only rows with expanded player
+        .map(r => normPlayer(r, teamName, id));
+
+      console.log(`  + ${normalized.length} players`);
+      allPlayers.push(...normalized);
+    } catch (err) {
+      console.warn(`  ⚠️  team ${id} failed: ${err.message}`);
+    }
   }
 
-  // Deduplicate by id (fallback to name+club if id missing)
-  const dedup = new Map();
-  for (const p of all) {
-    const key = p.id ? `id:${p.id}` : `nk:${p.name}-${p.club}`.toLowerCase();
-    if (!dedup.has(key)) dedup.set(key, p);
+  // De-dup by (club_id, name)
+  const seen = new Set();
+  const unique = [];
+  for (const p of allPlayers) {
+    const k = `${p.club_id || ''}|${p.name || ''}`.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    unique.push(p);
   }
 
-  const arr = Array.from(dedup.values());
-  await ensureDir(OUT);
-
-  // backup if exists
-  if (fs.existsSync(OUT)) {
-    const backup = `${OUT}.${Date.now()}.bak`;
-    await fsp.copyFile(OUT, backup);
-  }
-
-  await fsp.writeFile(OUT, JSON.stringify(arr, null, 2), 'utf8');
-  console.log(`\n✅ Done. Saved ${arr.length} unique players → ${OUT}`);
+  await fsp.writeFile(OUT, JSON.stringify(unique, null, 2));
+  console.log(`\n✅ Done. Saved ${unique.length} unique players → ${OUT}`);
 }
 
-main().catch(err => {
-  console.error('❌ Fatal:', err.message);
+run().catch(err => {
+  console.error(err);
   process.exit(1);
 });
