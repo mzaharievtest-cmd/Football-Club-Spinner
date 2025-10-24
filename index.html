@@ -44,6 +44,12 @@
   <!-- App styles -->
   <link rel="stylesheet" href="style.css">
 
+  <!-- Small sticky fix so the left card doesn’t overlap the wheel on scroll -->
+  <style>
+    .sidebar{position:sticky;top:84px;align-self:start;max-height:calc(100vh - 100px);overflow:auto}
+    .wheel-wrap{position:relative}
+  </style>
+
   <!-- Google Tag Manager -->
   <script>
     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
@@ -51,7 +57,6 @@
       j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl; f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-KS5K7Z4T');
   </script>
-  <!-- End Google Tag Manager -->
 </head>
 
 <body>
@@ -74,24 +79,20 @@
   </div>
 </header>
 
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
+<!-- GTM (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <main class="container">
-  <!-- LEFT: Filters / buttons (contents adapt per mode) -->
+  <!-- LEFT: dynamic filters / toggles -->
   <section class="card sidebar" aria-labelledby="filter-title">
     <div class="section-title" id="filter-title">Leagues (filter)</div>
 
-    <!-- Quick picks -->
     <div class="quick-picks" role="group" aria-label="Quick selections">
       <button id="qpAll"   class="chip-btn" type="button">All</button>
       <button id="qpNone"  class="chip-btn" type="button">None</button>
       <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
     </div>
 
-    <!-- Dynamic chips -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
 
@@ -111,13 +112,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 
     <button id="spinBtn" type="button">SPIN</button>
-    <button id="resetHistoryBtn" type="button">Reset History</button>
 
     <div class="history-title">History</div>
     <div class="history" id="history"></div>
+    <!-- moved here -->
+    <button id="resetHistoryBtn" type="button" style="margin-top:12px">Reset History</button>
   </section>
 
-  <!-- RIGHT: Wheel canvas (shared for both modes) -->
+  <!-- RIGHT: wheel -->
   <section class="card" aria-labelledby="wheel-title">
     <div class="section-title" id="wheel-title">Club Wheel</div>
     <div id="perfTip" class="perf-tip" aria-live="polite">0 teams selected</div>
@@ -144,17 +146,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <h2 id="what-is">What is Football Spinner?</h2>
     <p>Football Spinner is a free, fan-made <strong>random football club generator</strong> built for quick fun, discovery, and football trivia.</p>
-    <!-- (rest omitted for brevity) -->
   </section>
 </main>
 
 <!-- Modal -->
-<div id="backdrop" style="display:none">
-  <div id="modal">
-    <div id="mHead">Title</div>
+<div id="backdrop" class="modal-backdrop" style="display:none">
+  <div id="modal" class="modal">
+    <div id="mHead" class="m-head">Title</div>
     <div class="m-body">
-      <div id="mSub" class="small"></div>
-      <img id="mLogo" alt="" />
+      <div id="mSub" class="m-sub small"></div>
+      <img id="mLogo" class="m-logo" alt="" />
       <div class="m-row" style="margin-top:12px">
         <strong style="min-width:84px" id="mFieldLabel">Stadium</strong>
         <span id="mStadium" class="m-sub"></span>
