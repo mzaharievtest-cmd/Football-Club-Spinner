@@ -279,14 +279,15 @@ function renderPlayerChips(){
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
 
-  // only PL clubs that actually have players
-  const presentClubIds = new Set(PLAYERS.map(p => normId(p.club_id)).filter(Boolean));
-  const plTeams = TEAMS.filter(t => t.league_code==='EPL' && presentClubIds.has(t.team_id));
+  // ✅ Use ALL Premier League teams we have in TEAMS (not only those that appear in PLAYERS)
+  const plTeams = TEAMS.filter(t => t.league_code === 'EPL');
 
+  // Keep dynamic Top 6 (computed from TEAMS, with fallback ids)
   const top6Ids = computePLTop6Ids();
   const top6 = plTeams.filter(t => top6Ids.includes(t.team_id));
   top6.forEach(t => chipsTop.appendChild(makeChip(t.team_id, t.team_name, true)));
 
+  // “Show more” gets the rest of the PL clubs, alphabetically
   const rest = plTeams
     .filter(t => !top6Ids.includes(t.team_id))
     .sort((a,b)=>a.team_name.localeCompare(b.team_name));
