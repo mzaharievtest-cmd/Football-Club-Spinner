@@ -44,9 +44,9 @@
   <!-- App styles -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Sticky left card + wheel wrap safeguard -->
+  <!-- Sticky sidebar & wheel container nits -->
   <style>
-    .sidebar{position:sticky;top:84px;align-self:start;max-height:calc(100vh - 100px);overflow:auto}
+    .sidebar{position:sticky;top:84px;align-self:start;max-height:calc(100vh - 96px);overflow:auto}
     .wheel-wrap{position:relative}
   </style>
 
@@ -87,38 +87,29 @@
   <section class="card sidebar" aria-labelledby="filter-title">
     <div class="section-title" id="filter-title">Leagues (filter)</div>
 
-    <!-- Quick picks (TEAM) / Top 6 (PLAYER will re-label buttons) -->
+    <!-- Quick picks (mode-aware labels handled in JS) -->
     <div class="quick-picks" role="group" aria-label="Quick selections">
       <button id="qpAll"   class="chip-btn" type="button">All</button>
       <button id="qpNone"  class="chip-btn" type="button">None</button>
-      <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
+      <button id="qpTop"   class="chip-btn" type="button">Top</button>
     </div>
 
-    <!-- Chips area -->
+    <!-- Chips (TEAM: leagues; PLAYER: Premier League clubs) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
-
       <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">
-        Show more leagues
+        Show more
       </button>
-
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
     <div class="section-title">Show on wheel</div>
     <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
-      <!-- Always available; JS maps them by mode -->
-      <label class="chip"><input type="checkbox" id="optLogo" checked aria-label="Image or Logo"/><span id="lblLogo" class="chip-text">Logo</span></label>
-      <label class="chip"><input type="checkbox" id="optName" checked aria-label="Name"/><span id="lblName" class="chip-text">Name</span></label>
-
-      <!-- Player-only toggles (JS will still read them in TEAM but they do nothing visually) -->
-      <label class="chip"><input type="checkbox" id="optJersey" aria-label="Jersey Number"/><span id="lblJersey" class="chip-text">Jersey Number</span></label>
-      <label class="chip"><input type="checkbox" id="optNationality" aria-label="Nationality"/><span id="lblNationality" class="chip-text">Nationality</span></label>
-      <label class="chip"><input type="checkbox" id="optClub" aria-label="Club"/><span id="lblClub" class="chip-text">Club</span></label>
-
-      <!-- Team-only toggles -->
-      <label class="chip"><input type="checkbox" id="optStadium" aria-label="Stadium"/><span id="lblStadium" class="chip-text">Stadium</span></label>
-      <label class="chip"><input type="checkbox" id="optLeague"  aria-label="League"/><span id="lblLeague" class="chip-text">League</span></label>
+      <!-- labels & visibility are mode-aware (updated by JS) -->
+      <label class="chip"><input type="checkbox" id="optA" checked aria-label="A"/><span id="lblA" class="chip-text">A</span></label>
+      <label class="chip"><input type="checkbox" id="optB" checked aria-label="B"/><span id="lblB" class="chip-text">B</span></label>
+      <label class="chip"><input type="checkbox" id="optC"        aria-label="C"/><span id="lblC" class="chip-text">C</span></label>
+      <label class="chip"><input type="checkbox" id="optD"        aria-label="D"/><span id="lblD" class="chip-text">D</span></label>
     </div>
 
     <button id="spinBtn" type="button">SPIN</button>
@@ -131,7 +122,7 @@
   <!-- RIGHT: wheel -->
   <section class="card" aria-labelledby="wheel-title">
     <div class="section-title" id="wheel-title">Club Wheel</div>
-    <div id="perfTip" class="perf-tip" aria-live="polite">0 teams selected</div>
+    <div id="perfTip" class="perf-tip" aria-live="polite">0 items selected</div>
     <div class="wheel-wrap">
       <div class="pointer" aria-hidden="true"></div>
       <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
@@ -140,21 +131,15 @@
     </div>
   </section>
 
-  <!-- Content (trimmed) -->
+  <!-- Content (kept minimal for brevity) -->
   <section id="content" style="grid-column: 1 / -1" class="scroll-smooth">
     <nav aria-label="On this page" class="toc">
       <a href="#what-is">What is Football Spinner?</a>
       <a href="#how-it-works">How it works</a>
-      <a href="#leagues">Leagues</a>
-      <a href="#why">Why use it</a>
-      <a href="#faq">FAQ</a>
-      <a href="#updates">Updates</a>
-      <a href="#disclaimer">Disclaimer</a>
-      <a href="#ads">Ads & Cookies</a>
     </nav>
 
     <h2 id="what-is">What is Football Spinner?</h2>
-    <p>Football Spinner is a free, fan-made <strong>random football club generator</strong> built for quick fun, discovery, and football trivia.</p>
+    <p>Football Spinner is a free, fan-made random football club generator built for quick fun, discovery, and football trivia.</p>
   </section>
 </main>
 
@@ -164,23 +149,32 @@
     <div id="mHead" class="m-head">Title</div>
     <div class="m-body">
       <div id="mSub" class="m-sub small"></div>
+
+      <!-- shared image (team logo or player image) -->
       <img id="mLogo" class="m-logo" alt="" />
 
-      <!-- CLUB (always shown in PLAYER mode) -->
-      <div class="m-row" id="mClubRow" style="margin-top:6px; display:none;">
+      <!-- TEAM row: Stadium; PLAYER rows: Club / Jersey / Nationality -->
+      <div class="m-row" id="rowStadium">
+        <strong style="min-width:84px">Stadium</strong>
+        <span id="mStadium" class="m-sub"></span>
+      </div>
+
+      <div class="m-row" id="rowClub" style="display:none">
         <strong style="min-width:84px">Club</strong>
         <span id="mClub" class="m-sub"></span>
       </div>
 
-      <!-- Stadium (TEAM) / Jersey+Nationality badges (PLAYER) -->
-      <div class="m-row" id="mRowInfo" style="margin-top:12px">
-        <strong style="min-width:84px" id="mFieldLabel">Stadium</strong>
-        <span id="mStadium" class="m-sub"></span>
+      <div class="m-row" id="rowJersey" style="display:none">
+        <strong style="min-width:84px">Jersey</strong>
+        <span id="mJersey" class="m-sub"></span>
+      </div>
 
-        <span id="mJersey" class="m-sub" style="display:none"></span>
-        <span id="mNation" class="m-sub"  style="display:none"></span>
+      <div class="m-row" id="rowNat" style="display:none">
+        <strong style="min-width:84px">Nationality</strong>
+        <span id="mNat" class="m-sub"></span>
       </div>
     </div>
+
     <div class="m-actions">
       <button id="mClose" class="chip-btn" type="button">Close</button>
     </div>
