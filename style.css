@@ -939,3 +939,11 @@ button:focus-visible,
   #showOnWheel .chip input[type="checkbox"],
   .showopts .chip input[type="checkbox"] { width: 20px; height: 20px; }
 }
+/* --- Spinner fixes / modal placement helpers (append) --- */
+
+/* Ensure the left sidebar never visually overlaps the wheel while scrolling */
+.card.sidebar { z-index: 1; }
+.container > .card:not(.sidebar) { z-index: 2; }
+
+/* Keep reveal buttons positioned next to blurred elements */
+.reveal-btn { display: inline-flex; margin-top: 8px; }
