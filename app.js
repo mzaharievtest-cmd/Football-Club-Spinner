@@ -108,14 +108,13 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weigh
 }
 
 // ---------- Data helpers ----------
+// IMPORTANT FIX: collect all values from BOTH chip sections regardless of visibility
 function visibleCodes(){
-  // In TEAM: these are league codes. In PLAYER: these are club team_ids (string)
   const arr = [];
   chipsTop.querySelectorAll('input[type="checkbox"]').forEach(i=> arr.push(i.value));
-  if (!chipsMore.hidden) chipsMore.querySelectorAll('input[type="checkbox"]').forEach(i=> arr.push(i.value));
+  chipsMore.querySelectorAll('input[type="checkbox"]').forEach(i=> arr.push(i.value));
   return arr;
 }
-
 function activeCodes(){
   const arr=[];
   chipsWrap.querySelectorAll('input[type="checkbox"]:checked').forEach(i=> arr.push(i.value));
@@ -123,17 +122,27 @@ function activeCodes(){
 }
 
 function getCurrentData(){
+  // Which filters are checked?
   const active = new Set(activeCodes());
+
   if (MODE==='player'){
     if (!PLAYERS.length) return [];
-    // if no filters checked → treat as “all visible”
-    const vis = visibleCodes();
-    const restrict = active.size ? active : new Set(vis);
-    return PLAYERS.filter(p => restrict.has(String(p.club_id)));
+
+    // If nothing checked, use ALL club ids that exist in the chip list (even if "more" is collapsed).
+    const all = visibleCodes();
+    const restrict = active.size ? active : new Set(all);
+
+    let out = PLAYERS.filter(p => restrict.has(String(p.club_id)));
+
+    // SAFETY FIX: if the selection yields 0 players (e.g., ID mismatch), fall back to ALL players
+    if (out.length === 0) out = PLAYERS.slice();
+
+    return out;
   }
+
   // TEAM
-  const vis = visibleCodes();
-  const restrict = active.size ? active : new Set(vis);
+  const all = visibleCodes();
+  const restrict = active.size ? active : new Set(all);
   return TEAMS.filter(t => restrict.has(t.league_code));
 }
 
@@ -465,7 +474,7 @@ function openModal(item){
   } else {
     // TEAM
     mHead.textContent = item.team_name || '—';
-    mSub.textContent  = (optD.checked ? leagueLabel(item.league_code) : ''); // still rendered but blurred if disabled
+    mSub.textContent  = (optD.checked ? leagueLabel(item.league_code) : '');
     mLogo.src = item.logo_url || '';
     rowStadium.style.display='';
     rowClub.style.display='none';
@@ -587,9 +596,10 @@ function wire(){
   });
 
   function setActive(btn){ [qpAll,qpNone,qpTop].forEach(b=> b?.classList.toggle('active', b===btn)); }
-  qpAll.onclick = ()=>{ // select all visible
-    const vis = visibleCodes();
-    chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = vis.includes(i.value));
+  qpAll.onclick = ()=>{
+    // select ALL chips from both sections
+    const all = new Set(visibleCodes());
+    chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = all.has(i.value));
     setActive(qpAll); selectedIdx=-1; updatePerfBanner(); drawWheel();
   };
   qpNone.onclick = ()=>{
@@ -598,7 +608,6 @@ function wire(){
   };
   qpTop.onclick = ()=>{
     if (MODE==='player'){
-      // top 6 PL clubs
       const allowed = new Set(PL_TOP6_TEAM_IDS);
       chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = allowed.has(i.value));
     } else {
