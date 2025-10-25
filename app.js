@@ -126,7 +126,6 @@ function getCurrentData(){
   const active = new Set(activeCodes());
   if (MODE==='player'){
     if (!PLAYERS.length) return [];
-    // if no filters checked → treat as “all visible”
     const vis = visibleCodes();
     const restrict = active.size ? active : new Set(vis);
     return PLAYERS.filter(p => restrict.has(String(p.club_id))); // compare as string
@@ -149,10 +148,19 @@ function updatePerfBanner(){
 // ---------- Chips render (mode aware) ----------
 const TOP5 = ['EPL','SA','BUN','L1','LLA']; // teams
 
+// Robust Premier League detection (handles different league codes)
+function isPremierLeagueTeam(t){
+  const code = String(t.league_code || '').toUpperCase().trim();
+  const PL_CODES = new Set(['EPL','PL','ENG1','ENG-PREMIER','PREMIER_LEAGUE','ENGLAND_PREMIER','ENG-PREM','PREMIERLEAGUE']);
+  return PL_CODES.has(code);
+}
+
 // fallback Top 6 PL ids; filtered by presence in TEAMS at runtime
 function computePLTop6Ids(){
   const fallback = ['18','9','14','8','19','6']; // Chelsea, City, United, Liverpool, Arsenal, Spurs
-  const present = new Set(TEAMS.filter(t=>t.league_code==='EPL').map(t=> String(t.team_id)));
+  const present = new Set(
+    TEAMS.filter(isPremierLeagueTeam).map(t=> String(t.team_id))
+  );
   return fallback.filter(id => present.has(id));
 }
 
@@ -169,12 +177,17 @@ function renderChips(){
   chipsMore.innerHTML = '';
 
   if (MODE==='player'){
-    // Premier League 2025/26 clubs from teams.json present in TEAMS
-    const plTeams = TEAMS.filter(t => t.league_code==='EPL');
+    // Premier League clubs from teams.json (robust league code match)
+    const plTeams = TEAMS.filter(isPremierLeagueTeam);
+
+    // If for any reason PL teams couldn't be detected, avoid empty UI by
+    // falling back to "all teams" (still allows filtering/spinning).
+    const base = plTeams.length ? plTeams : TEAMS;
+
     const top6Ids = computePLTop6Ids();
-    const top6 = plTeams.filter(t => top6Ids.includes(String(t.team_id)));
+    const top6 = base.filter(t => top6Ids.includes(String(t.team_id)));
     top6.forEach(t => chipsTop.appendChild(makeChip(String(t.team_id), t.team_name, true)));
-    const rest = plTeams.filter(t => !top6Ids.includes(String(t.team_id)))
+    const rest = base.filter(t => !top6Ids.includes(String(t.team_id)))
       .sort((a,b)=>a.team_name.localeCompare(b.team_name));
     rest.forEach(t => chipsMore.appendChild(makeChip(String(t.team_id), t.team_name, false)));
 
@@ -182,7 +195,7 @@ function renderChips(){
     qpTop.textContent = 'Top 6';
   } else {
     // TEAM → leagues
-    const codes = [...new Set(TEAMS.map(t=>t.league_code))];
+    const codes = [...new Set(TEAMS.map(t=>String(t.league_code)))];
     const top = TOP5.filter(c => codes.includes(c));
     const more = codes.filter(c => !top.includes(c)).sort();
 
