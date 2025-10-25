@@ -81,10 +81,12 @@ const mod = (x,m)=>((x%m)+m)%m;
 const IMG_CACHE = new Map();
 function getImage(url, onload){
   if (!url) return null;
-  const c = IMG_CACHE.get(url);
-  if (c) return c.img;
+  const cached = IMG_CACHE.get(url);
+  if (cached) return cached.img;
   const img = new Image();
   img.crossOrigin = 'anonymous';
+  img.decoding = 'async';
+  img.loading = 'eager';
   img.src = url;
   img.onload = ()=> onload && onload();
   img.onerror = ()=> onload && onload();
@@ -174,16 +176,22 @@ function getCurrentData(){
   const active = new Set(activeCodes());
 
   if (MODE === 'player'){
+    // Fallbacks so the wheel is never empty:
+    // - If PLAYERS not loaded yet → []
+    // - If no chips exist yet → all players
+    // - If no chips are checked → all visible chips (Top + More)
     if (!PLAYERS.length) return [];
-    // If nothing checked → treat all visible codes as selected
-    const baseline = visibleCodesAll();
-    const restrict = active.size ? active : new Set(baseline.map(String));
+
+    const allCodes = visibleCodesAll();              // strings of team_ids from chips
+    if (allCodes.length === 0) return PLAYERS.slice(); // chips not rendered yet → show everyone
+
+    const restrict = active.size ? active : new Set(allCodes.map(String));
     return PLAYERS.filter(p => restrict.has(String(p.club_id)));
   }
 
   // TEAM: chips are league codes
-  const baseline = visibleCodesAll();
-  const restrict = active.size ? active : new Set(baseline);
+  const allCodes = visibleCodesAll();
+  const restrict = active.size ? active : new Set(allCodes);
   return TEAMS.filter(t => restrict.has(t.league_code));
 }
 
@@ -591,7 +599,7 @@ async function loadPlayers(){
       image_url: img,
       club_id: clubId,
       club: team?.team_name || resolveClubName(clubId),
-      league_code: team?.league_code || 'EPL', // used in modal text if needed
+      league_code: team?.league_code || 'EPL',
       nationality: nat,
       jersey: jersey ? String(jersey).replace('#','') : '',
       primary_color: color
