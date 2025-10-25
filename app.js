@@ -177,24 +177,39 @@ function renderChips(){
   chipsMore.innerHTML = '';
 
   if (MODE==='player'){
-    // Premier League clubs from teams.json (robust league code match)
+    // Detect PL clubs robustly; if we can't, fall back to all teams so the wheel isn't empty.
     const plTeams = TEAMS.filter(isPremierLeagueTeam);
-
-    // If for any reason PL teams couldn't be detected, avoid empty UI by
-    // falling back to "all teams" (still allows filtering/spinning).
     const base = plTeams.length ? plTeams : TEAMS;
 
-    const top6Ids = computePLTop6Ids();
-    const top6 = base.filter(t => top6Ids.includes(String(t.team_id)));
-    top6.forEach(t => chipsTop.appendChild(makeChip(String(t.team_id), t.team_name, true)));
-    const rest = base.filter(t => !top6Ids.includes(String(t.team_id)))
-      .sort((a,b)=>a.team_name.localeCompare(b.team_name));
-    rest.forEach(t => chipsMore.appendChild(makeChip(String(t.team_id), t.team_name, false)));
+    const top6Ids = computePLTop6Ids();                   // ['18','9','14','8','19','6'] filtered by presence
+    const top6    = base.filter(t => top6Ids.includes(String(t.team_id)));
+
+    // If we couldn't build a Top 6 (codes didn’t match), default to selecting ALL clubs in "More"
+    const defaultSelectAll = top6.length === 0;
+
+    // Top section (if available)
+    top6.forEach(t => chipsTop.appendChild(
+      makeChip(String(t.team_id), t.team_name, true)
+    ));
+
+    // Remaining clubs go into "More"
+    const rest = base
+      .filter(t => !top6Ids.includes(String(t.team_id)))
+      .sort((a,b)=> a.team_name.localeCompare(b.team_name));
+
+    rest.forEach(t => chipsMore.appendChild(
+      makeChip(String(t.team_id), t.team_name, defaultSelectAll) // ← check by default when no Top 6
+    ));
+
+    // If nothing is checked at all (e.g., no Top 6 and "More" hidden), ensure we still have a selection.
+    if (defaultSelectAll) {
+      chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = true; });
+    }
 
     toggleMore.textContent = 'Show more Premier League clubs';
     qpTop.textContent = 'Top 6';
   } else {
-    // TEAM → leagues
+    // TEAM → leagues (unchanged)
     const codes = [...new Set(TEAMS.map(t=>String(t.league_code)))];
     const top = TOP5.filter(c => codes.includes(c));
     const more = codes.filter(c => !top.includes(c)).sort();
@@ -208,6 +223,7 @@ function renderChips(){
 
   chipsMore.hidden = true;
   toggleMore.setAttribute('aria-expanded','false');
+
   updatePerfBanner();
 }
 
