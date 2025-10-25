@@ -144,23 +144,21 @@ const TOP5 = ['EPL','SA','BUN','L1','LLA'];
 const PL_TOP6_TEAM_IDS = ['18','9','14','8','19','6']; // Chelsea, City, United, Liverpool, Arsenal, Spurs
 
 /* ---------------- Data selection ---------------- */
-function getCurrentData(){
-  const active = new Set(activeCodes());
+function getCurrentData() {
+  const active = new Set(activeCodes()); // what is actually checked
 
-  if (MODE === 'player'){
+  // If user selected nothing, show nothing (strict filtering)
+  if (active.size === 0) return [];
+
+  if (MODE === 'player') {
     if (!PLAYERS.length) return [];
-
-    const allCodes = visibleCodesAll(); // strings (team_ids)
-    // If chips not rendered yet → show everyone
-    if (allCodes.length === 0) return PLAYERS.slice();
-
-    const restrict = active.size ? active : new Set(allCodes);
-    let out = PLAYERS.filter(p => restrict.has(String(p.club_id)));
-
-    // Last-resort safety: if filtering somehow produced 0, don't blank the wheel
-    if (out.length === 0) out = PLAYERS.slice();
-    return out;
+    // Player chips are Premier League team_ids (strings)
+    return PLAYERS.filter(p => active.has(String(p.club_id)));
   }
+
+  // TEAM: chips are league codes (e.g., EPL, SA, BUN ...)
+  return TEAMS.filter(t => active.has(t.league_code));
+}
 
   // TEAM: chips are league codes
   const allCodes = visibleCodesAll();
