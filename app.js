@@ -4,7 +4,7 @@
    - If >50 items selected → wedges only (no text/images)
    - Mode-aware Show-on-wheel (A..D)
    - Club name resolved from club_id via teams.json (+ PL fallbacks)
-   - TEAM leagues & labels come from /data/league-map.json
+   - TEAM leagues & labels come from /data/league-map.json (robust parse + fallback)
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -13,13 +13,13 @@ let TEAMS = [];                  // [{team_id, team_name, league_code, stadium, 
 let PLAYERS = [];                // normalized player objects
 let CLUB_BY_ID = new Map();      // team_id -> team_name
 let TEAM_BY_ID  = new Map();     // team_id -> full team
-let LEAGUE_MAP = [];             // from /data/league-map.json (array of {code,label} in your order)
-let PL_TOP6_IDS = ['18','9','14','8','19','6']; // fallback; will be recomputed from TEAMS by names
+let LEAGUE_MAP = [];             // normalized [{code,label}] in your desired order
+let PL_TOP6_IDS = ['18','9','14','8','19','6']; // fallback; recomputed from TEAMS by names
 
 let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
-let FORCE_NONE = false;          // when “None” is clicked, force empty selection
+let FORCE_NONE = false;          // “None” quick-pick forces empty selection
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 
 /* ---------- DOM ---------- */
@@ -125,12 +125,40 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weigh
   return {text:(s||'')+'…', fontPx:minPx};
 }
 
-/* ---------- League names ---------- */
+/* ---------- League names (robust) ---------- */
+function normLeagueMapPayload(payload){
+  // Accept:
+  // 1) [{code:'EPL', label:'Premier League'}, ...]
+  // 2) [{id:'EPL', name:'Premier League'}, ...]
+  // 3) ['EPL','SA', ...]  (labels default to code)
+  // 4) { "EPL":"Premier League", ... } (object map)
+  const out = [];
+  if (Array.isArray(payload)){
+    payload.forEach(x=>{
+      if (typeof x === 'string') out.push({code:x, label:x});
+      else if (x && typeof x === 'object'){
+        const code = x.code || x.id || x.key || x.abbr || x.slug;
+        const label= x.label || x.name || x.title || code;
+        if (code) out.push({code, label});
+      }
+    });
+  } else if (payload && typeof payload === 'object'){
+    Object.keys(payload).forEach(k=>{
+      out.push({code:k, label: String(payload[k] || k)});
+    });
+  }
+  // de-dup preserving order
+  const seen=new Set(); const uniq=[];
+  for(const e of out){ if(!seen.has(e.code)){seen.add(e.code); uniq.push(e);} }
+  return uniq;
+}
+
 async function loadLeagueMap(){
   try{
     const r = await fetch('/data/league-map.json',{cache:'no-store'});
     if (r.ok){
-      LEAGUE_MAP = await r.json(); // expected [{code:'EPL', label:'Premier League'}, ...] in your order
+      const raw = await r.json();
+      LEAGUE_MAP = normLeagueMapPayload(raw);
     } else {
       LEAGUE_MAP = [];
     }
@@ -142,7 +170,7 @@ function leagueLabel(code){
 }
 
 /* ---------- Data helpers ---------- */
-function allCodes(){ // all chips values regardless of visibility
+function allCodes(){ // all chip values in DOM
   const values = [];
   chipsTop.querySelectorAll('input[type="checkbox"]').forEach(i=> values.push(i.value));
   chipsMore.querySelectorAll('input[type="checkbox"]').forEach(i=> values.push(i.value));
@@ -202,7 +230,6 @@ function updatePerfBanner(){
 
 /* ---------- Chips render (mode aware) ---------- */
 function computePLTop6Ids() {
-  // Prefer to resolve by names from TEAMS, fallback to known SportMonks ids
   const want = new Map([
     ['Chelsea',''], ['Manchester City',''], ['Manchester United',''],
     ['Liverpool',''], ['Arsenal',''], ['Tottenham Hotspur','']
@@ -221,40 +248,61 @@ function makeChip(value, text, checked){
   return label;
 }
 
-function renderChips(){
+function renderTeamChips(){
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
 
+  const present = new Set(TEAMS.map(t=>t.league_code));
+
+  // normalize the league map; if empty, fall back to present codes with labels equal to code
+  let lm = LEAGUE_MAP.filter(x => present.has(x.code));
+  if (lm.length === 0){
+    // fallback: build from present codes, keep a stable order (top5 first)
+    const topCodes = ['EPL','SA','BUN','L1','LLA'];
+    const presentArr = [...present];
+    const top = presentArr.filter(c => topCodes.includes(c));
+    const more = presentArr.filter(c => !topCodes.includes(c)).sort();
+    top.forEach(c => chipsTop.appendChild(makeChip(c, c, c==='EPL')));
+    more.forEach(c => chipsMore.appendChild(makeChip(c, c, false)));
+    return;
+  }
+
+  const topCodes = ['EPL','SA','BUN','L1','LLA'];
+  const top = lm.filter(x => topCodes.includes(x.code));
+  const more = lm.filter(x => !topCodes.includes(x.code));
+
+  top.forEach(x => chipsTop.appendChild(makeChip(x.code, x.code, x.code==='EPL'))); // chips show codes per your UI
+  more.forEach(x => chipsMore.appendChild(makeChip(x.code, x.code, false)));
+}
+
+function renderPlayerChips(){
+  chipsTop.innerHTML = '';
+  chipsMore.innerHTML = '';
+
+  // only PL clubs that actually have players
+  const presentClubIds = new Set(PLAYERS.map(p => normId(p.club_id)).filter(Boolean));
+  const plTeams = TEAMS.filter(t => t.league_code==='EPL' && presentClubIds.has(t.team_id));
+
+  const top6Ids = computePLTop6Ids();
+  const top6 = plTeams.filter(t => top6Ids.includes(t.team_id));
+  top6.forEach(t => chipsTop.appendChild(makeChip(t.team_id, t.team_name, true)));
+
+  const rest = plTeams
+    .filter(t => !top6Ids.includes(t.team_id))
+    .sort((a,b)=>a.team_name.localeCompare(b.team_name));
+  rest.forEach(t => chipsMore.appendChild(makeChip(t.team_id, t.team_name, false)));
+}
+
+function renderChips(){
   if (MODE==='player'){
-    // Premier League clubs that actually exist in PLAYERS
-    const presentClubIds = new Set(PLAYERS.map(p => normId(p.club_id)).filter(Boolean));
-    const plTeams = TEAMS.filter(t => t.league_code==='EPL' && presentClubIds.has(t.team_id));
-
-    const top6Ids = computePLTop6Ids();
-    const top6 = plTeams.filter(t => top6Ids.includes(t.team_id));
-    top6.forEach(t => chipsTop.appendChild(makeChip(t.team_id, t.team_name, true)));
-
-    const rest = plTeams
-      .filter(t => !top6Ids.includes(t.team_id))
-      .sort((a,b)=>a.team_name.localeCompare(b.team_name));
-    rest.forEach(t => chipsMore.appendChild(makeChip(t.team_id, t.team_name, false)));
-
+    renderPlayerChips();
     toggleMore.textContent = 'Show more Premier League clubs';
     qpTop.textContent = 'Top 6';
   } else {
-    // TEAM — leagues from league-map.json (respecting its order and labels)
-    const present = new Set(TEAMS.map(t=>t.league_code));
-    const topCodes = ['EPL','SA','BUN','L1','LLA']; // your established Top 5 set
-    const top = LEAGUE_MAP.filter(x => topCodes.includes(x.code) && present.has(x.code));
-    const more = LEAGUE_MAP.filter(x => !topCodes.includes(x.code) && present.has(x.code));
-
-    top.forEach(x => chipsTop.appendChild(makeChip(x.code, x.code, x.code==='EPL')));      // chips show codes as in your UI
-    more.forEach(x => chipsMore.appendChild(makeChip(x.code, x.code, false)));
-
+    renderTeamChips();
     toggleMore.textContent = 'Show more leagues';
     qpTop.textContent = 'Top 5';
   }
-
   chipsMore.hidden = true;
   toggleMore.setAttribute('aria-expanded','false');
 }
@@ -479,7 +527,6 @@ function openModal(item){
   modalReveal = {a:false,b:false,c:false,d:false};
 
   if (MODE==='player'){
-    // header: player name; sub: nationality
     mHead.textContent = item.team_name || '—';
     mSub.textContent  = item.nationality || '';
     mLogo.src = item.image_url || '';
@@ -493,13 +540,11 @@ function openModal(item){
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
     mNat.textContent    = item.nationality || '—';
 
-    // reveals (A=image, B=name, C=jersey, D=nationality)
     addReveal('a', mLogo,   !!optA.checked, 'image');
     addReveal('b', mHead,   !!optB.checked, 'name');
     addReveal('c', mJersey, !!optC.checked, 'jersey number');
     addReveal('d', mNat,    !!optD.checked, 'nationality');
   } else {
-    // TEAM
     mHead.textContent = item.team_name || '—';
     mSub.textContent  = leagueLabel(item.league_code); // always set; blur via reveal if disabled
     mLogo.src = item.logo_url || '';
@@ -511,7 +556,6 @@ function openModal(item){
 
     mStadium.textContent = item.stadium || '—';
 
-    // reveals (A=logo, B=name, C=stadium, D=league)
     addReveal('a', mLogo,   !!optA.checked, 'logo');
     addReveal('b', mHead,   !!optB.checked, 'name');
     addReveal('c', mStadium,!!optC.checked, 'stadium');
@@ -623,7 +667,7 @@ function wire(){
 
   chipsWrap.addEventListener('change', ()=>{
     if (spinning) return;
-    FORCE_NONE=false;                // manual change after None
+    FORCE_NONE=false;
     selectedIdx=-1;
     updatePerfBanner();
     drawWheel();
@@ -653,7 +697,7 @@ function wire(){
   qpTop.onclick = ()=>{
     FORCE_NONE=false;
     if (MODE==='player'){
-      const allowed = new Set(PL_TOP6_IDS.map(String));
+      const allowed = new Set(computePLTop6Ids().map(String));
       chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = allowed.has(i.value));
     } else {
       const allowed = new Set(['EPL','SA','BUN','L1','LLA']);
