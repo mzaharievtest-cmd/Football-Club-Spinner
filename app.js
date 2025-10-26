@@ -1,11 +1,17 @@
-/* Football Spinner — TEAM / PLAYER unified (modern spin FX + sounds)
+/* Football Spinner — TEAM / PLAYER unified (subtle FX, no sounds by default)
    - TEAM wheel: Logo/Name on wheel (+Stadium optional). League: modal-only (reveal).
    - PLAYER wheel: Image/Name on wheel only. Jersey/Nationality/Club live in modal with reveal.
-   - >50 items → draw “ambient stripes” background (no text/images) but still wedges.
+   - >50 items → ambient stripes (no text/images). If 0 items → ambient stripes too (so it’s never empty).
    - Players are loaded from /data/players.json (single source of truth).
-   - Player chips are derived from players.json (club_id). Club names resolved via teams.json + fallback.
-   - Modern spin: neon trail, subtle tick marks, particles burst, generated whoosh & end chord.
+   - Player chips are derived from players.json (club_id). Club names via teams.json + fallback.
+   - Visuals: conic rim glow, crisp ticks, active-slice shimmer, gentle landing pulse. No confetti.
+   - Audio: DISABLED by default (set SOUND_ENABLED = true to re-enable minimal ticks/whoosh).
 */
+
+/* =========================
+   Global prefs
+   ========================= */
+const SOUND_ENABLED = false; // <<< keep quiet by default
 
 /* =========================
    Mode & state
@@ -43,7 +49,7 @@ const optA = document.getElementById('optA'); // A
 const optB = document.getElementById('optB'); // B
 const optC = document.getElementById('optC'); // C
 const optD = document.getElementById('optD'); // D
-const optE = document.getElementById('optE'); // E (Club) — present only after your HTML update
+const optE = document.getElementById('optE'); // E (Club) — optional input in HTML
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -64,7 +70,7 @@ const backdrop   = document.getElementById('backdrop');
 const modalEl    = document.getElementById('modal');
 const mClose     = document.getElementById('mClose');
 const mHead      = document.getElementById('mHead');
-const mSub       = document.getElementById('mSub');   // TEAM: League (reveal) / PLAYER: (kept empty to avoid duplication)
+const mSub       = document.getElementById('mSub');   // TEAM: League (reveal) / PLAYER: empty (avoid duplication)
 const mLogo      = document.getElementById('mLogo');
 
 const rowStadium = document.getElementById('rowStadium');
@@ -165,7 +171,7 @@ const leagueLabel = c => LEAGUE_LABELS[c] || c;
 const TOP5 = ['EPL','SA','BUN','L1','LLA'];
 const PL_TOP6 = ['18','9','14','8','19','6']; // Chelsea, City, United, Liverpool, Arsenal, Spurs
 
-/* Fallback club names for PL ids not in teams.json */
+/* Fallback club names */
 const FALLBACK_CLUBS = {
   '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
   '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
@@ -196,7 +202,7 @@ function updatePerfBanner(){
   const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
   const pct = Math.max(0, Math.min(1, n / total));
   perfTip.style.setProperty('--pct', pct);
-  perfTip.textContent = `${n} ${MODE==='player' ? 'players' : 'teams'} selected`;
+  perfTip.innerHTML = `<span class="meter-text">${n} ${MODE==='player' ? 'players' : 'teams'} selected</span>`;
   const disabled = n===0;
   spinBtn.disabled = disabled;
   spinFab.disabled = disabled;
@@ -210,7 +216,7 @@ function renderChips(){
   chipsMore.innerHTML = '';
 
   if (MODE === 'player'){
-    // Clubs from players.json so every club_id appears
+    // Build from players.json so every club_id present appears
     const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
     const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_CLUBS[id] || `Club #${id}`;
 
@@ -247,14 +253,14 @@ function applyModeShowControls(){
     lblA.textContent='Image';         optA.checked = true;
     lblB.textContent='Name';          optB.checked = true;
     lblC.textContent='Jersey Number'; optC.checked = false;
-    lblD.textContent='Nationality';   optD.checked = false;
-    if (lblE) { lblE.textContent='Club'; if (optE) optE.checked=false; }
+    lblD.textContent='Nationality';   optD.checked = false; // modal revealable
+    if (lblE) { lblE.textContent='Club'; if (optE) optE.checked=false; } // modal revealable
   } else {
     lblA.textContent='Logo';    optA.checked = true;
     lblB.textContent='Name';    optB.checked = true;
     lblC.textContent='Stadium'; optC.checked = false;
     lblD.textContent='League';  optD.checked = true; // modal only
-    if (lblE) { lblE.textContent='Club'; if (optE) optE.checked=false; } // not used in TEAM
+    if (lblE) { lblE.textContent='Club'; if (optE) optE.checked=false; }
   }
 }
 
@@ -273,96 +279,65 @@ function sizeCanvas(){
 }
 
 /* =========================
-   Drawing helpers (ambient patterns)
+   Ambient backgrounds
    ========================= */
 const PERF = { hideTextThreshold: 50, minTextWidth: 44, minLogoBox: 26 };
 
-function drawIdle(ctx,W,H){
+function drawBackdrop(ctx,W,H){
   ctx.clearRect(0,0,W,H);
   ctx.save(); ctx.translate(W/2,H/2);
   const r = Math.min(W,H)*0.48;
+
+  // soft radial base
   const g = ctx.createRadialGradient(0,0,r*0.1, 0,0,r);
-  g.addColorStop(0,'#1A2C5A'); g.addColorStop(0.35,'#21386F'); g.addColorStop(0.65,'#0E2A57'); g.addColorStop(1,'#0B1B38');
+  g.addColorStop(0,'#111c36'); g.addColorStop(0.45,'#0f1931'); g.addColorStop(1,'#0a1428');
   ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fillStyle=g; ctx.fill();
+
+  // glass conic ring
+  const grd = ctx.createConicGradient(0,0,0);
+  grd.addColorStop(0.00,'rgba(34,211,238,.16)');
+  grd.addColorStop(0.25,'rgba(100,168,255,.16)');
+  grd.addColorStop(0.50,'rgba(155,107,255,.16)');
+  grd.addColorStop(0.75,'rgba(100,168,255,.16)');
+  grd.addColorStop(1.00,'rgba(34,211,238,.16)');
+  ctx.lineWidth = 10; ctx.strokeStyle = grd;
+  ctx.beginPath(); ctx.arc(0,0,r*0.985,0,TAU); ctx.stroke();
+
   ctx.restore();
 }
 
-function drawAmbientGrid(ctx, W, H){
-  // faint rings + spokes for “too many players” visual
+function drawAmbientStripes(ctx,W,H){
+  // clean grid/rings so empty or heavy wheels still look designed
   ctx.save(); ctx.translate(W/2,H/2);
   const r = Math.min(W,H)*0.48;
-  // outer rim
-  ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.lineWidth=6; ctx.strokeStyle='rgba(120,170,255,.18)'; ctx.stroke();
-  // rings
-  ctx.lineWidth=2;
-  for (let i=1;i<=6;i++){
-    ctx.beginPath(); ctx.arc(0,0,r*(i/6),0,TAU);
-    ctx.strokeStyle = `rgba(120,170,255,${0.10 - i*0.012})`;
+
+  // faint rings
+  ctx.lineWidth=1.5;
+  for (let i=1;i<=5;i++){
+    ctx.beginPath(); ctx.arc(0,0,r*(i/5),0,TAU);
+    ctx.strokeStyle = `rgba(160,190,255,${0.08 - i*0.01})`;
     ctx.stroke();
   }
-  // spokes
-  const spokes = 36;
-  ctx.lineWidth=1.5; ctx.strokeStyle='rgba(120,170,255,.10)';
-  for (let i=0;i<spokes;i++){
-    const a = i*(TAU/spokes);
+  // ticks around rim
+  const ticks = 96;
+  for (let i=0;i<ticks;i++){
+    const a = (i/ticks)*TAU;
+    const inner = r*0.94 + (i%2?0:1.5);
     ctx.beginPath();
-    ctx.moveTo(Math.cos(a)*r*0.06, Math.sin(a)*r*0.06);
-    ctx.lineTo(Math.cos(a)*r,      Math.sin(a)*r);
+    ctx.moveTo(Math.cos(a)*inner, Math.sin(a)*inner);
+    ctx.lineTo(Math.cos(a)*r,     Math.sin(a)*r);
+    ctx.lineWidth = (i%2)?1:2;
+    ctx.strokeStyle = (i%2)?'rgba(200,220,255,.08)':'rgba(200,220,255,.12)';
     ctx.stroke();
   }
-  ctx.restore();
-}
-
-/* =========================
-   Spin FX (neon trail + ticks + particles)
-   ========================= */
-let lastTrailTime = 0;
-const trail = []; // {x,y,alpha}
-const particles = []; // {x,y,vx,vy,alpha}
-
-function addTrail(x,y){
-  trail.push({x,y,alpha:1});
-  if (trail.length>40) trail.shift();
-}
-function stepTrail(ctx){
-  for (const t of trail){ t.alpha *= 0.92; }
-  while (trail.length && trail[0].alpha < 0.02) trail.shift();
-
-  ctx.save();
-  ctx.globalCompositeOperation='lighter';
-  for (const t of trail){
-    ctx.beginPath();
-    ctx.arc(t.x,t.y, 6, 0, TAU);
-    ctx.fillStyle=`rgba(120,200,255,${0.25*t.alpha})`;
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
-function addBurst(cx,cy){
-  for (let i=0;i<26;i++){
-    const a = Math.random()*TAU;
-    const sp = 2.4 + Math.random()*2.8;
-    particles.push({x:cx,y:cy,vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, alpha:1});
-  }
-}
-function stepParticles(ctx){
-  ctx.save();
-  ctx.globalCompositeOperation='lighter';
-  for (const p of particles){
-    p.x+=p.vx; p.y+=p.vy; p.vx*=0.98; p.vy*=0.98; p.alpha*=0.94;
-    ctx.beginPath();
-    ctx.arc(p.x,p.y, 2.2, 0, TAU);
-    ctx.fillStyle=`rgba(120,200,255,${0.35*p.alpha})`;
-    ctx.fill();
-  }
-  while (particles.length && particles[0].alpha<0.05) particles.shift();
   ctx.restore();
 }
 
 /* =========================
    Wheel drawing
    ========================= */
+let lastSliceAtPointer = -1; // for optional tick sound
+
 function drawWheel(){
   const data = getCurrentData();
   const N = data.length;
@@ -373,13 +348,17 @@ function drawWheel(){
   const W = wheel.width / DPR, H = wheel.height / DPR;
 
   updatePerfBanner();
+  drawBackdrop(ctx,W,H);
 
-  if (N===0){ drawIdle(ctx,W,H); return; }
+  // If no data → show ambient and bail
+  if (N===0){
+    drawAmbientStripes(ctx,W,H);
+    return;
+  }
 
-  const hideAll = N >= PERF.hideTextThreshold; // applies to PLAYER & TEAM
+  const hideAll = N >= PERF.hideTextThreshold;
   ctx.imageSmoothingEnabled = !hideAll;
 
-  ctx.clearRect(0,0,W,H);
   ctx.save(); ctx.translate(W/2,H/2);
   ctx.rotate(mod(currentAngle,TAU));
 
@@ -392,154 +371,175 @@ function drawWheel(){
     ctx.fillStyle = data[i].primary_color || '#294a7a';
     ctx.fill();
 
-    // subtle tick at outer rim
+    // crisp rim tick (visual rhythm)
     ctx.save();
     ctx.rotate(i*slice);
     ctx.beginPath();
-    ctx.moveTo(r*0.92,0); ctx.lineTo(r,0);
+    ctx.moveTo(r*0.93,0); ctx.lineTo(r,0);
     ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255,255,255,.06)';
+    ctx.strokeStyle = 'rgba(255,255,255,.08)';
     ctx.stroke();
     ctx.restore();
   }
 
   if (hideAll){
     ctx.restore();
-    drawAmbientGrid(ctx,W,H); // modern ambient when lots of players/clubs
-    // FX layers
-    const fctx = fx.getContext('2d');
-    fctx.setTransform(DPR,0,0,DPR,0,0);
-    fctx.clearRect(0,0,W,H);
-    stepTrail(fctx); stepParticles(fctx);
-    return;
-  }
+    drawAmbientStripes(ctx,W,H);
+  } else {
+    // contents
+    for (let i=0;i<N;i++){
+      const t = data[i];
+      const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
+      const arcLen = r*(a1-a0);
 
-  // contents
-  for (let i=0;i<N;i++){
-    const t = data[i];
-    const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
-    const arcLen = r*(a1-a0);
+      const canLogo = (MODE==='team') ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
+      const canName = optB.checked && !!t.team_name;
 
-    const canLogo = (MODE==='team') ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
-    const canName = optB.checked && !!t.team_name;
+      ctx.save();
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
 
-    ctx.save();
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
+      ctx.rotate(aMid);
+      const needFlip = Math.cos(aMid) < 0;
+      if (needFlip) ctx.rotate(Math.PI);
+      const sign = needFlip ? -1 : 1;
 
-    ctx.rotate(aMid);
-    const needFlip = Math.cos(aMid) < 0;
-    if (needFlip) ctx.rotate(Math.PI);
-    const sign = needFlip ? -1 : 1;
+      const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
+      const logoHalf = logoSize/2;
+      const pad = 10;
+      const xLogo = sign * (r*0.74);
+      const xText = sign * (r*0.42);
+      const logoInner = xLogo - sign*(logoHalf+pad);
+      const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
 
-    const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
-    const logoHalf = logoSize/2;
-    const pad = 10;
-    const xLogo = sign * (r*0.74);
-    const xText = sign * (r*0.42);
-    const logoInner = xLogo - sign*(logoHalf+pad);
-    const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
+      const fg = textColorFor(t.primary_color);
 
-    const fg = textColorFor(t.primary_color);
-
-    if (canName && maxWidth>=PERF.minTextWidth){
-      const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
-      ctx.textAlign='left'; ctx.textBaseline='middle';
-      ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
-      ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
-      ctx.fillStyle=fg;
-      const x = Math.min(xText, logoInner);
-      ctx.strokeText(fit.text, x, 0);
-      ctx.fillText(fit.text,   x, 0);
-    }
-
-    if (canLogo){
-      ctx.save(); ctx.translate(xLogo,0);
-      ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
-      ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
-
-      ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
-      const url = MODE==='team' ? t.logo_url : t.image_url;
-      const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
-      if (img && img.complete){
-        const box = Math.max(4, 2*(logoHalf-1));
-        const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
-        const s = Math.min(box/iw, box/ih);
-        ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
-      } else {
-        ctx.fillStyle='rgba(255,255,255,.14)';
-        const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
+      if (canName && maxWidth>=PERF.minTextWidth){
+        const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
+        ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
+        ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
+        ctx.fillStyle=fg;
+        const x = Math.min(xText, logoInner);
+        ctx.strokeText(fit.text, x, 0);
+        ctx.fillText(fit.text,   x, 0);
       }
-      ctx.restore(); ctx.restore();
+
+      if (canLogo){
+        ctx.save(); ctx.translate(xLogo,0);
+        ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
+        ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
+
+        ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
+        const url = MODE==='team' ? t.logo_url : t.image_url;
+        const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
+        if (img && img.complete){
+          const box = Math.max(4, 2*(logoHalf-1));
+          const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
+          const s = Math.min(box/iw, box/ih);
+          ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
+        } else {
+          ctx.fillStyle='rgba(255,255,255,.14)';
+          const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
+        }
+        ctx.restore(); ctx.restore();
+      }
+
+      ctx.restore();
     }
 
     ctx.restore();
   }
 
-  // FX overlay
+  // active-slice shimmer ring at pointer
   const fctx = fx.getContext('2d');
   fctx.setTransform(DPR,0,0,DPR,0,0);
-  fctx.clearRect(0,0,W,H);
-  // neon trail from current pointer angle
-  const theta = mod(POINTER_ANGLE - mod(currentAngle,TAU), TAU);
-  const tx = W/2 + Math.cos(theta)*r*0.98;
-  const ty = H/2 + Math.sin(theta)*r*0.98;
-  const now = performance.now();
-  if (now - lastTrailTime > 16) { addTrail(tx,ty); lastTrailTime = now; }
-  stepTrail(fctx);
-  stepParticles(fctx);
+  fctx.clearRect(0,0,wheel.width/DPR, wheel.height/DPR);
 
-  ctx.restore();
+  if (N>0){
+    const W2 = wheel.width / DPR, H2 = wheel.height / DPR;
+    const r2 = Math.min(W2,H2)*0.48;
+    const offset = mod(POINTER_ANGLE - mod(currentAngle,TAU), TAU);
+    const idxAtPointer = Math.floor(offset / (TAU/N)) % N;
+
+    // shimmer arc
+    fctx.save();
+    fctx.translate(W2/2,H2/2);
+    const a0 = idxAtPointer*(TAU/N), a1=(idxAtPointer+1)*(TAU/N);
+    fctx.rotate(-mod(currentAngle,TAU));
+    fctx.beginPath();
+    fctx.arc(0,0,r2*0.995, a0, a1);
+    fctx.lineWidth = 6;
+    fctx.strokeStyle = 'rgba(255,255,255,.18)';
+    fctx.stroke();
+    fctx.restore();
+  }
 }
 
 /* =========================
-   Sounds (WebAudio generated)
+   Optional minimal audio (muted by default)
    ========================= */
 let ac, master;
 function ensureAudio(){
-  if (ac) return;
+  if (!SOUND_ENABLED) return false;
+  if (ac) return true;
   ac = new (window.AudioContext || window.webkitAudioContext)();
-  master = ac.createGain(); master.gain.value = 0.45; master.connect(ac.destination);
+  master = ac.createGain(); master.gain.value = 0.3; master.connect(ac.destination);
+  return true;
 }
-function whoosh(duration=0.7){
-  ensureAudio();
-  const osc = ac.createOscillator();
-  const gain = ac.createGain();
-  osc.type='sawtooth';
-  const now = ac.currentTime;
-  osc.frequency.setValueAtTime(220, now);
-  osc.frequency.exponentialRampToValueAtTime(880, now+duration);
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.4, now+0.08);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now+duration);
-  osc.connect(gain).connect(master);
-  osc.start(now); osc.stop(now+duration+0.05);
-}
-function endChord(){
-  ensureAudio();
-  const notes = [392,494,587]; // G B D
-  const now = ac.currentTime;
-  notes.forEach((f,i)=>{
-    const o=ac.createOscillator(), g=ac.createGain();
-    o.type='triangle'; o.frequency.value=f;
-    g.gain.value=0.001; g.gain.exponentialRampToValueAtTime(0.35, now+0.04);
-    g.gain.exponentialRampToValueAtTime(0.0001, now+0.7+i*0.02);
-    o.connect(g).connect(master);
-    o.start(now+0.02*i); o.stop(now+0.8+i*0.02);
-  });
+function whoosh(dur=0.6){
+  if (!ensureAudio()) return;
+  const noise = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+  const data = noise.getChannelData(0);
+  for (let i=0;i<data.length;i++) data[i] = (Math.random()*2-1) * (0.6 + 0.1*Math.random());
+  const src = ac.createBufferSource(); src.buffer = noise;
+  const bp = ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1200; bp.Q.value=0.6;
+  const g = ac.createGain(); const now = ac.currentTime;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.4, now+0.07);
+  g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
+  src.connect(bp).connect(g).connect(master);
+  src.start(now); src.stop(now+dur+0.02);
 }
 function tick(){
-  ensureAudio();
-  const o=ac.createOscillator(), g=ac.createGain();
-  o.type='square'; o.frequency.value=1200;
-  const now=ac.currentTime;
-  g.gain.value=0.0001; g.gain.exponentialRampToValueAtTime(0.15, now+0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, now+0.08);
-  o.connect(g).connect(master); o.start(now); o.stop(now+0.1);
+  if (!ensureAudio()) return;
+  const t = ac.currentTime;
+  const o = ac.createOscillator(); const g = ac.createGain();
+  o.type='square'; o.frequency.value=900;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.18, t+0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+0.05);
+  o.connect(g).connect(master);
+  o.start(t); o.stop(t+0.06);
 }
 
 /* =========================
    Spin
    ========================= */
+function ringPulse(){
+  // quick canvas pulse on landing (no audio)
+  const ctx = fx.getContext('2d');
+  const DPR = Math.max(1, window.devicePixelRatio||1);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const W = wheel.width / DPR, H = wheel.height / DPR;
+  const r = Math.min(W,H)*0.48;
+
+  let start = performance.now();
+  const dur = 280;
+  function step(now){
+    const p = clamp(0,(now-start)/dur,1);
+    ctx.clearRect(0,0,W,H);
+    ctx.save(); ctx.translate(W/2,H/2);
+    ctx.beginPath();
+    ctx.arc(0,0, r*(0.96 + 0.02*p), 0, TAU);
+    ctx.lineWidth = 10*(1-p);
+    ctx.strokeStyle = `rgba(100,168,255,${0.25*(1-p)})`;
+    ctx.stroke();
+    ctx.restore();
+    if (p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 function spin(){
   if (spinning) return;
   const data = getCurrentData();
@@ -554,37 +554,35 @@ function spin(){
   const targetAngle = TAU*(6+Math.floor(Math.random()*3)) + Math.random()*TAU;
 
   const start = performance.now(), dur=3200;
-  const ease = x=>1-Math.pow(1-x,3);
+  const easeOutCubic = x=>1-Math.pow(1-x,3);
 
-  whoosh(0.9);
+  whoosh(0.7);
+  lastSliceAtPointer = -1;
 
   function step(now){
     const p = clamp(0,(now-start)/dur,1);
-    currentAngle = targetAngle * ease(p);
+    currentAngle = targetAngle * easeOutCubic(p);
     drawWheel();
 
-    // periodic tick as slices pass the pointer
-    if (Math.random()<0.12) tick();
+    // quiet ticks: only if enabled
+    if (SOUND_ENABLED){
+      const theta = mod(currentAngle,TAU);
+      const offset = mod(POINTER_ANGLE - theta, TAU);
+      const idx = Math.floor(offset / slice) % N;
+      if (idx !== lastSliceAtPointer){ tick(); lastSliceAtPointer = idx; }
+    }
 
     if (p<1) requestAnimationFrame(step);
     else {
       const theta = mod(currentAngle,TAU);
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
-      // snap
+      // snap to center
       const center = idx*slice + slice/2;
       const delta = mod(center - offset, TAU);
       currentAngle = mod(currentAngle + delta, TAU);
 
-      // FX burst at pointer
-      const W = wheel.width/Math.max(1, window.devicePixelRatio||1);
-      const H = wheel.height/Math.max(1, window.devicePixelRatio||1);
-      const r = Math.min(W,H)*0.48;
-      const px = W/2 + Math.cos(POINTER_ANGLE)*r;
-      const py = H/2 + Math.sin(POINTER_ANGLE)*r;
-      addBurst(px,py);
-
-      endChord();
+      ringPulse();
 
       spinning=false;
       document.body.classList.remove('ui-locked');
@@ -631,7 +629,7 @@ function renderHistory(){
 }
 
 /* =========================
-   Reveal overlay in modal
+   Reveal overlay (centered on blurred element)
    ========================= */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
@@ -674,7 +672,7 @@ function openModal(item){
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.image_url || '';
 
-    // Keep subtitle empty to avoid “Nationality” duplication
+    // Subtitle empty (avoid nationality duplication here)
     mSub.textContent  = '';
 
     // Visible rows
@@ -751,7 +749,7 @@ async function loadTeams(){
     TEAM_BY_ID.set(id, t);
     CLUB_BY_ID.set(id, t.team_name);
   }
-  // seed fallbacks so all club_ids resolve
+  // fallback names so all club_ids resolve
   for (const [id,name] of Object.entries(FALLBACK_CLUBS)){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, name);
   }
@@ -842,8 +840,9 @@ function wire(){
   optD.addEventListener('change', refresh);
   if (optE) optE.addEventListener('change', refresh);
 
-  spinBtn.onclick = ()=>{ ensureAudio(); spin(); };
-  spinFab.onclick = ()=>{ ensureAudio(); spin(); };
+  const startSpin = ()=>{ if (SOUND_ENABLED) ensureAudio(); spin(); };
+  spinBtn.onclick = startSpin;
+  spinFab.onclick = startSpin;
 
   resetHistoryBtn.onclick = ()=>{ history=[]; localStorage.setItem('clubHistory', JSON.stringify(history)); renderHistory(); };
 
@@ -860,7 +859,7 @@ function wire(){
 (async function init(){
   try{
     await loadTeams();
-    await loadPlayers();
+    await loadPlayers(); // players depend on teams for club colors/names
   } catch (e){
     console.error('Failed to load data:', e);
   }
