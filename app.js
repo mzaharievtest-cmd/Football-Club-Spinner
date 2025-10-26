@@ -266,31 +266,52 @@ function drawIdle(ctx,W,H){
   ctx.restore();
 }
 
-/* subtle stripe helpers when >50 items (PLAYER) */
-function drawDenseStripes(ctx, r, N){
-  // concentric rings
+// replace the old drawDenseStripes(...) with this:
+function drawElegantStripes(ctx, r, N){
   ctx.save();
-  ctx.lineWidth = Math.max(1, r * 0.006);
-  for (let k=1;k<=3;k++){
+
+  // 1) soft alternating bands
+  const rings = 5;                         // 5 wide bands
+  for (let k = 0; k < rings; k++){
+    const r0 = r * (0.20 + k * 0.14);
+    const r1 = r * (0.20 + (k + 1) * 0.14);
     ctx.beginPath();
-    ctx.arc(0,0, r*(0.35 + k*0.15), 0, TAU);
-    ctx.strokeStyle = 'rgba(255,255,255,.05)';
-    ctx.stroke();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, r1, 0, TAU);
+    ctx.arc(0, 0, r0, TAU, 0, true);
+    ctx.closePath();
+    // alternate opacities for a subtle striped feel
+    ctx.fillStyle = `rgba(255,255,255,${k % 2 ? 0.035 : 0.06})`;
+    ctx.fill();
   }
-  // radial spokes at slice boundaries
-  const slice = TAU/N;
-  ctx.lineWidth = Math.max(1, r * 0.0035);
+
+  // 2) sparse radial spokes (max 48)
+  const steps = Math.max(12, Math.min(48, Math.round(N / 6)));
+  const inc = TAU / steps;
   ctx.strokeStyle = 'rgba(255,255,255,.06)';
-  for (let i=0;i<N;i++){
-    const a = i*slice;
-    ctx.save();
-    ctx.rotate(a);
+  ctx.lineWidth = Math.max(1, r * 0.0025);
+  for (let a = 0; a < TAU - 1e-6; a += inc){
     ctx.beginPath();
-    ctx.moveTo(r*0.25, 0);
-    ctx.lineTo(r*0.95, 0);
+    ctx.moveTo(Math.cos(a) * r * 0.32, Math.sin(a) * r * 0.32);
+    ctx.lineTo(Math.cos(a) * r * 0.94, Math.sin(a) * r * 0.94);
     ctx.stroke();
-    ctx.restore();
   }
+
+  // 3) rim + inner vignette to ground the wheel
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, TAU);
+  ctx.strokeStyle = 'rgba(255,255,255,.08)';
+  ctx.lineWidth = Math.max(1, r * 0.01);
+  ctx.stroke();
+
+  const g = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+  g.addColorStop(0, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(0,0,0,.18)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, TAU);
+  ctx.fill();
+
   ctx.restore();
 }
 
@@ -326,7 +347,7 @@ function drawWheel(){
 
   // When we hide everything on PLAYER, add tasteful stripes so the wheel doesn't look empty
   if (hideAll){
-    if (MODE === 'player') drawDenseStripes(ctx, r, N);
+    if (MODE === 'player') drawElegantStripes(ctx, r, N);
     ctx.restore();
     return;
   }
