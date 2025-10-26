@@ -1,10 +1,10 @@
 /* Football Spinner — TEAM / PLAYER unified
    - TEAM wheel: Logo/Name on wheel (+Stadium optional). League never drawn on wheel; modal only.
-   - PLAYER wheel: Image/Name on wheel. Jersey/Nationality live in modal with reveal when toggled off.
+   - PLAYER wheel: Image/Name on wheel (+Jersey optional, +Club optional). Nationality is in modal only.
    - If >50 wedges → draw stripes only (no text/images).
    - Mode-aware “Show on wheel” controls.
    - Players are loaded from /data/players.json (single source of truth).
-   - Player chips are derived from players.json and club_id is resolved to names via teams.json + fallback map.
+   - Player chips are derived from players.json; club_id → club name via teams.json + fallback map.
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -34,10 +34,10 @@ const qpAll     = document.getElementById('qpAll');
 const qpNone    = document.getElementById('qpNone');
 const qpTop     = document.getElementById('qpTop');
 
-const optA = document.getElementById('optA');
-const optB = document.getElementById('optB');
-const optC = document.getElementById('optC');
-const optD = document.getElementById('optD');
+const optA = document.getElementById('optA'); // A
+const optB = document.getElementById('optB'); // B
+const optC = document.getElementById('optC'); // C
+const optD = document.getElementById('optD'); // D
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -56,9 +56,9 @@ const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 const backdrop   = document.getElementById('backdrop');
 const modalEl    = document.getElementById('modal');
 const mClose     = document.getElementById('mClose');
-const mHead      = document.getElementById('mHead');
-const mSub       = document.getElementById('mSub');   // TEAM: League / PLAYER: Nationality
-const mLogo      = document.getElementById('mLogo');  // TEAM: Crest / PLAYER: Image
+const mHead      = document.getElementById('mHead'); // header text
+const mSub       = document.getElementById('mSub');  // subtitle (we hide in PLAYER mode)
+const mLogo      = document.getElementById('mLogo'); // crest / player image
 
 const rowStadium = document.getElementById('rowStadium');
 const mStadium   = document.getElementById('mStadium');
@@ -152,7 +152,7 @@ const leagueLabel = c => LEAGUE_LABELS[c] || c;
 const TOP5 = ['EPL','SA','BUN','L1','LLA'];
 const PL_TOP6 = ['18','9','14','8','19','6'];
 
-/* ---------- PL fallback map (extendable) ---------- */
+/* ---------- PL fallback map ---------- */
 const FALLBACK_CLUBS = {
   '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
   '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
@@ -191,7 +191,7 @@ function renderChips(){
   chipsMore.innerHTML = '';
 
   if (MODE === 'player'){
-    // Build list from players.json so every club_id is represented
+    // Build from players.json so every club_id is represented
     const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
     const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_CLUBS[id] || `Club #${id}`;
 
@@ -221,12 +221,13 @@ function renderChips(){
 }
 
 /* ---------- Show-on-wheel controls ---------- */
+/* PLAYER now: A Image, B Name, C Jersey Number, D Club (Nationality is modal-only) */
 function applyModeShowControls(){
   if (MODE==='player'){
     lblA.textContent='Image';         optA.checked = true;
     lblB.textContent='Name';          optB.checked = true;
     lblC.textContent='Jersey Number'; optC.checked = false;
-    lblD.textContent='Nationality';   optD.checked = false; // now blurred with a reveal button
+    lblD.textContent='Club';          optD.checked = true;   // draw club under name if space
   } else {
     lblA.textContent='Logo';    optA.checked = true;
     lblB.textContent='Name';    optB.checked = true;
@@ -298,7 +299,8 @@ function drawWheel(){
     const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
     const arcLen = r*(a1-a0);
 
-    const canLogo = (MODE==='team') ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
+    const isTeam = (MODE==='team');
+    const canLogo = isTeam ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
     const canName = optB.checked && !!t.team_name;
 
     ctx.save();
@@ -319,6 +321,8 @@ function drawWheel(){
 
     const fg = textColorFor(t.primary_color);
 
+    // Name (first line)
+    let textY = 0;
     if (canName && maxWidth>=PERF.minTextWidth){
       const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
       ctx.textAlign='left'; ctx.textBaseline='middle';
@@ -326,17 +330,33 @@ function drawWheel(){
       ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
       ctx.fillStyle=fg;
       const x = Math.min(xText, logoInner);
-      ctx.strokeText(fit.text, x, 0);
-      ctx.fillText(fit.text,   x, 0);
+      ctx.strokeText(fit.text, x, textY);
+      ctx.fillText(fit.text,   x, textY);
+      // leave space for a second line if we’ll draw club (PLAYER + optD)
+      if (!isTeam && optD.checked) textY += Math.max(12, Math.round(fit.fontPx*0.9));
     }
 
+    // Club (PLAYER only) as a second line, if enabled
+    if (!isTeam && optD.checked && maxWidth>=PERF.minTextWidth){
+      const clubName = CLUB_BY_ID.get(String(t.club_id)) || FALLBACK_CLUBS[String(t.club_id)] || '';
+      if (clubName){
+        const fit2 = fitSingleLine(ctx, clubName, {maxWidth, targetPx:Math.min(16, 0.18*arcLen)});
+        ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.font = `700 ${fit2.fontPx}px Inter, system-ui, sans-serif`;
+        ctx.fillStyle='rgba(255,255,255,.92)';
+        const x2 = Math.min(xText, logoInner);
+        ctx.fillText(fit2.text, x2, textY+10);
+      }
+    }
+
+    // logo/image (TEAM/PLAYER)
     if (canLogo){
       ctx.save(); ctx.translate(xLogo,0);
       ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
       ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
 
       ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
-      const url = MODE==='team' ? t.logo_url : t.image_url;
+      const url = isTeam ? t.logo_url : t.image_url;
       const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
       if (img && img.complete){
         const box = Math.max(4, 2*(logoHalf-1));
@@ -363,6 +383,7 @@ function spin(){
   if (!data.length) return;
 
   spinning = true;
+  document.body.classList.add('ui-locked');
   spinBtn.disabled = true; spinFab.disabled = true;
 
   const N = data.length;
@@ -386,6 +407,7 @@ function spin(){
       currentAngle = mod(currentAngle + delta, TAU);
 
       spinning=false;
+      document.body.classList.remove('ui-locked');
       spinBtn.disabled=false; spinFab.disabled=false;
       selectedIdx = idx;
       drawWheel();
@@ -431,9 +453,10 @@ function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
-    .reveal-wrap{position:relative;display:inline-block}
-    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none}
+    .reveal-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:42px}
+    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none;z-index:2}
     .reveal-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;user-select:none;white-space:nowrap;z-index:3}
+    .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.03);border-color:#22d3ee;box-shadow:0 6px 18px rgba(34,211,238,.18)}
   `;
   document.head.appendChild(s);
 }
@@ -462,13 +485,15 @@ function openModal(item){
   modalReveal = {a:false,b:false,c:false,d:false};
 
   if (MODE==='player'){
-    // header & subtitle
+    // Header + image
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.image_url || '';
-    mSub.textContent  = item.nationality || '';
-    mNat.textContent  = item.nationality || '—';
 
-    // rows visible for reveal (all 4 toggles support Show X)
+    // Hide subtitle in PLAYER mode (single nationality only in row)
+    mSub.textContent = '';
+    mSub.style.display = 'none';
+
+    // rows (Club, Jersey, Nationality)
     rowStadium.style.display='none';
     rowClub.style.display='';
     rowJersey.style.display='';
@@ -476,17 +501,24 @@ function openModal(item){
 
     mClub.textContent   = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_CLUBS[String(item.club_id)] || '—';
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
+    mNat.textContent    = item.nationality || '—';
 
-    // A=image, B=name, C=jersey, D=nationality (apply to both subtitle and row value)
+    // Show-on-wheel mapping in PLAYER:
+    // A=image, B=name, C=jersey, D=club; nationality is always reveal-only here
     addReveal('a', mLogo,   !!optA.checked, 'image');
     addReveal('b', mHead,   !!optB.checked, 'name');
     addReveal('c', mJersey, !!optC.checked, 'jersey number');
-    addReveal('d', mSub,    !!optD.checked, 'nationality');
-    addReveal('d', mNat,    !!optD.checked, 'nationality');
+    addReveal('d', mClub,   !!optD.checked, 'club');
+
+    // Nationality: always blurred until revealed (not tied to A..D)
+    addReveal('nat', mNat, false, 'nationality');
+
   } else {
+    // TEAM modal
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.logo_url || '';
     mSub.textContent  = leagueLabel(item.league_code) || '';
+    mSub.style.display = '';
 
     rowStadium.style.display='';
     rowClub.style.display='none';
