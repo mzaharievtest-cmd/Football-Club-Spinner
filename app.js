@@ -1,8 +1,10 @@
 /* Football Spinner — TEAM + PLAYER
-   - PLAYER data loaded from /data/players.json (robust relative paths)
-   - Modal “SHOW …” overlays sit ON TOP of blurred values and are compact
-   - Progress bar reflects selected/total (players or teams)
-   - >50 items → stripes-only render for both modes
+   - Robust player loader (multiple paths)
+   - Player chips default checked (no “0 selected”)
+   - Progress bar = selected / total
+   - >50 selected => wedges only (no text/images) in both modes
+   - PLAYER show-on-wheel: A Image, B Name, C Jersey, D Nationality
+     (Club stays in modal and is also controlled by D)
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -52,15 +54,15 @@ const backdrop = document.getElementById('backdrop');
 const modalEl  = document.getElementById('modal');
 const mClose   = document.getElementById('mClose');
 const mHead    = document.getElementById('mHead');
-const mSub     = document.getElementById('mSub');     // TEAM: league / PLAYER: nationality (single place)
-const mLogo    = document.getElementById('mLogo');    // TEAM: logo / PLAYER: portrait
+const mSub     = document.getElementById('mSub');     // TEAM: league; PLAYER: left blank (avoid duplicate nationality)
+const mLogo    = document.getElementById('mLogo');
 const rowStadium = document.getElementById('rowStadium');
 const mStadium = document.getElementById('mStadium');
 const rowClub  = document.getElementById('rowClub');
 const mClub    = document.getElementById('mClub');
 const rowJersey= document.getElementById('rowJersey');
 const mJersey  = document.getElementById('mJersey');
-const rowNat   = document.getElementById('rowNat');   // not used in PLAYER (avoid duplicates)
+const rowNat   = document.getElementById('rowNat');
 const mNat     = document.getElementById('mNat');
 
 let modalReveal = { a:false,b:false,c:false,d:false };
@@ -157,9 +159,12 @@ function renderChips(){
 
   if (MODE==='player'){
     const plTeams = TEAMS.filter(t=>t.league_code==='EPL');
+
+    // Top 6 default checked
     const top6 = plTeams.filter(t=>PL_TOP6_TEAM_IDS.includes(String(t.team_id)));
     top6.forEach(t => chipsTop.appendChild(makeChip(String(t.team_id), t.team_name || `Club #${t.team_id}`, true)));
 
+    // Rest default checked as well (so selection is never empty)
     const rest = plTeams.filter(t=>!PL_TOP6_TEAM_IDS.includes(String(t.team_id)))
                         .sort((a,b)=>a.team_name.localeCompare(b.team_name));
     rest.forEach(t => chipsMore.appendChild(makeChip(String(t.team_id), t.team_name || `Club #${t.team_id}`, true)));
@@ -186,7 +191,7 @@ function applyModeShowControls(){
     lblA.textContent='Image';         optA.checked=true;
     lblB.textContent='Name';          optB.checked=true;
     lblC.textContent='Jersey Number'; optC.checked=false;
-    lblD.textContent='Club';          optD.checked=true;
+    lblD.textContent='Nationality';   optD.checked=true; // also controls Club in modal
   } else {
     lblA.textContent='Logo';          optA.checked=true;
     lblB.textContent='Name';          optB.checked=true;
@@ -402,21 +407,24 @@ function openModal(item){
 
   if (MODE==='player'){
     mHead.textContent=item.team_name||'—';
-    mSub.textContent=item.nationality||'';
+    mSub.textContent=''; // avoid duplicate nationality
     mLogo.src=item.image_url||'';
 
     rowStadium.style.display='none';
     rowClub.style.display='';
     rowJersey.style.display='';
-    rowNat.style.display='none';
+    rowNat.style.display='';
 
-    mClub.textContent=item.club || resolveClubName(item.club_id) || '—';
-    mJersey.textContent=item.jersey ? `#${item.jersey}` : '—';
+    mClub.textContent = item.club || resolveClubName(item.club_id) || '—';
+    mJersey.textContent= item.jersey ? `#${item.jersey}` : '—';
+    mNat.textContent   = item.nationality || '—';
 
-    addReveal('a', mLogo,   !!optA.checked, 'image');          // on image box
-    addReveal('b', mHead,   !!optB.checked, 'name', true);     // hug so overlay is chip-like
+    // A=image, B=name, C=jersey, D= nationality (and also controls Club)
+    addReveal('a', mLogo,   !!optA.checked, 'image');
+    addReveal('b', mHead,   !!optB.checked, 'name', true);
     addReveal('c', mJersey, !!optC.checked, 'jersey number', true);
-    addReveal('d', mClub,   !!optD.checked, 'club', true);
+    addReveal('dNat', mNat, !!optD.checked, 'nationality', true);
+    addReveal('dClub', mClub, !!optD.checked, 'club', true);
   }else{
     mHead.textContent=item.team_name||'—';
     mSub.textContent=leagueLabel(item.league_code)||'';
@@ -429,10 +437,11 @@ function openModal(item){
 
     mStadium.textContent=item.stadium||'—';
 
-    addReveal('a', mLogo,    !!optA.checked, 'logo');          // square
-    addReveal('b', mHead,    !!optB.checked, 'name', true);    // compact chip
-    addReveal('c', mStadium, !!optC.checked, 'stadium', true); // pill
-    addReveal('d', mSub,     !!optD.checked, 'league', true);  // chip
+    // A=logo, B=name, C=stadium, D=league
+    addReveal('a', mLogo,    !!optA.checked, 'logo');
+    addReveal('b', mHead,    !!optB.checked, 'name', true);
+    addReveal('c', mStadium, !!optC.checked, 'stadium', true);
+    addReveal('d', mSub,     !!optD.checked, 'league', true);
   }
 
   backdrop.style.display='flex';
@@ -470,13 +479,16 @@ async function loadTeams(){
 }
 
 async function loadPlayers(){
-  // robust relative paths for production / subfolder deployments
-  const urls=['./data/players.json','data/players.json','/data/players.json'];
+  // Robust relative + root paths (covers local subfolders and production root)
+  const urls=[
+    './data/players.json','data/players.json','/data/players.json',
+    '/players/players.json','players/players.json'
+  ];
   let res=null;
   for (const u of urls){
     try{ const r=await fetch(u,{cache:'no-store'}); if(r.ok){res=r; break;} }catch{}
   }
-  if(!res) throw new Error('players.json not found at ./data/players.json');
+  if(!res) throw new Error('players.json not found in data/players.json');
   const raw=await res.json();
 
   PLAYERS=(raw||[]).map(p=>{
