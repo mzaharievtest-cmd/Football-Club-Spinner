@@ -1,584 +1,691 @@
-/* Main stylesheet for Football Spinner
-   - Dark theme, responsive grid cards, chip UI, wheel, modal
-   - Clean reveal overlay alignment (buttons centered on blurred targets)
+/* Football Spinner — TEAM / PLAYER unified
+   - TEAM wheel: Logo/Name on wheel (+Stadium optional). League never drawn on wheel; modal only.
+   - PLAYER wheel: Image/Name on wheel (+Jersey optional, +Club optional). Nationality is in modal only.
+   - If >50 wedges → draw stripes only (no text/images).
+   - Mode-aware “Show on wheel” controls.
+   - Players are loaded from /data/players.json (single source of truth).
+   - Player chips are derived from players.json; club_id → club name via teams.json + fallback map.
 */
 
-/* =========================
-   Theme variables
-   ========================= */
-:root {
-  color-scheme: dark;
+let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
 
-  /* Base palette */
-  --bg-0: #05070f;
-  --bg-1: #08101e;
-  --bg-2: #0e1526;
-  --bg-3: #121c34;
+let TEAMS = [];
+let TEAM_BY_ID = new Map();
+let CLUB_BY_ID = new Map();
 
-  --text: #eaf0fb;
-  --muted: #a9b9d6;
+let PLAYERS = [];
+let TOTAL_TEAMS = 0;
+let TOTAL_PLAYERS = 0;
 
-  /* Accents */
-  --accent: #64a8ff;
-  --accent-2: #22d3ee;
-  --accent-3: #9b6bff;
+let currentAngle = 0;
+let spinning = false;
+let selectedIdx = -1;
+let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 
-  /* Radii and shadows */
-  --radius: 20px;
-  --shadow-1: 0 8px 30px rgba(0,0,0,.25);
-  --shadow-2: 0 24px 80px rgba(18,30,52,0.42);
+/* ---------- DOM ---------- */
+const modeTeamBtn   = document.getElementById('modeTeam');
+const modePlayerBtn = document.getElementById('modePlayer');
 
-  /* Gradients */
-  --grad-chip: linear-gradient(135deg, rgba(18,28,52,.96), rgba(10,16,30,.92));
-  --grad-card: linear-gradient(180deg, rgba(18,27,48,.9), rgba(10,16,30,.86));
+const chipsWrap = document.getElementById('chips');
+const chipsTop  = document.getElementById('chipsTop');
+const chipsMore = document.getElementById('chipsMore');
+const toggleMore= document.getElementById('toggleMore');
+const qpAll     = document.getElementById('qpAll');
+const qpNone    = document.getElementById('qpNone');
+const qpTop     = document.getElementById('qpTop');
 
-  /* Borders */
-  --line: rgba(120,160,255,.18);
-  --line-strong: rgba(120,160,255,.32);
+const optA = document.getElementById('optA'); // A
+const optB = document.getElementById('optB'); // B
+const optC = document.getElementById('optC'); // C
+const optD = document.getElementById('optD'); // D
+const lblA = document.getElementById('lblA');
+const lblB = document.getElementById('lblB');
+const lblC = document.getElementById('lblC');
+const lblD = document.getElementById('lblD');
 
-  /* Motion */
-  --ease: cubic-bezier(.2,.7,.1,1);
-  --ease-out: cubic-bezier(.16,1,.3,1);
-}
+const spinBtn = document.getElementById('spinBtn');
+const spinFab = document.getElementById('spinFab');
+const perfTip = document.getElementById('perfTip');
+const wheel   = document.getElementById('wheel');
+const fx      = document.getElementById('fx');
 
-@media (prefers-reduced-motion: reduce) {
-  :root { --ease: linear; --ease-out: linear; }
-  * { animation: none !important; transition: none !important; }
-}
+const historyEl = document.getElementById('history');
+const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 
-/* Ensure anything with the hidden attribute stays hidden */
-[hidden] { display: none !important; }
+/* Modal */
+const backdrop   = document.getElementById('backdrop');
+const modalEl    = document.getElementById('modal');
+const mClose     = document.getElementById('mClose');
+const mHead      = document.getElementById('mHead'); // header text
+const mSub       = document.getElementById('mSub');  // subtitle (we hide in PLAYER mode)
+const mLogo      = document.getElementById('mLogo'); // crest / player image
 
-/* =========================
-   Base / Background
-   ========================= */
-*,
-*::before,
-*::after { box-sizing: border-box; }
+const rowStadium = document.getElementById('rowStadium');
+const mStadium   = document.getElementById('mStadium');
 
-html, body { height: 100%; }
+const rowClub    = document.getElementById('rowClub');
+const mClub      = document.getElementById('mClub');
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  font-family: "Inter", system-ui, Segoe UI, Roboto, Arial, sans-serif;
-  color: var(--text);
-  background: radial-gradient(1400px 840px at 25% -20%, rgba(90,161,255,.25) 0, transparent 48%),
-              radial-gradient(1100px 880px at 92% -12%, rgba(34,211,238,.16) 0, transparent 45%),
-              linear-gradient(180deg, var(--bg-0), var(--bg-1) 28%, var(--bg-1) 100%);
-  background-attachment: fixed;
-  overflow-x: hidden;
-}
+const rowJersey  = document.getElementById('rowJersey');
+const mJersey    = document.getElementById('mJersey');
 
-/* Soft ambient glows */
-body::before {
-  content: "";
-  position: fixed;
-  inset: -20vmax;
-  background:
-    radial-gradient(50% 50% at 50% 50%, rgba(60,120,255,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat,
-    radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat;
-  filter: blur(40px);
-  opacity: .8;
-  pointer-events: none;
-  z-index: 0;
-  animation: bg-drift 34s linear infinite;
-}
-@keyframes bg-drift {
-  0% { transform: translate3d(0,0,0) rotate(0deg); }
-  50%{ transform: translate3d(1.5%, -1.5%, 0) rotate(180deg); }
-  100%{ transform: translate3d(0,0,0) rotate(360deg); }
-}
+const rowNat     = document.getElementById('rowNat');
+const mNat       = document.getElementById('mNat');
 
-/* =========================
-   Header
-   ========================= */
-header {
-  padding: 16px clamp(16px,3vw,36px);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  position: sticky;
-  top: 0;
-  background: linear-gradient(180deg, rgba(12,18,31,.78), rgba(10,16,28,.62));
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(120,160,255,.14);
-  z-index: 20;
+let modalReveal = { a:false,b:false,c:false,d:false };
+
+/* ---------- Utils ---------- */
+const TAU = Math.PI * 2;
+const POINTER_ANGLE = ((-Math.PI/2)+TAU)%TAU;
+const clamp = (a,x,b)=>Math.max(a,Math.min(b,x));
+const mod   = (x,m)=>((x%m)+m)%m;
+
+const IMG_CACHE = new Map();
+function getImage(url, onload){
+  if (!url) return null;
+  const c = IMG_CACHE.get(url);
+  if (c) return c.img;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.decoding = 'async';
+  img.loading = 'eager';
+  img.src = url;
+  img.onload = ()=> onload && onload();
+  img.onerror = ()=> onload && onload();
+  IMG_CACHE.set(url,{img});
+  return img;
 }
 
-header h1 {
-  margin: 0;
-  font-size: clamp(22px, 2.6vw, 32px);
-  font-weight: 900;
-  letter-spacing: .01em;
-  text-shadow: 0 1px 0 rgba(0,0,0,.3);
+function textColorFor(hex){
+  if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
+  hex = hex.replace('#','');
+  const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
+  const L = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
+  return L > 0.35 ? '#0b0f17' : '#fff';
 }
 
-.season-tag {
-  margin-top: 2px;
-  font-size: 12px;
-  letter-spacing: .34em;
-  text-transform: uppercase;
-  color: rgba(197,212,235,.76);
+function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weight=800 }){
+  let px = clamp(minPx, Math.round(targetPx), maxPx);
+  ctx.font = `${weight} ${px}px Inter, system-ui, sans-serif`;
+  if (ctx.measureText(text).width <= maxWidth) return {text, fontPx: px};
+  while (px > minPx){
+    px--;
+    ctx.font = `${weight} ${px}px Inter, system-ui, sans-serif`;
+    if (ctx.measureText(text).width <= maxWidth) return {text, fontPx: px};
+  }
+  let s = String(text||'').trim();
+  while (s && ctx.measureText(s+'…').width > maxWidth) s = s.slice(0,-1);
+  return {text:(s||'')+'…', fontPx:minPx};
 }
 
-/* Brand cluster */
-header .brand { display: inline-flex; align-items: center; gap: 12px; }
-.brand-img {
-  width: clamp(30px, 3.3vw, 44px);
-  height: clamp(30px, 3.3vw, 44px);
-  border-radius: 12px;
-  object-fit: cover;
-  display: inline-block;
-  position: relative;
-  z-index: 0;
-  box-shadow: 0 4px 14px rgba(0,0,0,.28),
-              inset 0 0 0 1px rgba(255,255,255,.05);
-  background: #0b1220;
-  border: 1px solid rgba(100,160,255,.45);
-  transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
+/* ---------- Chips helpers ---------- */
+function makeChip(value, text, checked){
+  const label = document.createElement('label');
+  label.className='chip';
+  label.innerHTML = `<input type="checkbox" value="${value}" ${checked?'checked':''}><span class="chip-text">${text}</span>`;
+  return label;
 }
-.brand-img:hover {
-  transform: translateY(-1px) scale(1.03);
-  border-color: rgba(120,190,255,.8);
-  box-shadow: 0 10px 30px rgba(32,80,200,.35),
-              0 0 0 6px rgba(80,160,255,.08),
-              inset 0 0 0 1px rgba(255,255,255,.08);
+function visibleCodesAll(){
+  const out = [];
+  chipsTop.querySelectorAll('input[type="checkbox"]').forEach(i => out.push(i.value));
+  chipsMore.querySelectorAll('input[type="checkbox"]').forEach(i => out.push(i.value));
+  return out;
+}
+function activeCodes(){
+  const arr=[];
+  chipsWrap.querySelectorAll('input[type="checkbox"]:checked').forEach(i => arr.push(i.value));
+  return arr;
 }
 
-/* =========================
-   Page grid / cards
-   ========================= */
-.container {
-  max-width: 1200px;
-  margin: 20px auto 48px;
-  padding: 0 clamp(12px,4vw,36px);
-  display: grid;
-  gap: 22px;
-  align-items: start;
-  position: relative;
-  z-index: 1;
+/* ---------- Labels & presets ---------- */
+const LEAGUE_LABELS = {
+  AUT:"Austrian Bundesliga", BEL:"Jupiler Pro League", BUL:"efbet Liga",
+  CRO:"SuperSport HNL", CZE:"Fortuna Liga", DEN:"Superliga",
+  EPL:"Premier League", L1:"Ligue 1", BUN:"Bundesliga", GRE:"Super League 1",
+  ISR:"Ligat ha'Al", SA:"Serie A", NED:"Eredivisie", NOR:"Eliteserien",
+  POL:"PKO BP Ekstraklasa", POR:"Liga Portugal", ROU:"SuperLiga", RUS:"Premier Liga",
+  SCO:"Scottish Premiership", SRB:"Super liga Srbije", LLA:"LaLiga",
+  SWE:"Allsvenskan", SUI:"Super League", TUR:"Süper Lig", UKR:"Ukrainian Premier League"
+};
+const leagueLabel = c => LEAGUE_LABELS[c] || c;
+
+const TOP5 = ['EPL','SA','BUN','L1','LLA'];
+const PL_TOP6 = ['18','9','14','8','19','6'];
+
+/* ---------- PL fallback map ---------- */
+const FALLBACK_CLUBS = {
+  '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
+  '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
+  '19':'Arsenal','20':'Newcastle United','21':'West Ham United','26':'Leicester City',
+  '27':'Burnley','29':'Wolverhampton Wanderers','51':'Crystal Palace','52':'AFC Bournemouth',
+  '62':'Sheffield United','63':'Nottingham Forest','71':'Leeds United','78':'Brighton & Hove Albion',
+  '236':'Brentford'
+};
+
+/* ---------- Data selection ---------- */
+function getCurrentData(){
+  const active = new Set(activeCodes());
+  if (active.size === 0) return [];
+
+  if (MODE === 'player'){
+    return PLAYERS.filter(p => active.has(String(p.club_id)));
+  }
+  return TEAMS.filter(t => active.has(t.league_code));
 }
 
-@media (min-width: 980px) { .container { grid-template-columns: 380px 1fr; } }
-@media (max-width: 979.98px) { .container { display: block; } .card { margin-bottom: 16px; } }
-
-.card {
-  position: relative;
-  background: var(--grad-card);
-  border-radius: var(--radius);
-  padding: 18px clamp(14px,3vw,26px);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-1);
-  overflow: clip;
-  transform: translateY(8px);
-  opacity: 0;
-  animation: card-in .6s var(--ease-out) forwards;
-  align-self: start;
-}
-@keyframes card-in { to { transform: translateY(0); opacity: 1; } }
-
-.section-title {
-  font-size: 12px;
-  letter-spacing: .36em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 10px;
+/* ---------- Progress banner (fraction of total) ---------- */
+function updatePerfBanner(){
+  const n = getCurrentData().length;
+  const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
+  const pct = Math.max(0, Math.min(1, n / total));
+  perfTip.style.setProperty('--pct', pct);
+  perfTip.textContent = `${n} ${MODE==='player' ? 'players' : 'teams'} selected`;
+  const disabled = n===0;
+  spinBtn.disabled = disabled;
+  spinFab.disabled = disabled;
 }
 
-/* =========================
-   Quick picks / chips
-   ========================= */
-.quick-picks {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
+/* ---------- Chips render (mode aware) ---------- */
+function renderChips(){
+  chipsTop.innerHTML = '';
+  chipsMore.innerHTML = '';
+
+  if (MODE === 'player'){
+    // Build from players.json so every club_id is represented
+    const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
+    const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_CLUBS[id] || `Club #${id}`;
+
+    const top6 = ids.filter(id => PL_TOP6.includes(id));
+    const rest = ids.filter(id => !PL_TOP6.includes(id))
+                    .sort((a,b)=> labelFor(a).localeCompare(labelFor(b)));
+
+    top6.forEach(id => chipsTop.appendChild(makeChip(id, labelFor(id), true)));
+    rest.forEach(id => chipsMore.appendChild(makeChip(id, labelFor(id), true)));
+
+    toggleMore.textContent = 'Show more Premier League clubs';
+    qpTop.textContent = 'Top 6';
+  } else {
+    const codes = [...new Set(TEAMS.map(t=>t.league_code))];
+    const top = TOP5.filter(c => codes.includes(c));
+    const more = codes.filter(c => !top.includes(c)).sort();
+
+    top.forEach(c => chipsTop.appendChild(makeChip(c, leagueLabel(c), c==='EPL')));
+    more.forEach(c => chipsMore.appendChild(makeChip(c, leagueLabel(c), false)));
+
+    toggleMore.textContent = 'Show more leagues';
+    qpTop.textContent = 'Top 5';
+  }
+
+  chipsMore.hidden = true;
+  toggleMore.setAttribute('aria-expanded','false');
 }
 
-button, .chip-btn {
-  width: 100%;
-  margin-top: 6px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(22,34,64,.96), rgba(12,18,34,.92));
-  color: #f4f7ff;
-  font-weight: 900;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: transform .15s var(--ease),
-              border-color .15s var(--ease),
-              box-shadow .2s var(--ease),
-              background .2s var(--ease);
-  position: relative;
-  overflow: hidden;
-}
-button:hover, .chip-btn:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent-2);
-  box-shadow: 0 10px 30px rgba(34,211,238,.16);
-}
-button:active { transform: translateY(0); }
-button:disabled { opacity: .6; cursor: wait; }
-
-/* Button shine */
-button::after, .chip-btn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(255,255,255,.08), transparent 30% 70%, rgba(255,255,255,.08));
-  transform: translateX(-100%);
-  transition: transform .7s var(--ease-out);
-  pointer-events: none;
-}
-button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
-
-.chip-btn.active {
-  border-color: var(--accent-2);
-  box-shadow: 0 0 0 2px rgba(34,211,238,.20) inset, 0 12px 26px rgba(34,211,238,.12);
-  background: linear-gradient(180deg, rgba(32,46,88,.96), rgba(14,24,48,.92));
+/* ---------- Show-on-wheel controls ---------- */
+/* PLAYER now: A Image, B Name, C Jersey Number, D Club (Nationality is modal-only) */
+function applyModeShowControls(){
+  if (MODE==='player'){
+    lblA.textContent='Image';         optA.checked = true;
+    lblB.textContent='Name';          optB.checked = true;
+    lblC.textContent='Jersey Number'; optC.checked = false;
+    lblD.textContent='Club';          optD.checked = true;   // draw club under name if space
+  } else {
+    lblA.textContent='Logo';    optA.checked = true;
+    lblB.textContent='Name';    optB.checked = true;
+    lblC.textContent='Stadium'; optC.checked = false;
+    lblD.textContent='League';  optD.checked = true; // modal only
+  }
 }
 
-/* Ghost variant */
-.chip-btn.ghost {
-  background: linear-gradient(180deg, rgba(18,22,36,.86), rgba(10,14,26,.82));
-  border-style: dashed;
+/* ---------- Canvas sizing ---------- */
+function sizeCanvas(){
+  const rect = (wheel.parentElement||wheel).getBoundingClientRect();
+  const cssSize = clamp(300, Math.round(rect.width||640), 1200);
+  const DPR = Math.max(1, window.devicePixelRatio||1);
+  wheel.width  = Math.round(cssSize * DPR);
+  wheel.height = Math.round(cssSize * DPR);
+  fx.width = wheel.width; fx.height = wheel.height;
+  wheel.style.width = cssSize+'px'; wheel.style.height = cssSize+'px';
+  fx.style.width = cssSize+'px'; fx.style.height = cssSize+'px';
 }
 
-/* League chips + Show-on-wheel chips */
-#chips .chips, #showOnWheel, .showopts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 6px 0 14px;
+/* ---------- Wheel drawing ---------- */
+const PERF = { hideTextThreshold: 50, minTextWidth: 44, minLogoBox: 26 };
+
+function drawIdle(ctx,W,H){
+  ctx.clearRect(0,0,W,H);
+  ctx.save(); ctx.translate(W/2,H/2);
+  const r = Math.min(W,H)*0.48;
+  const g = ctx.createRadialGradient(0,0,r*0.1, 0,0,r);
+  g.addColorStop(0,'#1A2C5A'); g.addColorStop(0.35,'#21386F'); g.addColorStop(0.65,'#0E2A57'); g.addColorStop(1,'#0B1B38');
+  ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fillStyle=g; ctx.fill();
+  ctx.restore();
 }
 
-#chips .chip, #showOnWheel .chip, .showopts .chip {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px 10px 46px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--grad-chip);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  cursor: pointer;
-  transition: transform .16s var(--ease), border-color .16s var(--ease), box-shadow .2s var(--ease);
-  max-width: 100%;
-  will-change: transform;
-}
-#chips .chip:hover, #showOnWheel .chip:hover, .showopts .chip:hover {
-  border-color: var(--line-strong);
-  transform: translateY(-1px) scale(1.02);
+function drawWheel(){
+  const data = getCurrentData();
+  const N = data.length;
+
+  const ctx = wheel.getContext('2d');
+  const DPR = Math.max(1, window.devicePixelRatio||1);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const W = wheel.width / DPR, H = wheel.height / DPR;
+
+  updatePerfBanner();
+
+  if (N===0){ drawIdle(ctx,W,H); return; }
+
+  const hideAll = N >= PERF.hideTextThreshold; // applies to PLAYER & TEAM
+  ctx.imageSmoothingEnabled = !hideAll;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.save(); ctx.translate(W/2,H/2);
+  ctx.rotate(mod(currentAngle,TAU));
+
+  const r = Math.min(W,H)*0.48;
+  const slice = TAU/N;
+
+  // wedges
+  for (let i=0;i<N;i++){
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*slice,(i+1)*slice); ctx.closePath();
+    ctx.fillStyle = data[i].primary_color || '#4f8cff';
+    ctx.fill();
+  }
+
+  if (hideAll){ ctx.restore(); return; }
+
+  // contents
+  for (let i=0;i<N;i++){
+    const t = data[i];
+    const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
+    const arcLen = r*(a1-a0);
+
+    const isTeam = (MODE==='team');
+    const canLogo = isTeam ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
+    const canName = optB.checked && !!t.team_name;
+
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
+
+    ctx.rotate(aMid);
+    const needFlip = Math.cos(aMid) < 0;
+    if (needFlip) ctx.rotate(Math.PI);
+    const sign = needFlip ? -1 : 1;
+
+    const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
+    const logoHalf = logoSize/2;
+    const pad = 10;
+    const xLogo = sign * (r*0.74);
+    const xText = sign * (r*0.42);
+    const logoInner = xLogo - sign*(logoHalf+pad);
+    const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
+
+    const fg = textColorFor(t.primary_color);
+
+    // Name (first line)
+    let textY = 0;
+    if (canName && maxWidth>=PERF.minTextWidth){
+      const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
+      ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
+      ctx.fillStyle=fg;
+      const x = Math.min(xText, logoInner);
+      ctx.strokeText(fit.text, x, textY);
+      ctx.fillText(fit.text,   x, textY);
+      // leave space for a second line if we’ll draw club (PLAYER + optD)
+      if (!isTeam && optD.checked) textY += Math.max(12, Math.round(fit.fontPx*0.9));
+    }
+
+    // Club (PLAYER only) as a second line, if enabled
+    if (!isTeam && optD.checked && maxWidth>=PERF.minTextWidth){
+      const clubName = CLUB_BY_ID.get(String(t.club_id)) || FALLBACK_CLUBS[String(t.club_id)] || '';
+      if (clubName){
+        const fit2 = fitSingleLine(ctx, clubName, {maxWidth, targetPx:Math.min(16, 0.18*arcLen)});
+        ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.font = `700 ${fit2.fontPx}px Inter, system-ui, sans-serif`;
+        ctx.fillStyle='rgba(255,255,255,.92)';
+        const x2 = Math.min(xText, logoInner);
+        ctx.fillText(fit2.text, x2, textY+10);
+      }
+    }
+
+    // logo/image (TEAM/PLAYER)
+    if (canLogo){
+      ctx.save(); ctx.translate(xLogo,0);
+      ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
+      ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
+
+      ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
+      const url = isTeam ? t.logo_url : t.image_url;
+      const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
+      if (img && img.complete){
+        const box = Math.max(4, 2*(logoHalf-1));
+        const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
+        const s = Math.min(box/iw, box/ih);
+        ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
+      } else {
+        ctx.fillStyle='rgba(255,255,255,.14)';
+        const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
+      }
+      ctx.restore(); ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  ctx.restore();
 }
 
-#chips .chip input[type="checkbox"],
-#showOnWheel .chip input[type="checkbox"],
-.showopts .chip input[type="checkbox"]{
-  appearance: none;
-  position: absolute;
-  left: 16px;
-  width: 18px; height: 18px;
-  border-radius: 6px;
-  border: 1px solid rgba(120,150,220,.45);
-  background: rgba(4,9,19,.8);
-  display: grid;
-  place-items: center;
-  transition: .18s var(--ease);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
-}
-#chips .chip input[type="checkbox"]::after,
-#showOnWheel .chip input[type="checkbox"]::after,
-.showopts .chip input[type="checkbox"]::after{
-  content: "";
-  width: 9px; height: 9px; border-radius: 4px;
-  background: var(--accent);
-  transform: scale(.2);
-  opacity: 0;
-  transition: .18s var(--ease);
-}
-#chips .chip input[type="checkbox"]:checked,
-#showOnWheel .chip input[type="checkbox"]:checked,
-.showopts .chip input[type="checkbox"]:checked{
-  border-color: var(--accent);
-  background: rgba(90,161,255,.18);
-  box-shadow: 0 0 0 2px rgba(90,161,255,.18) inset;
-}
-#chips .chip input[type="checkbox"]:checked::after,
-#showOnWheel .chip input[type="checkbox"]:checked::after,
-.showopts .chip input[type="checkbox"]:checked::after{
-  transform: scale(1);
-  opacity: 1;
+/* ---------- Spin ---------- */
+function spin(){
+  if (spinning) return;
+  const data = getCurrentData();
+  if (!data.length) return;
+
+  spinning = true;
+  document.body.classList.add('ui-locked');
+  spinBtn.disabled = true; spinFab.disabled = true;
+
+  const N = data.length;
+  const slice = TAU/N;
+  const targetAngle = TAU*(6+Math.floor(Math.random()*3)) + Math.random()*TAU;
+
+  const start = performance.now(), dur=3200;
+  const ease = x=>1-Math.pow(1-x,3);
+
+  function step(now){
+    const p = clamp(0,(now-start)/dur,1);
+    currentAngle = targetAngle * ease(p);
+    drawWheel();
+    if (p<1) requestAnimationFrame(step);
+    else {
+      const theta = mod(currentAngle,TAU);
+      const offset = mod(POINTER_ANGLE - theta, TAU);
+      const idx = Math.floor(offset / slice) % N;
+      const center = idx*slice + slice/2;
+      const delta = mod(center - offset, TAU);
+      currentAngle = mod(currentAngle + delta, TAU);
+
+      spinning=false;
+      document.body.classList.remove('ui-locked');
+      spinBtn.disabled=false; spinFab.disabled=false;
+      selectedIdx = idx;
+      drawWheel();
+      showResult(idx);
+    }
+  }
+  requestAnimationFrame(step);
 }
 
-#chips .chip .chip-text, #showOnWheel .chip .chip-text, .showopts .chip .chip-text{
-  display: inline-block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 28ch;
+function showResult(idx){
+  const data = getCurrentData();
+  const item = data[idx];
+  if (!item) return;
+  history.unshift(item);
+  if (history.length>50) history = history.slice(0,50);
+  localStorage.setItem('clubHistory', JSON.stringify(history));
+  renderHistory();
+  openModal(item);
 }
 
-@media (max-width: 560px){
-  #chips .chip, #showOnWheel .chip, .showopts .chip { padding: 10px 18px 10px 46px; }
-  #chips .chip .chip-text, #showOnWheel .chip .chip-text, .showopts .chip .chip-text { max-width: 24ch; }
+/* ---------- History ---------- */
+function renderHistory(){
+  historyEl.innerHTML = '';
+  if (!history.length){
+    historyEl.innerHTML = '<div class="item">Spin the wheel to start your club journey</div>';
+    return;
+  }
+  history.forEach(h=>{
+    const div=document.createElement('div'); div.className='item';
+    const img=document.createElement('img');
+    img.src = MODE==='player' ? (h.image_url||'') : (h.logo_url||'');
+    img.alt = MODE==='player' ? h.team_name : `${h.team_name} logo`;
+    const span=document.createElement('span');
+    span.textContent = MODE==='player'
+      ? `${h.team_name} (${CLUB_BY_ID.get(String(h.club_id)) || FALLBACK_CLUBS[String(h.club_id)] || 'Unknown Team'})`
+      : `${h.team_name} (${h.league_code})`;
+    div.append(img,span); historyEl.append(div);
+  });
 }
 
-/* =========================
-   Result / History
-   ========================= */
-.result {
-  margin-top: 14px;
-  display: flex; align-items: center; gap: 10px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: linear-gradient(135deg, rgba(13,22,40,.9), rgba(7,12,24,.85));
-  backdrop-filter: blur(6px);
+/* ---------- Reveal overlay ---------- */
+function ensureRevealStyles(){
+  if (document.getElementById('reveal-style')) return;
+  const s=document.createElement('style'); s.id='reveal-style';
+  s.textContent = `
+    .reveal-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:42px}
+    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none;z-index:2}
+    .reveal-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;user-select:none;white-space:nowrap;z-index:3}
+    .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.03);border-color:#22d3ee;box-shadow:0 6px 18px rgba(34,211,238,.18)}
+  `;
+  document.head.appendChild(s);
 }
-.result img, .item img {
-  width: 38px; height: 38px; border-radius: 12px;
-  object-fit: contain; background: #0b1220;
-  border: 1px solid rgba(90,161,255,.22);
-  box-shadow: 0 2px 8px rgba(16,24,48,.28);
+function wrap(el){
+  if (!el) return null;
+  if (el.parentElement && el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
+  const w=document.createElement('span'); w.className='reveal-wrap';
+  el.parentElement.insertBefore(w, el); w.appendChild(el); return w;
+}
+function blurEl(el){ if(!el) return; el.style.filter='blur(14px)'; const w=wrap(el); if(w&&!w.querySelector('.reveal-overlay')){const o=document.createElement('span');o.className='reveal-overlay';w.appendChild(o);} }
+function unblurEl(el){ if(!el) return; el.style.filter=''; const w=el.parentElement; const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove(); const b=w && w.querySelector('.reveal-btn'); if(b) b.remove(); }
+
+function addReveal(key, el, enabled, label){
+  const w = wrap(el);
+  const prior = w.querySelector('.reveal-btn'); if (prior) prior.remove();
+  if (enabled || modalReveal[key]){ unblurEl(el); return; }
+  blurEl(el);
+  const b=document.createElement('button'); b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
+  b.onclick=()=>{ modalReveal[key]=true; unblurEl(el); };
+  w.appendChild(b);
 }
 
-.current-name {
-  font-weight: 800; font-size: 15px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+/* ---------- Modal ---------- */
+function openModal(item){
+  ensureRevealStyles();
+  modalReveal = {a:false,b:false,c:false,d:false};
+
+  if (MODE==='player'){
+    // Header + image
+    mHead.textContent = item.team_name || '—';
+    mLogo.src = item.image_url || '';
+
+    // Hide subtitle in PLAYER mode (single nationality only in row)
+    mSub.textContent = '';
+    mSub.style.display = 'none';
+
+    // rows (Club, Jersey, Nationality)
+    rowStadium.style.display='none';
+    rowClub.style.display='';
+    rowJersey.style.display='';
+    rowNat.style.display='';
+
+    mClub.textContent   = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_CLUBS[String(item.club_id)] || '—';
+    mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
+    mNat.textContent    = item.nationality || '—';
+
+    // Show-on-wheel mapping in PLAYER:
+    // A=image, B=name, C=jersey, D=club; nationality is always reveal-only here
+    addReveal('a', mLogo,   !!optA.checked, 'image');
+    addReveal('b', mHead,   !!optB.checked, 'name');
+    addReveal('c', mJersey, !!optC.checked, 'jersey number');
+    addReveal('d', mClub,   !!optD.checked, 'club');
+
+    // Nationality: always blurred until revealed (not tied to A..D)
+    addReveal('nat', mNat, false, 'nationality');
+
+  } else {
+    // TEAM modal
+    mHead.textContent = item.team_name || '—';
+    mLogo.src = item.logo_url || '';
+    mSub.textContent  = leagueLabel(item.league_code) || '';
+    mSub.style.display = '';
+
+    rowStadium.style.display='';
+    rowClub.style.display='none';
+    rowJersey.style.display='none';
+    rowNat.style.display='none';
+    mStadium.textContent = item.stadium || '—';
+
+    // A=logo, B=name, C=stadium, D=league
+    addReveal('a', mLogo,    !!optA.checked, 'logo');
+    addReveal('b', mHead,    !!optB.checked, 'name');
+    addReveal('c', mStadium, !!optC.checked, 'stadium');
+    addReveal('d', mSub,     !!optD.checked, 'league');
+  }
+
+  backdrop.style.display='flex';
+  requestAnimationFrame(()=> modalEl.classList.add('show'));
+}
+function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
+
+/* ---------- Mode switch ---------- */
+function setMode(next){
+  if (next===MODE) return;
+  MODE = next;
+  localStorage.setItem('fsMode', MODE);
+
+  modeTeamBtn.classList.toggle('mode-btn-active', MODE==='team');
+  modePlayerBtn.classList.toggle('mode-btn-active', MODE==='player');
+  modeTeamBtn.setAttribute('aria-pressed', MODE==='team' ? 'true':'false');
+  modePlayerBtn.setAttribute('aria-pressed', MODE==='player' ? 'true':'false');
+
+  applyModeShowControls();
+  renderChips();
+  selectedIdx=-1;
+  updatePerfBanner();
+  drawWheel();
 }
 
-.history-title {
-  margin: 18px 0 10px; color: var(--muted);
-  font-size: 12px; letter-spacing: .34em; text-transform: uppercase;
-}
-.history { max-height: 260px; overflow: auto; display: grid; gap: 10px; }
-.item {
-  display: flex; gap: 10px; align-items: center;
-  padding: 10px 12px; border-radius: 12px;
-  background: rgba(17,28,48,.85);
-  border: 1px solid rgba(90,161,255,.12);
-  transition: transform .16s var(--ease);
-}
-.item:hover { transform: translateY(-1px); }
+/* ---------- Loaders ---------- */
+async function loadTeams(){
+  const res = await fetch('./teams.json?v='+Date.now());
+  if (!res.ok) throw new Error('teams.json not found');
+  TEAMS = await res.json();
+  TEAM_BY_ID.clear(); CLUB_BY_ID.clear();
 
-/* =========================
-   Selection banner (progress)
-   ========================= */
-.perf-tip {
-  font-size: 12px;
-  color: #bcd4ff;
-  background: rgba(40,60,100,.28);
-  border: 1px solid rgba(120,160,255,.25);
-  border-radius: 10px;
-  padding: 6px 10px;
-  margin: 6px 0 10px;
-  text-align: center;
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-}
-.perf-tip::before{
-  content:"";
-  position:absolute; inset:0; transform-origin:left center;
-  transform:scaleX(var(--pct,0));
-  background: linear-gradient(90deg, rgba(34,211,238,.22), rgba(100,168,255,.25));
-  transition: transform .25s var(--ease);
-  pointer-events:none;
+  for (const t of (TEAMS||[])){
+    const id = String(t.team_id);
+    TEAM_BY_ID.set(id, t);
+    CLUB_BY_ID.set(id, t.team_name);
+  }
+  // seed fallbacks so all club_ids resolve
+  for (const [id,name] of Object.entries(FALLBACK_CLUBS)){
+    if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, name);
+  }
+  TOTAL_TEAMS = TEAMS.length;
 }
 
-/* Extra spacing */
-#chips { margin-bottom: 28px; }
-#chipsMore { margin-top: 10px; }
+async function loadPlayers(){
+  const res = await fetch('/data/players.json', {cache:'no-store'});
+  if (!res.ok) throw new Error('players.json not found');
+  const raw = await res.json();
 
-/* =========================
-   Wheel / Pointer / Spin FAB
-   ========================= */
-.wheel-wrap {
-  position: relative;
-  display: flex; justify-content: center; align-items: center;
-  padding: clamp(36px, 5vw, 64px) clamp(10px, 2.5vw, 18px) clamp(10px, 2.5vw, 18px);
-  min-height: 640px;
-}
-canvas#wheel {
-  width: 100%; max-width: 820px; height: auto;
-  filter: drop-shadow(0 30px 60px rgba(0,0,0,.55));
-  border-radius: 50%;
-  background: transparent;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  animation: wheel-pop .6s var(--ease-out);
-}
-@keyframes wheel-pop { 0%{transform:scale(.98);opacity:.8;} 100%{transform:scale(1);opacity:1;} }
-#fx { position: absolute; inset: 0; pointer-events: none; }
+  PLAYERS = (raw||[]).map(p=>{
+    const name   = p.name || p.player_name || 'Player';
+    const clubId = String(p.club_id ?? p.team_id ?? '');
+    const team   = TEAM_BY_ID.get(clubId);
+    const color  = team?.primary_color || '#163058';
+    const img    = p.image_url || p.image || p.file || '';
+    const nat    = p.nationality || p.country || '';
+    const jersey = p.jersey_number ?? p.jersey ?? p.number ?? '';
 
-/* Pointer */
-.pointer {
-  position: absolute;
-  top: clamp(6px, 1vw, 12px);
-  border-left: 16px solid transparent;
-  border-right: 16px solid transparent;
-  border-top: 26px solid var(--accent-2);
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
-  z-index: 3;
-  animation: pointer-float 3.5s ease-in-out infinite;
-}
-@keyframes pointer-float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-3px);} }
-@media (max-width:600px){
-  .pointer{ border-left-width:12px; border-right-width:12px; border-top-width:20px; }
+    return {
+      team_name: name,
+      image_url: img,
+      club_id: clubId,
+      league_code: team?.league_code || 'EPL',
+      nationality: nat,
+      jersey: jersey ? String(jersey).replace('#','') : '',
+      primary_color: color
+    };
+  });
+
+  TOTAL_PLAYERS = PLAYERS.length;
+
+  // Ensure a name for every club_id appearing in players.json
+  for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
+    if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_CLUBS[id] || `Club #${id}`);
+  }
 }
 
-/* Spin FAB */
-.spin-fab{
-  position:absolute; z-index:5;
-  display:inline-flex; align-items:center; justify-content:center;
-  left:50%; top:50%; transform:translate(-50%,-50%);
-  width: clamp(88px, 14vw, 132px); height: clamp(88px, 14vw, 132px);
-  border-radius:999px; border:2px solid rgba(120,200,255,.55);
-  background: radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
-  color:#f4f7ff; font-weight:900; letter-spacing:.16em; text-transform:uppercase;
-  box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 0 30px rgba(90,161,255,.15);
-  pointer-events:auto;
-  transition: transform .12s var(--ease), box-shadow .12s var(--ease), border-color .12s var(--ease), background .12s var(--ease);
-  will-change: left, top, transform;
-}
-.spin-fab::before{
-  content:"";
-  position:absolute; inset:-6px; border-radius:999px;
-  background: conic-gradient(from 0deg, #22d3ee, #2b68ff, #9b6bff, #22d3ee);
-  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 8px), black 0);
-  mask: radial-gradient(closest-side, transparent calc(100% - 8px), black 0);
-  animation: ring-spin 4s linear infinite; opacity:.9;
-}
-@keyframes ring-spin { to { transform: rotate(360deg); } }
-.spin-fab:hover{ transform:translate(-50%,-50%) scale(1.03); border-color:#22d3ee; box-shadow:0 14px 34px rgba(34,211,238,.25); }
-.spin-fab:active{ transform:translate(-50%,-50%) scale(.985); }
-.spin-fab:disabled{ opacity:.7; cursor: wait; }
+/* ---------- Events ---------- */
+function wire(){
+  modeTeamBtn?.addEventListener('click', ()=> setMode('team'));
+  modePlayerBtn?.addEventListener('click', ()=> setMode('player'));
 
-/* =========================
-   Modal
-   ========================= */
-#backdrop{
-  position:fixed; inset:0; background:rgba(4,10,24,.82);
-  backdrop-filter: blur(12px); display:none;
-  align-items:center; justify-content:center; z-index:1000; padding:24px;
-}
-#modal{
-  border-radius:18px; max-width: 480px; width:min(96vw, 480px);
-  background: linear-gradient(180deg, rgba(16,24,42,.96), rgba(13,20,38,.92));
-  box-shadow: var(--shadow-2); border:1px solid #4f82ff;
-  overflow:hidden; display:flex; flex-direction:column;
-  transform: translateY(8px) scale(.98); opacity:0;
-  transition: transform .22s var(--ease-out), opacity .22s var(--ease-out);
-}
-#modal.show{ transform: translateY(0) scale(1); opacity:1; }
+  chipsWrap.addEventListener('change', ()=>{
+    if (spinning) return;
+    selectedIdx=-1;
+    updatePerfBanner();
+    drawWheel();
+  });
 
-#mHead{
-  padding: 22px 26px 0;
-  font-weight: 900; font-size: 26px; color:#f4f7ff; text-align: center;
-  line-height:1.1;
-}
-#mSub{
-  font-size: 14px; color:#a3b8e7; margin: 6px 0 8px; text-align:center;
-}
+  toggleMore.addEventListener('click', ()=>{
+    const hidden = chipsMore.hidden;
+    chipsMore.hidden = !hidden;
+    toggleMore.textContent = hidden
+      ? (MODE==='player' ? 'Show fewer clubs' : 'Show fewer leagues')
+      : (MODE==='player' ? 'Show more Premier League clubs' : 'Show more leagues');
+    toggleMore.setAttribute('aria-expanded', String(!hidden));
+  });
 
-.m-body{
-  padding: 10px 22px 14px;
-  display:flex; flex-direction:column; align-items:center; gap:12px;
-}
+  // Quick picks
+  qpAll.onclick = () => {
+    const all = visibleCodesAll();
+    chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = all.includes(i.value); });
+    selectedIdx=-1; updatePerfBanner(); drawWheel();
+  };
+  qpNone.onclick = () => {
+    chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = false; });
+    selectedIdx=-1; updatePerfBanner(); drawWheel();
+  };
+  qpTop.onclick = () => {
+    if (MODE==='player'){
+      const allow = new Set(PL_TOP6);
+      chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = allow.has(i.value); });
+    } else {
+      const allow = new Set(TOP5);
+      chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = allow.has(i.value); });
+    }
+    selectedIdx=-1; updatePerfBanner(); drawWheel();
+  };
 
-/* Image box */
-#mLogo{
-  width: 140px; height: 140px; max-width: 70vw;
-  object-fit: cover; border-radius: 16px; margin: 10px auto 8px;
-  background:#0b1220; border:1px solid #5aa1ff; box-shadow:0 2px 10px rgba(16,24,48,.45); display:block;
+  const refresh = ()=>{ if (!spinning){ selectedIdx=-1; drawWheel(); } };
+  optA.addEventListener('change', refresh);
+  optB.addEventListener('change', refresh);
+  optC.addEventListener('change', refresh);
+  optD.addEventListener('change', refresh);
+
+  spinBtn.onclick = spin; spinFab.onclick = spin;
+
+  resetHistoryBtn.onclick = ()=>{ history=[]; localStorage.setItem('clubHistory', JSON.stringify(history)); renderHistory(); };
+
+  mClose.onclick = ()=> !spinning && closeModal();
+  backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop) closeModal(); });
+  window.addEventListener('keydown', e=> { if (e.key==='Escape' && !spinning) closeModal(); });
+
+  let t; window.addEventListener('resize', ()=>{ clearTimeout(t); t=setTimeout(()=>{ sizeCanvas(); drawWheel(); },120); }, {passive:true});
 }
 
-/* Rows */
-.m-row{
-  width:100%;
-  display:flex; align-items:center; justify-content:space-between;
-  gap:12px; flex-wrap:nowrap; margin: 8px 0;
-}
-.m-row .label{
-  font-weight: 800; font-size: 20px; min-width: 96px; color:#eaf0fb;
-}
+/* ---------- Boot ---------- */
+(async function init(){
+  try{
+    await loadTeams();
+    await loadPlayers();
+  } catch (e){
+    console.error('Failed to load data:', e);
+  }
 
-/* Unified value “pill” so reveal button can center over it */
-#mStadium, #mClub, #mJersey, #mNat{
-  display: inline-flex;
-  align-items: center; justify-content: center;
-  min-width: 200px; max-width: 280px;
-  min-height: 42px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: rgba(17,28,48,.85);
-  border: 1px solid rgba(90,161,255,.16);
-  color: #d7e8ff; font-weight: 800;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
+  modeTeamBtn.classList.toggle('mode-btn-active', MODE==='team');
+  modePlayerBtn.classList.toggle('mode-btn-active', MODE==='player');
+  modeTeamBtn.setAttribute('aria-pressed', MODE==='team' ? 'true':'false');
+  modePlayerBtn.setAttribute('aria-pressed', MODE==='player' ? 'true':'false');
 
-/* Actions */
-.m-actions{
-  padding: 14px 22px 20px;
-  background:#0f1830; border-top:1px solid #234080;
-  display:flex; gap:10px; justify-content:center;
-}
-#backdrop .chip-btn, #backdrop button { width:auto; min-width: 160px; }
-
-/* =========================
-   Reveal overlay (centered)
-   ========================= */
-.reveal-wrap{
-  position: relative;
-  display: inline-flex;
-  align-items: center; justify-content: center;
-  /* make sure there is an area to center inside even if text is short */
-  min-height: 42px;
-}
-.reveal-overlay{
-  position:absolute; inset:0; border-radius:inherit;
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  background: rgba(0,0,0,0); pointer-events:none; z-index:2;
-}
-.reveal-btn{
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:8px 14px; border-radius:10px;
-  border:1px solid rgba(90,161,255,.6); background:#152036; color:#fff;
-  font-weight:800; letter-spacing:.03em; cursor:pointer; user-select:none; white-space:nowrap;
-  z-index:3; transition: transform .12s var(--ease), border-color .12s var(--ease), box-shadow .12s var(--ease);
-}
-.reveal-btn:hover{ transform: translate(-50%,-50%) scale(1.03); border-color: var(--accent-2); box-shadow: 0 6px 18px rgba(34,211,238,.18); }
-
-/* =========================
-   Pointer room / misc
-   ========================= */
-.wheel-wrap { padding-top: clamp(36px, 5vw, 64px); }
-.pointer { top: clamp(6px, 1vw, 12px); z-index: 3; }
-
-.small { font-size: 12px; color: var(--muted); }
-.hidden { display: none !important; }
-
-body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked label, body.ui-locked .chip { cursor: wait !important; }
-
-/* Sticky sidebar on desktop */
-@media (min-width: 980px) { .card.sidebar { position: sticky; top: 84px; } }
-
-/* Scrollbar for history */
-.history{ scrollbar-width: thin; scrollbar-color: rgba(120,160,255,.35) transparent; }
-.history::-webkit-scrollbar{ width:8px; }
-.history::-webkit-scrollbar-thumb{ background: rgba(120,160,255,.28); border-radius:8px; }
-.history::-webkit-scrollbar-track{ background: transparent; }
-
-/* Mobile tap targets */
-@media (max-width: 560px) {
-  #chips .chip, #showOnWheel .chip, .showopts .chip { padding: 12px 18px 12px 46px; }
-  #chips .chip input[type="checkbox"], #showOnWheel .chip input[type="checkbox"], .showopts .chip input[type="checkbox"] { width: 20px; height: 20px; }
-}
+  applyModeShowControls();
+  renderChips();
+  renderHistory();
+  sizeCanvas();
+  updatePerfBanner();
+  drawWheel();
+  wire();
+})();
