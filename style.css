@@ -1,6 +1,7 @@
 /* Main stylesheet for Football Spinner
    - Dark theme, responsive grid cards, chip UI, wheel, modal
-   - Includes enhanced FAQ/Content block and sticky sidebar fixes
+   - Sticky left sidebar with its own scroll, no overlay on wheel
+   - FAQ block matches card visuals
    - Inter font is loaded via <link> in index.html
 */
 
@@ -64,9 +65,10 @@ body {
   min-height: 100vh;
   font-family: "Inter", system-ui, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--text);
-  background: radial-gradient(1400px 840px at 25% -20%, rgba(90,161,255,.25) 0, transparent 48%),
-              radial-gradient(1100px 880px at 92% -12%, rgba(34,211,238,.16) 0, transparent 45%),
-              linear-gradient(180deg, var(--bg-0), var(--bg-1) 28%, var(--bg-1) 100%);
+  background:
+    radial-gradient(1400px 840px at 25% -20%, rgba(90,161,255,.25) 0, transparent 48%),
+    radial-gradient(1100px 880px at 92% -12%, rgba(34,211,238,.16) 0, transparent 45%),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1) 28%, var(--bg-1) 100%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
@@ -76,8 +78,9 @@ body::before {
   content: "";
   position: fixed;
   inset: -20vmax;
-  background: radial-gradient(50% 50% at 50% 50%, rgba(60,120,255,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat,
-              radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat;
+  background:
+    radial-gradient(50% 50% at 50% 50%, rgba(60,120,255,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat,
+    radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat;
   filter: blur(40px);
   opacity: .8;
   pointer-events: none;
@@ -123,12 +126,7 @@ header h1 {
   color: rgba(197,212,235,.76);
 }
 
-/* Brand cluster */
-header .brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-}
+header .brand { display: inline-flex; align-items: center; gap: 12px; }
 
 .brand-img {
   width: clamp(30px, 3.3vw, 44px);
@@ -138,9 +136,7 @@ header .brand {
   display: inline-block;
   position: relative;
   z-index: 0;
-  box-shadow:
-    0 4px 14px rgba(0,0,0,.28),
-    inset 0 0 0 1px rgba(255,255,255,.05);
+  box-shadow: 0 4px 14px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.05);
   background: #0b1220;
   border: 1px solid rgba(100,160,255,.45);
   transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
@@ -190,19 +186,7 @@ header .brand {
   animation: card-in .6s var(--ease-out) forwards;
   align-self: start;
 }
-@keyframes card-in {
-  to { transform: translateY(0); opacity: 1; }
-}
-
-/* Sticky sidebar — override any inline max-height/overflow */
-.card.sidebar {
-  position: sticky;
-  top: 84px;
-  align-self: start;
-  z-index: 2;
-  max-height: none !important;
-  overflow: visible !important;
-}
+@keyframes card-in { to { transform: translateY(0); opacity: 1; } }
 
 .section-title {
   font-size: 12px;
@@ -210,6 +194,36 @@ header .brand {
   text-transform: uppercase;
   color: var(--muted);
   margin: 0 0 10px;
+}
+
+/* =========================
+   Sticky sidebar (left) — bounded + internal scroll
+   ========================= */
+.card.sidebar{
+  position: sticky;
+  top: 84px;                       /* below sticky header */
+  align-self: start;
+  z-index: 1;                      /* under the wheel card */
+  max-height: calc(100vh - 96px);  /* viewport minus header & margin */
+  overflow: auto;                  /* internal scrolling */
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(black 92%, transparent); /* subtle bottom fade */
+}
+
+/* Right card (wheel) always above the sidebar */
+.container > .card:not(.sidebar){
+  position: relative;
+  z-index: 2;
+}
+
+/* Disable sticky on mobile */
+@media (max-width: 979.98px){
+  .card.sidebar{
+    position: static;
+    max-height: none;
+    overflow: visible;
+    mask-image: none;
+  }
 }
 
 /* =========================
@@ -356,20 +370,16 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   max-width: 28ch;
 }
 
-/* HIDE any empty “Show on wheel” chip (fixes the mysterious blank one in TEAM mode) */
-.showopts .chip:has(.chip-text:empty) { display: none !important; }
+/* Hide any empty Show-on-wheel chip (TEAM sometimes had a blank slot) */
+.showopts .chip:has(.chip-text:empty){ display: none !important; }
 
 @media (max-width: 560px) {
   #chips .chip,
   #showOnWheel .chip,
-  .showopts .chip {
-    padding: 10px 18px 10px 46px;
-  }
+  .showopts .chip { padding: 10px 18px 10px 46px; }
   #chips .chip .chip-text,
   #showOnWheel .chip .chip-text,
-  .showopts .chip .chip-text {
-    max-width: 24ch;
-  }
+  .showopts .chip .chip-text { max-width: 24ch; }
 }
 
 /* =========================
@@ -436,8 +446,8 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   position: relative;
   font-size: 12px;
   color: #bcd4ff;
-  background: rgba(40, 60, 100, 0.28);
-  border: 1px solid rgba(120, 160, 255, 0.25);
+  background: rgba(40,60,100,.28);
+  border: 1px solid rgba(120,160,255,.25);
   border-radius: 10px;
   padding: 6px 10px;
   margin: 6px 0 10px;
@@ -466,6 +476,7 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   align-items: center;
   padding: clamp(36px, 5vw, 64px) clamp(10px, 2.5vw, 18px) clamp(10px, 2.5vw, 18px);
   min-height: 640px;
+  isolation: isolate; /* layer for z-index sanity */
 }
 
 canvas#wheel {
@@ -513,19 +524,16 @@ canvas#wheel {
 .spin-fab {
   position: absolute;
   z-index: 5;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-
   width: clamp(88px, 14vw, 132px);
   height: clamp(88px, 14vw, 132px);
   border-radius: 999px;
-  border: 2px solid rgba(120, 200, 255, 0.55);
+  border: 2px solid rgba(120,200,255,.55);
   background: radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
   color: #f4f7ff;
   font-weight: 900;
@@ -535,7 +543,6 @@ canvas#wheel {
   pointer-events: auto;
   transition: transform .12s var(--ease), box-shadow .12s var(--ease),
               border-color .12s var(--ease), background .12s var(--ease);
-  will-change: left, top, transform;
 }
 .spin-fab::before {
   content: "";
@@ -686,24 +693,23 @@ canvas#wheel {
 body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked label, body.ui-locked .chip { cursor: wait !important; }
 
 /* =========================
-   Content / FAQ Enhancements
+   Content / FAQ — match card visuals
    ========================= */
 #content {
-  --content-max: 1040px;
+  --content-max: 1200px;
   --anchor-offset: 84px;
 
   max-width: var(--content-max);
   margin: 22px auto 0;
-  padding: clamp(16px, 3.5vw, 26px);
+  padding: 18px clamp(14px,3vw,26px);
   color: var(--text);
-  background:
-    radial-gradient(120% 140% at 10% -10%, rgba(34,211,238,.10), transparent 45%),
-    radial-gradient(120% 140% at 95% -15%, rgba(0,180,216,.08), transparent 50%),
-    linear-gradient(180deg, rgba(14,18,28,.86), rgba(10,14,24,.86));
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 16px;
-  box-shadow: 0 10px 28px rgba(0,0,0,.35);
+  background: var(--grad-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
   overflow: clip;
+  position: relative;
+  z-index: 2;
 }
 #content [id] { scroll-margin-top: var(--anchor-offset); }
 
@@ -828,116 +834,4 @@ button:focus-visible,
   outline: 2px solid var(--accent-2);
   outline-offset: 3px;
   border-radius: 12px;
-
-   /* ==== Fix: sidebar overlaying content while scrolling ==== */
-/* Put the sidebar under everything else in the main area */
-.card.sidebar { z-index: 1 !important; }
-
-/* Keep the right column (wheel card) above the sidebar */
-.container > .card:not(.sidebar) { position: relative; z-index: 2; }
-
-/* Keep the wide bottom content block above both */
-#content { position: relative; z-index: 3; }
-}
-/* ==== Stack order fix: prevent sticky sidebar from overlaying content/wheel ==== */
-
-/* Sidebar should sit underneath other main content while still being sticky */
-.card.sidebar {
-  z-index: 0 !important;           /* lower than the other cards */
-}
-
-/* Wheel card sits above the sidebar */
-.container > .card:not(.sidebar) {
-  position: relative;              /* create stacking context */
-  z-index: 2;                      /* higher than sidebar */
-}
-
-/* The wide bottom content/FAQ sits above both */
-#content {
-  position: relative;
-  z-index: 3;
-}
-
-/* Optional: ensure the wheel canvas group is its own layer */
-.wheel-wrap { isolation: isolate; }
-
-/* === Make the left card behave like the right card (no sticky, no overlay) === */
-.card.sidebar {
-  position: static !important;   /* not sticky */
-  top: auto !important;
-  z-index: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
-}
-
-/* Ensure the wheel card and content stack normally */
-.container > .card:not(.sidebar) { position: static; z-index: auto; }
-#content { position: static; z-index: auto; }
-
-/* (optional) add a little space before the content block so cards don't feel cramped */
-#content { margin-top: 24px; }
-
-/* === Make both columns equal height === */
-.container {
-  /* let grid rows stretch to the tallest card in the row */
-  align-items: stretch !important;
-}
-
-.card {
-  height: 100%;              /* stretch to grid row height */
-}
-
-.card.sidebar {
-  position: static !important; /* not sticky */
-  top: auto !important;
-  z-index: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
-  height: 100% !important;    /* match wheel card height */
-}
-
-/* === FAQ block: same visual as cards === */
-#content {
-  position: relative;
-  z-index: auto;
-  margin-top: 24px;
-
-  /* match left/right card visuals */
-  background: var(--grad-card) !important;
-  border: 1px solid var(--line) !important;
-  border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-1) !important;
-
-  /* keep internal spacing consistent with cards */
-  padding: 18px clamp(14px,3vw,26px) !important;
-  max-width: 1200px; /* stays centered like cards */
-}
-
-/* optional: keep FAQ headings aligned with card titles */
-#content h2 { margin-top: 4px; }
-
-/* === Sidebar: bounded sticky with its own scrollbar === */
-.card.sidebar{
-  position: sticky;         /* sticks under the header */
-  top: 84px;                /* matches your header height */
-  align-self: start;
-  z-index: 1;               /* sits below the wheel card */
-  max-height: calc(100vh - 100px); /* full viewport minus header/margins */
-  overflow: auto;           /* <-- internal scrolling when content grows */
-  -webkit-overflow-scrolling: touch; /* smooth on iOS */
-}
-
-/* Keep the wheel card visually on top so the sidebar never overlaps it */
-.container > .card:not(.sidebar){
-  position: relative;
-  z-index: 2;
-}
-
-/* Mobile: disable sticky so it behaves like a normal block */
-@media (max-width: 979.98px){
-  .card.sidebar{
-    position: static;
-    max-height: none;
-    overflow: visible;
-  }
 }
