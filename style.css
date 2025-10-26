@@ -860,3 +860,19 @@ button:focus-visible,
 
 /* Optional: ensure the wheel canvas group is its own layer */
 .wheel-wrap { isolation: isolate; }
+
+/* === Make the left card behave like the right card (no sticky, no overlay) === */
+.card.sidebar {
+  position: static !important;   /* not sticky */
+  top: auto !important;
+  z-index: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Ensure the wheel card and content stack normally */
+.container > .card:not(.sidebar) { position: static; z-index: auto; }
+#content { position: static; z-index: auto; }
+
+/* (optional) add a little space before the content block so cards don't feel cramped */
+#content { margin-top: 24px; }
