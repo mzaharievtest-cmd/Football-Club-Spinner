@@ -1,20 +1,19 @@
 /* Football Spinner — TEAM / PLAYER unified
    - TEAM wheel: Logo/Name on wheel (+Stadium optional). League never drawn on wheel; modal only.
-   - PLAYER wheel: Image/Name on wheel. Jersey/Nationality live in modal.
+   - PLAYER wheel: Image/Name on wheel. Jersey/Nationality live in modal with reveal when toggled off.
    - If >50 wedges → draw stripes only (no text/images).
    - Mode-aware “Show on wheel” controls.
    - Players are loaded from /data/players.json (single source of truth).
-   - Player chips are derived from players.json (not teams.json) and each club_id
-     is resolved to a name via teams.json or an extended SportMonks fallback map.
+   - Player chips are derived from players.json and club_id is resolved to names via teams.json + fallback map.
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
 
-let TEAMS = [];              // [{team_id, team_name, league_code, stadium, logo_url, primary_color}]
-let TEAM_BY_ID = new Map();  // id -> team
-let CLUB_BY_ID = new Map();  // id -> team_name (filled from teams + fallback)
+let TEAMS = [];
+let TEAM_BY_ID = new Map();
+let CLUB_BY_ID = new Map();
 
-let PLAYERS = [];            // normalized for wheel
+let PLAYERS = [];
 let TOTAL_TEAMS = 0;
 let TOTAL_PLAYERS = 0;
 
@@ -35,10 +34,10 @@ const qpAll     = document.getElementById('qpAll');
 const qpNone    = document.getElementById('qpNone');
 const qpTop     = document.getElementById('qpTop');
 
-const optA = document.getElementById('optA'); // Logo / Image
-const optB = document.getElementById('optB'); // Name
-const optC = document.getElementById('optC'); // Stadium / Jersey
-const optD = document.getElementById('optD'); // League  / Nationality
+const optA = document.getElementById('optA');
+const optB = document.getElementById('optB');
+const optC = document.getElementById('optC');
+const optD = document.getElementById('optD');
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -138,7 +137,7 @@ function activeCodes(){
   return arr;
 }
 
-/* ---------- Labels ---------- */
+/* ---------- Labels & presets ---------- */
 const LEAGUE_LABELS = {
   AUT:"Austrian Bundesliga", BEL:"Jupiler Pro League", BUL:"efbet Liga",
   CRO:"SuperSport HNL", CZE:"Fortuna Liga", DEN:"Superliga",
@@ -150,32 +149,16 @@ const LEAGUE_LABELS = {
 };
 const leagueLabel = c => LEAGUE_LABELS[c] || c;
 
-const TOP5 = ['EPL','SA','BUN','L1','LLA'];                              // TEAM quick pick (leagues)
-const PL_TOP6 = ['18','9','14','8','19','6'];                            // PLAYER quick pick ids
+const TOP5 = ['EPL','SA','BUN','L1','LLA'];
+const PL_TOP6 = ['18','9','14','8','19','6'];
 
-/* ---------- SportMonks fallback for PL (extendable) ---------- */
+/* ---------- PL fallback map (extendable) ---------- */
 const FALLBACK_CLUBS = {
-  '6':'Tottenham Hotspur',
-  '8':'Liverpool',
-  '9':'Manchester City',
-  '10':'Southampton',
-  '11':'Fulham',
-  '13':'Everton',
-  '14':'Manchester United',
-  '15':'Aston Villa',
-  '18':'Chelsea',
-  '19':'Arsenal',
-  '20':'Newcastle United',
-  '21':'West Ham United',
-  '26':'Leicester City',
-  '27':'Burnley',
-  '29':'Wolverhampton Wanderers',
-  '51':'Crystal Palace',
-  '52':'AFC Bournemouth',
-  '62':'Sheffield United',
-  '63':'Nottingham Forest',
-  '71':'Leeds United',
-  '78':'Brighton & Hove Albion',
+  '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
+  '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
+  '19':'Arsenal','20':'Newcastle United','21':'West Ham United','26':'Leicester City',
+  '27':'Burnley','29':'Wolverhampton Wanderers','51':'Crystal Palace','52':'AFC Bournemouth',
+  '62':'Sheffield United','63':'Nottingham Forest','71':'Leeds United','78':'Brighton & Hove Albion',
   '236':'Brentford'
 };
 
@@ -190,7 +173,7 @@ function getCurrentData(){
   return TEAMS.filter(t => active.has(t.league_code));
 }
 
-/* ---------- Progress banner ---------- */
+/* ---------- Progress banner (fraction of total) ---------- */
 function updatePerfBanner(){
   const n = getCurrentData().length;
   const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
@@ -208,23 +191,20 @@ function renderChips(){
   chipsMore.innerHTML = '';
 
   if (MODE === 'player'){
-    // Build from players.json so every club_id is represented
+    // Build list from players.json so every club_id is represented
     const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
-    // derive label via teams.json map or fallback
-    const makeLabel = id => CLUB_BY_ID.get(id) || FALLBACK_CLUBS[id] || `Club #${id}`;
+    const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_CLUBS[id] || `Club #${id}`;
 
-    // Put PL top 6 first (if present), rest sorted by label
     const top6 = ids.filter(id => PL_TOP6.includes(id));
     const rest = ids.filter(id => !PL_TOP6.includes(id))
-                    .sort((a,b)=> makeLabel(a).localeCompare(makeLabel(b)));
+                    .sort((a,b)=> labelFor(a).localeCompare(labelFor(b)));
 
-    top6.forEach(id => chipsTop.appendChild(makeChip(id, makeLabel(id), true)));
-    rest.forEach(id => chipsMore.appendChild(makeChip(id, makeLabel(id), true)));
+    top6.forEach(id => chipsTop.appendChild(makeChip(id, labelFor(id), true)));
+    rest.forEach(id => chipsMore.appendChild(makeChip(id, labelFor(id), true)));
 
     toggleMore.textContent = 'Show more Premier League clubs';
     qpTop.textContent = 'Top 6';
   } else {
-    // TEAM: leagues from teams.json
     const codes = [...new Set(TEAMS.map(t=>t.league_code))];
     const top = TOP5.filter(c => codes.includes(c));
     const more = codes.filter(c => !top.includes(c)).sort();
@@ -246,7 +226,7 @@ function applyModeShowControls(){
     lblA.textContent='Image';         optA.checked = true;
     lblB.textContent='Name';          optB.checked = true;
     lblC.textContent='Jersey Number'; optC.checked = false;
-    lblD.textContent='Nationality';   optD.checked = false; // hidden in modal when OFF (per request)
+    lblD.textContent='Nationality';   optD.checked = false; // now blurred with a reveal button
   } else {
     lblA.textContent='Logo';    optA.checked = true;
     lblB.textContent='Name';    optB.checked = true;
@@ -293,7 +273,7 @@ function drawWheel(){
 
   if (N===0){ drawIdle(ctx,W,H); return; }
 
-  const hideAll = N >= PERF.hideTextThreshold;
+  const hideAll = N >= PERF.hideTextThreshold; // applies to PLAYER & TEAM
   ctx.imageSmoothingEnabled = !hideAll;
 
   ctx.clearRect(0,0,W,H);
@@ -446,7 +426,7 @@ function renderHistory(){
   });
 }
 
-/* ---------- Modal + reveal (overlay buttons) ---------- */
+/* ---------- Reveal overlay ---------- */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
@@ -468,9 +448,7 @@ function unblurEl(el){ if(!el) return; el.style.filter=''; const w=el.parentElem
 
 function addReveal(key, el, enabled, label){
   const w = wrap(el);
-  // Clear any prior button
   const prior = w.querySelector('.reveal-btn'); if (prior) prior.remove();
-
   if (enabled || modalReveal[key]){ unblurEl(el); return; }
   blurEl(el);
   const b=document.createElement('button'); b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
@@ -484,43 +462,39 @@ function openModal(item){
   modalReveal = {a:false,b:false,c:false,d:false};
 
   if (MODE==='player'){
-    // Header (name) + nationality in subline (hidden entirely if toggle OFF)
+    // header & subtitle
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.image_url || '';
+    mSub.textContent  = item.nationality || '';
+    mNat.textContent  = item.nationality || '—';
 
+    // rows visible for reveal (all 4 toggles support Show X)
     rowStadium.style.display='none';
     rowClub.style.display='';
     rowJersey.style.display='';
-    rowNat.style.display = optD.checked ? '' : 'none';
+    rowNat.style.display='';
 
     mClub.textContent   = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_CLUBS[String(item.club_id)] || '—';
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
-    mSub.textContent    = item.nationality || '';
-    mNat.textContent    = item.nationality || '—';
 
-    // A=image, B=name, C=jersey, D=nationality (but D is hidden when toggle OFF)
+    // A=image, B=name, C=jersey, D=nationality (apply to both subtitle and row value)
     addReveal('a', mLogo,   !!optA.checked, 'image');
     addReveal('b', mHead,   !!optB.checked, 'name');
     addReveal('c', mJersey, !!optC.checked, 'jersey number');
-    if (optD.checked){
-      addReveal('d', mSub,  true, ''); // visible; no blur
-    } else {
-      unblurEl(mSub);
-    }
+    addReveal('d', mSub,    !!optD.checked, 'nationality');
+    addReveal('d', mNat,    !!optD.checked, 'nationality');
   } else {
-    // TEAM
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.logo_url || '';
+    mSub.textContent  = leagueLabel(item.league_code) || '';
 
     rowStadium.style.display='';
     rowClub.style.display='none';
     rowJersey.style.display='none';
     rowNat.style.display='none';
-
     mStadium.textContent = item.stadium || '—';
-    mSub.textContent     = leagueLabel(item.league_code) || '';
 
-    // A=logo, B=name, C=stadium, D=league (modal only)
+    // A=logo, B=name, C=stadium, D=league
     addReveal('a', mLogo,    !!optA.checked, 'logo');
     addReveal('b', mHead,    !!optB.checked, 'name');
     addReveal('c', mStadium, !!optC.checked, 'stadium');
@@ -562,7 +536,7 @@ async function loadTeams(){
     TEAM_BY_ID.set(id, t);
     CLUB_BY_ID.set(id, t.team_name);
   }
-  // Prime with known PL fallbacks so missing ids resolve correctly
+  // seed fallbacks so all club_ids resolve
   for (const [id,name] of Object.entries(FALLBACK_CLUBS)){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, name);
   }
@@ -596,7 +570,7 @@ async function loadPlayers(){
 
   TOTAL_PLAYERS = PLAYERS.length;
 
-  // Ensure we have label for every club_id in players
+  // Ensure a name for every club_id appearing in players.json
   for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_CLUBS[id] || `Club #${id}`);
   }
@@ -664,13 +638,12 @@ function wire(){
 /* ---------- Boot ---------- */
 (async function init(){
   try{
-    await loadTeams();     // mapping/colors
-    await loadPlayers();   // players from /data/players.json
+    await loadTeams();
+    await loadPlayers();
   } catch (e){
     console.error('Failed to load data:', e);
   }
 
-  // reflect mode
   modeTeamBtn.classList.toggle('mode-btn-active', MODE==='team');
   modePlayerBtn.classList.toggle('mode-btn-active', MODE==='player');
   modeTeamBtn.setAttribute('aria-pressed', MODE==='team' ? 'true':'false');
