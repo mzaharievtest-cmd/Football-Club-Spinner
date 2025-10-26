@@ -839,3 +839,24 @@ button:focus-visible,
 /* Keep the wide bottom content block above both */
 #content { position: relative; z-index: 3; }
 }
+/* ==== Stack order fix: prevent sticky sidebar from overlaying content/wheel ==== */
+
+/* Sidebar should sit underneath other main content while still being sticky */
+.card.sidebar {
+  z-index: 0 !important;           /* lower than the other cards */
+}
+
+/* Wheel card sits above the sidebar */
+.container > .card:not(.sidebar) {
+  position: relative;              /* create stacking context */
+  z-index: 2;                      /* higher than sidebar */
+}
+
+/* The wide bottom content/FAQ sits above both */
+#content {
+  position: relative;
+  z-index: 3;
+}
+
+/* Optional: ensure the wheel canvas group is its own layer */
+.wheel-wrap { isolation: isolate; }
