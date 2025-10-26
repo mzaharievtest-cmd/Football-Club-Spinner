@@ -1,10 +1,17 @@
-/* Football Spinner — TEAM / PLAYER unified (with Club toggle)
-   - TEAM wheel: Logo/Name on wheel (+Stadium optional). League never drawn on wheel; modal only.
-   - PLAYER wheel: Image/Name on wheel only. Jersey/Nationality/Club live in modal with reveal when toggled off.
-   - If >50 wedges → draw stripes only (no text/images).
-   - Mode-aware “Show on wheel” controls.
-   - Players are loaded from /data/players.json (single source of truth).
-   - Player chips are derived from players.json and club_id is resolved to names via teams.json + fallback map.
+/* Football Spinner — TEAM / PLAYER unified
+   - TEAM: Logo+Name on wheel (+Stadium optional). League is modal-only (reveal when hidden).
+   - PLAYER: Image+Name on wheel; optional on-wheel: Jersey # / Club / Nationality (via modal reveal when hidden).
+   - Filters:
+       TEAM   -> league chips (Top 5 preset)
+       PLAYER -> Premier League clubs from data/players.json (Top 6 preset)
+   - Players are the single source of truth: /data/players.json
+   - Club names resolved from teams.json (fallback table included)
+   - UX:
+       • If >50 items → draw wedges only (no text/images)
+       • Idle/overflow stripes for PLAYER so the wheel never looks empty
+       • Progress bar reflects fraction of ALL items (teams or players)
+       • Modal “Show X” buttons sit ON the blurred value (overlay)
+       • Spin SFX + light ticking near the end (WebAudio, no files)
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -34,17 +41,23 @@ const qpAll     = document.getElementById('qpAll');
 const qpNone    = document.getElementById('qpNone');
 const qpTop     = document.getElementById('qpTop');
 
+/* Show on wheel controls
+   We support 4 or 5 controls (A..D or A..E).
+   PLAYER mapping we expect:
+     A=Image, B=Name, C=Jersey, D=Club, E=Nationality (if present)
+   TEAM mapping:
+     A=Logo,  B=Name, C=Stadium, D=League (modal only)
+*/
 const optA = document.getElementById('optA');
 const optB = document.getElementById('optB');
 const optC = document.getElementById('optC');
 const optD = document.getElementById('optD');
-const optE = document.getElementById('optE'); // NEW (Club)
-
+const optE = document.getElementById('optE'); // may be null (older HTML)
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
 const lblD = document.getElementById('lblD');
-const lblE = document.getElementById('lblE'); // NEW (Club)
+const lblE = document.getElementById('lblE'); // may be null
 
 const spinBtn = document.getElementById('spinBtn');
 const spinFab = document.getElementById('spinFab');
@@ -60,7 +73,7 @@ const backdrop   = document.getElementById('backdrop');
 const modalEl    = document.getElementById('modal');
 const mClose     = document.getElementById('mClose');
 const mHead      = document.getElementById('mHead');
-const mSub       = document.getElementById('mSub');   // TEAM: League / PLAYER: (unused – keep empty)
+const mSub       = document.getElementById('mSub');   // TEAM: League / (we hide duplicate nationality subtitle)
 const mLogo      = document.getElementById('mLogo');  // TEAM: Crest / PLAYER: Image
 
 const rowStadium = document.getElementById('rowStadium');
@@ -182,7 +195,7 @@ function updatePerfBanner(){
   const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
   const pct = Math.max(0, Math.min(1, n / total));
   perfTip.style.setProperty('--pct', pct);
-  perfTip.textContent = `${n} ${MODE==='player' ? 'players' : 'teams'} selected`;
+  perfTip.innerHTML = `<span class="meter-text">${n} ${MODE==='player' ? 'players' : 'teams'} selected</span>`;
   const disabled = n===0;
   spinBtn.disabled = disabled;
   spinFab.disabled = disabled;
@@ -194,7 +207,7 @@ function renderChips(){
   chipsMore.innerHTML = '';
 
   if (MODE === 'player'){
-    // Build list from players.json so every club_id is represented
+    // Build from players.json so every club_id is represented
     const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
     const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_CLUBS[id] || `Club #${id}`;
 
@@ -226,18 +239,19 @@ function renderChips(){
 /* ---------- Show-on-wheel controls ---------- */
 function applyModeShowControls(){
   if (MODE==='player'){
-    lblA.textContent='Image';         optA.checked = true;
-    lblB.textContent='Name';          optB.checked = true;
-    lblC.textContent='Jersey Number'; optC.checked = false;
-    lblD.textContent='Nationality';   optD.checked = false;  // bottom row only
-    lblE.textContent='Club';          optE.checked = false;  // NEW
-    optE.closest('label').style.display = '';
+    lblA.textContent='Image';         if (optA) optA.checked = true;
+    lblB.textContent='Name';          if (optB) optB.checked = true;
+    lblC.textContent='Jersey Number'; if (optC) optC.checked = false;
+    lblD.textContent='Club';          if (optD) optD.checked = false;
+    if (lblE) lblE.textContent='Nationality';
+    if (optE) optE.checked = false;
   } else {
-    lblA.textContent='Logo';    optA.checked = true;
-    lblB.textContent='Name';    optB.checked = true;
-    lblC.textContent='Stadium'; optC.checked = false;
-    lblD.textContent='League';  optD.checked = true; // modal-only
-    if (optE) { optE.checked = false; optE.closest('label').style.display = 'none'; }
+    lblA.textContent='Logo';    if (optA) optA.checked = true;
+    lblB.textContent='Name';    if (optB) optB.checked = true;
+    lblC.textContent='Stadium'; if (optC) optC.checked = false;
+    lblD.textContent='League';  if (optD) optD.checked = true; // modal-only
+    if (lblE) lblE.textContent='';
+    if (optE) optE.checked = false;
   }
 }
 
@@ -260,57 +274,36 @@ function drawIdle(ctx,W,H){
   ctx.clearRect(0,0,W,H);
   ctx.save(); ctx.translate(W/2,H/2);
   const r = Math.min(W,H)*0.48;
-  const g = ctx.createRadialGradient(0,0,r*0.1, 0,0,r);
-  g.addColorStop(0,'#1A2C5A'); g.addColorStop(0.35,'#21386F'); g.addColorStop(0.65,'#0E2A57'); g.addColorStop(1,'#0B1B38');
+
+  // base disk
+  const g = ctx.createRadialGradient(0,0,r*0.08, 0,0,r);
+  g.addColorStop(0,'#182c5a'); g.addColorStop(0.55,'#15284f'); g.addColorStop(1,'#102140');
   ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fillStyle=g; ctx.fill();
-  ctx.restore();
-}
 
-// replace the old drawDenseStripes(...) with this:
-function drawElegantStripes(ctx, r, N){
-  ctx.save();
-
-  // 1) soft alternating bands
-  const rings = 5;                         // 5 wide bands
-  for (let k = 0; k < rings; k++){
-    const r0 = r * (0.20 + k * 0.14);
-    const r1 = r * (0.20 + (k + 1) * 0.14);
+  // tasteful concentric rings
+  const rings = 7;
+  for (let i=1;i<=rings;i++){
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, r1, 0, TAU);
-    ctx.arc(0, 0, r0, TAU, 0, true);
-    ctx.closePath();
-    // alternate opacities for a subtle striped feel
-    ctx.fillStyle = `rgba(255,255,255,${k % 2 ? 0.035 : 0.06})`;
-    ctx.fill();
-  }
-
-  // 2) sparse radial spokes (max 48)
-  const steps = Math.max(12, Math.min(48, Math.round(N / 6)));
-  const inc = TAU / steps;
-  ctx.strokeStyle = 'rgba(255,255,255,.06)';
-  ctx.lineWidth = Math.max(1, r * 0.0025);
-  for (let a = 0; a < TAU - 1e-6; a += inc){
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(a) * r * 0.32, Math.sin(a) * r * 0.32);
-    ctx.lineTo(Math.cos(a) * r * 0.94, Math.sin(a) * r * 0.94);
+    ctx.arc(0,0,(r * (i/(rings+0.6))),0,TAU);
+    ctx.strokeStyle=`rgba(130,170,255,${0.04 + 0.015*(rings-i)})`;
+    ctx.lineWidth=1.2;
     ctx.stroke();
   }
 
-  // 3) rim + inner vignette to ground the wheel
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, TAU);
-  ctx.strokeStyle = 'rgba(255,255,255,.08)';
-  ctx.lineWidth = Math.max(1, r * 0.01);
-  ctx.stroke();
-
-  const g = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
-  g.addColorStop(0, 'rgba(0,0,0,0)');
-  g.addColorStop(1, 'rgba(0,0,0,.18)');
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, TAU);
-  ctx.fill();
+  // soft spokes
+  ctx.save();
+  const spokes = 32;
+  ctx.rotate(Math.PI/spokes);
+  for (let i=0;i<spokes;i++){
+    ctx.rotate(TAU/spokes);
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(0,-r*0.96);
+    ctx.strokeStyle='rgba(120,160,220,.06)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  }
+  ctx.restore();
 
   ctx.restore();
 }
@@ -326,9 +319,10 @@ function drawWheel(){
 
   updatePerfBanner();
 
+  // Nothing selected? draw modern idle look (PLAYER request)
   if (N===0){ drawIdle(ctx,W,H); return; }
 
-  const hideAll = N >= PERF.hideTextThreshold; // applies to PLAYER & TEAM
+  const hideAll = N >= PERF.hideTextThreshold; // applies to both modes
   ctx.imageSmoothingEnabled = !hideAll;
 
   ctx.clearRect(0,0,W,H);
@@ -345,21 +339,18 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // When we hide everything on PLAYER, add tasteful stripes so the wheel doesn't look empty
-  if (hideAll){
-    if (MODE === 'player') drawElegantStripes(ctx, r, N);
-    ctx.restore();
-    return;
-  }
+  if (hideAll){ ctx.restore(); return; }
 
-  // contents (wheel shows only image + name in PLAYER; logo + name for TEAM)
+  // contents
   for (let i=0;i<N;i++){
     const t = data[i];
     const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
     const arcLen = r*(a1-a0);
 
-    const canLogoOrImage = (MODE==='team') ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
-    const canName        = optB.checked && !!t.team_name;
+    const canLogo = (MODE==='team') ? (optA?.checked && !!t.logo_url) : (optA?.checked && !!t.image_url);
+    const canName = optB?.checked && !!t.team_name;
+    const showJersey = MODE==='player' && optC?.checked && t.jersey;
+    const showClub   = MODE==='player' && optD?.checked;
 
     ctx.save();
     ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
@@ -379,20 +370,33 @@ function drawWheel(){
 
     const fg = textColorFor(t.primary_color);
 
+    // Name on wheel (both modes)
     if (canName && maxWidth>=PERF.minTextWidth){
-      const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
+      const base = showClub ? `${t.team_name} • ${CLUB_BY_ID.get(String(t.club_id)) || ''}` : t.team_name;
+      const fit = fitSingleLine(ctx, base, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
       ctx.textAlign='left'; ctx.textBaseline='middle';
       ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
       ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
       ctx.fillStyle=fg;
       const x = Math.min(xText, logoInner);
-      ctx.strokeText(fit.text, x, 0);
-      ctx.fillText(fit.text,   x, 0);
+      ctx.strokeText(fit.text, x, showJersey ? -9 : 0);
+      ctx.fillText(fit.text,   x, showJersey ? -9 : 0);
     }
 
-    if (canLogoOrImage){
+    // Jersey small badge under text (PLAYER)
+    if (showJersey){
+      ctx.font = `800 11px Inter, system-ui, sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,.9)';
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      const x = Math.min(xText, logoInner);
+      ctx.fillText(`#${t.jersey}`, x, 9);
+    }
+
+    // Logo / player image
+    if (canLogo){
       ctx.save(); ctx.translate(xLogo,0);
-      ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU);
+      ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
       ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
 
       ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
@@ -416,11 +420,51 @@ function drawWheel(){
   ctx.restore();
 }
 
+/* ---------- WebAudio spin SFX (lightweight, no files) ---------- */
+let AC=null, master=null;
+function initAudio(){
+  if (AC) return;
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = 0.18; master.connect(AC.destination);
+  } catch(e){ /* audio not critical */ }
+}
+function whoosh(duration=0.45){
+  if (!AC) return;
+  const osc = AC.createOscillator();
+  const gain = AC.createGain();
+  osc.type='sine';
+  const now = AC.currentTime;
+  osc.frequency.setValueAtTime(180, now);
+  osc.frequency.exponentialRampToValueAtTime(60, now+duration);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.4, now+0.06);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now+duration);
+  osc.connect(gain); gain.connect(master);
+  osc.start(now); osc.stop(now+duration+0.02);
+}
+function tick(){
+  if (!AC) return;
+  const o = AC.createOscillator();
+  const g = AC.createGain();
+  o.type='square';
+  const t = AC.currentTime;
+  o.frequency.setValueAtTime(1200, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.25, t+0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+0.08);
+  o.connect(g); g.connect(master);
+  o.start(t); o.stop(t+0.1);
+}
+
 /* ---------- Spin ---------- */
 function spin(){
   if (spinning) return;
   const data = getCurrentData();
   if (!data.length) return;
+
+  initAudio();
+  whoosh(0.55);
 
   spinning = true;
   document.body.classList.add('ui-locked');
@@ -430,18 +474,34 @@ function spin(){
   const slice = TAU/N;
   const targetAngle = TAU*(6+Math.floor(Math.random()*3)) + Math.random()*TAU;
 
-  const start = performance.now(), dur=3200;
+  const start = performance.now(), dur=3300;
   const ease = x=>1-Math.pow(1-x,3);
+
+  let prevAngle = currentAngle;
+  let lastTickIdx = -1;
 
   function step(now){
     const p = clamp(0,(now-start)/dur,1);
     currentAngle = targetAngle * ease(p);
+
+    // gentle ticks in the last 25% while passing slice centers
+    if (p>0.75 && AC){
+      const theta = mod(currentAngle,TAU);
+      const pointer = mod(POINTER_ANGLE - theta, TAU);
+      const idx = Math.floor(pointer / slice) % N;
+      if (idx !== lastTickIdx){
+        lastTickIdx = idx;
+        tick();
+      }
+    }
+
     drawWheel();
     if (p<1) requestAnimationFrame(step);
     else {
       const theta = mod(currentAngle,TAU);
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
+      // snap
       const center = idx*slice + slice/2;
       const delta = mod(center - offset, TAU);
       currentAngle = mod(currentAngle + delta, TAU);
@@ -488,13 +548,13 @@ function renderHistory(){
   });
 }
 
-/* ---------- Reveal overlay ---------- */
+/* ---------- Reveal overlay (button on blurred element) ---------- */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
     .reveal-wrap{position:relative;display:inline-block}
-    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none}
+    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(0,0,0,.0);pointer-events:none;z-index:2}
     .reveal-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;user-select:none;white-space:nowrap;z-index:3}
   `;
   document.head.appendChild(s);
@@ -505,11 +565,23 @@ function wrap(el){
   const w=document.createElement('span'); w.className='reveal-wrap';
   el.parentElement.insertBefore(w, el); w.appendChild(el); return w;
 }
-function blurEl(el){ if(!el) return; el.style.filter='blur(14px)'; const w=wrap(el); if(w&&!w.querySelector('.reveal-overlay')){const o=document.createElement('span');o.className='reveal-overlay';w.appendChild(o);} }
-function unblurEl(el){ if(!el) return; el.style.filter=''; const w=el.parentElement; const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove(); const b=w && w.querySelector('.reveal-btn'); if(b) b.remove(); }
-
+function blurEl(el){
+  if(!el) return;
+  el.style.filter='blur(14px)';
+  const w=wrap(el);
+  if(w&&!w.querySelector('.reveal-overlay')){
+    const o=document.createElement('span');o.className='reveal-overlay';w.appendChild(o);
+  }
+}
+function unblurEl(el){
+  if(!el) return;
+  el.style.filter='';
+  const w=el.parentElement;
+  const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove();
+  const b=w && w.querySelector('.reveal-btn'); if(b) b.remove();
+}
 function addReveal(key, el, enabled, label){
-  const w = wrap(el);
+  const w=wrap(el);
   const prior = w.querySelector('.reveal-btn'); if (prior) prior.remove();
   if (enabled || modalReveal[key]){ unblurEl(el); return; }
   blurEl(el);
@@ -524,28 +596,32 @@ function openModal(item){
   modalReveal = {a:false,b:false,c:false,d:false,e:false};
 
   if (MODE==='player'){
-    // header & image
+    // header & portrait
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.image_url || '';
+
+    // subtitle: avoid duplicating nationality here (we show it only in the row)
     mSub.textContent = '';
 
-    // rows
+    // rows visibility
     rowStadium.style.display='none';
     rowClub.style.display='';
     rowJersey.style.display='';
     rowNat.style.display='';
 
+    // values
     mClub.textContent   = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_CLUBS[String(item.club_id)] || '—';
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
     mNat.textContent    = item.nationality || '—';
 
-    // reveals
-    addReveal('a', mLogo,   !!optA.checked, 'image');
-    addReveal('b', mHead,   !!optB.checked, 'name');
-    addReveal('c', mJersey, !!optC.checked, 'jersey number');
-    addReveal('d', mNat,    !!optD.checked, 'nationality');
-    addReveal('e', mClub,   !!optE.checked, 'club');
+    // Reveals: A=image, B=name, C=jersey, D=club, E=nationality (if control present; fallback to D)
+    addReveal('a', mLogo,   !!optA?.checked, 'image');
+    addReveal('b', mHead,   !!optB?.checked, 'name');
+    addReveal('c', mJersey, !!optC?.checked, 'jersey number');
+    addReveal('d', mClub,   !!optD?.checked, 'club');
+    addReveal('e', mNat,    !!(optE?.checked ?? optD?.checked), 'nationality');
   } else {
+    // TEAM
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.logo_url || '';
     mSub.textContent  = leagueLabel(item.league_code) || '';
@@ -556,10 +632,11 @@ function openModal(item){
     rowNat.style.display='none';
     mStadium.textContent = item.stadium || '—';
 
-    addReveal('a', mLogo,    !!optA.checked, 'logo');
-    addReveal('b', mHead,    !!optB.checked, 'name');
-    addReveal('c', mStadium, !!optC.checked, 'stadium');
-    addReveal('d', mSub,     !!optD.checked, 'league');
+    // Reveals: A=logo, B=name, C=stadium, D=league (modal only)
+    addReveal('a', mLogo,    !!optA?.checked, 'logo');
+    addReveal('b', mHead,    !!optB?.checked, 'name');
+    addReveal('c', mStadium, !!optC?.checked, 'stadium');
+    addReveal('d', mSub,     !!optD?.checked, 'league');
   }
 
   backdrop.style.display='flex';
@@ -631,6 +708,7 @@ async function loadPlayers(){
 
   TOTAL_PLAYERS = PLAYERS.length;
 
+  // Ensure a name for every club_id appearing in players.json
   for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_CLUBS[id] || `Club #${id}`);
   }
@@ -679,14 +757,13 @@ function wire(){
   };
 
   const refresh = ()=>{ if (!spinning){ selectedIdx=-1; drawWheel(); } };
-  optA.addEventListener('change', refresh);
-  optB.addEventListener('change', refresh);
-  optC.addEventListener('change', refresh);
-  optD.addEventListener('change', refresh);
-  if (optE) optE.addEventListener('change', refresh);
+  optA?.addEventListener('change', refresh);
+  optB?.addEventListener('change', refresh);
+  optC?.addEventListener('change', refresh);
+  optD?.addEventListener('change', refresh);
+  optE?.addEventListener('change', refresh);
 
-  spinBtn.onclick = spin; 
-  spinFab.onclick = spin;
+  spinBtn.onclick = spin; spinFab.onclick = spin;
 
   resetHistoryBtn.onclick = ()=>{ history=[]; localStorage.setItem('clubHistory', JSON.stringify(history)); renderHistory(); };
 
@@ -706,6 +783,7 @@ function wire(){
     console.error('Failed to load data:', e);
   }
 
+  // reflect current mode
   modeTeamBtn.classList.toggle('mode-btn-active', MODE==='team');
   modePlayerBtn.classList.toggle('mode-btn-active', MODE==='player');
   modeTeamBtn.setAttribute('aria-pressed', MODE==='team' ? 'true':'false');
