@@ -313,7 +313,7 @@ function drawWheel(){
   drawBackdrop(ctx,W,H);
 
   if (N===0){
-    drawAmbientStripes(ctx,W,H); // never looks empty
+    drawAmbientStripes(ctx,W,H);
     return;
   }
 
@@ -344,12 +344,40 @@ function drawWheel(){
   }
 
   if (hideAll){
+    // >>> NEW: rotating dashed ring so spin is visually obvious when >50
+    const ringR = r * 0.60;
+    ctx.save();
+    ctx.setLineDash([Math.max(6, r*0.08), Math.max(6, r*0.06)]);
+    ctx.lineDashOffset = 0; // follows currentAngle via the transform
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(220,235,255,.22)';
+    ctx.beginPath();
+    ctx.arc(0,0, ringR, 0, TAU);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // small inner rotating markers (triad) for extra motion hint
+    const markers = 3;
+    for (let i=0;i<markers;i++){
+      const a = i * (TAU/markers);
+      ctx.save();
+      ctx.rotate(a);
+      ctx.beginPath();
+      ctx.moveTo(ringR*0.88, 0);
+      ctx.lineTo(ringR*0.98, 0);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(255,255,255,.16)';
+      ctx.stroke();
+      ctx.restore();
+    }
     ctx.restore();
-    drawAmbientStripes(ctx,W,H);
+
+    ctx.restore(); // from translate/rotate
+    drawAmbientStripes(ctx,W,H); // static overlay on top
     return;
   }
 
-  // contents
+  // contents (only if not hideAll)
   for (let i=0;i<N;i++){
     const t = data[i];
     const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
