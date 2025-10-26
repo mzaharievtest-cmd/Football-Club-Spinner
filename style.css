@@ -1,7 +1,7 @@
 /* Main stylesheet for Football Spinner
    - Dark theme, responsive grid cards, chip UI, wheel, modal
-   - Sticky left sidebar with its own scroll, no overlay on wheel
-   - FAQ block matches card visuals
+   - Sidebar: bounded sticky with internal scroll (no overlay)
+   - FAQ block shares same card visuals
    - Inter font is loaded via <link> in index.html
 */
 
@@ -65,10 +65,9 @@ body {
   min-height: 100vh;
   font-family: "Inter", system-ui, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(1400px 840px at 25% -20%, rgba(90,161,255,.25) 0, transparent 48%),
-    radial-gradient(1100px 880px at 92% -12%, rgba(34,211,238,.16) 0, transparent 45%),
-    linear-gradient(180deg, var(--bg-0), var(--bg-1) 28%, var(--bg-1) 100%);
+  background: radial-gradient(1400px 840px at 25% -20%, rgba(90,161,255,.25) 0, transparent 48%),
+              radial-gradient(1100px 880px at 92% -12%, rgba(34,211,238,.16) 0, transparent 45%),
+              linear-gradient(180deg, var(--bg-0), var(--bg-1) 28%, var(--bg-1) 100%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
@@ -126,7 +125,12 @@ header h1 {
   color: rgba(197,212,235,.76);
 }
 
-header .brand { display: inline-flex; align-items: center; gap: 12px; }
+/* Brand cluster */
+header .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
 
 .brand-img {
   width: clamp(30px, 3.3vw, 44px);
@@ -136,7 +140,9 @@ header .brand { display: inline-flex; align-items: center; gap: 12px; }
   display: inline-block;
   position: relative;
   z-index: 0;
-  box-shadow: 0 4px 14px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.05);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.28),
+    inset 0 0 0 1px rgba(255,255,255,.05);
   background: #0b1220;
   border: 1px solid rgba(100,160,255,.45);
   transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
@@ -159,14 +165,12 @@ header .brand { display: inline-flex; align-items: center; gap: 12px; }
   padding: 0 clamp(12px,4vw,36px);
   display: grid;
   gap: 22px;
+  grid-template-columns: 380px 1fr;
+  align-items: stretch;             /* equal row height across columns */
   position: relative;
   z-index: 1;
-  align-items: start; /* keep columns aligned during scroll */
 }
 
-@media (min-width: 980px) {
-  .container { grid-template-columns: 380px 1fr; }
-}
 @media (max-width: 979.98px) {
   .container { display: block; }
   .card { margin-bottom: 16px; }
@@ -184,46 +188,39 @@ header .brand { display: inline-flex; align-items: center; gap: 12px; }
   transform: translateY(8px);
   opacity: 0;
   animation: card-in .6s var(--ease-out) forwards;
-  align-self: start;
+  height: 100%;                     /* participate in equal heights */
 }
-@keyframes card-in { to { transform: translateY(0); opacity: 1; } }
+@keyframes card-in {
+  to { transform: translateY(0); opacity: 1; }
+}
 
+/* === Sidebar: bounded sticky with its own scrollbar (no overlay) === */
+.card.sidebar{
+  position: sticky;                 /* sticks below the header */
+  top: 84px;                        /* header height */
+  align-self: start;
+  height: calc(100vh - 110px);      /* fixed viewport-bound height */
+  max-height: calc(100vh - 110px);
+  overflow: auto;                   /* internal scrolling only */
+  -webkit-overflow-scrolling: touch;
+  z-index: 1;                       /* under the wheel */
+}
+
+/* Wheel card sits above the sidebar so it never gets covered */
+.container > .card:not(.sidebar){
+  position: relative;
+  z-index: 2;
+}
+
+/* =========================
+   Section titles
+   ========================= */
 .section-title {
   font-size: 12px;
   letter-spacing: .36em;
   text-transform: uppercase;
   color: var(--muted);
   margin: 0 0 10px;
-}
-
-/* =========================
-   Sticky sidebar (left) — bounded + internal scroll
-   ========================= */
-.card.sidebar{
-  position: sticky;
-  top: 84px;                       /* below sticky header */
-  align-self: start;
-  z-index: 1;                      /* under the wheel card */
-  max-height: calc(100vh - 96px);  /* viewport minus header & margin */
-  overflow: auto;                  /* internal scrolling */
-  -webkit-overflow-scrolling: touch;
-  mask-image: linear-gradient(black 92%, transparent); /* subtle bottom fade */
-}
-
-/* Right card (wheel) always above the sidebar */
-.container > .card:not(.sidebar){
-  position: relative;
-  z-index: 2;
-}
-
-/* Disable sticky on mobile */
-@media (max-width: 979.98px){
-  .card.sidebar{
-    position: static;
-    max-height: none;
-    overflow: visible;
-    mask-image: none;
-  }
 }
 
 /* =========================
@@ -370,16 +367,16 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   max-width: 28ch;
 }
 
-/* Hide any empty Show-on-wheel chip (TEAM sometimes had a blank slot) */
-.showopts .chip:has(.chip-text:empty){ display: none !important; }
+/* HIDE any empty “Show on wheel” chip (fixes mysterious blank one) */
+.showopts .chip:has(.chip-text:empty) { display: none !important; }
 
 @media (max-width: 560px) {
   #chips .chip,
   #showOnWheel .chip,
-  .showopts .chip { padding: 10px 18px 10px 46px; }
-  #chips .chip .chip-text,
-  #showOnWheel .chip .chip-text,
-  .showopts .chip .chip-text { max-width: 24ch; }
+  .showopts .chip { padding: 12px 18px 12px 46px; }
+  #chips .chip input[type="checkbox"],
+  #showOnWheel .chip input[type="checkbox"],
+  .showopts .chip input[type="checkbox"] { width: 20px; height: 20px; }
 }
 
 /* =========================
@@ -446,8 +443,8 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   position: relative;
   font-size: 12px;
   color: #bcd4ff;
-  background: rgba(40,60,100,.28);
-  border: 1px solid rgba(120,160,255,.25);
+  background: rgba(40, 60, 100, 0.28);
+  border: 1px solid rgba(120, 160, 255, 0.25);
   border-radius: 10px;
   padding: 6px 10px;
   margin: 6px 0 10px;
@@ -476,7 +473,7 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   align-items: center;
   padding: clamp(36px, 5vw, 64px) clamp(10px, 2.5vw, 18px) clamp(10px, 2.5vw, 18px);
   min-height: 640px;
-  isolation: isolate; /* layer for z-index sanity */
+  isolation: isolate; /* keep effects contained */
 }
 
 canvas#wheel {
@@ -524,16 +521,19 @@ canvas#wheel {
 .spin-fab {
   position: absolute;
   z-index: 5;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+
   width: clamp(88px, 14vw, 132px);
   height: clamp(88px, 14vw, 132px);
   border-radius: 999px;
-  border: 2px solid rgba(120,200,255,.55);
+  border: 2px solid rgba(120, 200, 255, 0.55);
   background: radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
   color: #f4f7ff;
   font-weight: 900;
@@ -665,18 +665,16 @@ canvas#wheel {
   justify-content: center;
 }
 
-/* Modal reveal button (centered over blurred value) */
+/* Reveal controls */
 .reveal-wrap { position: relative; display: inline-block; z-index: 0; }
 .reveal-overlay { position: absolute; inset: 0; border-radius: inherit; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); pointer-events: none; z-index: 2; }
 .reveal-btn {
-  position: absolute;
-  left: 50%; top: 50%;
-  transform: translate(-50%, -50%);
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   display: inline-flex; align-items: center; justify-content: center;
   padding: 8px 14px; border-radius: 10px;
   border: 1px solid rgba(90,161,255,.6);
-  background: #152036; color: #fff; font-weight: 800;
-  letter-spacing: .03em; cursor: pointer; user-select: none; white-space: nowrap; z-index: 3;
+  background: #152036; color: #fff; font-weight: 800; letter-spacing: .03em;
+  cursor: pointer; user-select: none; white-space: nowrap; z-index: 3;
   transition: transform .12s var(--ease), border-color .12s var(--ease), box-shadow .12s var(--ease);
 }
 .reveal-btn:hover { transform: translate(-50%, -50%) scale(1.02); border-color: var(--accent-2); box-shadow: 0 6px 18px rgba(34,211,238,.18); }
@@ -684,23 +682,23 @@ canvas#wheel {
 /* =========================
    Pointer room / misc
    ========================= */
-.wheel-wrap { padding-top: clamp(36px, 5vw, 64px); }
-.pointer { top: clamp(6px, 1vw, 12px); z-index: 3; }
-
 .small { font-size: 12px; color: var(--muted); }
 .hidden { display: none !important; }
-
 body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked label, body.ui-locked .chip { cursor: wait !important; }
 
 /* =========================
-   Content / FAQ — match card visuals
+   Content / FAQ (same visual as cards)
    ========================= */
 #content {
-  --content-max: 1200px;
+  --content-max: 1040px;
   --anchor-offset: 84px;
 
-  max-width: var(--content-max);
+  position: relative;
+  z-index: 3;                  /* above sidebar */
+  grid-column: 1 / -1;         /* full width under the two cards */
   margin: 22px auto 0;
+  max-width: var(--content-max);
+
   padding: 18px clamp(14px,3vw,26px);
   color: var(--text);
   background: var(--grad-card);
@@ -708,9 +706,8 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   border-radius: var(--radius);
   box-shadow: var(--shadow-1);
   overflow: clip;
-  position: relative;
-  z-index: 2;
 }
+
 #content [id] { scroll-margin-top: var(--anchor-offset); }
 
 #content h2 {
@@ -820,11 +817,6 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   margin-right: 8px; color: #eaf0fb;
 }
 
-@media (max-width: 640px) {
-  #content { padding: 16px; }
-  #content p, #content li, #content dd { line-height: 1.75; }
-}
-
 /* Stronger focus rings on interactive elements */
 button:focus-visible,
 .chip-btn:focus-visible,
@@ -835,3 +827,13 @@ button:focus-visible,
   outline-offset: 3px;
   border-radius: 12px;
 }
+
+/* Custom thin scrollbar for sidebar/history */
+.card.sidebar::-webkit-scrollbar,
+.history::-webkit-scrollbar { width: 8px; }
+.card.sidebar::-webkit-scrollbar-thumb,
+.history::-webkit-scrollbar-thumb {
+  background: rgba(120,160,255,.28);
+  border-radius: 8px;
+}
+.history { scrollbar-width: thin; scrollbar-color: rgba(120,160,255,.35) transparent; }
