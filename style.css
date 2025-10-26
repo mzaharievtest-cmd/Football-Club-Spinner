@@ -422,7 +422,7 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
 .item:hover { transform: translateY(-1px); }
 
 /* =========================
-   Selection banner
+   Selection banner (with progress)
    ========================= */
 .perf-tip {
   font-size: 12px;
@@ -434,7 +434,19 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   margin: 6px 0 10px;
   text-align: center;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
+.perf-tip::before{
+  content:"";
+  position:absolute; inset:0;
+  transform-origin:left center;
+  transform:scaleX(var(--pct,0));
+  background: linear-gradient(90deg, rgba(34,211,238,.22), rgba(100,168,255,.25));
+  transition: transform .25s var(--ease);
+  pointer-events:none;
+}
+.perf-tip .meter-text{position:relative; z-index:1;}
 
 /* Extra spacing around chips and pointer area */
 #chips { margin-bottom: 28px; }
@@ -651,43 +663,23 @@ canvas#wheel {
 /* Keep modal buttons narrow */
 #backdrop .chip-btn, #backdrop button { width: auto; min-width: 160px; }
 
-/* Reveal button styling used by JS */
-.reveal-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(90,161,255,.6);
-  background: #152036;
-  color: #fff;
-  font-weight: 800;
-  letter-spacing: .03em;
-  cursor: pointer;
-  user-select: none;
-  z-index: 3;
-  position: relative;
-  white-space: nowrap;
-  transition: transform .12s var(--ease), border-color .12s var(--ease), box-shadow .12s var(--ease);
+/* ===== Reveal overlay & button — absolute centered on blurred value ===== */
+.reveal-wrap{ position:relative; display:inline-block; z-index:0; }
+.reveal-overlay{
+  position:absolute; inset:0; border-radius:inherit;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  background:transparent; pointer-events:none; z-index:2;
 }
-.reveal-btn:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent-2);
-  box-shadow: 0 6px 18px rgba(34,211,238,.18);
+.reveal-btn{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:8px 14px; border-radius:10px;
+  border:1px solid rgba(90,161,255,.6);
+  background:#152036; color:#fff; font-weight:800; letter-spacing:.03em;
+  cursor:pointer; user-select:none; white-space:nowrap; z-index:3;
+  outline:none; transition: none; /* prevent hover jump */
 }
-#modal #mHead + .reveal-btn { display: inline-block; margin-left: 0; margin-top: 6px; }
-
-.reveal-wrap { position: relative; display: inline-block; z-index: 0; }
-.reveal-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: transparent;
-  pointer-events: none;
-  z-index: 2;
-}
+.reveal-btn:hover, .reveal-btn:focus { transform:translate(-50%,-50%); }
 
 /* =========================
    Pointer room / misc tweaks
@@ -939,11 +931,7 @@ button:focus-visible,
   #showOnWheel .chip input[type="checkbox"],
   .showopts .chip input[type="checkbox"] { width: 20px; height: 20px; }
 }
-/* --- Spinner fixes / modal placement helpers (append) --- */
 
-/* Ensure the left sidebar never visually overlaps the wheel while scrolling */
+/* Keep the left sidebar below the wheel card z-index */
 .card.sidebar { z-index: 1; }
 .container > .card:not(.sidebar) { z-index: 2; }
-
-/* Keep reveal buttons positioned next to blurred elements */
-.reveal-btn { display: inline-flex; margin-top: 8px; }
