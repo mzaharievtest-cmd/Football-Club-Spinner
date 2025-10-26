@@ -1,21 +1,12 @@
-/* Football Spinner — TEAM / PLAYER unified (subtle FX, no sounds by default)
+/* Football Spinner — TEAM / PLAYER unified (minimal, modern, no sound)
    - TEAM wheel: Logo/Name on wheel (+Stadium optional). League: modal-only (reveal).
-   - PLAYER wheel: Image/Name on wheel only. Jersey/Nationality/Club live in modal with reveal.
-   - >50 items → ambient stripes (no text/images). If 0 items → ambient stripes too (so it’s never empty).
-   - Players are loaded from /data/players.json (single source of truth).
-   - Player chips are derived from players.json (club_id). Club names via teams.json + fallback.
-   - Visuals: conic rim glow, crisp ticks, active-slice shimmer, gentle landing pulse. No confetti.
-   - Audio: DISABLED by default (set SOUND_ENABLED = true to re-enable minimal ticks/whoosh).
+   - PLAYER wheel: Image/Name on wheel only. Jersey/Nationality/Club in modal with reveal.
+   - >50 items or 0 items → ambient stripes (no text/images).
+   - Players load only from /data/players.json.
+   - Player filters are Premier League club chips derived from players.json (club_id).
+   - Club names resolved via teams.json + fallback map.
 */
 
-/* =========================
-   Global prefs
-   ========================= */
-const SOUND_ENABLED = false; // <<< keep quiet by default
-
-/* =========================
-   Mode & state
-   ========================= */
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
 
 let TEAMS = [];
@@ -31,9 +22,7 @@ let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 
-/* =========================
-   DOM
-   ========================= */
+/* ---------- DOM ---------- */
 const modeTeamBtn   = document.getElementById('modeTeam');
 const modePlayerBtn = document.getElementById('modePlayer');
 
@@ -49,7 +38,7 @@ const optA = document.getElementById('optA'); // A
 const optB = document.getElementById('optB'); // B
 const optC = document.getElementById('optC'); // C
 const optD = document.getElementById('optD'); // D
-const optE = document.getElementById('optE'); // E (Club) — optional input in HTML
+const optE = document.getElementById('optE'); // E (Club) — present only in PLAYER mode HTML
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -70,7 +59,7 @@ const backdrop   = document.getElementById('backdrop');
 const modalEl    = document.getElementById('modal');
 const mClose     = document.getElementById('mClose');
 const mHead      = document.getElementById('mHead');
-const mSub       = document.getElementById('mSub');   // TEAM: League (reveal) / PLAYER: empty (avoid duplication)
+const mSub       = document.getElementById('mSub');   // TEAM: League (reveal). PLAYER: left empty to avoid duplication.
 const mLogo      = document.getElementById('mLogo');
 
 const rowStadium = document.getElementById('rowStadium');
@@ -87,9 +76,7 @@ const mNat       = document.getElementById('mNat');
 
 let modalReveal = { a:false,b:false,c:false,d:false,e:false };
 
-/* =========================
-   Utils
-   ========================= */
+/* ---------- Utils ---------- */
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI/2)+TAU)%TAU;
 const clamp = (a,x,b)=>Math.max(a,Math.min(b,x));
@@ -133,9 +120,7 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weigh
   return {text:(s||'')+'…', fontPx:minPx};
 }
 
-/* =========================
-   Chips helpers
-   ========================= */
+/* ---------- Chips helpers ---------- */
 function makeChip(value, text, checked){
   const label = document.createElement('label');
   label.className='chip';
@@ -154,9 +139,7 @@ function activeCodes(){
   return arr;
 }
 
-/* =========================
-   Labels & presets
-   ========================= */
+/* ---------- Labels & presets ---------- */
 const LEAGUE_LABELS = {
   AUT:"Austrian Bundesliga", BEL:"Jupiler Pro League", BUL:"efbet Liga",
   CRO:"SuperSport HNL", CZE:"Fortuna Liga", DEN:"Superliga",
@@ -171,7 +154,7 @@ const leagueLabel = c => LEAGUE_LABELS[c] || c;
 const TOP5 = ['EPL','SA','BUN','L1','LLA'];
 const PL_TOP6 = ['18','9','14','8','19','6']; // Chelsea, City, United, Liverpool, Arsenal, Spurs
 
-/* Fallback club names */
+/* PL fallback names */
 const FALLBACK_CLUBS = {
   '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
   '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
@@ -181,9 +164,7 @@ const FALLBACK_CLUBS = {
   '236':'Brentford'
 };
 
-/* =========================
-   Data selection
-   ========================= */
+/* ---------- Data selection ---------- */
 function getCurrentData(){
   const active = new Set(activeCodes());
   if (active.size === 0) return [];
@@ -194,9 +175,7 @@ function getCurrentData(){
   return TEAMS.filter(t => active.has(t.league_code));
 }
 
-/* =========================
-   Perf banner (progress out of total)
-   ========================= */
+/* ---------- Progress banner ---------- */
 function updatePerfBanner(){
   const n = getCurrentData().length;
   const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
@@ -208,9 +187,7 @@ function updatePerfBanner(){
   spinFab.disabled = disabled;
 }
 
-/* =========================
-   Chips render (mode aware)
-   ========================= */
+/* ---------- Chips render (mode aware) ---------- */
 function renderChips(){
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
@@ -245,9 +222,7 @@ function renderChips(){
   toggleMore.setAttribute('aria-expanded','false');
 }
 
-/* =========================
-   Show-on-wheel (mode aware)
-   ========================= */
+/* ---------- Show-on-wheel labels ---------- */
 function applyModeShowControls(){
   if (MODE==='player'){
     lblA.textContent='Image';         optA.checked = true;
@@ -264,9 +239,7 @@ function applyModeShowControls(){
   }
 }
 
-/* =========================
-   Canvas sizing
-   ========================= */
+/* ---------- Canvas sizing ---------- */
 function sizeCanvas(){
   const rect = (wheel.parentElement||wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width||640), 1200);
@@ -278,9 +251,7 @@ function sizeCanvas(){
   fx.style.width = cssSize+'px'; fx.style.height = cssSize+'px';
 }
 
-/* =========================
-   Ambient backgrounds
-   ========================= */
+/* ---------- Ambient visuals ---------- */
 const PERF = { hideTextThreshold: 50, minTextWidth: 44, minLogoBox: 26 };
 
 function drawBackdrop(ctx,W,H){
@@ -288,37 +259,32 @@ function drawBackdrop(ctx,W,H){
   ctx.save(); ctx.translate(W/2,H/2);
   const r = Math.min(W,H)*0.48;
 
-  // soft radial base
+  // soft radial base (very subtle)
   const g = ctx.createRadialGradient(0,0,r*0.1, 0,0,r);
-  g.addColorStop(0,'#111c36'); g.addColorStop(0.45,'#0f1931'); g.addColorStop(1,'#0a1428');
+  g.addColorStop(0,'#101a33'); g.addColorStop(0.45,'#0d162d'); g.addColorStop(1,'#0a1326');
   ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fillStyle=g; ctx.fill();
 
-  // glass conic ring
-  const grd = ctx.createConicGradient(0,0,0);
-  grd.addColorStop(0.00,'rgba(34,211,238,.16)');
-  grd.addColorStop(0.25,'rgba(100,168,255,.16)');
-  grd.addColorStop(0.50,'rgba(155,107,255,.16)');
-  grd.addColorStop(0.75,'rgba(100,168,255,.16)');
-  grd.addColorStop(1.00,'rgba(34,211,238,.16)');
-  ctx.lineWidth = 10; ctx.strokeStyle = grd;
-  ctx.beginPath(); ctx.arc(0,0,r*0.985,0,TAU); ctx.stroke();
+  // thin outer ring
+  ctx.beginPath(); ctx.arc(0,0,r*0.99,0,TAU);
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = 'rgba(170,200,255,.10)';
+  ctx.stroke();
 
   ctx.restore();
 }
 
 function drawAmbientStripes(ctx,W,H){
-  // clean grid/rings so empty or heavy wheels still look designed
   ctx.save(); ctx.translate(W/2,H/2);
   const r = Math.min(W,H)*0.48;
 
-  // faint rings
-  ctx.lineWidth=1.5;
-  for (let i=1;i<=5;i++){
-    ctx.beginPath(); ctx.arc(0,0,r*(i/5),0,TAU);
-    ctx.strokeStyle = `rgba(160,190,255,${0.08 - i*0.01})`;
+  // faint concentric rings
+  ctx.lineWidth=1.2;
+  for (let i=1;i<=6;i++){
+    ctx.beginPath(); ctx.arc(0,0,r*(i/6),0,TAU);
+    ctx.strokeStyle = `rgba(180,205,255,${0.08 - i*0.01})`;
     ctx.stroke();
   }
-  // ticks around rim
+  // rim ticks
   const ticks = 96;
   for (let i=0;i<ticks;i++){
     const a = (i/ticks)*TAU;
@@ -327,17 +293,13 @@ function drawAmbientStripes(ctx,W,H){
     ctx.moveTo(Math.cos(a)*inner, Math.sin(a)*inner);
     ctx.lineTo(Math.cos(a)*r,     Math.sin(a)*r);
     ctx.lineWidth = (i%2)?1:2;
-    ctx.strokeStyle = (i%2)?'rgba(200,220,255,.08)':'rgba(200,220,255,.12)';
+    ctx.strokeStyle = (i%2)?'rgba(200,220,255,.07)':'rgba(200,220,255,.11)';
     ctx.stroke();
   }
   ctx.restore();
 }
 
-/* =========================
-   Wheel drawing
-   ========================= */
-let lastSliceAtPointer = -1; // for optional tick sound
-
+/* ---------- Wheel drawing ---------- */
 function drawWheel(){
   const data = getCurrentData();
   const N = data.length;
@@ -350,9 +312,8 @@ function drawWheel(){
   updatePerfBanner();
   drawBackdrop(ctx,W,H);
 
-  // If no data → show ambient and bail
   if (N===0){
-    drawAmbientStripes(ctx,W,H);
+    drawAmbientStripes(ctx,W,H); // never looks empty
     return;
   }
 
@@ -371,13 +332,13 @@ function drawWheel(){
     ctx.fillStyle = data[i].primary_color || '#294a7a';
     ctx.fill();
 
-    // crisp rim tick (visual rhythm)
+    // subtle rim tick for separation
     ctx.save();
     ctx.rotate(i*slice);
     ctx.beginPath();
     ctx.moveTo(r*0.93,0); ctx.lineTo(r,0);
     ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255,255,255,.08)';
+    ctx.strokeStyle = 'rgba(255,255,255,.07)';
     ctx.stroke();
     ctx.restore();
   }
@@ -385,138 +346,75 @@ function drawWheel(){
   if (hideAll){
     ctx.restore();
     drawAmbientStripes(ctx,W,H);
-  } else {
-    // contents
-    for (let i=0;i<N;i++){
-      const t = data[i];
-      const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
-      const arcLen = r*(a1-a0);
+    return;
+  }
 
-      const canLogo = (MODE==='team') ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
-      const canName = optB.checked && !!t.team_name;
+  // contents
+  for (let i=0;i<N;i++){
+    const t = data[i];
+    const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
+    const arcLen = r*(a1-a0);
 
-      ctx.save();
-      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
+    const canLogo = (MODE==='team') ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
+    const canName = optB.checked && !!t.team_name;
 
-      ctx.rotate(aMid);
-      const needFlip = Math.cos(aMid) < 0;
-      if (needFlip) ctx.rotate(Math.PI);
-      const sign = needFlip ? -1 : 1;
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
 
-      const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
-      const logoHalf = logoSize/2;
-      const pad = 10;
-      const xLogo = sign * (r*0.74);
-      const xText = sign * (r*0.42);
-      const logoInner = xLogo - sign*(logoHalf+pad);
-      const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
+    ctx.rotate(aMid);
+    const needFlip = Math.cos(aMid) < 0;
+    if (needFlip) ctx.rotate(Math.PI);
+    const sign = needFlip ? -1 : 1;
 
-      const fg = textColorFor(t.primary_color);
+    const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
+    const logoHalf = logoSize/2;
+    const pad = 10;
+    const xLogo = sign * (r*0.74);
+    const xText = sign * (r*0.42);
+    const logoInner = xLogo - sign*(logoHalf+pad);
+    const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
 
-      if (canName && maxWidth>=PERF.minTextWidth){
-        const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
-        ctx.textAlign='left'; ctx.textBaseline='middle';
-        ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
-        ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
-        ctx.fillStyle=fg;
-        const x = Math.min(xText, logoInner);
-        ctx.strokeText(fit.text, x, 0);
-        ctx.fillText(fit.text,   x, 0);
+    const fg = textColorFor(t.primary_color);
+
+    if (canName && maxWidth>=PERF.minTextWidth){
+      const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
+      ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
+      ctx.fillStyle=fg;
+      const x = Math.min(xText, logoInner);
+      ctx.strokeText(fit.text, x, 0);
+      ctx.fillText(fit.text,   x, 0);
+    }
+
+    if (canLogo){
+      ctx.save(); ctx.translate(xLogo,0);
+      ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
+      ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
+
+      ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
+      const url = MODE==='team' ? t.logo_url : t.image_url;
+      const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
+      if (img && img.complete){
+        const box = Math.max(4, 2*(logoHalf-1));
+        const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
+        const s = Math.min(box/iw, box/ih);
+        ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
+      } else {
+        ctx.fillStyle='rgba(255,255,255,.14)';
+        const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
       }
-
-      if (canLogo){
-        ctx.save(); ctx.translate(xLogo,0);
-        ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
-        ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
-
-        ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
-        const url = MODE==='team' ? t.logo_url : t.image_url;
-        const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
-        if (img && img.complete){
-          const box = Math.max(4, 2*(logoHalf-1));
-          const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
-          const s = Math.min(box/iw, box/ih);
-          ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
-        } else {
-          ctx.fillStyle='rgba(255,255,255,.14)';
-          const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
-        }
-        ctx.restore(); ctx.restore();
-      }
-
-      ctx.restore();
+      ctx.restore(); ctx.restore();
     }
 
     ctx.restore();
   }
 
-  // active-slice shimmer ring at pointer
-  const fctx = fx.getContext('2d');
-  fctx.setTransform(DPR,0,0,DPR,0,0);
-  fctx.clearRect(0,0,wheel.width/DPR, wheel.height/DPR);
-
-  if (N>0){
-    const W2 = wheel.width / DPR, H2 = wheel.height / DPR;
-    const r2 = Math.min(W2,H2)*0.48;
-    const offset = mod(POINTER_ANGLE - mod(currentAngle,TAU), TAU);
-    const idxAtPointer = Math.floor(offset / (TAU/N)) % N;
-
-    // shimmer arc
-    fctx.save();
-    fctx.translate(W2/2,H2/2);
-    const a0 = idxAtPointer*(TAU/N), a1=(idxAtPointer+1)*(TAU/N);
-    fctx.rotate(-mod(currentAngle,TAU));
-    fctx.beginPath();
-    fctx.arc(0,0,r2*0.995, a0, a1);
-    fctx.lineWidth = 6;
-    fctx.strokeStyle = 'rgba(255,255,255,.18)';
-    fctx.stroke();
-    fctx.restore();
-  }
+  ctx.restore();
 }
 
-/* =========================
-   Optional minimal audio (muted by default)
-   ========================= */
-let ac, master;
-function ensureAudio(){
-  if (!SOUND_ENABLED) return false;
-  if (ac) return true;
-  ac = new (window.AudioContext || window.webkitAudioContext)();
-  master = ac.createGain(); master.gain.value = 0.3; master.connect(ac.destination);
-  return true;
-}
-function whoosh(dur=0.6){
-  if (!ensureAudio()) return;
-  const noise = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
-  const data = noise.getChannelData(0);
-  for (let i=0;i<data.length;i++) data[i] = (Math.random()*2-1) * (0.6 + 0.1*Math.random());
-  const src = ac.createBufferSource(); src.buffer = noise;
-  const bp = ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1200; bp.Q.value=0.6;
-  const g = ac.createGain(); const now = ac.currentTime;
-  g.gain.setValueAtTime(0.0001, now);
-  g.gain.exponentialRampToValueAtTime(0.4, now+0.07);
-  g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
-  src.connect(bp).connect(g).connect(master);
-  src.start(now); src.stop(now+dur+0.02);
-}
-function tick(){
-  if (!ensureAudio()) return;
-  const t = ac.currentTime;
-  const o = ac.createOscillator(); const g = ac.createGain();
-  o.type='square'; o.frequency.value=900;
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.18, t+0.005);
-  g.gain.exponentialRampToValueAtTime(0.0001, t+0.05);
-  o.connect(g).connect(master);
-  o.start(t); o.stop(t+0.06);
-}
-
-/* =========================
-   Spin
-   ========================= */
+/* ---------- Landing pulse (very subtle) ---------- */
 function ringPulse(){
-  // quick canvas pulse on landing (no audio)
   const ctx = fx.getContext('2d');
   const DPR = Math.max(1, window.devicePixelRatio||1);
   ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -524,15 +422,15 @@ function ringPulse(){
   const r = Math.min(W,H)*0.48;
 
   let start = performance.now();
-  const dur = 280;
+  const dur = 260;
   function step(now){
     const p = clamp(0,(now-start)/dur,1);
     ctx.clearRect(0,0,W,H);
     ctx.save(); ctx.translate(W/2,H/2);
     ctx.beginPath();
-    ctx.arc(0,0, r*(0.96 + 0.02*p), 0, TAU);
-    ctx.lineWidth = 10*(1-p);
-    ctx.strokeStyle = `rgba(100,168,255,${0.25*(1-p)})`;
+    ctx.arc(0,0, r*(0.965 + 0.02*p), 0, TAU);
+    ctx.lineWidth = 8*(1-p);
+    ctx.strokeStyle = `rgba(140,180,255,${0.20*(1-p)})`;
     ctx.stroke();
     ctx.restore();
     if (p<1) requestAnimationFrame(step);
@@ -540,6 +438,7 @@ function ringPulse(){
   requestAnimationFrame(step);
 }
 
+/* ---------- Spin ---------- */
 function spin(){
   if (spinning) return;
   const data = getCurrentData();
@@ -556,28 +455,17 @@ function spin(){
   const start = performance.now(), dur=3200;
   const easeOutCubic = x=>1-Math.pow(1-x,3);
 
-  whoosh(0.7);
-  lastSliceAtPointer = -1;
-
   function step(now){
     const p = clamp(0,(now-start)/dur,1);
     currentAngle = targetAngle * easeOutCubic(p);
     drawWheel();
 
-    // quiet ticks: only if enabled
-    if (SOUND_ENABLED){
-      const theta = mod(currentAngle,TAU);
-      const offset = mod(POINTER_ANGLE - theta, TAU);
-      const idx = Math.floor(offset / slice) % N;
-      if (idx !== lastSliceAtPointer){ tick(); lastSliceAtPointer = idx; }
-    }
-
     if (p<1) requestAnimationFrame(step);
     else {
+      // snap to center of the slice at pointer
       const theta = mod(currentAngle,TAU);
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
-      // snap to center
       const center = idx*slice + slice/2;
       const delta = mod(center - offset, TAU);
       currentAngle = mod(currentAngle + delta, TAU);
@@ -606,9 +494,7 @@ function showResult(idx){
   openModal(item);
 }
 
-/* =========================
-   History
-   ========================= */
+/* ---------- History ---------- */
 function renderHistory(){
   historyEl.innerHTML = '';
   if (!history.length){
@@ -628,9 +514,7 @@ function renderHistory(){
   });
 }
 
-/* =========================
-   Reveal overlay (centered on blurred element)
-   ========================= */
+/* ---------- Reveal overlay (centered on blurred element) ---------- */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
@@ -660,9 +544,7 @@ function addReveal(key, el, enabled, label){
   w.appendChild(b);
 }
 
-/* =========================
-   Modal
-   ========================= */
+/* ---------- Modal ---------- */
 function openModal(item){
   ensureRevealStyles();
   modalReveal = {a:false,b:false,c:false,d:false,e:false};
@@ -672,7 +554,7 @@ function openModal(item){
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.image_url || '';
 
-    // Subtitle empty (avoid nationality duplication here)
+    // Subtitle left empty (avoid nationality duplication)
     mSub.textContent  = '';
 
     // Visible rows
@@ -715,9 +597,7 @@ function openModal(item){
 }
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
 
-/* =========================
-   Mode switch
-   ========================= */
+/* ---------- Mode switch ---------- */
 function setMode(next){
   if (next===MODE) return;
   MODE = next;
@@ -735,9 +615,7 @@ function setMode(next){
   drawWheel();
 }
 
-/* =========================
-   Loaders
-   ========================= */
+/* ---------- Loaders ---------- */
 async function loadTeams(){
   const res = await fetch('./teams.json?v='+Date.now());
   if (!res.ok) throw new Error('teams.json not found');
@@ -749,7 +627,6 @@ async function loadTeams(){
     TEAM_BY_ID.set(id, t);
     CLUB_BY_ID.set(id, t.team_name);
   }
-  // fallback names so all club_ids resolve
   for (const [id,name] of Object.entries(FALLBACK_CLUBS)){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, name);
   }
@@ -783,15 +660,13 @@ async function loadPlayers(){
 
   TOTAL_PLAYERS = PLAYERS.length;
 
-  // Ensure label for every club_id
+  // ensure label for every present club_id
   for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_CLUBS[id] || `Club #${id}`);
   }
 }
 
-/* =========================
-   Events
-   ========================= */
+/* ---------- Events ---------- */
 function wire(){
   modeTeamBtn?.addEventListener('click', ()=> setMode('team'));
   modePlayerBtn?.addEventListener('click', ()=> setMode('player'));
@@ -840,9 +715,8 @@ function wire(){
   optD.addEventListener('change', refresh);
   if (optE) optE.addEventListener('change', refresh);
 
-  const startSpin = ()=>{ if (SOUND_ENABLED) ensureAudio(); spin(); };
-  spinBtn.onclick = startSpin;
-  spinFab.onclick = startSpin;
+  spinBtn.onclick = spin;
+  spinFab.onclick = spin;
 
   resetHistoryBtn.onclick = ()=>{ history=[]; localStorage.setItem('clubHistory', JSON.stringify(history)); renderHistory(); };
 
@@ -853,13 +727,11 @@ function wire(){
   let t; window.addEventListener('resize', ()=>{ clearTimeout(t); t=setTimeout(()=>{ sizeCanvas(); drawWheel(); },120); }, {passive:true});
 }
 
-/* =========================
-   Boot
-   ========================= */
+/* ---------- Boot ---------- */
 (async function init(){
   try{
     await loadTeams();
-    await loadPlayers(); // players depend on teams for club colors/names
+    await loadPlayers();
   } catch (e){
     console.error('Failed to load data:', e);
   }
