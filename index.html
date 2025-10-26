@@ -82,6 +82,30 @@
 <!-- GTM (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBqAN5yo8PKSCFx3rSHJKxPxG8aD0Xe6mY",
+    authDomain: "football-spinner.firebaseapp.com",
+    projectId: "football-spinner",
+    storageBucket: "football-spinner.firebasestorage.app",
+    messagingSenderId: "1013809737265",
+    appId: "1:1013809737265:web:20c6dc3e75633b12e66f10",
+    measurementId: "G-N21FHSRD02"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+  
 <main class="container">
   <!-- LEFT: filters / toggles -->
   <section class="card sidebar" aria-labelledby="filter-title">
