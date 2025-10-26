@@ -876,3 +876,42 @@ button:focus-visible,
 
 /* (optional) add a little space before the content block so cards don't feel cramped */
 #content { margin-top: 24px; }
+
+/* === Make both columns equal height === */
+.container {
+  /* let grid rows stretch to the tallest card in the row */
+  align-items: stretch !important;
+}
+
+.card {
+  height: 100%;              /* stretch to grid row height */
+}
+
+.card.sidebar {
+  position: static !important; /* not sticky */
+  top: auto !important;
+  z-index: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  height: 100% !important;    /* match wheel card height */
+}
+
+/* === FAQ block: same visual as cards === */
+#content {
+  position: relative;
+  z-index: auto;
+  margin-top: 24px;
+
+  /* match left/right card visuals */
+  background: var(--grad-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-1) !important;
+
+  /* keep internal spacing consistent with cards */
+  padding: 18px clamp(14px,3vw,26px) !important;
+  max-width: 1200px; /* stays centered like cards */
+}
+
+/* optional: keep FAQ headings aligned with card titles */
+#content h2 { margin-top: 4px; }
