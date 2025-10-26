@@ -231,14 +231,12 @@ function applyModeShowControls(){
     lblC.textContent='Jersey Number'; optC.checked = false;
     lblD.textContent='Nationality';   optD.checked = false;  // bottom row only
     lblE.textContent='Club';          optE.checked = false;  // NEW
-    // show E control in PLAYER
     optE.closest('label').style.display = '';
   } else {
     lblA.textContent='Logo';    optA.checked = true;
     lblB.textContent='Name';    optB.checked = true;
     lblC.textContent='Stadium'; optC.checked = false;
     lblD.textContent='League';  optD.checked = true; // modal-only
-    // hide E control in TEAM
     if (optE) { optE.checked = false; optE.closest('label').style.display = 'none'; }
   }
 }
@@ -265,6 +263,34 @@ function drawIdle(ctx,W,H){
   const g = ctx.createRadialGradient(0,0,r*0.1, 0,0,r);
   g.addColorStop(0,'#1A2C5A'); g.addColorStop(0.35,'#21386F'); g.addColorStop(0.65,'#0E2A57'); g.addColorStop(1,'#0B1B38');
   ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fillStyle=g; ctx.fill();
+  ctx.restore();
+}
+
+/* subtle stripe helpers when >50 items (PLAYER) */
+function drawDenseStripes(ctx, r, N){
+  // concentric rings
+  ctx.save();
+  ctx.lineWidth = Math.max(1, r * 0.006);
+  for (let k=1;k<=3;k++){
+    ctx.beginPath();
+    ctx.arc(0,0, r*(0.35 + k*0.15), 0, TAU);
+    ctx.strokeStyle = 'rgba(255,255,255,.05)';
+    ctx.stroke();
+  }
+  // radial spokes at slice boundaries
+  const slice = TAU/N;
+  ctx.lineWidth = Math.max(1, r * 0.0035);
+  ctx.strokeStyle = 'rgba(255,255,255,.06)';
+  for (let i=0;i<N;i++){
+    const a = i*slice;
+    ctx.save();
+    ctx.rotate(a);
+    ctx.beginPath();
+    ctx.moveTo(r*0.25, 0);
+    ctx.lineTo(r*0.95, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
   ctx.restore();
 }
 
@@ -298,7 +324,12 @@ function drawWheel(){
     ctx.fill();
   }
 
-  if (hideAll){ ctx.restore(); return; }
+  // When we hide everything on PLAYER, add tasteful stripes so the wheel doesn't look empty
+  if (hideAll){
+    if (MODE === 'player') drawDenseStripes(ctx, r, N);
+    ctx.restore();
+    return;
+  }
 
   // contents (wheel shows only image + name in PLAYER; logo + name for TEAM)
   for (let i=0;i<N;i++){
@@ -475,11 +506,9 @@ function openModal(item){
     // header & image
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.image_url || '';
-
-    // subtitle hidden (avoid nationality duplication at top)
     mSub.textContent = '';
 
-    // rows visible for reveal
+    // rows
     rowStadium.style.display='none';
     rowClub.style.display='';
     rowJersey.style.display='';
@@ -489,7 +518,7 @@ function openModal(item){
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
     mNat.textContent    = item.nationality || '—';
 
-    // A=image, B=name, C=jersey, D=nationality (bottom only), E=club
+    // reveals
     addReveal('a', mLogo,   !!optA.checked, 'image');
     addReveal('b', mHead,   !!optB.checked, 'name');
     addReveal('c', mJersey, !!optC.checked, 'jersey number');
@@ -506,7 +535,6 @@ function openModal(item){
     rowNat.style.display='none';
     mStadium.textContent = item.stadium || '—';
 
-    // A=logo, B=name, C=stadium, D=league
     addReveal('a', mLogo,    !!optA.checked, 'logo');
     addReveal('b', mHead,    !!optB.checked, 'name');
     addReveal('c', mStadium, !!optC.checked, 'stadium');
@@ -582,7 +610,6 @@ async function loadPlayers(){
 
   TOTAL_PLAYERS = PLAYERS.length;
 
-  // Ensure a name for every club_id appearing in players.json
   for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_CLUBS[id] || `Club #${id}`);
   }
