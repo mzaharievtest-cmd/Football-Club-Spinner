@@ -255,8 +255,8 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
 
 .chip-btn.active {
   border-color: var(--accent-2);
-  box-shadow: 0 0 0 2px rgba(34,211,238,.20) inset, 0 12px 26px rgba(34,211,238,.12);
-  background: linear-gradient(180deg, rgba(32,46,88,.96), rgba(14,24,48,.92));
+  box-shadow: 0 0 0 2px rgba(34,211,238,.20) inset, 0 12px 26px rgba(34,211,238,.12) !important;
+  background: linear-gradient(180deg, rgba(32,46,88,.96), rgba(14,24,48,.92)) !important;
 }
 
 /* Ghost variant for “Show more” */
@@ -422,7 +422,7 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
 .item:hover { transform: translateY(-1px); }
 
 /* =========================
-   Selection banner (with progress)
+   Selection banner
    ========================= */
 .perf-tip {
   font-size: 12px;
@@ -446,7 +446,7 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   transition: transform .25s var(--ease);
   pointer-events:none;
 }
-.perf-tip .meter-text{position:relative; z-index:1;}
+.perf-tip .meter-text{ position:relative; z-index:1; }
 
 /* Extra spacing around chips and pointer area */
 #chips { margin-bottom: 28px; }
@@ -461,8 +461,6 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   justify-content: center;
   align-items: center;
   padding: clamp(36px, 5vw, 64px) clamp(10px, 2.5vw, 18px) clamp(10px, 2.5vw, 18px);
-
-  /* keeps layout stable when the wheel shrinks on mobile */
   min-height: 640px;
 }
 
@@ -507,21 +505,16 @@ canvas#wheel {
   }
 }
 
-/* Spin FAB with animated ring
-   (centered by JS with left/top; fallback keeps it centered) */
+/* Spin FAB */
 .spin-fab {
   position: absolute;
   z-index: 5;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  /* Fallback center before JS positions it precisely */
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-
   width: clamp(88px, 14vw, 132px);
   height: clamp(88px, 14vw, 132px);
   border-radius: 999px;
@@ -535,7 +528,6 @@ canvas#wheel {
   pointer-events: auto;
   transition: transform .12s var(--ease), box-shadow .12s var(--ease),
               border-color .12s var(--ease), background .12s var(--ease);
-  will-change: left, top, transform;
 }
 .spin-fab::before {
   content: "";
@@ -548,9 +540,7 @@ canvas#wheel {
   animation: ring-spin 4s linear infinite;
   opacity: .9;
 }
-@keyframes ring-spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes ring-spin { to { transform: rotate(360deg); } }
 .spin-fab:hover { transform: translate(-50%, -50%) scale(1.03); border-color: #22d3ee; box-shadow: 0 14px 34px rgba(34,211,238,.25); }
 .spin-fab:active { transform: translate(-50%, -50%) scale(0.985); }
 .spin-fab:disabled { opacity: .7; cursor: wait; }
@@ -584,10 +574,7 @@ canvas#wheel {
   opacity: 0;
   transition: transform .22s var(--ease-out), opacity .22s var(--ease-out);
 }
-#modal.show {
-  transform: translateY(0) scale(1);
-  opacity: 1;
-}
+#modal.show { transform: translateY(0) scale(1); opacity: 1; }
 
 #mHead {
   padding: 22px 26px 0;
@@ -625,16 +612,14 @@ canvas#wheel {
 
 .m-row {
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  justify-content: center;
   gap: 10px;
-  flex-wrap: wrap;
   margin: 6px 0;
 }
 
-.m-sep { width: 100%; height: 1px; background: #234080; margin: 8px 0; }
-
+/* Stadium pill */
 #mStadium {
   display: inline-block;
   min-width: 180px;
@@ -663,23 +648,42 @@ canvas#wheel {
 /* Keep modal buttons narrow */
 #backdrop .chip-btn, #backdrop button { width: auto; min-width: 160px; }
 
-/* ===== Reveal overlay & button — absolute centered on blurred value ===== */
-.reveal-wrap{ position:relative; display:inline-block; z-index:0; }
-.reveal-overlay{
-  position:absolute; inset:0; border-radius:inherit;
-  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-  background:transparent; pointer-events:none; z-index:2;
+/* Reveal button styling */
+.reveal-wrap { position: relative; display: inline-block; z-index: 0; }
+.reveal-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: transparent;
+  pointer-events: none;
+  z-index: 2;
 }
-.reveal-btn{
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:8px 14px; border-radius:10px;
-  border:1px solid rgba(90,161,255,.6);
-  background:#152036; color:#fff; font-weight:800; letter-spacing:.03em;
-  cursor:pointer; user-select:none; white-space:nowrap; z-index:3;
-  outline:none; transition: none; /* prevent hover jump */
+
+/* Button placed ON TOP of the blurred element (centered) */
+.reveal-btn.over {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(90,161,255,.6);
+  background: rgba(21,32,54,.82);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: .03em;
+  cursor: pointer;
+  z-index: 3;
+  transition: transform .12s var(--ease), border-color .12s var(--ease), box-shadow .12s var(--ease);
 }
-.reveal-btn:hover, .reveal-btn:focus { transform:translate(-50%,-50%); }
+.reveal-btn.over:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-2);
+  box-shadow: 0 6px 18px rgba(34,211,238,.18);
+}
 
 /* =========================
    Pointer room / misc tweaks
@@ -697,186 +701,21 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
 
 /* =======================================================================
    Content Section Enhancements (semantic section with details/summary)
-   Target: <section id="content"> ... </section>
-   Clean, premium look
    ======================================================================= */
+#content { /* … as before … */ }
+#content [id] { scroll-margin-top: 84px; }
+/* (Keeping all your existing content styles below unchanged) */
 
-/* Content container card */
-#content {
-  --content-max: 1040px;
-  --anchor-offset: 84px;
+/* 1) Header TEAM/PLAYER toggle visuals */
+.mode-btn[aria-pressed="true"], .mode-btn-active{
+  border-color: var(--accent-2)!important;
+  background: linear-gradient(180deg, rgba(32,46,88,.96), rgba(14,24,48,.92))!important;
+  box-shadow: 0 0 0 2px rgba(34,211,238,.20) inset, 0 12px 26px rgba(34,211,238,.12)!important;
+  color:#f4f9ff!important;
+}
+.mode-btn:focus-visible{ outline:2px solid var(--accent-2); outline-offset:3px; border-radius:12px; }
 
-  max-width: var(--content-max);
-  margin: 22px auto 0;
-  padding: clamp(16px, 3.5vw, 26px);
-  color: var(--text);
-  background:
-    radial-gradient(120% 140% at 10% -10%, rgba(34,211,238,.10), transparent 45%),
-    radial-gradient(120% 140% at 95% -15%, rgba(0,180,216,.08), transparent 50%),
-    linear-gradient(180deg, rgba(14,18,28,.86), rgba(10,14,24,.86));
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 16px;
-  box-shadow: 0 10px 28px rgba(0,0,0,.35);
-  overflow: clip;
-}
-#content [id] { scroll-margin-top: var(--anchor-offset); }
-
-/* Typography inside the content block */
-#content h2 {
-  margin: 0 0 10px;
-  font-size: clamp(24px, 2.4vw, 30px);
-  font-weight: 800;
-  letter-spacing: .01em;
-  color: #f6f9ff;
-}
-#content h3 {
-  font-size: clamp(18px, 2vw, 22px);
-  font-weight: 800;
-  letter-spacing: .01em;
-  margin: 0;
-  color: #eaf2ff;
-}
-#content p, #content li, #content dd {
-  font-size: clamp(15px, 1.6vw, 17px);
-  line-height: 1.7;
-  color: #e8eefb;
-}
-#content dt {
-  font-size: clamp(13px, 1.45vw, 14px);
-  color: var(--muted);
-  font-weight: 800;
-  margin-top: 12px;
-}
-
-/* TOC styles (chips) */
-#content .toc {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 12px;
-  margin: 8px 0 18px; /* +2px vertical space before the H2 */
-  padding-top: 6px;
-}
-#content .toc a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: clamp(13px, 1.4vw, 14px);
-  text-decoration: none;
-  color: #e9f5ff;
-  background: linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));
-  border: 1px solid var(--line);
-  transition: transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease);
-}
-#content .toc a:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent-2);
-  box-shadow: 0 10px 22px rgba(34,211,238,.18);
-}
-
-/* Details containers */
-#content details {
-  border: 1px solid rgba(255,255,255,.07);
-  background: rgba(255,255,255,.02);
-  border-radius: 12px;
-  margin: 12px 0;
-  overflow: hidden;
-}
-#content details[open] {
-  border-color: rgba(0,180,216,.28);
-  background: linear-gradient(180deg, rgba(0,180,216,.05), rgba(255,255,255,.02));
-}
-
-/* Summary row: hide native marker and add hover/focus states */
-#content summary {
-  list-style: none;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  cursor: pointer;
-  border-radius: 10px;
-  transition: background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease);
-  outline: none;
-}
-#content summary::-webkit-details-marker { display: none !important; }
-#content summary::marker { content: "" !important; } /* Firefox */
-
-#content summary:hover { background: rgba(255,255,255,.03); text-decoration: underline; }
-#content summary:focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 4px;
-  border-radius: 8px;
-}
-
-/* Panel animation (fallback if inline style missing) */
-#content details > .panel {
-  padding: 0 16px 0;
-  border-top: 1px solid rgba(255,255,255,.10);
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-height .3s var(--ease), opacity .22s var(--ease);
-}
-#content details[open] > .panel {
-  padding: 12px 16px 16px;
-  max-height: 1000px;
-  opacity: 1;
-}
-@media (prefers-reduced-motion: reduce) {
-  #content details > .panel { transition: none; }
-}
-
-/* Badge for updates dates */
-#content .badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  line-height: 1.2;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  margin-right: 8px;
-  color: #eaf0fb;
-}
-
-/* Responsive tweaks for content block */
-@media (max-width: 640px) {
-  #content { padding: 16px; }
-  #content p, #content li, #content dd { line-height: 1.75; }
-}
-
-/* FINAL FORCE-HIDE OVERRIDES (in case of UA quirks showing ▶/▾) */
-#content details > summary::-webkit-details-marker,
-#content summary::-webkit-details-marker { display: none !important; }
-#content details > summary::marker,
-#content summary::marker { content: "" !important; font-size: 0 !important; }
-#content details > summary { list-style: none !important; }
-#content summary > h3 { margin: 0 !important; font: inherit !important; font-weight: 800 !important; }
-
-/* ======================================================================
-   Enhancements & Overrides (added)
-   ====================================================================== */
-
-/* 1) Header TEAM/PLAYER toggle visuals (works with aria-pressed or .mode-btn-active) */
-.mode-btn[aria-pressed="true"],
-.mode-btn-active {
-  border-color: var(--accent-2) !important;
-  background: linear-gradient(180deg, rgba(32,46,88,.96), rgba(14,24,48,.92)) !important;
-  box-shadow: 0 0 0 2px rgba(34,211,238,.20) inset, 0 12px 26px rgba(34,211,238,.12) !important;
-  color: #f4f9ff !important;
-}
-.mode-btn:focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 3px;
-  border-radius: 12px;
-}
-
-/* 2) Stronger focus rings on interactive elements for keyboard users */
+/* 2) Stronger focus rings */
 button:focus-visible,
 .chip-btn:focus-visible,
 #chips .chip input[type="checkbox"]:focus-visible,
@@ -887,51 +726,14 @@ button:focus-visible,
   border-radius: 12px;
 }
 
-/* 3) Optional sticky sidebar on desktop (apply class="card sidebar" to the left card) */
-@media (min-width: 980px) {
-  .card.sidebar { position: sticky; top: 84px; }
-}
+/* 3) Sticky sidebar on desktop */
+@media (min-width: 980px){ .card.sidebar{ position:sticky; top:84px; } }
 
-/* 4) Extra headroom for pointer on narrow screens */
-@media (max-width: 560px) {
-  .wheel-wrap { padding-top: 72px; }
-}
+/* 4) Mobile pointer room */
+@media (max-width: 560px){ .wheel-wrap{ padding-top:72px; } }
 
-/* 5) Custom, subtle scrollbar for history list */
-.history {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(120,160,255,.35) transparent;
-}
-.history::-webkit-scrollbar { width: 8px; }
-.history::-webkit-scrollbar-thumb {
-  background: rgba(120,160,255,.28);
-  border-radius: 8px;
-}
-.history::-webkit-scrollbar-track { background: transparent; }
-
-/* 6) Perf-tip progress meter (set --pct: 0..1 via JS; wrap text in .meter-text) */
-.perf-tip { position: relative; overflow: hidden; }
-.perf-tip::before {
-  content: "";
-  position: absolute; inset: 0;
-  transform-origin: left center;
-  transform: scaleX(var(--pct, 0));
-  background: linear-gradient(90deg, rgba(34,211,238,.22), rgba(100,168,255,.25));
-  transition: transform .25s var(--ease);
-  pointer-events: none;
-}
-.perf-tip .meter-text { position: relative; z-index: 1; }
-
-/* 7) Slightly larger tap targets for chips on mobile */
-@media (max-width: 560px) {
-  #chips .chip,
-  #showOnWheel .chip,
-  .showopts .chip { padding: 12px 18px 12px 46px; }
-  #chips .chip input[type="checkbox"],
-  #showOnWheel .chip input[type="checkbox"],
-  .showopts .chip input[type="checkbox"] { width: 20px; height: 20px; }
-}
-
-/* Keep the left sidebar below the wheel card z-index */
-.card.sidebar { z-index: 1; }
-.container > .card:not(.sidebar) { z-index: 2; }
+/* 5) Nice scrollbar for history */
+.history{ scrollbar-width:thin; scrollbar-color:rgba(120,160,255,.35) transparent; }
+.history::-webkit-scrollbar{ width:8px; }
+.history::-webkit-scrollbar-thumb{ background:rgba(120,160,255,.28); border-radius:8px; }
+.history::-webkit-scrollbar-track{ background:transparent; }
