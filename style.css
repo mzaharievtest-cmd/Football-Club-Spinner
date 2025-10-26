@@ -828,4 +828,14 @@ button:focus-visible,
   outline: 2px solid var(--accent-2);
   outline-offset: 3px;
   border-radius: 12px;
+
+   /* ==== Fix: sidebar overlaying content while scrolling ==== */
+/* Put the sidebar under everything else in the main area */
+.card.sidebar { z-index: 1 !important; }
+
+/* Keep the right column (wheel card) above the sidebar */
+.container > .card:not(.sidebar) { position: relative; z-index: 2; }
+
+/* Keep the wide bottom content block above both */
+#content { position: relative; z-index: 3; }
 }
