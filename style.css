@@ -915,3 +915,29 @@ button:focus-visible,
 
 /* optional: keep FAQ headings aligned with card titles */
 #content h2 { margin-top: 4px; }
+
+/* === Sidebar: bounded sticky with its own scrollbar === */
+.card.sidebar{
+  position: sticky;         /* sticks under the header */
+  top: 84px;                /* matches your header height */
+  align-self: start;
+  z-index: 1;               /* sits below the wheel card */
+  max-height: calc(100vh - 100px); /* full viewport minus header/margins */
+  overflow: auto;           /* <-- internal scrolling when content grows */
+  -webkit-overflow-scrolling: touch; /* smooth on iOS */
+}
+
+/* Keep the wheel card visually on top so the sidebar never overlaps it */
+.container > .card:not(.sidebar){
+  position: relative;
+  z-index: 2;
+}
+
+/* Mobile: disable sticky so it behaves like a normal block */
+@media (max-width: 979.98px){
+  .card.sidebar{
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
