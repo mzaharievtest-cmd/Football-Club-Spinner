@@ -1,6 +1,7 @@
 /* Main stylesheet for Football Spinner
-   - Dark theme, responsive grid cards, chips, wheel, modal
-   - Centered spin button (fixed), modern empty-wheel stripes, reveal buttons overlayed & centered
+   - Dark theme, responsive grid cards, chip UI, wheel, modal
+   - Sticky left sidebar with its own scroll, no overlay on wheel
+   - FAQ block matches card visuals
    - Inter font is loaded via <link> in index.html
 */
 
@@ -47,7 +48,7 @@
   * { animation: none !important; transition: none !important; }
 }
 
-/* Ensure anything with [hidden] stays hidden */
+/* Keep hidden elements hidden */
 [hidden] { display: none !important; }
 
 /* =========================
@@ -125,12 +126,7 @@ header h1 {
   color: rgba(197,212,235,.76);
 }
 
-/* Brand cluster */
-header .brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-}
+header .brand { display: inline-flex; align-items: center; gap: 12px; }
 
 .brand-img {
   width: clamp(30px, 3.3vw, 44px);
@@ -140,9 +136,7 @@ header .brand {
   display: inline-block;
   position: relative;
   z-index: 0;
-  box-shadow:
-    0 4px 14px rgba(0,0,0,.28),
-    inset 0 0 0 1px rgba(255,255,255,.05);
+  box-shadow: 0 4px 14px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.05);
   background: #0b1220;
   border: 1px solid rgba(100,160,255,.45);
   transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
@@ -190,11 +184,9 @@ header .brand {
   transform: translateY(8px);
   opacity: 0;
   animation: card-in .6s var(--ease-out) forwards;
-  align-self: start; /* match wheel column */
+  align-self: start;
 }
-@keyframes card-in {
-  to { transform: translateY(0); opacity: 1; }
-}
+@keyframes card-in { to { transform: translateY(0); opacity: 1; } }
 
 .section-title {
   font-size: 12px;
@@ -202,6 +194,36 @@ header .brand {
   text-transform: uppercase;
   color: var(--muted);
   margin: 0 0 10px;
+}
+
+/* =========================
+   Sticky sidebar (left) — bounded + internal scroll
+   ========================= */
+.card.sidebar{
+  position: sticky;
+  top: 84px;                       /* below sticky header */
+  align-self: start;
+  z-index: 1;                      /* under the wheel card */
+  max-height: calc(100vh - 96px);  /* viewport minus header & margin */
+  overflow: auto;                  /* internal scrolling */
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(black 92%, transparent); /* subtle bottom fade */
+}
+
+/* Right card (wheel) always above the sidebar */
+.container > .card:not(.sidebar){
+  position: relative;
+  z-index: 2;
+}
+
+/* Disable sticky on mobile */
+@media (max-width: 979.98px){
+  .card.sidebar{
+    position: static;
+    max-height: none;
+    overflow: visible;
+    mask-image: none;
+  }
 }
 
 /* =========================
@@ -348,17 +370,16 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   max-width: 28ch;
 }
 
+/* Hide any empty Show-on-wheel chip (TEAM sometimes had a blank slot) */
+.showopts .chip:has(.chip-text:empty){ display: none !important; }
+
 @media (max-width: 560px) {
   #chips .chip,
   #showOnWheel .chip,
-  .showopts .chip {
-    padding: 10px 18px 10px 46px;
-  }
+  .showopts .chip { padding: 10px 18px 10px 46px; }
   #chips .chip .chip-text,
   #showOnWheel .chip .chip-text,
-  .showopts .chip .chip-text {
-    max-width: 24ch;
-  }
+  .showopts .chip .chip-text { max-width: 24ch; }
 }
 
 /* =========================
@@ -419,19 +440,19 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
 .item:hover { transform: translateY(-1px); }
 
 /* =========================
-   Selection banner (progress)
+   Selection banner (progress meter)
    ========================= */
 .perf-tip {
+  position: relative;
   font-size: 12px;
   color: #bcd4ff;
-  background: rgba(40, 60, 100, 0.28);
-  border: 1px solid rgba(120, 160, 255, 0.25);
+  background: rgba(40,60,100,.28);
+  border: 1px solid rgba(120,160,255,.25);
   border-radius: 10px;
   padding: 6px 10px;
   margin: 6px 0 10px;
   text-align: center;
   width: 100%;
-  position: relative;
   overflow: hidden;
 }
 .perf-tip::before {
@@ -445,27 +466,17 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
 }
 .perf-tip .meter-text { position: relative; z-index: 1; }
 
-/* Extra spacing around chips and pointer area */
-#chips { margin-bottom: 28px; }
-#chipsMore { margin-top: 10px; }
-
 /* =========================
    Wheel / Pointer / Spin FAB
    ========================= */
-
-/* The wheel zone is a grid so overlays (pointer/fab) are centered regardless of canvas scaling */
 .wheel-wrap {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: clamp(36px, 5vw, 64px) clamp(10px, 2.5vw, 18px) clamp(10px, 2.5vw, 18px);
-  min-height: 640px; /* ensures stable layout on narrow screens */
-}
-
-/* Keep canvases block-level and centered */
-canvas#wheel, #fx {
-  display: block;
-  margin: 0 auto;
+  min-height: 640px;
+  isolation: isolate; /* layer for z-index sanity */
 }
 
 canvas#wheel {
@@ -509,22 +520,20 @@ canvas#wheel {
   }
 }
 
-/* Spin FAB — now perfectly centered without JS offsets */
+/* Spin FAB */
 .spin-fab {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-
   z-index: 5;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   width: clamp(88px, 14vw, 132px);
   height: clamp(88px, 14vw, 132px);
   border-radius: 999px;
-  border: 2px solid rgba(120, 200, 255, 0.55);
+  border: 2px solid rgba(120,200,255,.55);
   background: radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
   color: #f4f7ff;
   font-weight: 900;
@@ -534,7 +543,6 @@ canvas#wheel {
   pointer-events: auto;
   transition: transform .12s var(--ease), box-shadow .12s var(--ease),
               border-color .12s var(--ease), background .12s var(--ease);
-  will-change: transform;
 }
 .spin-fab::before {
   content: "";
@@ -569,8 +577,8 @@ canvas#wheel {
 
 #modal {
   border-radius: 18px;
-  max-width: 480px;
-  width: min(95vw, 480px);
+  max-width: 420px;
+  width: min(95vw, 420px);
   background: linear-gradient(180deg, rgba(16,24,42,.96), rgba(13,20,38,.92));
   box-shadow: var(--shadow-2);
   border: 1px solid #4f82ff;
@@ -586,7 +594,7 @@ canvas#wheel {
 #mHead {
   padding: 22px 26px 0;
   font-weight: 900;
-  font-size: 28px;
+  font-size: 24px;
   color: #f4f7ff;
   text-align: center;
 }
@@ -606,12 +614,11 @@ canvas#wheel {
 }
 
 #mLogo {
-  width: 120px;
-  height: 120px;
+  width: 110px; height: 110px;
   max-width: 60vw;
   object-fit: contain;
   border-radius: 16px;
-  margin: 12px auto 6px;
+  margin: 10px auto 6px;
   background: #0b1220;
   border: 1px solid #5aa1ff;
   box-shadow: 0 2px 10px rgba(16,24,48,.45);
@@ -620,22 +627,25 @@ canvas#wheel {
 
 .m-row {
   width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  margin: 8px 0;
+  flex-wrap: wrap;
+  margin: 6px 0;
 }
-.m-row strong {
-  justify-self: start;
-  font-size: 18px;
-}
-.m-row .m-sub {
-  justify-self: end;
+
+.m-sep { width: 100%; height: 1px; background: #234080; margin: 8px 0; }
+
+#mStadium,
+#mClub,
+#mJersey,
+#mNat {
+  display: inline-block;
   min-width: 180px;
-  max-width: 280px;
+  max-width: 260px;
   text-align: center;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: 10px;
   background: rgba(17,28,48,.85);
   border: 1px solid rgba(90,161,255,.16);
@@ -646,8 +656,6 @@ canvas#wheel {
   white-space: nowrap;
 }
 
-.m-sep { width: 100%; height: 1px; background: #234080; margin: 8px 0; }
-
 .m-actions {
   padding: 14px 22px 20px;
   background: #0f1830;
@@ -657,77 +665,51 @@ canvas#wheel {
   justify-content: center;
 }
 
-/* Keep modal buttons narrow */
-#backdrop .chip-btn, #backdrop button { width: auto; min-width: 160px; }
-
-/* Reveal overlay system (button centered over blurred value) */
+/* Modal reveal button (centered over blurred value) */
 .reveal-wrap { position: relative; display: inline-block; z-index: 0; }
-.reveal-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: transparent;
-  pointer-events: none;
-  z-index: 2;
-}
+.reveal-overlay { position: absolute; inset: 0; border-radius: inherit; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); pointer-events: none; z-index: 2; }
 .reveal-btn {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: 50%; top: 50%;
   transform: translate(-50%, -50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 14px;
-  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px 14px; border-radius: 10px;
   border: 1px solid rgba(90,161,255,.6);
-  background: #152036;
-  color: #fff;
-  font-weight: 800;
-  letter-spacing: .03em;
-  cursor: pointer;
-  user-select: none;
-  white-space: nowrap;
-  z-index: 3;
+  background: #152036; color: #fff; font-weight: 800;
+  letter-spacing: .03em; cursor: pointer; user-select: none; white-space: nowrap; z-index: 3;
   transition: transform .12s var(--ease), border-color .12s var(--ease), box-shadow .12s var(--ease);
 }
-.reveal-btn:hover {
-  transform: translate(-50%, -50%) scale(1.03);
-  border-color: var(--accent-2);
-  box-shadow: 0 6px 18px rgba(34,211,238,.18);
-}
+.reveal-btn:hover { transform: translate(-50%, -50%) scale(1.02); border-color: var(--accent-2); box-shadow: 0 6px 18px rgba(34,211,238,.18); }
 
 /* =========================
-   Pointer room / misc tweaks
+   Pointer room / misc
    ========================= */
+.wheel-wrap { padding-top: clamp(36px, 5vw, 64px); }
+.pointer { top: clamp(6px, 1vw, 12px); z-index: 3; }
+
 .small { font-size: 12px; color: var(--muted); }
 .hidden { display: none !important; }
 
-body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked label, body.ui-locked .chip {
-  cursor: wait !important;
-}
+body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked label, body.ui-locked .chip { cursor: wait !important; }
 
 /* =========================
-   Content Section (SEO block)
+   Content / FAQ — match card visuals
    ========================= */
 #content {
-  --content-max: 1040px;
+  --content-max: 1200px;
   --anchor-offset: 84px;
 
   max-width: var(--content-max);
   margin: 22px auto 0;
-  padding: clamp(16px, 3.5vw, 26px);
+  padding: 18px clamp(14px,3vw,26px);
   color: var(--text);
-  background:
-    radial-gradient(120% 140% at 10% -10%, rgba(34,211,238,.10), transparent 45%),
-    radial-gradient(120% 140% at 95% -15%, rgba(0,180,216,.08), transparent 50%),
-    linear-gradient(180deg, rgba(14,18,28,.86), rgba(10,14,24,.86));
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 16px;
-  box-shadow: 0 10px 28px rgba(0,0,0,.35);
+  background: var(--grad-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
   overflow: clip;
+  position: relative;
+  z-index: 2;
 }
 #content [id] { scroll-margin-top: var(--anchor-offset); }
 
@@ -757,6 +739,7 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   margin-top: 12px;
 }
 
+/* TOC as chips */
 #content .toc {
   display: flex;
   flex-wrap: wrap;
@@ -765,59 +748,55 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   padding-top: 6px;
 }
 #content .toc a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: clamp(13px, 1.4vw, 14px);
-  text-decoration: none;
-  color: #e9f5ff;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 12px; border-radius: 999px; font-weight: 700;
+  font-size: clamp(13px, 1.4vw, 14px); text-decoration: none; color: #e9f5ff;
   background: linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));
   border: 1px solid var(--line);
   transition: transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease);
 }
-#content .toc a:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent-2);
-  box-shadow: 0 10px 22px rgba(34,211,238,.18);
-}
+#content .toc a:hover { transform: translateY(-1px); border-color: var(--accent-2); box-shadow: 0 10px 22px rgba(34,211,238,.18); }
 
+/* Modern accordion */
 #content details {
-  border: 1px solid rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.08);
   background: rgba(255,255,255,.02);
-  border-radius: 12px;
+  border-radius: 14px;
   margin: 12px 0;
   overflow: hidden;
 }
 #content details[open] {
-  border-color: rgba(0,180,216,.28);
-  background: linear-gradient(180deg, rgba(0,180,216,.05), rgba(255,255,255,.02));
+  border-color: rgba(100,168,255,.28);
+  background: linear-gradient(180deg, rgba(100,168,255,.06), rgba(255,255,255,.02));
 }
-
-/* Summary row: hide native marker and add hover/focus states */
 #content summary {
   list-style: none;
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 14px 16px;
   cursor: pointer;
-  border-radius: 10px;
   transition: background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease);
-  outline: none;
+  position: relative;
 }
-#content summary::-webkit-details-marker { display: none !important; }
-#content summary::marker { content: "" !important; }
-#content summary:hover { background: rgba(255,255,255,.03); text-decoration: underline; }
+#content summary::-webkit-details-marker { display: none; }
+#content summary::marker { content: ""; }
+#content summary::after {
+  content: "⌄";
+  font-weight: 900;
+  letter-spacing: .06em;
+  color: #bcd4ff;
+  transform: rotate(0deg);
+  transition: transform .2s var(--ease);
+}
+#content details[open] summary::after { transform: rotate(-180deg); }
+#content summary:hover { background: rgba(255,255,255,.03); }
 #content summary:focus-visible {
   outline: 2px solid var(--accent-2);
   outline-offset: 4px;
-  border-radius: 8px;
+  border-radius: 10px;
 }
-
 #content details > .panel {
   padding: 0 16px 0;
   border-top: 1px solid rgba(255,255,255,.10);
@@ -831,22 +810,14 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   max-height: 1000px;
   opacity: 1;
 }
-@media (prefers-reduced-motion: reduce) {
-  #content details > .panel { transition: none; }
-}
 
-/* Badge */
 #content .badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  line-height: 1.2;
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 12px; line-height: 1.2;
   border: 1px solid rgba(255,255,255,.18);
   background: rgba(255,255,255,.06);
-  margin-right: 8px;
-  color: #eaf0fb;
+  margin-right: 8px; color: #eaf0fb;
 }
 
 @media (max-width: 640px) {
@@ -854,30 +825,7 @@ body.ui-locked, body.ui-locked button, body.ui-locked input, body.ui-locked labe
   #content p, #content li, #content dd { line-height: 1.75; }
 }
 
-/* FINAL FORCE-HIDE OVERRIDES */
-#content details > summary::-webkit-details-marker,
-#content summary::-webkit-details-marker { display: none !important; }
-#content details > summary::marker,
-#content summary::marker { content: "" !important; font-size: 0 !important; }
-#content details > summary { list-style: none !important; }
-#content summary > h3 { margin: 0 !important; font: inherit !important; font-weight: 800 !important; }
-
-/* =========================
-   Accessibility & focus rings
-   ========================= */
-.mode-btn[aria-pressed="true"],
-.mode-btn-active {
-  border-color: var(--accent-2) !important;
-  background: linear-gradient(180deg, rgba(32,46,88,.96), rgba(14,24,48,.92)) !important;
-  box-shadow: 0 0 0 2px rgba(34,211,238,.20) inset, 0 12px 26px rgba(34,211,238,.12) !important;
-  color: #f4f9ff !important;
-}
-.mode-btn:focus-visible {
-  outline: 2px solid var(--accent-2);
-  outline-offset: 3px;
-  border-radius: 12px;
-}
-
+/* Stronger focus rings on interactive elements */
 button:focus-visible,
 .chip-btn:focus-visible,
 #chips .chip input[type="checkbox"]:focus-visible,
@@ -887,23 +835,3 @@ button:focus-visible,
   outline-offset: 3px;
   border-radius: 12px;
 }
-
-/* Sticky sidebar (desktop) */
-@media (min-width: 980px) {
-  .card.sidebar { position: sticky; top: 84px; }
-}
-
-/* Extra room for pointer on narrow screens */
-@media (max-width: 560px) {
-  .wheel-wrap { padding-top: 72px; }
-}
-
-/* Custom scrollbar for history list */
-.history { scrollbar-width: thin; scrollbar-color: rgba(120,160,255,.35) transparent; }
-.history::-webkit-scrollbar { width: 8px; }
-.history::-webkit-scrollbar-thumb { background: rgba(120,160,255,.28); border-radius: 8px; }
-.history::-webkit-scrollbar-track { background: transparent; }
-
-/* Z-index safety for sidebar vs wheel */
-.card.sidebar { z-index: 1; }
-.container > .card:not(.sidebar) { z-index: 2; }
