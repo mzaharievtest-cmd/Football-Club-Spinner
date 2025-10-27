@@ -429,3 +429,29 @@ button:focus-visible,
     min-height: calc(100vh - var(--header-h) - 24px);
   }
 }
+
+/* === FINAL SIDEBAR FIX (visibility + layering) === */
+.card.sidebar {
+  background: linear-gradient(180deg, rgba(15,20,40,0.95), rgba(10,14,30,0.92)) !important;
+  border: 1px solid rgba(100,160,255,0.18) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
+
+  position: sticky !important;
+  top: var(--header-h) !important;
+  height: calc(100vh - var(--header-h) - 24px) !important;
+  max-height: calc(100vh - var(--header-h) - 24px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 3 !important; /* brings it in front of background but behind wheel */
+}
+
+/* Ensure grid keeps left column visible */
+@media (min-width:980px){
+  .container{
+    align-items: start !important;
+    grid-template-columns: 380px 1fr !important;
+  }
+}
