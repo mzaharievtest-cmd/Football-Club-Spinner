@@ -415,3 +415,17 @@ button:focus-visible,
 
 /* Safety: hide any stray blank chip */
 .showopts .chip .chip-text:empty{ display:none!important; }
+
+
+/* === PATCH: ensure sidebar column always visible and same height === */
+@media (min-width:980px) {
+  .container {
+    align-items: stretch; /* both columns same vertical size */
+  }
+  .card.sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: calc(100vh - var(--header-h) - 24px);
+  }
+}
