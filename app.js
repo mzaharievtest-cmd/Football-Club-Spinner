@@ -1,723 +1,422 @@
-/* Football Spinner — TEAM / PLAYER unified
-   - TEAM wheel: Logo/Name on wheel (+Stadium optional). League never on wheel; modal only.
-   - PLAYER wheel: Image/Name on wheel. Club/Jersey/Nationality live in modal with reveal when toggled off.
-   - If >50 wedges → hide item content, draw modern tick ring + subtle radial rings, and keep rotation visible.
-   - Mode-aware “Show on wheel” controls.
-   - Players are loaded from /data/players.json (single source of truth).
-   - Player chips are derived from players.json; club_id resolved to names via teams.json + fallback map.
+/* Main stylesheet for Football Spinner
+   - Dark theme, responsive grid cards, chip UI, wheel, modal
+   - Sticky left sidebar with INTERNAL scrolling (no overlay)
+   - Bottom content block matches cards
 */
 
-let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
+/* =========================
+   Theme variables
+   ========================= */
+:root{
+  color-scheme: dark;
 
-let TEAMS = [];
-let TEAM_BY_ID = new Map();
-let CLUB_BY_ID = new Map();
+  /* Base palette */
+  --bg-0:#05070f;
+  --bg-1:#08101e;
+  --bg-2:#0e1526;
 
-let PLAYERS = [];
-let TOTAL_TEAMS = 0;
-let TOTAL_PLAYERS = 0;
+  --text:#eaf0fb;
+  --muted:#a9b9d6;
 
-let currentAngle = 0;
-let spinning = false;
-let selectedIdx = -1;
-let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
+  /* Accents */
+  --accent:#64a8ff;
+  --accent-2:#22d3ee;
+  --accent-3:#9b6bff;
 
-/* ---------- DOM ---------- */
-const modeTeamBtn   = document.getElementById('modeTeam');
-const modePlayerBtn = document.getElementById('modePlayer');
+  /* Cards / borders */
+  --grad-card:linear-gradient(180deg, rgba(18,27,48,.9), rgba(10,16,30,.86));
+  --grad-chip:linear-gradient(135deg, rgba(18,28,52,.96), rgba(10,16,30,.92));
+  --line:rgba(120,160,255,.18);
+  --line-strong:rgba(120,160,255,.32);
 
-const chipsWrap = document.getElementById('chips');
-const chipsTop  = document.getElementById('chipsTop');
-const chipsMore = document.getElementById('chipsMore');
-const toggleMore= document.getElementById('toggleMore');
-const qpAll     = document.getElementById('qpAll');
-const qpNone    = document.getElementById('qpNone');
-const qpTop     = document.getElementById('qpTop');
+  /* Radius / shadows */
+  --radius:20px;
+  --shadow-1:0 8px 30px rgba(0,0,0,.25);
+  --shadow-2:0 24px 80px rgba(18,30,52,.42);
 
-const optA = document.getElementById('optA'); // Logo/Image
-const optB = document.getElementById('optB'); // Name
-const optC = document.getElementById('optC'); // Stadium (team) / Jersey (player)
-const optD = document.getElementById('optD'); // League (team) / Nationality (player)
-const optE = document.getElementById('optE'); // (optional) Club (player only, modal reveal)
-const lblA = document.getElementById('lblA');
-const lblB = document.getElementById('lblB');
-const lblC = document.getElementById('lblC');
-const lblD = document.getElementById('lblD');
-const lblE = document.getElementById('lblE');
+  /* Motion */
+  --ease:cubic-bezier(.2,.7,.1,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
 
-const spinBtn = document.getElementById('spinBtn');
-const spinFab = document.getElementById('spinFab');
-const perfTip = document.getElementById('perfTip');
-const wheel   = document.getElementById('wheel');
-const fx      = document.getElementById('fx');
-
-const historyEl = document.getElementById('history');
-const resetHistoryBtn = document.getElementById('resetHistoryBtn');
-
-/* Modal */
-const backdrop   = document.getElementById('backdrop');
-const modalEl    = document.getElementById('modal');
-const mClose     = document.getElementById('mClose');
-const mHead      = document.getElementById('mHead');
-const mSub       = document.getElementById('mSub');   // TEAM: League / PLAYER: (kept empty; use bottom row instead)
-const mLogo      = document.getElementById('mLogo');  // TEAM: Crest / PLAYER: Image
-
-const rowStadium = document.getElementById('rowStadium');
-const mStadium   = document.getElementById('mStadium');
-
-const rowClub    = document.getElementById('rowClub');
-const mClub      = document.getElementById('mClub');
-
-const rowJersey  = document.getElementById('rowJersey');
-const mJersey    = document.getElementById('mJersey');
-
-const rowNat     = document.getElementById('rowNat');
-const mNat       = document.getElementById('mNat');
-
-let modalReveal = { a:false,b:false,c:false,d:false,e:false };
-
-/* ---------- Utils ---------- */
-const TAU = Math.PI * 2;
-const POINTER_ANGLE = ((-Math.PI/2)+TAU)%TAU;
-const clamp = (a,x,b)=>Math.max(a,Math.min(b,x));
-const mod   = (x,m)=>((x%m)+m)%m;
-
-const IMG_CACHE = new Map();
-function getImage(url, onload){
-  if (!url) return null;
-  const c = IMG_CACHE.get(url);
-  if (c) return c.img;
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.decoding = 'async';
-  img.loading = 'eager';
-  img.src = url;
-  img.onload = ()=> onload && onload();
-  img.onerror = ()=> onload && onload();
-  IMG_CACHE.set(url,{img});
-  return img;
+  /* Layout numbers */
+  --header-h:84px;     /* sticky header height */
+  --gutter:22px;
 }
 
-function textColorFor(hex){
-  if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
-  hex = hex.replace('#','');
-  const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
-  const L = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
-  return L > 0.35 ? '#0b0f17' : '#fff';
+@media (prefers-reduced-motion:reduce){
+  :root{ --ease:linear; --ease-out:linear; }
+  *{ animation:none!important; transition:none!important; }
 }
 
-function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weight=800 }){
-  let px = clamp(minPx, Math.round(targetPx), maxPx);
-  ctx.font = `${weight} ${px}px Inter, system-ui, sans-serif`;
-  if (ctx.measureText(text).width <= maxWidth) return {text, fontPx: px};
-  while (px > minPx){
-    px--;
-    ctx.font = `${weight} ${px}px Inter, system-ui, sans-serif`;
-    if (ctx.measureText(text).width <= maxWidth) return {text, fontPx: px};
-  }
-  let s = String(text||'').trim();
-  while (s && ctx.measureText(s+'…').width > maxWidth) s = s.slice(0,-1);
-  return {text:(s||'')+'…', fontPx:minPx};
+[hidden]{ display:none!important; }
+
+/* =========================
+   Base / Background
+   ========================= */
+*,
+*::before,
+*::after{ box-sizing:border-box; }
+
+html, body{ height:100%; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:"Inter", system-ui, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1400px 840px at 25% -20%, rgba(90,161,255,.25) 0, transparent 48%),
+    radial-gradient(1100px 880px at 92% -12%, rgba(34,211,238,.16) 0, transparent 45%),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1) 28%, var(--bg-1) 100%);
+  background-attachment:fixed;
+  overflow-x:hidden;
 }
 
-/* ---------- Chips helpers ---------- */
-function makeChip(value, text, checked){
-  const label = document.createElement('label');
-  label.className='chip';
-  label.innerHTML = `<input type="checkbox" value="${value}" ${checked?'checked':''}><span class="chip-text">${text}</span>`;
-  return label;
+/* Ambient glows */
+body::before{
+  content:"";
+  position:fixed; inset:-20vmax;
+  background:
+    radial-gradient(50% 50% at 50% 50%, rgba(60,120,255,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat,
+    radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat;
+  filter:blur(40px);
+  opacity:.8; pointer-events:none; z-index:0;
+  animation:bg-drift 34s linear infinite;
 }
-function visibleCodesAll(){
-  const out = [];
-  chipsTop.querySelectorAll('input[type="checkbox"]').forEach(i => out.push(i.value));
-  chipsMore.querySelectorAll('input[type="checkbox"]').forEach(i => out.push(i.value));
-  return out;
-}
-function activeCodes(){
-  const arr=[];
-  chipsWrap.querySelectorAll('input[type="checkbox"]:checked').forEach(i => arr.push(i.value));
-  return arr;
+@keyframes bg-drift{
+  0%{ transform:translate3d(0,0,0) rotate(0deg); }
+  50%{ transform:translate3d(1.5%,-1.5%,0) rotate(180deg); }
+  100%{ transform:translate3d(0,0,0) rotate(360deg); }
 }
 
-/* ---------- Labels & presets ---------- */
-const LEAGUE_LABELS = {
-  AUT:"Austrian Bundesliga", BEL:"Jupiler Pro League", BUL:"efbet Liga",
-  CRO:"SuperSport HNL", CZE:"Fortuna Liga", DEN:"Superliga",
-  EPL:"Premier League", L1:"Ligue 1", BUN:"Bundesliga", GRE:"Super League 1",
-  ISR:"Ligat ha'Al", SA:"Serie A", NED:"Eredivisie", NOR:"Eliteserien",
-  POL:"PKO BP Ekstraklasa", POR:"Liga Portugal", ROU:"SuperLiga", RUS:"Premier Liga",
-  SCO:"Scottish Premiership", SRB:"Super liga Srbije", LLA:"LaLiga",
-  SWE:"Allsvenskan", SUI:"Super League", TUR:"Süper Lig", UKR:"Ukrainian Premier League"
-};
-const leagueLabel = c => LEAGUE_LABELS[c] || c;
-
-const TOP5 = ['EPL','SA','BUN','L1','LLA'];
-const PL_TOP6 = ['18','9','14','8','19','6'];
-
-/* ---------- PL fallback map (extendable) ---------- */
-const FALLBACK_CLUBS = {
-  '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
-  '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
-  '19':'Arsenal','20':'Newcastle United','21':'West Ham United','26':'Leicester City',
-  '27':'Burnley','29':'Wolverhampton Wanderers','51':'Crystal Palace','52':'AFC Bournemouth',
-  '62':'Sheffield United','63':'Nottingham Forest','71':'Leeds United','78':'Brighton & Hove Albion',
-  '236':'Brentford'
-};
-
-/* ---------- Data selection ---------- */
-function getCurrentData(){
-  const active = new Set(activeCodes());
-  if (active.size === 0) return [];
-
-  if (MODE === 'player'){
-    return PLAYERS.filter(p => active.has(String(p.club_id)));
-  }
-  return TEAMS.filter(t => active.has(t.league_code));
+/* =========================
+   Header
+   ========================= */
+header{
+  position:sticky; top:0; z-index:20;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+  padding:16px clamp(16px,3vw,36px);
+  background:linear-gradient(180deg, rgba(12,18,31,.78), rgba(10,16,28,.62));
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(120,160,255,.14);
+}
+header h1{
+  margin:0; font-size:clamp(22px,2.6vw,32px); font-weight:900; letter-spacing:.01em;
+}
+.season-tag{
+  margin-top:2px; font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:rgba(197,212,235,.76);
+}
+header .brand{ display:inline-flex; align-items:center; gap:12px; }
+.brand-img{
+  width:clamp(30px,3.3vw,44px); height:clamp(30px,3.3vw,44px);
+  border-radius:12px; object-fit:cover; background:#0b1220;
+  border:1px solid rgba(100,160,255,.45);
+  box-shadow:0 4px 14px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.05);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
+}
+.brand-img:hover{
+  transform:translateY(-1px) scale(1.03);
+  border-color:rgba(120,190,255,.8);
+  box-shadow:0 10px 30px rgba(32,80,200,.35), 0 0 0 6px rgba(80,160,255,.08), inset 0 0 0 1px rgba(255,255,255,.08);
 }
 
-/* ---------- Progress banner (fraction of total) ---------- */
-function updatePerfBanner(){
-  const n = getCurrentData().length;
-  const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
-  const pct = Math.max(0, Math.min(1, n / total));
-  perfTip.style.setProperty('--pct', pct);
-  perfTip.innerHTML = `<span class="meter-text">${n} ${MODE==='player' ? 'players' : 'teams'} selected</span>`;
-  const disabled = n===0;
-  spinBtn.disabled = disabled;
-  spinFab.disabled = disabled;
+/* =========================
+   Grid / Cards
+   ========================= */
+.container{
+  max-width:1200px;
+  margin:20px auto 48px;
+  padding:0 clamp(12px,4vw,36px);
+  display:grid; gap:var(--gutter); align-items:start; position:relative; z-index:1;
+}
+@media (min-width:980px){
+  .container{ grid-template-columns:380px 1fr; }
+}
+@media (max-width:979.98px){
+  .container{ display:block; }
+  .card{ margin-bottom:16px; }
 }
 
-/* ---------- Chips render (mode aware) ---------- */
-function renderChips(){
-  chipsTop.innerHTML = '';
-  chipsMore.innerHTML = '';
+.card{
+  position:relative;
+  background:var(--grad-card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px clamp(14px,3vw,26px);
+  box-shadow:var(--shadow-1);
+  transform:translateY(8px); opacity:0;
+  animation:card-in .6s var(--ease-out) forwards;
+}
+@keyframes card-in{ to{ transform:translateY(0); opacity:1; } }
 
-  if (MODE === 'player'){
-    // Build list from players.json so every club_id is represented
-    const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
-    const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_CLUBS[id] || `Club #${id}`;
+/* === Sticky left card with INTERNAL scroll (no overlay) === */
+.card.sidebar{
+  position:sticky; top:var(--header-h);
+  height:calc(100vh - var(--header-h) - 24px);
+  max-height:calc(100vh - var(--header-h) - 24px);
+  overflow:auto; -webkit-overflow-scrolling:touch;
+  z-index:1;            /* below wheel and content */
+}
+.container > .card:not(.sidebar){ position:relative; z-index:2; } /* wheel card above */
+#content{ position:relative; z-index:2; }                        /* content above */
 
-    const top6 = ids.filter(id => PL_TOP6.includes(id));
-    const rest = ids.filter(id => !PL_TOP6.includes(id))
-                    .sort((a,b)=> labelFor(a).localeCompare(labelFor(b)));
-
-    top6.forEach(id => chipsTop.appendChild(makeChip(id, labelFor(id), true)));
-    rest.forEach(id => chipsMore.appendChild(makeChip(id, labelFor(id), true)));
-
-    toggleMore.textContent = 'Show more Premier League clubs';
-    qpTop.textContent = 'Top 6';
-  } else {
-    const codes = [...new Set(TEAMS.map(t=>t.league_code))];
-    const top = TOP5.filter(c => codes.includes(c));
-    const more = codes.filter(c => !top.includes(c)).sort();
-
-    top.forEach(c => chipsTop.appendChild(makeChip(c, leagueLabel(c), c==='EPL')));
-    more.forEach(c => chipsMore.appendChild(makeChip(c, leagueLabel(c), false)));
-
-    toggleMore.textContent = 'Show more leagues';
-    qpTop.textContent = 'Top 5';
-  }
-
-  chipsMore.hidden = true;
-  toggleMore.setAttribute('aria-expanded','false');
+/* Titles */
+.section-title{
+  font-size:12px; letter-spacing:.36em; text-transform:uppercase; color:var(--muted);
+  margin:0 0 10px;
 }
 
-/* ---------- Show-on-wheel controls ---------- */
-function applyModeShowControls(){
-  if (MODE==='player'){
-    lblA.textContent='Image';         optA.checked = true;
-    lblB.textContent='Name';          optB.checked = true;
-    lblC.textContent='Jersey Number'; if (optC) optC.checked = false;
-    lblD.textContent='Nationality';   if (optD) optD.checked = false; // bottom-row reveal
-    if (lblE && optE){ lblE.textContent='Club'; optE.checked=false; } // modal reveal
-  } else {
-    lblA.textContent='Logo';    optA.checked = true;
-    lblB.textContent='Name';    optB.checked = true;
-    lblC.textContent='Stadium'; if (optC) optC.checked = false;
-    lblD.textContent='League';  if (optD) optD.checked = true; // modal only
-    if (lblE && optE){ lblE.textContent=''; optE.checked=false; }     // hidden/ignored
-  }
+/* =========================
+   Buttons / Chips
+   ========================= */
+.quick-picks{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+
+button, .chip-btn{
+  width:100%; margin-top:6px; padding:14px 16px;
+  border-radius:14px; border:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(22,34,64,.96), rgba(12,18,34,.92));
+  color:#f4f7ff; font-weight:900; letter-spacing:.12em; text-transform:uppercase;
+  cursor:pointer; position:relative; overflow:hidden;
+  transition:transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
+}
+button:hover, .chip-btn:hover{ transform:translateY(-1px); border-color:var(--accent-2); box-shadow:0 10px 30px rgba(34,211,238,.16); }
+button:active{ transform:translateY(0); }
+button:disabled{ opacity:.6; cursor:wait; }
+button::after, .chip-btn::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(120deg, rgba(255,255,255,.08), transparent 30% 70%, rgba(255,255,255,.08));
+  transform:translateX(-100%); transition:transform .7s var(--ease-out); pointer-events:none;
+}
+button:hover::after, .chip-btn:hover::after{ transform:translateX(100%); }
+.chip-btn.ghost{ background:linear-gradient(180deg, rgba(18,22,36,.86), rgba(10,14,26,.82)); border-style:dashed; }
+
+/* Chip groups */
+#chips .chips, #showOnWheel, .showopts{ display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 14px; }
+
+#chips .chip, #showOnWheel .chip, .showopts .chip{
+  position:relative; display:inline-flex; align-items:center; gap:10px;
+  padding:10px 16px 10px 46px; border-radius:999px;
+  border:1px solid var(--line); background:var(--grad-chip);
+  font-size:13px; font-weight:700; color:var(--text); cursor:pointer;
+  transition:transform .16s var(--ease), border-color .16s var(--ease), box-shadow .2s var(--ease);
+  max-width:100%;
+}
+#chips .chip:hover, #showOnWheel .chip:hover, .showopts .chip:hover{ border-color:var(--line-strong); transform:translateY(-1px) scale(1.02); }
+
+#chips .chip input[type="checkbox"],
+#showOnWheel .chip input[type="checkbox"],
+.showopts .chip input[type="checkbox"]{
+  appearance:none; position:absolute; left:16px; width:18px; height:18px;
+  border-radius:6px; border:1px solid rgba(120,150,220,.45); background:rgba(4,9,19,.8);
+  display:grid; place-items:center; transition:.18s var(--ease); box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+#chips .chip input[type="checkbox"]::after,
+#showOnWheel .chip input[type="checkbox"]::after,
+.showopts .chip input[type="checkbox"]::after{
+  content:""; width:9px; height:9px; border-radius:4px; background:var(--accent);
+  transform:scale(.2); opacity:0; transition:.18s var(--ease);
+}
+#chips .chip input[type="checkbox"]:checked,
+#showOnWheel .chip input[type="checkbox"]:checked,
+.showopts .chip input[type="checkbox"]:checked{
+  border-color:var(--accent); background:rgba(90,161,255,.18); box-shadow:0 0 0 2px rgba(90,161,255,.18) inset;
+}
+#chips .chip input[type="checkbox"]:checked::after,
+#showOnWheel .chip input[type="checkbox"]:checked::after,
+.showopts .chip input[type="checkbox"]:checked::after{
+  transform:scale(1); opacity:1;
 }
 
-/* ---------- Canvas sizing & FAB centering ---------- */
-function sizeCanvas(){
-  const rect = (wheel.parentElement||wheel).getBoundingClientRect();
-  const cssSize = clamp(300, Math.round(rect.width||640), 1200);
-  const DPR = Math.max(1, window.devicePixelRatio||1);
-  wheel.width  = Math.round(cssSize * DPR);
-  wheel.height = Math.round(cssSize * DPR);
-  fx.width = wheel.width; fx.height = wheel.height;
-  wheel.style.width = cssSize+'px'; wheel.style.height = cssSize+'px';
-  fx.style.width = cssSize+'px'; fx.style.height = cssSize+'px';
-  requestAnimationFrame(positionSpinFab);
+/* Hide any empty label in Show on wheel (fixes blank chip in TEAM mode) */
+.showopts .chip:has(.chip-text:empty){ display:none!important; }
+
+#chips .chip .chip-text, #showOnWheel .chip .chip-text, .showopts .chip .chip-text{
+  display:inline-block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:28ch;
+}
+@media (max-width:560px){
+  #chips .chip, #showOnWheel .chip, .showopts .chip{ padding:10px 18px 10px 46px; }
+  #chips .chip .chip-text, #showOnWheel .chip .chip-text, .showopts .chip .chip-text{ max-width:24ch; }
 }
 
-function positionSpinFab(){
-  const wrap = wheel.parentElement; // .wheel-wrap (position:relative)
-  const wr = wrap.getBoundingClientRect();
-  const cr = wheel.getBoundingClientRect();
-  const cx = (cr.left + cr.width  / 2) - wr.left;
-  const cy = (cr.top  + cr.height / 2) - wr.top;
-  spinFab.style.left = `${cx}px`;
-  spinFab.style.top  = `${cy}px`;
+/* =========================
+   History
+   ========================= */
+.history-title{ margin:18px 0 10px; color:var(--muted); font-size:12px; letter-spacing:.34em; text-transform:uppercase; }
+.history{ max-height:260px; overflow:auto; display:grid; gap:10px; }
+.item{
+  display:flex; gap:10px; align-items:center; padding:10px 12px;
+  border-radius:12px; background:rgba(17,28,48,.85); border:1px solid rgba(90,161,255,.12);
+  transition:transform .16s var(--ease);
+}
+.item:hover{ transform:translateY(-1px); }
+.item img{
+  width:38px; height:38px; border-radius:12px; object-fit:contain; background:#0b1220;
+  border:1px solid rgba(90,161,255,.22); box-shadow:0 2px 8px rgba(16,24,48,.28);
 }
 
-/* ---------- Wheel drawing ---------- */
-const PERF = { hideTextThreshold: 50, minTextWidth: 44, minLogoBox: 26 };
+/* =========================
+   Selection meter
+   ========================= */
+.perf-tip{
+  position:relative; font-size:12px; color:#bcd4ff;
+  background:rgba(40,60,100,.28); border:1px solid rgba(120,160,255,.25);
+  border-radius:10px; padding:6px 10px; margin:6px 0 10px; text-align:center; overflow:hidden;
+}
+.perf-tip::before{
+  content:""; position:absolute; inset:0; transform-origin:left center; transform:scaleX(var(--pct,0));
+  background:linear-gradient(90deg, rgba(34,211,238,.22), rgba(100,168,255,.25));
+  transition:transform .25s var(--ease); pointer-events:none;
+}
+.perf-tip .meter-text{ position:relative; z-index:1; }
 
-function drawIdle(ctx,W,H){
-  ctx.clearRect(0,0,W,H);
-  ctx.save(); ctx.translate(W/2,H/2);
-  const r = Math.min(W,H)*0.48;
-  const g = ctx.createRadialGradient(0,0,r*0.1, 0,0,r);
-  g.addColorStop(0,'#1A2C5A'); g.addColorStop(0.35,'#21386F'); g.addColorStop(0.65,'#0E2A57'); g.addColorStop(1,'#0B1B38');
-  ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fillStyle=g; ctx.fill();
-  // soft rings
-  ctx.lineWidth=1;
-  for(let i=1;i<=5;i++){
-    ctx.beginPath(); ctx.arc(0,0,r*i/5,0,TAU);
-    ctx.strokeStyle=`rgba(140,170,220,${0.08 + i*0.02})`;
-    ctx.setLineDash([6,18]); ctx.lineDashOffset = (i*14 + currentAngle*40)%1000;
-    ctx.stroke();
-  }
-  ctx.restore();
+/* =========================
+   Wheel / Pointer / Spin FAB
+   ========================= */
+.wheel-wrap{
+  position:relative; display:flex; justify-content:center; align-items:center;
+  padding:clamp(36px,5vw,64px) clamp(10px,2.5vw,18px) clamp(10px,2.5vw,18px);
+  min-height:640px; isolation:isolate;
+}
+canvas#wheel{
+  width:100%; max-width:820px; height:auto; border-radius:50%;
+  filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));
+  background:transparent;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  animation:wheel-pop .6s var(--ease-out);
+}
+@keyframes wheel-pop{ 0%{ transform:scale(.98); opacity:.8; } 100%{ transform:scale(1); opacity:1; } }
+#fx{ position:absolute; inset:0; pointer-events:none; }
+
+.pointer{
+  position:absolute; top:clamp(4px,1vw,12px); z-index:3;
+  border-left:16px solid transparent; border-right:16px solid transparent; border-top:26px solid var(--accent-2);
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));
+  animation:pointer-float 3.5s ease-in-out infinite;
+}
+@keyframes pointer-float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
+@media (max-width:600px){
+  .pointer{ border-left-width:12px; border-right-width:12px; border-top-width:20px; }
 }
 
-function drawTickRing(ctx, R, ticks=120){
-  ctx.save();
-  ctx.rotate(mod(currentAngle, TAU));
-  const h = Math.max(6, R*0.02);
-  for(let i=0;i<ticks;i++){
-    const a = i * (TAU/ticks);
-    const x = Math.cos(a) * (R-h/2);
-    const y = Math.sin(a) * (R-h/2);
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.rotate(a);
-    ctx.fillStyle = (i%5===0) ? 'rgba(200,220,255,.22)' : 'rgba(200,220,255,.12)';
-    ctx.fillRect(-1, -h/2, 2, h);
-    ctx.restore();
-  }
-  ctx.restore();
+/* Spin FAB (kept centered even while sticky sidebar scrolls) */
+.spin-fab{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5;
+  width:clamp(88px,14vw,132px); height:clamp(88px,14vw,132px); border-radius:999px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border:2px solid rgba(120,200,255,.55);
+  background:radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
+  color:#f4f7ff; font-weight:900; letter-spacing:.16em; text-transform:uppercase;
+  box-shadow:0 10px 30px rgba(0,0,0,.45), inset 0 0 30px rgba(90,161,255,.15);
+  transition:transform .12s var(--ease), box-shadow .12s var(--ease), border-color .12s var(--ease);
 }
-
-function drawWheel(){
-  const data = getCurrentData();
-  const N = data.length;
-
-  const ctx = wheel.getContext('2d');
-  const DPR = Math.max(1, window.devicePixelRatio||1);
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-  const W = wheel.width / DPR, H = wheel.height / DPR;
-
-  updatePerfBanner();
-
-  if (N===0){ drawIdle(ctx,W,H); return; }
-
-  const hideAll = N >= PERF.hideTextThreshold; // applies to PLAYER & TEAM
-  ctx.imageSmoothingEnabled = !hideAll;
-
-  ctx.clearRect(0,0,W,H);
-  ctx.save(); ctx.translate(W/2,H/2);
-  ctx.rotate(mod(currentAngle,TAU));
-
-  const r = Math.min(W,H)*0.48;
-  const slice = TAU/N;
-
-  // wedges (always draw so rotation is visible)
-  for (let i=0;i<N;i++){
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*slice,(i+1)*slice); ctx.closePath();
-    ctx.fillStyle = data[i].primary_color || '#243e6b';
-    ctx.fill();
-  }
-
-  // If too many, add a modern tick ring and radial rings and bail out
-  if (hideAll){
-    ctx.restore();
-    const ctx2 = wheel.getContext('2d');
-    ctx2.save(); ctx2.translate(W/2,H/2);
-    drawTickRing(ctx2, r*0.98, Math.min(180, Math.max(100, Math.round(N/2))));
-    // subtle concentric rings
-    ctx2.lineWidth=1;
-    for(let i=1;i<=4;i++){
-      ctx2.beginPath(); ctx2.arc(0,0,r*i/5,0,TAU);
-      ctx2.strokeStyle=`rgba(140,170,220,${0.06 + i*0.02})`;
-      ctx2.setLineDash([6,22]); ctx2.lineDashOffset = (i*10 + currentAngle*36)%1000;
-      ctx2.stroke();
-    }
-    ctx2.restore();
-    return;
-  }
-
-  // contents
-  for (let i=0;i<N;i++){
-    const t = data[i];
-    const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
-    const arcLen = r*(a1-a0);
-
-    const canLogo = (MODE==='team') ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
-    const canName = optB.checked && !!t.team_name;
-
-    ctx.save();
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
-
-    ctx.rotate(aMid);
-    const needFlip = Math.cos(aMid) < 0;
-    if (needFlip) ctx.rotate(Math.PI);
-    const sign = needFlip ? -1 : 1;
-
-    const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
-    const logoHalf = logoSize/2;
-    const pad = 10;
-    const xLogo = sign * (r*0.74);
-    const xText = sign * (r*0.42);
-    const logoInner = xLogo - sign*(logoHalf+pad);
-    const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
-
-    const fg = textColorFor(t.primary_color);
-
-    if (canName && maxWidth>=PERF.minTextWidth){
-      const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
-      ctx.textAlign='left'; ctx.textBaseline='middle';
-      ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
-      ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
-      ctx.fillStyle=fg;
-      const x = Math.min(xText, logoInner);
-      ctx.strokeText(fit.text, x, 0);
-      ctx.fillText(fit.text,   x, 0);
-    }
-
-    if (canLogo){
-      ctx.save(); ctx.translate(xLogo,0);
-      ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
-      ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
-
-      ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
-      const url = MODE==='team' ? t.logo_url : t.image_url;
-      const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
-      if (img && img.complete){
-        const box = Math.max(4, 2*(logoHalf-1));
-        const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
-        const s = Math.min(box/iw, box/ih);
-        ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
-      } else {
-        ctx.fillStyle='rgba(255,255,255,.14)';
-        const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
-      }
-      ctx.restore(); ctx.restore();
-    }
-
-    ctx.restore();
-  }
-
-  ctx.restore();
+.spin-fab::before{
+  content:""; position:absolute; inset:-6px; border-radius:999px;
+  background:conic-gradient(from 0deg, #22d3ee, #2b68ff, #9b6bff, #22d3ee);
+  -webkit-mask:radial-gradient(closest-side, transparent calc(100% - 8px), black 0);
+          mask:radial-gradient(closest-side, transparent calc(100% - 8px), black 0);
+  animation:ring-spin 4s linear infinite; opacity:.9;
 }
+@keyframes ring-spin{ to{ transform:rotate(360deg); } }
+.spin-fab:hover{ transform:translate(-50%,-50%) scale(1.03); border-color:#22d3ee; box-shadow:0 14px 34px rgba(34,211,238,.25); }
+.spin-fab:active{ transform:translate(-50%,-50%) scale(.985); }
+.spin-fab:disabled{ opacity:.7; cursor:wait; }
 
-/* ---------- Spin ---------- */
-function spin(){
-  if (spinning) return;
-  const data = getCurrentData();
-  if (!data.length) return;
-
-  spinning = true;
-  document.body.classList.add('ui-locked');
-  spinBtn.disabled = true; spinFab.disabled = true;
-
-  const N = data.length;
-  const slice = TAU/N;
-  const targetAngle = TAU*(6+Math.floor(Math.random()*3)) + Math.random()*TAU;
-
-  const start = performance.now(), dur=3200;
-  const ease = x=>1-Math.pow(1-x,3);
-
-  function step(now){
-    const p = clamp(0,(now-start)/dur,1);
-    currentAngle = targetAngle * ease(p);
-    drawWheel();
-    if (p<1) requestAnimationFrame(step);
-    else {
-      const theta = mod(currentAngle,TAU);
-      const offset = mod(POINTER_ANGLE - theta, TAU);
-      const idx = Math.floor(offset / slice) % N;
-      const center = idx*slice + slice/2;
-      const delta = mod(center - offset, TAU);
-      currentAngle = mod(currentAngle + delta, TAU);
-
-      spinning=false;
-      document.body.classList.remove('ui-locked');
-      spinBtn.disabled=false; spinFab.disabled=false;
-      selectedIdx = idx;
-      drawWheel();
-      showResult(idx);
-    }
-  }
-  requestAnimationFrame(step);
+/* =========================
+   Modal
+   ========================= */
+#backdrop{
+  position:fixed; inset:0; z-index:1000;
+  background:rgba(4,10,24,.82); backdrop-filter:blur(12px);
+  display:none; align-items:center; justify-content:center; padding:24px;
 }
-
-function showResult(idx){
-  const data = getCurrentData();
-  const item = data[idx];
-  if (!item) return;
-  history.unshift(item);
-  if (history.length>50) history = history.slice(0,50);
-  localStorage.setItem('clubHistory', JSON.stringify(history));
-  renderHistory();
-  openModal(item);
+#modal{
+  width:min(95vw,420px); max-width:420px;
+  background:linear-gradient(180deg, rgba(16,24,42,.96), rgba(13,20,38,.92));
+  border:1px solid #4f82ff; border-radius:18px; box-shadow:var(--shadow-2);
+  overflow:hidden; display:flex; flex-direction:column;
+  transform:translateY(8px) scale(.98); opacity:0;
+  transition:transform .22s var(--ease-out), opacity .22s var(--ease-out);
 }
-
-/* ---------- History ---------- */
-function renderHistory(){
-  historyEl.innerHTML = '';
-  if (!history.length){
-    historyEl.innerHTML = '<div class="item">Spin the wheel to start your club journey</div>';
-    return;
-  }
-  history.forEach(h=>{
-    const div=document.createElement('div'); div.className='item';
-    const img=document.createElement('img');
-    img.src = MODE==='player' ? (h.image_url||'') : (h.logo_url||'');
-    img.alt = MODE==='player' ? h.team_name : `${h.team_name} logo`;
-    const span=document.createElement('span');
-    span.textContent = MODE==='player'
-      ? `${h.team_name} (${CLUB_BY_ID.get(String(h.club_id)) || FALLBACK_CLUBS[String(h.club_id)] || 'Unknown Team'})`
-      : `${h.team_name} (${h.league_code})`;
-    div.append(img,span); historyEl.append(div);
-  });
+#modal.show{ transform:translateY(0) scale(1); opacity:1; }
+#mHead{ padding:22px 26px 0; font-weight:900; font-size:24px; text-align:center; }
+#mSub{ font-size:14px; color:#a3b8e7; margin:6px 0 2px; text-align:center; }
+.m-body{ padding:10px 22px 14px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+#mLogo{
+  width:110px; height:110px; max-width:60vw; object-fit:contain; display:block; margin:10px auto 6px;
+  background:#0b1220; border:1px solid #5aa1ff; border-radius:16px; box-shadow:0 2px 10px rgba(16,24,48,.45);
 }
-
-/* ---------- Reveal overlay ---------- */
-function ensureRevealStyles(){
-  if (document.getElementById('reveal-style')) return;
-  const s=document.createElement('style'); s.id='reveal-style';
-  s.textContent = `
-    .reveal-wrap{position:relative;display:inline-block}
-    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none}
-    .reveal-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;user-select:none;white-space:nowrap;z-index:3}
-  `;
-  document.head.appendChild(s);
+.m-row{ width:100%; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin:6px 0; }
+.value-pill{
+  display:inline-block; min-width:180px; max-width:260px; text-align:center;
+  padding:8px 12px; border-radius:10px; background:rgba(17,28,48,.85);
+  border:1px solid rgba(90,161,255,.16); color:#d7e8ff; font-weight:800;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
-function wrap(el){
-  if (!el) return null;
-  if (el.parentElement && el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
-  const w=document.createElement('span'); w.className='reveal-wrap';
-  el.parentElement.insertBefore(w, el); w.appendChild(el); return w;
+.m-actions{ padding:14px 22px 20px; background:#0f1830; border-top:1px solid #234080; display:flex; justify-content:center; gap:10px; }
+
+/* Reveal helpers */
+.reveal-wrap{ position:relative; display:inline-block; z-index:0; }
+.reveal-overlay{ position:absolute; inset:0; border-radius:inherit; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); pointer-events:none; z-index:2; }
+.reveal-btn{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:8px 14px; border-radius:10px; border:1px solid rgba(90,161,255,.6);
+  background:#152036; color:#fff; font-weight:800; letter-spacing:.03em; cursor:pointer;
+  transition:transform .12s var(--ease), border-color .12s var(--ease), box-shadow .12s var(--ease);
+  z-index:3;
 }
-function blurEl(el){ if(!el) return; el.style.filter='blur(14px)'; const w=wrap(el); if(w&&!w.querySelector('.reveal-overlay')){const o=document.createElement('span');o.className='reveal-overlay';w.appendChild(o);} }
-function unblurEl(el){ if(!el) return; el.style.filter=''; const w=el.parentElement; const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove(); const b=w && w.querySelector('.reveal-btn'); if(b) b.remove(); }
+.reveal-btn:hover{ transform:translate(-50%,-50%) scale(1.02); border-color:var(--accent-2); box-shadow:0 6px 18px rgba(34,211,238,.18); }
 
-function addReveal(key, el, enabled, label){
-  const w = wrap(el);
-  const prior = w.querySelector('.reveal-btn'); if (prior) prior.remove();
-  if (enabled || modalReveal[key]){ unblurEl(el); return; }
-  blurEl(el);
-  const b=document.createElement('button'); b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
-  b.onclick=()=>{ modalReveal[key]=true; unblurEl(el); };
-  w.appendChild(b);
+/* =========================
+   Content / FAQ (matches cards)
+   ========================= */
+#content{
+  grid-column:1 / -1;
+  background:var(--grad-card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-1);
+  padding:18px clamp(14px,3vw,26px);
 }
+#content [id]{ scroll-margin-top:calc(var(--header-h) + 12px); }
+#content h2{ margin:0 0 10px; font-size:clamp(24px,2.4vw,30px); font-weight:800; }
+#content h3{ font-size:clamp(18px,2vw,22px); font-weight:800; margin:0; }
+#content p, #content li, #content dd{ font-size:clamp(15px,1.6vw,17px); line-height:1.7; color:#e8eefb; }
+#content dt{ font-size:clamp(13px,1.45vw,14px); color:var(--muted); font-weight:800; margin-top:12px; }
 
-/* ---------- Modal ---------- */
-function openModal(item){
-  ensureRevealStyles();
-  modalReveal = {a:false,b:false,c:false,d:false,e:false};
-
-  if (MODE==='player'){
-    mHead.textContent = item.team_name || '—';
-    mLogo.src = item.image_url || '';
-    mSub.textContent  = ''; // no duplicate nationality here
-
-    rowStadium.style.display='none';
-    rowClub.style.display='';
-    rowJersey.style.display='';
-    rowNat.style.display='';
-
-    mClub.textContent   = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_CLUBS[String(item.club_id)] || '—';
-    mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
-    mNat.textContent    = item.nationality || '—';
-
-    // A=image, B=name, C=jersey, D=nationality (bottom row), E=club (bottom row)
-    addReveal('a', mLogo,   !!optA.checked, 'image');
-    addReveal('b', mHead,   !!optB.checked, 'name');
-    if (optC) addReveal('c', mJersey, !!optC.checked, 'jersey number');
-    if (optD) addReveal('d', mNat,    !!optD.checked, 'nationality');
-    if (optE) addReveal('e', mClub,   !!optE.checked, 'club');
-  } else {
-    mHead.textContent = item.team_name || '—';
-    mLogo.src = item.logo_url || '';
-    mSub.textContent  = leagueLabel(item.league_code) || '';
-
-    rowStadium.style.display='';
-    rowClub.style.display='none';
-    rowJersey.style.display='none';
-    rowNat.style.display='none';
-    mStadium.textContent = item.stadium || '—';
-
-    // A=logo, B=name, C=stadium, D=league
-    addReveal('a', mLogo,    !!optA.checked, 'logo');
-    addReveal('b', mHead,    !!optB.checked, 'name');
-    if (optC) addReveal('c', mStadium, !!optC.checked, 'stadium');
-    if (optD) addReveal('d', mSub,     !!optD.checked, 'league');
-  }
-
-  backdrop.style.display='flex';
-  requestAnimationFrame(()=> modalEl.classList.add('show'));
+#content .toc{ display:flex; flex-wrap:wrap; gap:10px 12px; margin:8px 0 18px; padding-top:6px; }
+#content .toc a{
+  display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px;
+  font-weight:700; font-size:clamp(13px,1.4vw,14px); text-decoration:none; color:#e9f5ff;
+  background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88)); border:1px solid var(--line);
+  transition:transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease);
 }
-function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
+#content .toc a:hover{ transform:translateY(-1px); border-color:var(--accent-2); box-shadow:0 10px 22px rgba(34,211,238,.18); }
 
-/* ---------- Mode switch ---------- */
-function setMode(next){
-  if (next===MODE) return;
-  MODE = next;
-  localStorage.setItem('fsMode', MODE);
-
-  modeTeamBtn.classList.toggle('mode-btn-active', MODE==='team');
-  modePlayerBtn.classList.toggle('mode-btn-active', MODE==='player');
-  modeTeamBtn.setAttribute('aria-pressed', MODE==='team' ? 'true':'false');
-  modePlayerBtn.setAttribute('aria-pressed', MODE==='player' ? 'true':'false');
-
-  applyModeShowControls();
-  renderChips();
-  selectedIdx=-1;
-  updatePerfBanner();
-  drawWheel();
+/* Modern accordion */
+#content details{
+  border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.02);
+  border-radius:14px; margin:12px 0; overflow:hidden;
 }
-
-/* ---------- Loaders ---------- */
-async function loadTeams(){
-  const res = await fetch('./teams.json?v='+Date.now());
-  if (!res.ok) throw new Error('teams.json not found');
-  TEAMS = await res.json();
-  TEAM_BY_ID.clear(); CLUB_BY_ID.clear();
-
-  for (const t of (TEAMS||[])){
-    const id = String(t.team_id);
-    TEAM_BY_ID.set(id, t);
-    CLUB_BY_ID.set(id, t.team_name);
-  }
-  // seed fallbacks so all club_ids resolve
-  for (const [id,name] of Object.entries(FALLBACK_CLUBS)){
-    if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, name);
-  }
-  TOTAL_TEAMS = TEAMS.length;
+#content details[open]{ border-color:rgba(100,168,255,.28); background:linear-gradient(180deg, rgba(100,168,255,.06), rgba(255,255,255,.02)); }
+#content summary{
+  list-style:none; display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px;
+  padding:14px 16px; cursor:pointer; transition:background .18s var(--ease), color .18s var(--ease);
 }
-
-async function loadPlayers(){
-  const res = await fetch('/data/players.json', {cache:'no-store'});
-  if (!res.ok) throw new Error('players.json not found');
-  const raw = await res.json();
-
-  PLAYERS = (raw||[]).map(p=>{
-    const name   = p.name || p.player_name || 'Player';
-    const clubId = String(p.club_id ?? p.team_id ?? '');
-    const team   = TEAM_BY_ID.get(clubId);
-    const color  = team?.primary_color || '#163058';
-    const img    = p.image_url || p.image || p.file || '';
-    const nat    = p.nationality || p.country || '';
-    const jersey = p.jersey_number ?? p.jersey ?? p.number ?? '';
-
-    return {
-      team_name: name,
-      image_url: img,
-      club_id: clubId,
-      league_code: team?.league_code || 'EPL',
-      nationality: nat,
-      jersey: jersey ? String(jersey).replace('#','') : '',
-      primary_color: color
-    };
-  });
-
-  TOTAL_PLAYERS = PLAYERS.length;
-
-  // Ensure a name for every club_id appearing in players.json
-  for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
-    if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_CLUBS[id] || `Club #${id}`);
-  }
+#content summary::-webkit-details-marker{ display:none; }
+#content summary::after{ content:"⌄"; font-weight:900; letter-spacing:.06em; color:#bcd4ff; transform:rotate(0deg); transition:transform .2s var(--ease); }
+#content details[open] summary::after{ transform:rotate(-180deg); }
+#content details > .panel{
+  padding:0 16px 0; border-top:1px solid rgba(255,255,255,.1);
+  max-height:0; overflow:hidden; opacity:0; transition:max-height .3s var(--ease), opacity .22s var(--ease);
 }
+#content details[open] > .panel{ padding:12px 16px 16px; max-height:1000px; opacity:1; }
 
-/* ---------- Events ---------- */
-function wire(){
-  modeTeamBtn?.addEventListener('click', ()=> setMode('team'));
-  modePlayerBtn?.addEventListener('click', ()=> setMode('player'));
-
-  chipsWrap.addEventListener('change', ()=>{
-    if (spinning) return;
-    selectedIdx=-1;
-    updatePerfBanner();
-    drawWheel();
-  });
-
-  toggleMore.addEventListener('click', ()=>{
-    const hidden = chipsMore.hidden;
-    chipsMore.hidden = !hidden;
-    toggleMore.textContent = hidden
-      ? (MODE==='player' ? 'Show fewer clubs' : 'Show fewer leagues')
-      : (MODE==='player' ? 'Show more Premier League clubs' : 'Show more leagues');
-    toggleMore.setAttribute('aria-expanded', String(!hidden));
-  });
-
-  // Quick picks
-  qpAll.onclick = () => {
-    const all = visibleCodesAll();
-    chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = all.includes(i.value); });
-    selectedIdx=-1; updatePerfBanner(); drawWheel();
-  };
-  qpNone.onclick = () => {
-    chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = false; });
-    selectedIdx=-1; updatePerfBanner(); drawWheel();
-  };
-  qpTop.onclick = () => {
-    if (MODE==='player'){
-      const allow = new Set(PL_TOP6);
-      chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = allow.has(i.value); });
-    } else {
-      const allow = new Set(TOP5);
-      chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = allow.has(i.value); });
-    }
-    selectedIdx=-1; updatePerfBanner(); drawWheel();
-  };
-
-  const refresh = ()=>{ if (!spinning){ selectedIdx=-1; drawWheel(); } };
-  optA.addEventListener('change', refresh);
-  optB.addEventListener('change', refresh);
-  optC?.addEventListener('change', refresh);
-  optD?.addEventListener('change', refresh);
-  optE?.addEventListener('change', refresh);
-
-  spinBtn.onclick = spin; 
-  spinFab.onclick = spin;
-
-  resetHistoryBtn.onclick = ()=>{ history=[]; localStorage.setItem('clubHistory', JSON.stringify(history)); renderHistory(); };
-
-  mClose.onclick = ()=> !spinning && closeModal();
-  backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop) closeModal(); });
-  window.addEventListener('keydown', e=> { if (e.key==='Escape' && !spinning) closeModal(); });
-
-  let t; 
-  window.addEventListener('resize', ()=>{
-    clearTimeout(t);
-    t=setTimeout(()=>{ sizeCanvas(); positionSpinFab(); drawWheel(); },120);
-  }, {passive:true});
+/* Focus rings */
+button:focus-visible,
+.chip-btn:focus-visible,
+#chips .chip input[type="checkbox"]:focus-visible,
+#showOnWheel .chip input[type="checkbox"]:focus-visible,
+.showopts .chip input[type="checkbox"]:focus-visible{
+  outline:2px solid var(--accent-2); outline-offset:3px; border-radius:12px;
 }
-
-/* ---------- Boot ---------- */
-(async function init(){
-  try{
-    await loadTeams();
-    await loadPlayers();
-  } catch (e){
-    console.error('Failed to load data:', e);
-  }
-
-  modeTeamBtn.classList.toggle('mode-btn-active', MODE==='team');
-  modePlayerBtn.classList.toggle('mode-btn-active', MODE==='player');
-  modeTeamBtn.setAttribute('aria-pressed', MODE==='team' ? 'true':'false');
-  modePlayerBtn.setAttribute('aria-pressed', MODE==='player' ? 'true':'false');
-
-  applyModeShowControls();
-  renderChips();
-  renderHistory();
-  sizeCanvas();
-  updatePerfBanner();
-  drawWheel();
-  positionSpinFab();
-  wire();
-})();
