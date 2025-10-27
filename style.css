@@ -420,3 +420,44 @@ button:focus-visible,
 .showopts .chip input[type="checkbox"]:focus-visible{
   outline:2px solid var(--accent-2); outline-offset:3px; border-radius:12px;
 }
+/* ==== Sidebar: truly sticky, no drift, internal scroll, no overlay ==== */
+:root { --header-h: 84px; } /* keep in sync with header height */
+
+.card.sidebar{
+  position: sticky !important;
+  top: var(--header-h) !important;
+
+  /* fixed viewport-height box with its own scrollbar */
+  height: calc(100vh - var(--header-h) - 24px) !important;
+  max-height: calc(100vh - var(--header-h) - 24px) !important;
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch;
+
+  /* stop the generic .card entrance animation from shifting the sticky box */
+  transform: none !important;
+  animation: none !important;
+
+  /* sit under the wheel/content so it never covers them */
+  z-index: 1 !important;
+}
+
+/* Wheel card + bottom content always above the sidebar */
+.container > .card:not(.sidebar),
+#content{
+  position: relative;
+  z-index: 2;
+}
+
+/* Mobile: disable sticky so it behaves like a normal block */
+@media (max-width: 979.98px){
+  .card.sidebar{
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+}
+
+/* Hide any accidental blank chip (TEAM mode stray pill) */
+.showopts .chip .chip-text:empty { display: none !important; }
