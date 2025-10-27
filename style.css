@@ -494,3 +494,73 @@ button:focus-visible,
 
 /* Hide any accidental blank chip (TEAM mode stray pill) */
 .showopts .chip .chip-text:empty { display: none !important; }
+/* === FINAL FIX: Sticky left sidebar, internal scroll, equal height === */
+:root { --header-h: 84px; }
+
+.container {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  align-items: start;
+  gap: 22px;
+  max-width: 1200px;
+  margin: 20px auto 48px;
+  padding: 0 clamp(12px, 4vw, 36px);
+}
+
+/* --- Left Sidebar --- */
+.card.sidebar {
+  position: sticky;
+  top: var(--header-h);
+  height: calc(100vh - var(--header-h) - 24px);
+  max-height: calc(100vh - var(--header-h) - 24px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  z-index: 1;
+  transform: none;
+  animation: none;
+}
+
+/* --- Right Card (Wheel) --- */
+.container > .card:not(.sidebar) {
+  position: relative;
+  z-index: 2;
+  height: calc(100vh - var(--header-h) - 24px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* --- Content / FAQ --- */
+#content {
+  grid-column: 1 / -1;
+  margin-top: 24px;
+  position: relative;
+  z-index: 3;
+  background: var(--grad-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+  padding: 18px clamp(14px, 3vw, 26px);
+}
+
+/* --- Responsive: disable sticky on small screens --- */
+@media (max-width: 979.98px) {
+  .container {
+    display: block;
+  }
+  .card.sidebar {
+    position: static;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .container > .card:not(.sidebar) {
+    height: auto;
+  }
+}
+
+/* --- Hide accidental blank chip --- */
+.showopts .chip .chip-text:empty {
+  display: none !important;
+}
