@@ -411,3 +411,57 @@ button:focus-visible,
 
 /* Safety: hide any stray blank chip */
 .showopts .chip .chip-text:empty{ display:none !important; }
+
+/* === CANONICAL LAYOUT FIX (paste at END of style.css) === */
+:root { --header-h: 84px; }
+
+/* Desktop grid */
+@media (min-width: 980px) {
+  .container{
+    display: grid !important;
+    grid-template-columns: 380px 1fr !important;
+    gap: 22px !important;
+    align-items: start !important;
+  }
+
+  /* Kill entrance transform on ALL cards to avoid new stacking contexts */
+  .card{ transform: none !important; opacity: 1 !important; animation: none !important; }
+
+  /* Left: sticky panel with INTERNAL scroll, never overlays */
+  .card.sidebar{
+    position: sticky !important;
+    top: var(--header-h) !important;
+    height: calc(100vh - var(--header-h) - 24px) !important;
+    max-height: calc(100vh - var(--header-h) - 24px) !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+    z-index: 1 !important;          /* below the wheel card */
+  }
+
+  /* Right: wheel card always above the sidebar */
+  .container > .card:not(.sidebar){
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  /* Bottom content above both columns and matches card styling */
+  #content{
+    grid-column: 1 / -1 !important;
+    position: relative !important;
+    z-index: 3 !important;
+  }
+}
+
+/* Mobile: disable sticky; normal flow */
+@media (max-width: 979.98px){
+  .card.sidebar{
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+}
+
+/* Safety: hide any stray empty chip label */
+.showopts .chip .chip-text:empty{ display:none !important; }
