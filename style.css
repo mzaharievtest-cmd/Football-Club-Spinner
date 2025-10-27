@@ -29,7 +29,7 @@
   --ease:cubic-bezier(.2,.7,.1,1); --ease-out:cubic-bezier(.16,1,.3,1);
 
   /* Layout */
-  --header-h:84px;     /* sticky header height */
+  --header-h:84px;              /* sticky header height (keep in sync with header) */
   --gutter:22px;
 }
 
@@ -139,7 +139,7 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   position: sticky !important;
   top: var(--header-h) !important;
 
-  height: calc(100vh - var(--header-h) - 24px) !important;
+  height: calc(100vh - var(--header-h) - 24px) !important; /* fixed viewport-height pane */
   max-height: calc(100vh - var(--header-h) - 24px) !important;
   overflow: auto !important;
   -webkit-overflow-scrolling: touch;
@@ -147,7 +147,7 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   transform: none !important;
   animation: none !important;
 
-  z-index: 1 !important;
+  z-index: 1 !important;        /* never covers the wheel/content */
 }
 .container > .card:not(.sidebar){ position:relative; z-index:2; } /* wheel above sidebar */
 
@@ -402,9 +402,6 @@ button:focus-visible,
   outline:2px solid var(--accent-2); outline-offset:3px; border-radius:12px;
 }
 
-/* Safety: hide any stray blank chip */
-.showopts .chip .chip-text:empty{ display:none!important; }
-
 /* Small screens: disable sticky so it behaves like normal block */
 @media (max-width:979.98px){
   .card.sidebar{
@@ -415,3 +412,6 @@ button:focus-visible,
     z-index:auto !important;
   }
 }
+
+/* Safety: hide any stray blank chip */
+.showopts .chip .chip-text:empty{ display:none!important; }
