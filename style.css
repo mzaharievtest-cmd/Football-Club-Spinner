@@ -465,3 +465,84 @@ button:focus-visible,
 
 /* Safety: hide any stray empty chip label */
 .showopts .chip .chip-text:empty{ display:none !important; }
+
+/* --- minimal theme bits (keep yours if you like) --- */
+:root{
+  --header-h:84px;
+  --line:rgba(120,160,255,.18);
+  --radius:20px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:#eaf0fb; background:#08101e}
+
+/* --- header --- */
+header{position:sticky;top:0;z-index:20;padding:16px 24px;background:rgba(12,18,31,.78);backdrop-filter:blur(14px);border-bottom:1px solid rgba(120,160,255,.14)}
+header h1{margin:0}
+
+/* --- grid: left sidebar + right card --- */
+.container{
+  max-width:1200px;
+  margin:20px auto 48px;
+  padding:0 24px;
+  display:grid;
+  grid-template-columns:380px 1fr;   /* <- two columns */
+  gap:22px;
+  align-items:start;                  /* keep tops aligned */
+}
+
+/* card base – NO transform/animation (prevents stacking issues) */
+.card{
+  background:linear-gradient(180deg, rgba(18,27,48,.9), rgba(10,16,30,.86));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  box-shadow:0 8px 30px rgba(0,0,0,.25);
+}
+
+/* ===== LEFT: sticky, fixed height, INTERNAL scroll ===== */
+.card.sidebar{
+  position:sticky;                    /* sticks under header */
+  top:var(--header-h);
+  height:calc(100vh - var(--header-h) - 24px);
+  max-height:calc(100vh - var(--header-h) - 24px);
+  overflow:auto;                      /* its own scrollbar */
+  -webkit-overflow-scrolling:touch;
+  z-index:1;                          /* below right column */
+}
+
+/* ===== RIGHT: wheel card sits above sidebar (no overlay) ===== */
+.container > .card:not(.sidebar){
+  position:relative;
+  z-index:2;
+}
+
+/* ===== Bottom content spans both columns and sits on top ===== */
+#content{
+  grid-column:1 / -1;
+  position:relative;
+  z-index:3;
+  background:linear-gradient(180deg, rgba(18,27,48,.9), rgba(10,16,30,.86));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 20px;
+}
+
+/* headings */
+.section-title{font-size:12px;letter-spacing:.36em;text-transform:uppercase;opacity:.75;margin:0 0 10px}
+
+/* history list example */
+.history{max-height:260px;overflow:auto;display:grid;gap:10px}
+
+/* wheel container just needs room; your existing wheel styles can stay */
+.wheel-wrap{position:relative;display:flex;justify-content:center;align-items:center;min-height:640px}
+
+/* ===== Mobile: disable sticky, normal flow ===== */
+@media (max-width:979.98px){
+  .container{display:block}
+  .card{margin-bottom:16px}
+  .card.sidebar{
+    position:static;
+    height:auto;max-height:none;overflow:visible;z-index:auto;
+  }
+}
