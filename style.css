@@ -480,3 +480,20 @@ button:focus-visible,
   visibility: visible !important;
   opacity: 1 !important;
 }
+
+/* ---- Sidebar visibility hot-fix ---- */
+.card.sidebar{
+  /* we disabled the entrance animation earlier; make sure it’s visible */
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+
+  /* keep the sticky + internal scroll behaviour */
+  position: sticky !important;
+  top: var(--header-h) !important;
+  height: calc(100vh - var(--header-h) - 24px) !important;
+  max-height: calc(100vh - var(--header-h) - 24px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 1 !important;
+}
