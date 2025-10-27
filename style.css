@@ -1,36 +1,30 @@
-/* Football Spinner — full stylesheet (stable)
-   - Dark theme, grid cards, chip UI, wheel, modal
+/* Football Spinner — full stylesheet (stable v11)
    - Sticky left sidebar with INTERNAL scroll (no overlay)
-   - Bottom content block styled as a card, sits beneath main grid
+   - Wheel column above sidebar
+   - Clean SPIN button (no crazy hover ring/scale)
 */
 
 /* =========================
-   Theme / tokens
+   Tokens
    ========================= */
 :root{
   color-scheme: dark;
-
-  /* Layout */
-  --header-h:84px;                  /* keep in sync with header height */
+  --header-h:84px;
   --gutter:22px;
   --radius:20px;
 
-  /* Colors */
   --bg-0:#05070f; --bg-1:#08101e; --bg-2:#0e1526;
   --text:#eaf0fb; --muted:#a9b9d6;
 
   --accent:#64a8ff; --accent-2:#22d3ee; --accent-3:#9b6bff;
 
-  /* Surfaces / borders / shadows */
   --grad-card:linear-gradient(180deg, rgba(18,27,48,.9), rgba(10,16,30,.86));
   --grad-chip:linear-gradient(135deg, rgba(18,28,52,.96), rgba(10,16,30,.92));
-  --line:rgba(120,160,255,.18);
-  --line-strong:rgba(120,160,255,.32);
+  --line:rgba(120,160,255,.18); --line-strong:rgba(120,160,255,.32);
 
   --shadow-1:0 8px 30px rgba(0,0,0,.25);
   --shadow-2:0 24px 80px rgba(18,30,52,.42);
 
-  /* Motion */
   --ease:cubic-bezier(.2,.7,.1,1);
   --ease-out:cubic-bezier(.16,1,.3,1);
 }
@@ -40,15 +34,15 @@
   *{ animation:none!important; transition:none!important; }
 }
 
-/* =========================
-   Base / background
-   ========================= */
 *,
 *::before,
 *::after{ box-sizing:border-box; }
+[hidden]{ display:none!important; }
 
+/* =========================
+   Base / Background / Header
+   ========================= */
 html, body{ height:100%; }
-
 body{
   margin:0; min-height:100vh; color:var(--text);
   font-family:"Inter", system-ui, Segoe UI, Roboto, Arial, sans-serif;
@@ -59,22 +53,7 @@ body{
   background-attachment:fixed;
   overflow-x:hidden;
 }
-[hidden]{ display:none!important; }
 
-/* Soft ambient glow (subtle) */
-body::before{
-  content:""; position:fixed; inset:-20vmax; pointer-events:none; z-index:0;
-  background:
-    radial-gradient(50% 50% at 50% 50%, rgba(60,120,255,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat,
-    radial-gradient(50% 50% at 100% 0%, rgba(34,211,238,.08) 0%, transparent 60%) 0 0/40vmax 40vmax no-repeat;
-  filter:blur(40px); opacity:.8;
-  animation:bg-drift 34s linear infinite;
-}
-@keyframes bg-drift{ 0%{transform:translate3d(0,0,0) rotate(0)} 50%{transform:translate3d(1.5%,-1.5%,0) rotate(180deg)} 100%{transform:translate3d(0,0,0) rotate(360deg)} }
-
-/* =========================
-   Header
-   ========================= */
 header{
   position:sticky; top:0; z-index:20;
   display:flex; align-items:center; justify-content:space-between; gap:24px;
@@ -93,11 +72,6 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   box-shadow:0 4px 14px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.05);
   transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
 }
-.brand-img:hover{
-  transform:translateY(-1px) scale(1.03);
-  border-color:rgba(120,190,255,.8);
-  box-shadow:0 10px 30px rgba(32,80,200,.35), 0 0 0 6px rgba(80,160,255,.08), inset 0 0 0 1px rgba(255,255,255,.08);
-}
 
 /* =========================
    Grid / Cards
@@ -107,14 +81,12 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   margin:20px auto 48px;
   padding:0 clamp(12px,4vw,36px);
   display:grid;
-  grid-template-columns:380px 1fr;   /* left sidebar | right wheel */
+  grid-template-columns:380px 1fr;  /* left | right */
   gap:var(--gutter);
   align-items:start;
   position:relative; z-index:1;
 }
-@media (max-width:979.98px){
-  .container{ display:block; }
-}
+@media (max-width:979.98px){ .container{ display:block; } }
 
 .card{
   background:var(--grad-card);
@@ -124,10 +96,10 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   box-shadow:var(--shadow-1);
 }
 
-/* ===== LEFT SIDEBAR (single source of truth)
+/* ===== LEFT SIDEBAR
    - Sticky under header
-   - Fixed viewport-height box with INTERNAL scroll
-   - Always sits UNDER the wheel (z-index ladder)
+   - Fixed viewport-height with INTERNAL scroll
+   - Always under the wheel z-layer (no overlay)
 ============================================= */
 .card.sidebar{
   position:sticky;
@@ -135,28 +107,23 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   height:calc(100vh - var(--header-h) - 24px);
   max-height:calc(100vh - var(--header-h) - 24px);
   overflow:auto; -webkit-overflow-scrolling:touch;
-  z-index:1;
+  z-index:1;                 /* wheel card goes above at z:2 */
 }
 @media (max-width:979.98px){
-  .card.sidebar{
-    position:static; height:auto; max-height:none; overflow:visible; z-index:auto;
-  }
+  .card.sidebar{ position:static; height:auto; max-height:none; overflow:visible; z-index:auto; }
 }
 
-/* Right card (wheel) sits above sidebar */
-.container > .card:not(.sidebar){
-  position:relative; z-index:2;
-}
+/* Wheel card sits above sidebar (prevents overlay) */
+.container > .card:not(.sidebar){ position:relative; z-index:2; }
 
-/* Titles */
+/* =========================
+   Titles / Buttons / Chips
+   ========================= */
 .section-title{
   font-size:12px; letter-spacing:.36em; text-transform:uppercase; color:var(--muted);
   margin:0 0 10px;
 }
 
-/* =========================
-   Quick picks / Buttons / Chips
-   ========================= */
 .quick-picks{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
 
 button, .chip-btn{
@@ -170,10 +137,12 @@ button, .chip-btn{
 button:hover, .chip-btn:hover{ transform:translateY(-1px); border-color:var(--accent-2); box-shadow:0 10px 30px rgba(34,211,238,.16); }
 button:active{ transform:translateY(0); }
 button:disabled{ opacity:.6; cursor:wait; }
+
+/* glossy sweep on standard buttons (but NOT the spin-fab) */
 button::after, .chip-btn::after{
-  content:""; position:absolute; inset:0;
+  content:""; position:absolute; inset:0; pointer-events:none;
   background:linear-gradient(120deg, rgba(255,255,255,.08), transparent 30% 70%, rgba(255,255,255,.08));
-  transform:translateX(-100%); transition:transform .7s var(--ease-out); pointer-events:none;
+  transform:translateX(-100%); transition:transform .7s var(--ease-out);
 }
 button:hover::after, .chip-btn:hover::after{ transform:translateX(100%); }
 .chip-btn.ghost{ background:linear-gradient(180deg, rgba(18,22,36,.86), rgba(10,14,26,.82)); border-style:dashed; }
@@ -216,7 +185,6 @@ button:hover::after, .chip-btn:hover::after{ transform:translateX(100%); }
 
 /* Hide stray blank chip in TEAM mode */
 .showopts .chip:has(.chip-text:empty){ display:none!important; }
-
 #chips .chip .chip-text, #showOnWheel .chip .chip-text, .showopts .chip .chip-text{
   display:inline-block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:28ch;
 }
@@ -257,12 +225,12 @@ button:hover::after, .chip-btn:hover::after{ transform:translateX(100%); }
 .perf-tip .meter-text{ position:relative; z-index:1; }
 
 /* =========================
-   Wheel / Pointer / Spin FAB
+   Wheel / Pointer
    ========================= */
 .wheel-wrap{
   position:relative; display:flex; justify-content:center; align-items:center;
   padding:clamp(36px,5vw,64px) clamp(10px,2.5vw,18px) clamp(10px,2.5vw,18px);
-  min-height:640px; isolation:isolate;   /* own stacking context for safety */
+  min-height:640px; isolation:isolate;
 }
 canvas#wheel{
   width:100%; max-width:820px; height:auto; border-radius:50%;
@@ -283,7 +251,9 @@ canvas#wheel{
   .pointer{ border-left-width:12px; border-right-width:12px; border-top-width:20px; }
 }
 
-/* Spin button */
+/* =========================
+   SPIN button — simplified hover (no ring, no shine, no scale)
+   ========================= */
 .spin-fab{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5;
   width:clamp(88px,14vw,132px); height:clamp(88px,14vw,132px); border-radius:999px;
@@ -292,7 +262,18 @@ canvas#wheel{
   background:radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
   color:#f4f7ff; font-weight:900; letter-spacing:.16em; text-transform:uppercase;
   box-shadow:0 10px 30px rgba(0,0,0,.45), inset 0 0 30px rgba(90,161,255,.15);
+  transition:box-shadow .15s var(--ease), border-color .15s var(--ease);
 }
+/* kill global glossy sweep and previous conic ring */
+.spin-fab::after{ content:none !important; }
+.spin-fab::before{ content:none !important; }
+/* subtle, modern hover */
+.spin-fab:hover{
+  border-color:#22d3ee;
+  box-shadow:0 14px 40px rgba(34,211,238,.22), inset 0 0 34px rgba(90,161,255,.18);
+}
+.spin-fab:active{ box-shadow:0 8px 20px rgba(0,0,0,.45), inset 0 0 18px rgba(90,161,255,.18); }
+.spin-fab:disabled{ opacity:.7; cursor:wait; }
 
 /* =========================
    Modal
@@ -325,12 +306,11 @@ canvas#wheel{
 .m-actions{ padding:14px 22px 20px; background:#0f1830; border-top:1px solid #234080; display:flex; justify-content:center; gap:10px; }
 
 /* =========================
-   Content / FAQ (card look, BELOW grid)
+   Content / FAQ (card look, sits BELOW grid)
    ========================= */
 #content{
   grid-column:1 / -1;
-  position:relative;
-  z-index:0;                    /* IMPORTANT: below wheel & sidebar */
+  position:relative; z-index:0;   /* ensure it never overlays wheel/sidebar */
   background:var(--grad-card);
   border:1px solid var(--line);
   border-radius:var(--radius);
@@ -351,23 +331,6 @@ canvas#wheel{
   transition:transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease);
 }
 #content .toc a:hover{ transform:translateY(-1px); border-color:var(--accent-2); box-shadow:0 10px 22px rgba(34,211,238,.18); }
-#content details{
-  border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.02);
-  border-radius:14px; margin:12px 0; overflow:hidden;
-}
-#content details[open]{ border-color:rgba(100,168,255,.28); background:linear-gradient(180deg, rgba(100,168,255,.06), rgba(255,255,255,.02)); }
-#content summary{
-  list-style:none; display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px;
-  padding:14px 16px; cursor:pointer; transition:background .18s var(--ease), color .18s var(--ease);
-}
-#content summary::-webkit-details-marker{ display:none; }
-#content summary::after{ content:"⌄"; font-weight:900; letter-spacing:.06em; color:#bcd4ff; transform:rotate(0); transition:transform .2s var(--ease); }
-#content details[open] summary::after{ transform:rotate(-180deg); }
-#content details>.panel{
-  padding:0 16px 0; border-top:1px solid rgba(255,255,255,.1);
-  max-height:0; overflow:hidden; opacity:0; transition:max-height .3s var(--ease), opacity .22s var(--ease);
-}
-#content details[open]>.panel{ padding:12px 16px 16px; max-height:1000px; opacity:1; }
 
 /* =========================
    Accessibility
