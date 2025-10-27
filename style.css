@@ -1,7 +1,7 @@
-/* Football Spinner — main stylesheet
+/* Football Spinner — clean stylesheet
    - Dark theme, grid cards, chip UI, wheel, modal
-   - Sticky left sidebar with INTERNAL scroll (no overlay)
-   - Bottom content block matches cards
+   - Sticky left sidebar with INTERNAL scroll
+   - Right card stays above, FAQ matches cards
 */
 
 /* =========================
@@ -20,25 +20,25 @@
   /* Cards / borders */
   --grad-card:linear-gradient(180deg, rgba(18,27,48,.9), rgba(10,16,30,.86));
   --grad-chip:linear-gradient(135deg, rgba(18,28,52,.96), rgba(10,16,30,.92));
-  --line:rgba(120,160,255,.18); --line-strong:rgba(120,160,255,.32);
+  --line:rgba(120,160,255,.18);
+  --line-strong:rgba(120,160,255,.32);
 
   /* Radius / shadows */
   --radius:20px; --shadow-1:0 8px 30px rgba(0,0,0,.25); --shadow-2:0 24px 80px rgba(18,30,52,.42);
 
-  /* Motion */
-  --ease:cubic-bezier(.2,.7,.1,1); --ease-out:cubic-bezier(.16,1,.3,1);
-
-  /* Layout */
-  --header-h:84px;              /* sticky header height (keep in sync with header) */
+  /* Motion + layout */
+  --ease:cubic-bezier(.2,.7,.1,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --header-h:84px;            /* keep in sync with header */
   --gutter:22px;
 }
 
 @media (prefers-reduced-motion:reduce){
   :root{ --ease:linear; --ease-out:linear; }
-  *{ animation:none!important; transition:none!important; }
+  *{ animation:none !important; transition:none !important; }
 }
 
-[hidden]{ display:none!important; }
+[hidden]{ display:none !important; }
 
 /* =========================
    Base / Background
@@ -62,7 +62,7 @@ body{
   overflow-x:hidden;
 }
 
-/* Ambient glows */
+/* Soft ambient glows */
 body::before{
   content:"";
   position:fixed; inset:-20vmax;
@@ -73,7 +73,11 @@ body::before{
   opacity:.8; pointer-events:none; z-index:0;
   animation:bg-drift 34s linear infinite;
 }
-@keyframes bg-drift{ 0%{transform:translate3d(0,0,0) rotate(0)} 50%{transform:translate3d(1.5%,-1.5%,0) rotate(180deg)} 100%{transform:translate3d(0,0,0) rotate(360deg)} }
+@keyframes bg-drift{
+  0%{ transform:translate3d(0,0,0) rotate(0deg); }
+  50%{ transform:translate3d(1.5%,-1.5%,0) rotate(180deg); }
+  100%{ transform:translate3d(0,0,0) rotate(360deg); }
+}
 
 /* =========================
    Header
@@ -96,11 +100,6 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   box-shadow:0 4px 14px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.05);
   transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
 }
-.brand-img:hover{
-  transform:translateY(-1px) scale(1.03);
-  border-color:rgba(120,190,255,.8);
-  box-shadow:0 10px 30px rgba(32,80,200,.35), 0 0 0 6px rgba(80,160,255,.08), inset 0 0 0 1px rgba(255,255,255,.08);
-}
 
 /* =========================
    Grid / Cards
@@ -110,12 +109,10 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   margin:20px auto 48px;
   padding:0 clamp(12px,4vw,36px);
   display:grid;
+  grid-template-columns:380px 1fr;
   gap:var(--gutter);
   align-items:start;
   position:relative; z-index:1;
-}
-@media (min-width:980px){
-  .container{ grid-template-columns:380px 1fr; }
 }
 @media (max-width:979.98px){
   .container{ display:block; }
@@ -129,27 +126,36 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   border-radius:var(--radius);
   padding:18px clamp(14px,3vw,26px);
   box-shadow:var(--shadow-1);
-  transform:translateY(8px); opacity:0;
+  transform:translateY(8px);
+  opacity:0;
   animation:card-in .6s var(--ease-out) forwards;
 }
 @keyframes card-in{ to{ transform:translateY(0); opacity:1; } }
 
-/* === Sticky left card with INTERNAL scroll (single source of truth) === */
+/* ===== Sticky left sidebar with INTERNAL scroll ===== */
 .card.sidebar{
-  position: sticky !important;
-  top: var(--header-h) !important;
+  position:sticky;
+  top:var(--header-h);
 
-  height: calc(100vh - var(--header-h) - 24px) !important; /* fixed viewport-height pane */
-  max-height: calc(100vh - var(--header-h) - 24px) !important;
-  overflow: auto !important;
-  -webkit-overflow-scrolling: touch;
+  /* viewport-bounded box with its own scrollbar */
+  height:calc(100vh - var(--header-h) - 24px);
+  max-height:calc(100vh - var(--header-h) - 24px);
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
 
-  transform: none !important;
-  animation: none !important;
+  /* ensure visible (we disabled the entrance animation for sticky) */
+  transform:none;
+  animation:none;
+  opacity:1;
 
-  z-index: 1 !important;        /* never covers the wheel/content */
+  z-index:1;          /* sits UNDER the wheel card */
 }
-.container > .card:not(.sidebar){ position:relative; z-index:2; } /* wheel above sidebar */
+
+/* Right column/wheel should always be above the sidebar */
+.container > .card:not(.sidebar){
+  position:relative;
+  z-index:2;
+}
 
 /* Titles */
 .section-title{
@@ -171,8 +177,6 @@ button, .chip-btn{
   transition:transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
 }
 button:hover, .chip-btn:hover{ transform:translateY(-1px); border-color:var(--accent-2); box-shadow:0 10px 30px rgba(34,211,238,.16); }
-button:active{ transform:translateY(0); }
-button:disabled{ opacity:.6; cursor:wait; }
 button::after, .chip-btn::after{
   content:""; position:absolute; inset:0;
   background:linear-gradient(120deg, rgba(255,255,255,.08), transparent 30% 70%, rgba(255,255,255,.08));
@@ -181,7 +185,6 @@ button::after, .chip-btn::after{
 button:hover::after, .chip-btn:hover::after{ transform:translateX(100%); }
 .chip-btn.ghost{ background:linear-gradient(180deg, rgba(18,22,36,.86), rgba(10,14,26,.82)); border-style:dashed; }
 
-/* Chip groups */
 #chips .chips, #showOnWheel, .showopts{ display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 14px; }
 
 #chips .chip, #showOnWheel .chip, .showopts .chip{
@@ -219,7 +222,7 @@ button:hover::after, .chip-btn:hover::after{ transform:translateX(100%); }
 }
 
 /* Hide accidental blank chip in TEAM mode */
-.showopts .chip:has(.chip-text:empty){ display:none!important; }
+.showopts .chip:has(.chip-text:empty){ display:none !important; }
 
 #chips .chip .chip-text, #showOnWheel .chip .chip-text, .showopts .chip .chip-text{
   display:inline-block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:28ch;
@@ -239,7 +242,6 @@ button:hover::after, .chip-btn:hover::after{ transform:translateX(100%); }
   border-radius:12px; background:rgba(17,28,48,.85); border:1px solid rgba(90,161,255,.12);
   transition:transform .16s var(--ease);
 }
-.item:hover{ transform:translateY(-1px); }
 .item img{
   width:38px; height:38px; border-radius:12px; object-fit:contain; background:#0b1220;
   border:1px solid rgba(90,161,255,.22); box-shadow:0 2px 8px rgba(16,24,48,.28);
@@ -289,7 +291,6 @@ canvas#wheel{
   .pointer{ border-left-width:12px; border-right-width:12px; border-top-width:20px; }
 }
 
-/* Spin button */
 .spin-fab{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5;
   width:clamp(88px,14vw,132px); height:clamp(88px,14vw,132px); border-radius:999px;
@@ -298,7 +299,6 @@ canvas#wheel{
   background:radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
   color:#f4f7ff; font-weight:900; letter-spacing:.16em; text-transform:uppercase;
   box-shadow:0 10px 30px rgba(0,0,0,.45), inset 0 0 30px rgba(90,161,255,.15);
-  transition:transform .12s var(--ease), box-shadow .12s var(--ease), border-color .12s var(--ease);
 }
 .spin-fab::before{
   content:""; position:absolute; inset:-6px; border-radius:999px;
@@ -307,10 +307,6 @@ canvas#wheel{
           mask:radial-gradient(closest-side, transparent calc(100% - 8px), black 0);
   animation:ring-spin 4s linear infinite; opacity:.9;
 }
-@keyframes ring-spin{ to{ transform:rotate(360deg); } }
-.spin-fab:hover{ transform:translate(-50%,-50%) scale(1.03); border-color:#22d3ee; box-shadow:0 14px 34px rgba(34,211,238,.25); }
-.spin-fab:active{ transform:translate(-50%,-50%) scale(.985); }
-.spin-fab:disabled{ opacity:.7; cursor:wait; }
 
 /* =========================
    Modal
@@ -402,7 +398,7 @@ button:focus-visible,
   outline:2px solid var(--accent-2); outline-offset:3px; border-radius:12px;
 }
 
-/* Small screens: disable sticky so it behaves like normal block */
+/* Small screens: disable sticky so it behaves like a normal block */
 @media (max-width:979.98px){
   .card.sidebar{
     position:static !important;
@@ -414,61 +410,4 @@ button:focus-visible,
 }
 
 /* Safety: hide any stray blank chip */
-.showopts .chip .chip-text:empty{ display:none!important; }
-
-
-/* === PATCH: ensure sidebar column always visible and same height === */
-@media (min-width:980px) {
-  .container {
-    align-items: stretch; /* both columns same vertical size */
-  }
-  .card.sidebar {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    min-height: calc(100vh - var(--header-h) - 24px);
-  }
-}
-
-/* === FINAL SIDEBAR FIX (visibility + layering) === */
-.card.sidebar {
-  background: linear-gradient(180deg, rgba(15,20,40,0.95), rgba(10,14,30,0.92)) !important;
-  border: 1px solid rgba(100,160,255,0.18) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
-
-  position: sticky !important;
-  top: var(--header-h) !important;
-  height: calc(100vh - var(--header-h) - 24px) !important;
-  max-height: calc(100vh - var(--header-h) - 24px) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-
-  display: flex !important;
-  flex-direction: column !important;
-  z-index: 3 !important; /* brings it in front of background but behind wheel */
-}
-
-/* Ensure grid keeps left column visible */
-@media (min-width:980px){
-  .container{
-    align-items: start !important;
-    grid-template-columns: 380px 1fr !important;
-  }
-}
-
-/* ---- Sidebar visibility hot-fix ---- */
-.card.sidebar{
-  /* we disabled the entrance animation earlier; make sure it’s visible */
-  opacity: 1 !important;
-  transform: none !important;
-  animation: none !important;
-
-  /* keep the sticky + internal scroll behaviour */
-  position: sticky !important;
-  top: var(--header-h) !important;
-  height: calc(100vh - var(--header-h) - 24px) !important;
-  max-height: calc(100vh - var(--header-h) - 24px) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  z-index: 1 !important;
-}
+.showopts .chip .chip-text:empty{ display:none !important; }
