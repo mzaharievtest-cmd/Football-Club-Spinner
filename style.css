@@ -456,31 +456,6 @@ button:focus-visible,
   }
 }
 
-/* === FINAL FIX: Sidebar content visibility & stacking === */
-.card.sidebar {
-  background: linear-gradient(180deg, rgba(15,20,40,0.95), rgba(10,14,30,0.92)) !important;
-  border: 1px solid rgba(100,160,255,0.18) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
-  position: sticky !important;
-  top: var(--header-h) !important;
-  height: calc(100vh - var(--header-h) - 24px) !important;
-  max-height: calc(100vh - var(--header-h) - 24px) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  z-index: 5 !important; /* bring text/buttons above background layers */
-  color: var(--text) !important;
-}
-
-.card.sidebar * {
-  position: relative !important;
-  z-index: 6 !important;
-  color: var(--text) !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
 /* ---- Sidebar visibility hot-fix ---- */
 .card.sidebar{
   /* we disabled the entrance animation earlier; make sure it’s visible */
