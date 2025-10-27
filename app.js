@@ -1,16 +1,12 @@
-/* Football Spinner — TEAM / PLAYER unified (modern FX)
-   - TEAM wheel: Logo/Name on wheel (+Stadium optional). League: modal-only (reveal).
-   - PLAYER wheel: Image/Name on wheel only. Jersey/Nationality/Club live in modal with reveal.
-   - >50 items → ambient stripes (no text/images) but still wedges.
+/* Football Spinner — TEAM / PLAYER unified
+   - TEAM wheel: Logo/Name on wheel (+Stadium optional). League never on wheel; modal only.
+   - PLAYER wheel: Image/Name on wheel. Club/Jersey/Nationality live in modal with reveal when toggled off.
+   - If >50 wedges → hide item content, draw modern tick ring + subtle radial rings, and keep rotation visible.
+   - Mode-aware “Show on wheel” controls.
    - Players are loaded from /data/players.json (single source of truth).
-   - Player chips are derived from players.json (club_id). Club names resolved via teams.json + fallback.
-   - Modern visuals: conic glow ring, pointer LED, motion blur trail, wedge highlight, confetti/sparkles.
-   - Modern audio: swept-noise whoosh (band-pass), per-slice vinyl tick, soft end-chord with plate reverb.
+   - Player chips are derived from players.json; club_id resolved to names via teams.json + fallback map.
 */
 
-/* =========================
-   Mode & state
-   ========================= */
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
 
 let TEAMS = [];
@@ -26,9 +22,7 @@ let spinning = false;
 let selectedIdx = -1;
 let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
 
-/* =========================
-   DOM
-   ========================= */
+/* ---------- DOM ---------- */
 const modeTeamBtn   = document.getElementById('modeTeam');
 const modePlayerBtn = document.getElementById('modePlayer');
 
@@ -40,11 +34,11 @@ const qpAll     = document.getElementById('qpAll');
 const qpNone    = document.getElementById('qpNone');
 const qpTop     = document.getElementById('qpTop');
 
-const optA = document.getElementById('optA'); // A
-const optB = document.getElementById('optB'); // B
-const optC = document.getElementById('optC'); // C
-const optD = document.getElementById('optD'); // D
-const optE = document.getElementById('optE'); // E (Club) — optional in HTML
+const optA = document.getElementById('optA'); // Logo/Image
+const optB = document.getElementById('optB'); // Name
+const optC = document.getElementById('optC'); // Stadium (team) / Jersey (player)
+const optD = document.getElementById('optD'); // League (team) / Nationality (player)
+const optE = document.getElementById('optE'); // (optional) Club (player only, modal reveal)
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -65,8 +59,8 @@ const backdrop   = document.getElementById('backdrop');
 const modalEl    = document.getElementById('modal');
 const mClose     = document.getElementById('mClose');
 const mHead      = document.getElementById('mHead');
-const mSub       = document.getElementById('mSub');   // TEAM: League (reveal) / PLAYER: kept empty (avoid duplication)
-const mLogo      = document.getElementById('mLogo');
+const mSub       = document.getElementById('mSub');   // TEAM: League / PLAYER: (kept empty; use bottom row instead)
+const mLogo      = document.getElementById('mLogo');  // TEAM: Crest / PLAYER: Image
 
 const rowStadium = document.getElementById('rowStadium');
 const mStadium   = document.getElementById('mStadium');
@@ -82,9 +76,7 @@ const mNat       = document.getElementById('mNat');
 
 let modalReveal = { a:false,b:false,c:false,d:false,e:false };
 
-/* =========================
-   Utils
-   ========================= */
+/* ---------- Utils ---------- */
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI/2)+TAU)%TAU;
 const clamp = (a,x,b)=>Math.max(a,Math.min(b,x));
@@ -128,9 +120,7 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weigh
   return {text:(s||'')+'…', fontPx:minPx};
 }
 
-/* =========================
-   Chips helpers
-   ========================= */
+/* ---------- Chips helpers ---------- */
 function makeChip(value, text, checked){
   const label = document.createElement('label');
   label.className='chip';
@@ -149,9 +139,7 @@ function activeCodes(){
   return arr;
 }
 
-/* =========================
-   Labels & presets
-   ========================= */
+/* ---------- Labels & presets ---------- */
 const LEAGUE_LABELS = {
   AUT:"Austrian Bundesliga", BEL:"Jupiler Pro League", BUL:"efbet Liga",
   CRO:"SuperSport HNL", CZE:"Fortuna Liga", DEN:"Superliga",
@@ -164,9 +152,9 @@ const LEAGUE_LABELS = {
 const leagueLabel = c => LEAGUE_LABELS[c] || c;
 
 const TOP5 = ['EPL','SA','BUN','L1','LLA'];
-const PL_TOP6 = ['18','9','14','8','19','6']; // Chelsea, City, United, Liverpool, Arsenal, Spurs
+const PL_TOP6 = ['18','9','14','8','19','6'];
 
-/* Fallback club names for PL ids not in teams.json */
+/* ---------- PL fallback map (extendable) ---------- */
 const FALLBACK_CLUBS = {
   '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
   '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
@@ -176,9 +164,7 @@ const FALLBACK_CLUBS = {
   '236':'Brentford'
 };
 
-/* =========================
-   Data selection
-   ========================= */
+/* ---------- Data selection ---------- */
 function getCurrentData(){
   const active = new Set(activeCodes());
   if (active.size === 0) return [];
@@ -189,9 +175,7 @@ function getCurrentData(){
   return TEAMS.filter(t => active.has(t.league_code));
 }
 
-/* =========================
-   Perf banner (progress out of total)
-   ========================= */
+/* ---------- Progress banner (fraction of total) ---------- */
 function updatePerfBanner(){
   const n = getCurrentData().length;
   const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
@@ -203,14 +187,13 @@ function updatePerfBanner(){
   spinFab.disabled = disabled;
 }
 
-/* =========================
-   Chips render (mode aware)
-   ========================= */
+/* ---------- Chips render (mode aware) ---------- */
 function renderChips(){
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
 
   if (MODE === 'player'){
+    // Build list from players.json so every club_id is represented
     const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
     const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_CLUBS[id] || `Club #${id}`;
 
@@ -239,28 +222,24 @@ function renderChips(){
   toggleMore.setAttribute('aria-expanded','false');
 }
 
-/* =========================
-   Show-on-wheel (mode aware)
-   ========================= */
+/* ---------- Show-on-wheel controls ---------- */
 function applyModeShowControls(){
   if (MODE==='player'){
     lblA.textContent='Image';         optA.checked = true;
     lblB.textContent='Name';          optB.checked = true;
-    lblC.textContent='Jersey Number'; optC.checked = false;
-    lblD.textContent='Nationality';   optD.checked = false;
-    if (lblE) { lblE.textContent='Club'; if (optE) optE.checked=false; }
+    lblC.textContent='Jersey Number'; if (optC) optC.checked = false;
+    lblD.textContent='Nationality';   if (optD) optD.checked = false; // bottom-row reveal
+    if (lblE && optE){ lblE.textContent='Club'; optE.checked=false; } // modal reveal
   } else {
     lblA.textContent='Logo';    optA.checked = true;
     lblB.textContent='Name';    optB.checked = true;
-    lblC.textContent='Stadium'; optC.checked = false;
-    lblD.textContent='League';  optD.checked = true; // modal only
-    if (lblE) { lblE.textContent='Club'; if (optE) optE.checked=false; } // not used in TEAM
+    lblC.textContent='Stadium'; if (optC) optC.checked = false;
+    lblD.textContent='League';  if (optD) optD.checked = true; // modal only
+    if (lblE && optE){ lblE.textContent=''; optE.checked=false; }     // hidden/ignored
   }
 }
 
-/* =========================
-   Canvas sizing
-   ========================= */
+/* ---------- Canvas sizing & FAB centering ---------- */
 function sizeCanvas(){
   const rect = (wheel.parentElement||wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width||640), 1200);
@@ -270,11 +249,20 @@ function sizeCanvas(){
   fx.width = wheel.width; fx.height = wheel.height;
   wheel.style.width = cssSize+'px'; wheel.style.height = cssSize+'px';
   fx.style.width = cssSize+'px'; fx.style.height = cssSize+'px';
+  requestAnimationFrame(positionSpinFab);
 }
 
-/* =========================
-   Drawing helpers (ambient patterns)
-   ========================= */
+function positionSpinFab(){
+  const wrap = wheel.parentElement; // .wheel-wrap (position:relative)
+  const wr = wrap.getBoundingClientRect();
+  const cr = wheel.getBoundingClientRect();
+  const cx = (cr.left + cr.width  / 2) - wr.left;
+  const cy = (cr.top  + cr.height / 2) - wr.top;
+  spinFab.style.left = `${cx}px`;
+  spinFab.style.top  = `${cy}px`;
+}
+
+/* ---------- Wheel drawing ---------- */
 const PERF = { hideTextThreshold: 50, minTextWidth: 44, minLogoBox: 26 };
 
 function drawIdle(ctx,W,H){
@@ -282,131 +270,36 @@ function drawIdle(ctx,W,H){
   ctx.save(); ctx.translate(W/2,H/2);
   const r = Math.min(W,H)*0.48;
   const g = ctx.createRadialGradient(0,0,r*0.1, 0,0,r);
-  g.addColorStop(0,'#121b34'); g.addColorStop(0.5,'#0f1830'); g.addColorStop(1,'#0a1428');
+  g.addColorStop(0,'#1A2C5A'); g.addColorStop(0.35,'#21386F'); g.addColorStop(0.65,'#0E2A57'); g.addColorStop(1,'#0B1B38');
   ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fillStyle=g; ctx.fill();
-  // glass conic ring
-  const grd = ctx.createConicGradient(0,0,0);
-  grd.addColorStop(0.00,'rgba(34,211,238,.18)');
-  grd.addColorStop(0.25,'rgba(100,168,255,.18)');
-  grd.addColorStop(0.50,'rgba(155,107,255,.18)');
-  grd.addColorStop(0.75,'rgba(100,168,255,.18)');
-  grd.addColorStop(1.00,'rgba(34,211,238,.18)');
-  ctx.lineWidth = 10; ctx.strokeStyle = grd;
-  ctx.beginPath(); ctx.arc(0,0,r*0.98,0,TAU); ctx.stroke();
-  ctx.restore();
-}
-
-function drawAmbientGrid(ctx, W, H){
-  ctx.save(); ctx.translate(W/2,H/2);
-  const r = Math.min(W,H)*0.48;
-  // outer rim ticked
-  const ticks = 96;
-  for (let i=0;i<ticks;i++){
-    const a = (i/ticks)*TAU;
-    ctx.beginPath();
-    const inner = r*0.94 + (i%2?0:1.5);
-    ctx.moveTo(Math.cos(a)*inner, Math.sin(a)*inner);
-    ctx.lineTo(Math.cos(a)*r,     Math.sin(a)*r);
-    ctx.lineWidth = (i%2)?1:2;
-    ctx.strokeStyle = (i%2)?'rgba(200,220,255,.08)':'rgba(200,220,255,.12)';
-    ctx.stroke();
-  }
-  // faint rings
-  ctx.lineWidth=1.5;
-  for (let i=1;i<=5;i++){
-    ctx.beginPath(); ctx.arc(0,0,r*(i/5),0,TAU);
-    ctx.strokeStyle = `rgba(160,190,255,${0.10 - i*0.012})`;
+  // soft rings
+  ctx.lineWidth=1;
+  for(let i=1;i<=5;i++){
+    ctx.beginPath(); ctx.arc(0,0,r*i/5,0,TAU);
+    ctx.strokeStyle=`rgba(140,170,220,${0.08 + i*0.02})`;
+    ctx.setLineDash([6,18]); ctx.lineDashOffset = (i*14 + currentAngle*40)%1000;
     ctx.stroke();
   }
   ctx.restore();
 }
 
-/* =========================
-   FX (trail / confetti / sparkles)
-   ========================= */
-let lastTrailTime = 0;
-const trail = [];     // {x,y,alpha}
-const confetti = [];  // {x,y,vx,vy,alpha,rot,vr,clr}
-const sparkles = [];  // {x,y,vx,vy,alpha}
-
-function addTrail(x,y){
-  trail.push({x,y,alpha:1});
-  if (trail.length>50) trail.shift();
-}
-function stepTrail(ctx){
-  for (const t of trail){ t.alpha *= 0.92; }
-  while (trail.length && trail[0].alpha < 0.02) trail.shift();
-
+function drawTickRing(ctx, R, ticks=120){
   ctx.save();
-  ctx.globalCompositeOperation='lighter';
-  for (const t of trail){
-    ctx.beginPath();
-    ctx.arc(t.x,t.y, 5.5, 0, TAU);
-    ctx.fillStyle=`rgba(120,200,255,${0.28*t.alpha})`;
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
-function burstConfetti(cx,cy, theme='blue'){
-  const palette = theme==='blue'
-    ? ['#64a8ff','#22d3ee','#9b6bff','#eaf3ff']
-    : ['#ff5a7a','#ffd166','#7cffb2','#a0a7ff'];
-  for (let i=0;i<30;i++){
-    const a = Math.random()*TAU;
-    const s = 2 + Math.random()*3.2;
-    confetti.push({
-      x:cx, y:cy,
-      vx:Math.cos(a)*s, vy:Math.sin(a)*s - 1.2,
-      alpha:1,
-      rot:Math.random()*TAU,
-      vr:(Math.random()-.5)*0.2,
-      clr: palette[Math.floor(Math.random()*palette.length)]
-    });
-  }
-  for (let i=0;i<24;i++){
-    const a = Math.random()*TAU;
-    const s = 1.2 + Math.random()*2.0;
-    sparkles.push({
-      x:cx, y:cy,
-      vx:Math.cos(a)*s, vy:Math.sin(a)*s,
-      alpha:1
-    });
-  }
-}
-function stepConfetti(ctx){
-  ctx.save();
-  ctx.globalCompositeOperation='screen';
-  for (const c of confetti){
-    c.vy += 0.045; // gravity
-    c.x += c.vx; c.y += c.vy;
-    c.rot += c.vr;
-    c.alpha *= 0.985;
+  ctx.rotate(mod(currentAngle, TAU));
+  const h = Math.max(6, R*0.02);
+  for(let i=0;i<ticks;i++){
+    const a = i * (TAU/ticks);
+    const x = Math.cos(a) * (R-h/2);
+    const y = Math.sin(a) * (R-h/2);
     ctx.save();
-    ctx.translate(c.x,c.y);
-    ctx.rotate(c.rot);
-    ctx.fillStyle = c.clr + Math.floor(c.alpha*255).toString(16).padStart(2,'0');
-    ctx.fillRect(-3,-1.5,6,3);
+    ctx.translate(x,y);
+    ctx.rotate(a);
+    ctx.fillStyle = (i%5===0) ? 'rgba(200,220,255,.22)' : 'rgba(200,220,255,.12)';
+    ctx.fillRect(-1, -h/2, 2, h);
     ctx.restore();
   }
-  while (confetti.length && confetti[0].alpha<0.05) confetti.shift();
-
-  ctx.globalCompositeOperation='lighter';
-  for (const s of sparkles){
-    s.x+=s.vx; s.y+=s.vy; s.vx*=0.98; s.vy*=0.98; s.alpha*=0.93;
-    ctx.beginPath();
-    ctx.arc(s.x,s.y, 1.8, 0, TAU);
-    ctx.fillStyle=`rgba(255,255,255,${0.55*s.alpha})`;
-    ctx.fill();
-  }
-  while (sparkles.length && sparkles[0].alpha<0.05) sparkles.shift();
   ctx.restore();
 }
-
-/* =========================
-   Wheel drawing
-   ========================= */
-let lastSliceAtPointer = -1; // for precise ticks
 
 function drawWheel(){
   const data = getCurrentData();
@@ -421,235 +314,106 @@ function drawWheel(){
 
   if (N===0){ drawIdle(ctx,W,H); return; }
 
-  const hideAll = N >= PERF.hideTextThreshold;
+  const hideAll = N >= PERF.hideTextThreshold; // applies to PLAYER & TEAM
   ctx.imageSmoothingEnabled = !hideAll;
 
-  // background + conic gloss
-  drawIdle(ctx,W,H);
-
+  ctx.clearRect(0,0,W,H);
   ctx.save(); ctx.translate(W/2,H/2);
   ctx.rotate(mod(currentAngle,TAU));
 
   const r = Math.min(W,H)*0.48;
   const slice = TAU/N;
 
-  // wedges
+  // wedges (always draw so rotation is visible)
   for (let i=0;i<N;i++){
     ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*slice,(i+1)*slice); ctx.closePath();
-    ctx.fillStyle = data[i].primary_color || '#294a7a';
+    ctx.fillStyle = data[i].primary_color || '#243e6b';
     ctx.fill();
-
-    // crisp rim tick
-    ctx.save();
-    ctx.rotate(i*slice);
-    ctx.beginPath();
-    ctx.moveTo(r*0.93,0); ctx.lineTo(r,0);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255,255,255,.08)';
-    ctx.stroke();
-    ctx.restore();
   }
 
+  // If too many, add a modern tick ring and radial rings and bail out
   if (hideAll){
     ctx.restore();
-    drawAmbientGrid(ctx,W,H);
-  } else {
-    // contents
-    for (let i=0;i<N;i++){
-      const t = data[i];
-      const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
-      const arcLen = r*(a1-a0);
+    const ctx2 = wheel.getContext('2d');
+    ctx2.save(); ctx2.translate(W/2,H/2);
+    drawTickRing(ctx2, r*0.98, Math.min(180, Math.max(100, Math.round(N/2))));
+    // subtle concentric rings
+    ctx2.lineWidth=1;
+    for(let i=1;i<=4;i++){
+      ctx2.beginPath(); ctx2.arc(0,0,r*i/5,0,TAU);
+      ctx2.strokeStyle=`rgba(140,170,220,${0.06 + i*0.02})`;
+      ctx2.setLineDash([6,22]); ctx2.lineDashOffset = (i*10 + currentAngle*36)%1000;
+      ctx2.stroke();
+    }
+    ctx2.restore();
+    return;
+  }
 
-      const canLogo = (MODE==='team') ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
-      const canName = optB.checked && !!t.team_name;
+  // contents
+  for (let i=0;i<N;i++){
+    const t = data[i];
+    const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
+    const arcLen = r*(a1-a0);
 
-      ctx.save();
-      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
+    const canLogo = (MODE==='team') ? (optA.checked && !!t.logo_url) : (optA.checked && !!t.image_url);
+    const canName = optB.checked && !!t.team_name;
 
-      ctx.rotate(aMid);
-      const needFlip = Math.cos(aMid) < 0;
-      if (needFlip) ctx.rotate(Math.PI);
-      const sign = needFlip ? -1 : 1;
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
 
-      const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
-      const logoHalf = logoSize/2;
-      const pad = 10;
-      const xLogo = sign * (r*0.74);
-      const xText = sign * (r*0.42);
-      const logoInner = xLogo - sign*(logoHalf+pad);
-      const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
+    ctx.rotate(aMid);
+    const needFlip = Math.cos(aMid) < 0;
+    if (needFlip) ctx.rotate(Math.PI);
+    const sign = needFlip ? -1 : 1;
 
-      const fg = textColorFor(t.primary_color);
+    const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
+    const logoHalf = logoSize/2;
+    const pad = 10;
+    const xLogo = sign * (r*0.74);
+    const xText = sign * (r*0.42);
+    const logoInner = xLogo - sign*(logoHalf+pad);
+    const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
 
-      if (canName && maxWidth>=PERF.minTextWidth){
-        const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
-        ctx.textAlign='left'; ctx.textBaseline='middle';
-        ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
-        ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
-        ctx.fillStyle=fg;
-        const x = Math.min(xText, logoInner);
-        ctx.strokeText(fit.text, x, 0);
-        ctx.fillText(fit.text,   x, 0);
+    const fg = textColorFor(t.primary_color);
+
+    if (canName && maxWidth>=PERF.minTextWidth){
+      const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
+      ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
+      ctx.fillStyle=fg;
+      const x = Math.min(xText, logoInner);
+      ctx.strokeText(fit.text, x, 0);
+      ctx.fillText(fit.text,   x, 0);
+    }
+
+    if (canLogo){
+      ctx.save(); ctx.translate(xLogo,0);
+      ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
+      ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
+
+      ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
+      const url = MODE==='team' ? t.logo_url : t.image_url;
+      const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
+      if (img && img.complete){
+        const box = Math.max(4, 2*(logoHalf-1));
+        const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
+        const s = Math.min(box/iw, box/ih);
+        ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
+      } else {
+        ctx.fillStyle='rgba(255,255,255,.14)';
+        const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
       }
-
-      if (canLogo){
-        ctx.save(); ctx.translate(xLogo,0);
-        ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
-        ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
-
-        ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
-        const url = MODE==='team' ? t.logo_url : t.image_url;
-        const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
-        if (img && img.complete){
-          const box = Math.max(4, 2*(logoHalf-1));
-          const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
-          const s = Math.min(box/iw, box/ih);
-          ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
-        } else {
-          ctx.fillStyle='rgba(255,255,255,.14)';
-          const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
-        }
-        ctx.restore(); ctx.restore();
-      }
-
-      ctx.restore();
+      ctx.restore(); ctx.restore();
     }
 
     ctx.restore();
   }
 
-  // pointer LED + trail + sparkles layer
-  const fctx = fx.getContext('2d');
-  fctx.setTransform(DPR,0,0,DPR,0,0);
-  const W2 = wheel.width / DPR, H2 = wheel.height / DPR;
-  fctx.clearRect(0,0,W2,H2);
-
-  const r2 = Math.min(W2,H2)*0.48;
-  const theta = mod(POINTER_ANGLE - mod(currentAngle,TAU), TAU);
-  const tx = W2/2 + Math.cos(theta)*r2*0.99;
-  const ty = H2/2 + Math.sin(theta)*r2*0.99;
-
-  // LED
-  fctx.save();
-  fctx.filter = 'blur(2px)';
-  fctx.beginPath(); fctx.arc(tx,ty,5.5,0,TAU);
-  fctx.fillStyle='rgba(100,168,255,.85)'; fctx.fill();
-  fctx.restore();
-
-  // motion blur trail
-  const now = performance.now();
-  if (now - lastTrailTime > 14) { addTrail(tx,ty); lastTrailTime = now; }
-  stepTrail(fctx);
-  stepConfetti(fctx);
-
-  // highlight current wedge rim
-  if (N>0){
-    const offset = mod(POINTER_ANGLE - mod(currentAngle,TAU), TAU);
-    const idxAtPointer = Math.floor(offset / (TAU/N)) % N;
-
-    // clean tick detection: emit on change
-    if (spinning && idxAtPointer !== lastSliceAtPointer){
-      vinylTick(); // precise per-slice tick
-      lastSliceAtPointer = idxAtPointer;
-    }
-
-    // shimmer arc
-    fctx.save();
-    fctx.translate(W2/2,H2/2);
-    const a0 = idxAtPointer*(TAU/N), a1=(idxAtPointer+1)*(TAU/N);
-    fctx.rotate(-mod(currentAngle,TAU));
-    fctx.beginPath();
-    fctx.arc(0,0,r2*0.995, a0, a1);
-    fctx.lineWidth = 6;
-    fctx.strokeStyle = 'rgba(255,255,255,.22)';
-    fctx.stroke();
-    fctx.restore();
-  }
+  ctx.restore();
 }
 
-/* =========================
-   WebAudio (modern)
-   ========================= */
-let ac, master, reverb;
-function ensureAudio(){
-  if (ac) return;
-  ac = new (window.AudioContext || window.webkitAudioContext)();
-  master = ac.createGain(); master.gain.value = 0.5; master.connect(ac.destination);
-  reverb = ac.createConvolver(); reverb.buffer = makePlateImpulse(ac, 1.2, 2.5); // short airy plate
-  const verbGain = ac.createGain(); verbGain.gain.value = 0.18;
-  reverb.connect(verbGain).connect(master);
-}
-
-function makePlateImpulse(ctx, seconds=1.0, decay=2.0){
-  const rate = ctx.sampleRate;
-  const len = rate * seconds;
-  const impulse = ctx.createBuffer(2, len, rate);
-  for (let c=0;c<2;c++){
-    const ch = impulse.getChannelData(c);
-    for (let i=0;i<len;i++){
-      ch[i] = (Math.random()*2-1) * Math.pow(1 - i/len, decay);
-    }
-  }
-  return impulse;
-}
-
-function sweptWhoosh(dur=1.0){
-  ensureAudio();
-  const noise = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
-  const data = noise.getChannelData(0);
-  for (let i=0;i<data.length;i++) data[i] = (Math.random()*2-1) * (0.8 + 0.2*Math.random());
-  const src = ac.createBufferSource(); src.buffer = noise;
-
-  const bp = ac.createBiquadFilter(); bp.type='bandpass';
-  const q = ac.createBiquadFilter();  q.type='peaking'; q.frequency.value=1600; q.Q.value=0.8; q.gain.value=1.5;
-
-  const g = ac.createGain();
-  const now = ac.currentTime;
-  bp.frequency.setValueAtTime(400, now);
-  bp.frequency.exponentialRampToValueAtTime(2200, now+dur*0.9);
-
-  g.gain.setValueAtTime(0.0001, now);
-  g.gain.exponentialRampToValueAtTime(0.5, now+0.06);
-  g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
-
-  src.connect(bp).connect(q).connect(g).connect(master);
-  src.start(now); src.stop(now+dur+0.02);
-}
-
-function vinylTick(){
-  ensureAudio();
-  const t = ac.currentTime;
-  const o = ac.createOscillator();
-  const g = ac.createGain();
-  const hp = ac.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=900;
-
-  o.type='square'; o.frequency.value=1000;
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.25, t+0.005);
-  g.gain.exponentialRampToValueAtTime(0.0001, t+0.06);
-
-  o.connect(g).connect(hp).connect(master);
-  o.start(t); o.stop(t+0.08);
-}
-
-function endChord(){
-  ensureAudio();
-  const notes = [392,494,587]; // G B D
-  const now = ac.currentTime;
-  notes.forEach((f,i)=>{
-    const o=ac.createOscillator(), g=ac.createGain();
-    o.type='triangle'; o.frequency.value=f;
-    g.gain.value=0.0001;
-    g.gain.exponentialRampToValueAtTime(0.35, now+0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001, now+0.7+i*0.02);
-    o.connect(g); g.connect(master); g.connect(reverb);
-    o.start(now+0.01*i); o.stop(now+0.8+i*0.02);
-  });
-}
-
-/* =========================
-   Spin
-   ========================= */
+/* ---------- Spin ---------- */
 function spin(){
   if (spinning) return;
   const data = getCurrentData();
@@ -663,36 +427,21 @@ function spin(){
   const slice = TAU/N;
   const targetAngle = TAU*(6+Math.floor(Math.random()*3)) + Math.random()*TAU;
 
-  const start = performance.now(), dur=3400;
-  const easeOutCubic = x=>1-Math.pow(1-x,3);
-
-  sweptWhoosh(1.0);
-  lastSliceAtPointer = -1;
+  const start = performance.now(), dur=3200;
+  const ease = x=>1-Math.pow(1-x,3);
 
   function step(now){
     const p = clamp(0,(now-start)/dur,1);
-    currentAngle = targetAngle * easeOutCubic(p);
+    currentAngle = targetAngle * ease(p);
     drawWheel();
-
     if (p<1) requestAnimationFrame(step);
     else {
       const theta = mod(currentAngle,TAU);
       const offset = mod(POINTER_ANGLE - theta, TAU);
       const idx = Math.floor(offset / slice) % N;
-      // snap to center
       const center = idx*slice + slice/2;
       const delta = mod(center - offset, TAU);
       currentAngle = mod(currentAngle + delta, TAU);
-
-      // FX burst at pointer
-      const DPR = Math.max(1, window.devicePixelRatio||1);
-      const W = wheel.width/DPR, H = wheel.height/DPR;
-      const r = Math.min(W,H)*0.48;
-      const px = W/2 + Math.cos(POINTER_ANGLE)*r;
-      const py = H/2 + Math.sin(POINTER_ANGLE)*r;
-      burstConfetti(px,py,'blue');
-
-      endChord();
 
       spinning=false;
       document.body.classList.remove('ui-locked');
@@ -716,9 +465,7 @@ function showResult(idx){
   openModal(item);
 }
 
-/* =========================
-   History
-   ========================= */
+/* ---------- History ---------- */
 function renderHistory(){
   historyEl.innerHTML = '';
   if (!history.length){
@@ -738,9 +485,7 @@ function renderHistory(){
   });
 }
 
-/* =========================
-   Reveal overlay in modal
-   ========================= */
+/* ---------- Reveal overlay ---------- */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
@@ -770,22 +515,16 @@ function addReveal(key, el, enabled, label){
   w.appendChild(b);
 }
 
-/* =========================
-   Modal
-   ========================= */
+/* ---------- Modal ---------- */
 function openModal(item){
   ensureRevealStyles();
   modalReveal = {a:false,b:false,c:false,d:false,e:false};
 
   if (MODE==='player'){
-    // Title & image
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.image_url || '';
+    mSub.textContent  = ''; // no duplicate nationality here
 
-    // Subtitle empty (avoid nationalities duplication)
-    mSub.textContent  = '';
-
-    // Visible rows
     rowStadium.style.display='none';
     rowClub.style.display='';
     rowJersey.style.display='';
@@ -795,14 +534,13 @@ function openModal(item){
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
     mNat.textContent    = item.nationality || '—';
 
-    // Reveals (A=image, B=name, C=jersey, D=nationality, E=club)
+    // A=image, B=name, C=jersey, D=nationality (bottom row), E=club (bottom row)
     addReveal('a', mLogo,   !!optA.checked, 'image');
     addReveal('b', mHead,   !!optB.checked, 'name');
-    addReveal('c', mJersey, !!optC.checked, 'jersey number');
-    addReveal('d', mNat,    !!optD.checked, 'nationality');
-    if (optE) addReveal('e', mClub, !!optE.checked, 'club');
+    if (optC) addReveal('c', mJersey, !!optC.checked, 'jersey number');
+    if (optD) addReveal('d', mNat,    !!optD.checked, 'nationality');
+    if (optE) addReveal('e', mClub,   !!optE.checked, 'club');
   } else {
-    // TEAM
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.logo_url || '';
     mSub.textContent  = leagueLabel(item.league_code) || '';
@@ -816,8 +554,8 @@ function openModal(item){
     // A=logo, B=name, C=stadium, D=league
     addReveal('a', mLogo,    !!optA.checked, 'logo');
     addReveal('b', mHead,    !!optB.checked, 'name');
-    addReveal('c', mStadium, !!optC.checked, 'stadium');
-    addReveal('d', mSub,     !!optD.checked, 'league');
+    if (optC) addReveal('c', mStadium, !!optC.checked, 'stadium');
+    if (optD) addReveal('d', mSub,     !!optD.checked, 'league');
   }
 
   backdrop.style.display='flex';
@@ -825,9 +563,7 @@ function openModal(item){
 }
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
 
-/* =========================
-   Mode switch
-   ========================= */
+/* ---------- Mode switch ---------- */
 function setMode(next){
   if (next===MODE) return;
   MODE = next;
@@ -845,9 +581,7 @@ function setMode(next){
   drawWheel();
 }
 
-/* =========================
-   Loaders
-   ========================= */
+/* ---------- Loaders ---------- */
 async function loadTeams(){
   const res = await fetch('./teams.json?v='+Date.now());
   if (!res.ok) throw new Error('teams.json not found');
@@ -893,15 +627,13 @@ async function loadPlayers(){
 
   TOTAL_PLAYERS = PLAYERS.length;
 
-  // Ensure label for every club_id
+  // Ensure a name for every club_id appearing in players.json
   for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_CLUBS[id] || `Club #${id}`);
   }
 }
 
-/* =========================
-   Events
-   ========================= */
+/* ---------- Events ---------- */
 function wire(){
   modeTeamBtn?.addEventListener('click', ()=> setMode('team'));
   modePlayerBtn?.addEventListener('click', ()=> setMode('player'));
@@ -946,13 +678,12 @@ function wire(){
   const refresh = ()=>{ if (!spinning){ selectedIdx=-1; drawWheel(); } };
   optA.addEventListener('change', refresh);
   optB.addEventListener('change', refresh);
-  optC.addEventListener('change', refresh);
-  optD.addEventListener('change', refresh);
-  if (optE) optE.addEventListener('change', refresh);
+  optC?.addEventListener('change', refresh);
+  optD?.addEventListener('change', refresh);
+  optE?.addEventListener('change', refresh);
 
-  const startSpin = ()=>{ ensureAudio(); spin(); };
-  spinBtn.onclick = startSpin;
-  spinFab.onclick = startSpin;
+  spinBtn.onclick = spin; 
+  spinFab.onclick = spin;
 
   resetHistoryBtn.onclick = ()=>{ history=[]; localStorage.setItem('clubHistory', JSON.stringify(history)); renderHistory(); };
 
@@ -960,12 +691,14 @@ function wire(){
   backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop) closeModal(); });
   window.addEventListener('keydown', e=> { if (e.key==='Escape' && !spinning) closeModal(); });
 
-  let t; window.addEventListener('resize', ()=>{ clearTimeout(t); t=setTimeout(()=>{ sizeCanvas(); drawWheel(); },120); }, {passive:true});
+  let t; 
+  window.addEventListener('resize', ()=>{
+    clearTimeout(t);
+    t=setTimeout(()=>{ sizeCanvas(); positionSpinFab(); drawWheel(); },120);
+  }, {passive:true});
 }
 
-/* =========================
-   Boot
-   ========================= */
+/* ---------- Boot ---------- */
 (async function init(){
   try{
     await loadTeams();
@@ -985,5 +718,6 @@ function wire(){
   sizeCanvas();
   updatePerfBanner();
   drawWheel();
+  positionSpinFab();
   wire();
 })();
