@@ -1,184 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-RK8RD59N8G');
-  </script>
-
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>Football Club Spinner — 398 Clubs · 25 Leagues</title>
-  <meta name="description" content="Football Spinner is a free random football club generator. Spin across Premier League, La Liga, Serie A, Bundesliga and Ligue 1. Great for trivia and discovery.">
-  <meta name="keywords" content="football spinner, random football club, random club generator, european leagues, premier league, la liga, serie a, bundesliga, ligue 1, football trivia, stadium quiz">
-  <link rel="canonical" href="https://footballspinner.com/">
-  <meta name="robots" content="index,follow">
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="Football Club Spinner — Random Football Club Generator">
-  <meta property="og:description" content="Spin the wheel to discover clubs from the Premier League, La Liga, Serie A, Bundesliga, Ligue 1 and more. A fun tool for quizzes, watch parties, and learning new teams.">
-  <meta property="og:url" content="https://footballspinner.com/">
-  <meta property="og:site_name" content="Football Spinner">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="https://footballspinner.com/app-logo.png">
-
-  <!-- AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
-
-  <!-- Icons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1">
-  <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png?v=1">
-  <link rel="apple-touch-icon" href="app-logo.png?v=1">
-  <link rel="shortcut icon" href="app-logo.png?v=1">
-
-  <!-- Fonts -->
+  <title>Football Spinner — Guess Team · Stadium · Player</title>
+  <meta name="description" content="Football Spinner — a modern football-themed spinning wheel game. Guess teams, stadiums, or players with smooth animations, confetti, and sound.">
+  <link rel="icon" href="app-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-
-  <!-- App styles -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- Google Tag Manager -->
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
-      var f=d.getElementsByTagName(s)[0], j=d.createElement(s), dl=l!='dataLayer'?'&l='+l:'';
-      j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl; f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-KS5K7Z4T');
-  </script>
 </head>
-
 <body>
-<header>
-  <div class="brand">
-    <img src="app-logo.png?v=1" alt="Football Club Spinner" class="brand-img" decoding="async">
-    <div>
-      <h1 id="main-title">Football Club Spinner</h1>
-      <div class="season-tag">398 Clubs · 25 Leagues</div>
-    </div>
-  </div>
-
-  <div class="header-right">
-    <div class="mode-switch-wrap">
-      <div class="mode-switch" role="tablist" aria-label="View mode">
-        <button id="modeTeam"   role="tab" aria-pressed="true"  class="mode-btn mode-btn-active">TEAM</button>
-        <button id="modePlayer" role="tab" aria-pressed="false" class="mode-btn">PLAYER</button>
+  <header class="fs-header">
+    <div class="brand">
+      <img src="app-logo.png" alt="Football Spinner Logo" class="brand-img" />
+      <div class="brand-copy">
+        <h1>Football Spinner</h1>
+        <p class="season">Guess Team · Stadium · Player</p>
       </div>
     </div>
-  </div>
-</header>
-
-<!-- GTM (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-
-<main class="container">
-  <!-- LEFT: filters / toggles -->
-  <section class="card sidebar" aria-labelledby="filter-title">
-    <div class="section-title" id="filter-title">Leagues (filter)</div>
-
-    <!-- Quick picks (mode-aware in JS) -->
-    <div class="quick-picks" role="group" aria-label="Quick selections">
-      <button id="qpAll"  class="chip-btn" type="button">All</button>
-      <button id="qpNone" class="chip-btn" type="button">None</button>
-      <button id="qpTop"  class="chip-btn" type="button">Top</button>
+    <div class="brand-right">
+      <span class="tag">v1.0</span>
     </div>
+  </header>
 
-    <!-- Chips (TEAM: leagues · PLAYER: PL clubs generated from players.json) -->
-    <div id="chips">
-      <div id="chipsTop" class="chips"></div>
-      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more</button>
-      <div id="chipsMore" class="chips" hidden></div>
+  <!-- Mode bar -->
+  <nav class="fs-modebar" aria-label="Game modes">
+    <div class="fs-modebar-left" role="tablist" aria-label="Modes">
+      <button class="fs-mode-btn is-active" data-mode="team"    role="tab" aria-selected="true">Guess Team</button>
+      <button class="fs-mode-btn"           data-mode="stadium" role="tab" aria-selected="false">Guess Stadium</button>
+      <button class="fs-mode-btn"           data-mode="player"  role="tab" aria-selected="false">Guess Player</button>
     </div>
-
-    <div class="section-title">Show on wheel</div>
-    <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
-      <!-- labels & checked state are set by JS (mode-aware) -->
-      <label class="chip"><input type="checkbox" id="optA" checked aria-label="A"><span id="lblA" class="chip-text">A</span></label>
-      <label class="chip"><input type="checkbox" id="optB" checked aria-label="B"><span id="lblB" class="chip-text">B</span></label>
-      <label class="chip"><input type="checkbox" id="optC"         aria-label="C"><span id="lblC" class="chip-text">C</span></label>
-      <label class="chip"><input type="checkbox" id="optD"         aria-label="D"><span id="lblD" class="chip-text">D</span></label>
-      <label class="chip"><input type="checkbox" id="optE" aria-label="E"><span id="lblE" class="chip-text">E</span></label>
+    <div class="fs-modebar-right">
+      <button class="fs-freespin-btn" id="fsFreeSpinBtn" type="button" aria-label="Free Spin">Free&nbsp;Spin</button>
     </div>
+  </nav>
 
-    <button id="spinBtn" type="button">SPIN</button>
+  <!-- Sub-variants bar -->
+  <nav class="fs-subbar" id="fsSubbar" aria-label="Mode variants" role="tablist">
+    <!-- Default (team) is injected by JS on load -->
+  </nav>
 
-    <div class="history-title">History</div>
-    <div class="history" id="history"></div>
-    <button id="resetHistoryBtn" type="button" style="margin-top:12px">Reset History</button>
-  </section>
-
-  <!-- RIGHT: wheel -->
-  <section class="card" aria-labelledby="wheel-title">
-    <div class="section-title" id="wheel-title">Club Wheel</div>
-    <div id="perfTip" class="perf-tip" aria-live="polite"><span class="meter-text">0 items selected</span></div>
-
-    <div class="wheel-wrap">
-      <div class="pointer" aria-hidden="true"></div>
-      <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
-      <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
-      <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
-    </div>
-  </section>
-
-  <!-- Content -->
-  <section id="content" style="grid-column:1 / -1">
-    <nav aria-label="On this page" class="toc">
-      <a href="#what-is">What is Football Spinner?</a>
-      <a href="#how-it-works">How it works</a>
-    </nav>
-
-    <h2 id="what-is">What is Football Spinner?</h2>
-    <p>Football Spinner is a free, fan-made random football club generator built for quick fun, discovery, and football trivia.</p>
-
-    <h2 id="how-it-works">How it works</h2>
-    <p>Choose leagues (or Premier League clubs in PLAYER mode), pick what to show on the wheel, then spin. If too many entries are selected, the wheel switches to wedge-only for performance.</p>
-  </section>
-</main>
-
-<!-- Modal -->
-<div id="backdrop" style="display:none">
-  <div id="modal">
-    <div id="mHead">Title</div>
-    <div id="mSub" class="small" aria-live="polite"></div>
-
-    <div class="m-body">
-      <!-- shared image (team logo or player image) -->
-      <img id="mLogo" alt="">
-
-      <!-- TEAM row: Stadium -->
-      <div class="m-row" id="rowStadium">
-        <div class="label">Stadium</div>
-        <span id="mStadium" class="value-pill"></span>
+  <main class="fs-container">
+    <section class="fs-card fs-card-wheel" aria-labelledby="wheel-title">
+      <div class="fs-card-head">
+        <h2 id="wheel-title">Spin the Wheel</h2>
+        <p class="hint">Pick a mode and a variant · press SPIN</p>
       </div>
 
-      <!-- PLAYER rows: Club / Jersey / Nationality -->
-      <div class="m-row" id="rowClub" style="display:none">
-        <div class="label">Club</div>
-        <span id="mClub" class="value-pill"></span>
+      <div class="wheel-wrap">
+        <div class="pointer" aria-hidden="true"></div>
+        <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN</button>
+        <canvas id="wheel" width="700" height="700" aria-label="Wheel"></canvas>
+        <canvas id="fx"    width="700" height="700" aria-hidden="true"></canvas>
       </div>
 
-      <div class="m-row" id="rowJersey" style="display:none">
-        <div class="label">Jersey</div>
-        <span id="mJersey" class="value-pill"></span>
+      <div class="fs-actions">
+        <button id="fsRevealBtn" class="fs-reveal-btn" type="button">Reveal</button>
       </div>
 
-      <div class="m-row" id="rowNat" style="display:none">
-        <div class="label">Nationality</div>
-        <span id="mNat" class="value-pill"></span>
+      <div id="fsResult" class="fs-result" aria-live="polite" hidden>
+        <div class="fs-result-media" id="fsResultMedia" aria-hidden="true"></div>
+        <div class="fs-result-text">
+          <div class="fs-result-title" id="fsResultTitle">—</div>
+          <div class="fs-result-sub"   id="fsResultSub">—</div>
+        </div>
       </div>
-    </div>
 
-    <div class="m-actions">
-      <button id="mClose" class="chip-btn" type="button">Close</button>
-    </div>
-  </div>
-</div>
+      <audio id="fsCheer" preload="auto">
+        <source src="crowd-cheer.mp3" type="audio/mpeg">
+      </audio>
+    </section>
 
-<script src="app.js" defer></script>
+    <section class="fs-card fs-card-info">
+      <div class="fs-card-head">
+        <h2>How it works</h2>
+      </div>
+      <div class="fs-card-body">
+        <ul class="info-list">
+          <li><strong>Guess Team</strong> → <em>By Logo</em> or <em>By Stadium (+ League)</em></li>
+          <li><strong>Guess Stadium</strong> → <em>By Team Name</em> or <em>By Logo</em></li>
+          <li><strong>Guess Player</strong> → <em>By Photo</em> or <em>By Club + Flag + Number</em></li>
+          <li>Click <b>SPIN</b>, then <b>Reveal</b> to show the answer.</li>
+          <li>Confetti pops and a crowd cheer plays on reveal (audio can be muted in your browser tab if needed).</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="fs-footer">
+    <span>© Football Spinner</span>
+  </footer>
+
+  <script src="app.js" defer></script>
 </body>
 </html>
