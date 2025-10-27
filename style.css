@@ -149,16 +149,49 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
 }
 @keyframes card-in{ to{ transform:translateY(0); opacity:1; } }
 
-/* === Sticky left card with INTERNAL scroll (no overlay) === */
+/* === Sticky left card with INTERNAL scroll (single source of truth) === */
+:root { --header-h: 84px; }  /* keep in sync with header height */
+
 .card.sidebar{
-  position:sticky; top:var(--header-h);
-  height:calc(100vh - var(--header-h) - 24px);
-  max-height:calc(100vh - var(--header-h) - 24px);
-  overflow:auto; -webkit-overflow-scrolling:touch;
-  z-index:1;            /* below wheel and content */
+  position: sticky;
+  top: var(--header-h);
+
+  /* Fixed viewport-height panel with its own scrollbar */
+  height: calc(100vh - var(--header-h) - 24px);
+  max-height: calc(100vh - var(--header-h) - 24px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  /* Ensure it actually renders (no entrance transform on sticky) */
+  transform: none;
+  animation: none;
+
+  /* Never overlay the wheel/content */
+  z-index: 1;
+
+  /* Safety: don’t accidentally collapse */
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
-.container > .card:not(.sidebar){ position:relative; z-index:2; } /* wheel card above */
-#content{ position:relative; z-index:2; }                        /* content above */
+
+/* Wheel card + bottom content always above the sidebar */
+.container > .card:not(.sidebar),
+#content{
+  position: relative;
+  z-index: 2;
+}
+
+/* Mobile: disable sticky (normal flow) */
+@media (max-width: 979.98px){
+  .card.sidebar{
+    position: static;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    z-index: auto;
+  }
+}
 
 /* Titles */
 .section-title{
