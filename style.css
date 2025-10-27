@@ -1,44 +1,34 @@
-/* Main stylesheet for Football Spinner
-   - Dark theme, responsive grid cards, chip UI, wheel, modal
-   - Sticky left sidebar with INTERNAL scrolling (no overlay)
+/* Football Spinner — main stylesheet
+   - Dark theme, grid cards, chip UI, wheel, modal
+   - Sticky left sidebar with INTERNAL scroll (no overlay)
    - Bottom content block matches cards
 */
 
 /* =========================
-   Theme variables
+   Theme
    ========================= */
 :root{
   color-scheme: dark;
 
-  /* Base palette */
-  --bg-0:#05070f;
-  --bg-1:#08101e;
-  --bg-2:#0e1526;
-
-  --text:#eaf0fb;
-  --muted:#a9b9d6;
+  /* Palette */
+  --bg-0:#05070f; --bg-1:#08101e; --bg-2:#0e1526;
+  --text:#eaf0fb; --muted:#a9b9d6;
 
   /* Accents */
-  --accent:#64a8ff;
-  --accent-2:#22d3ee;
-  --accent-3:#9b6bff;
+  --accent:#64a8ff; --accent-2:#22d3ee; --accent-3:#9b6bff;
 
   /* Cards / borders */
   --grad-card:linear-gradient(180deg, rgba(18,27,48,.9), rgba(10,16,30,.86));
   --grad-chip:linear-gradient(135deg, rgba(18,28,52,.96), rgba(10,16,30,.92));
-  --line:rgba(120,160,255,.18);
-  --line-strong:rgba(120,160,255,.32);
+  --line:rgba(120,160,255,.18); --line-strong:rgba(120,160,255,.32);
 
   /* Radius / shadows */
-  --radius:20px;
-  --shadow-1:0 8px 30px rgba(0,0,0,.25);
-  --shadow-2:0 24px 80px rgba(18,30,52,.42);
+  --radius:20px; --shadow-1:0 8px 30px rgba(0,0,0,.25); --shadow-2:0 24px 80px rgba(18,30,52,.42);
 
   /* Motion */
-  --ease:cubic-bezier(.2,.7,.1,1);
-  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease:cubic-bezier(.2,.7,.1,1); --ease-out:cubic-bezier(.16,1,.3,1);
 
-  /* Layout numbers */
+  /* Layout */
   --header-h:84px;     /* sticky header height */
   --gutter:22px;
 }
@@ -83,11 +73,7 @@ body::before{
   opacity:.8; pointer-events:none; z-index:0;
   animation:bg-drift 34s linear infinite;
 }
-@keyframes bg-drift{
-  0%{ transform:translate3d(0,0,0) rotate(0deg); }
-  50%{ transform:translate3d(1.5%,-1.5%,0) rotate(180deg); }
-  100%{ transform:translate3d(0,0,0) rotate(360deg); }
-}
+@keyframes bg-drift{ 0%{transform:translate3d(0,0,0) rotate(0)} 50%{transform:translate3d(1.5%,-1.5%,0) rotate(180deg)} 100%{transform:translate3d(0,0,0) rotate(360deg)} }
 
 /* =========================
    Header
@@ -100,12 +86,8 @@ header{
   backdrop-filter:blur(14px);
   border-bottom:1px solid rgba(120,160,255,.14);
 }
-header h1{
-  margin:0; font-size:clamp(22px,2.6vw,32px); font-weight:900; letter-spacing:.01em;
-}
-.season-tag{
-  margin-top:2px; font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:rgba(197,212,235,.76);
-}
+header h1{ margin:0; font-size:clamp(22px,2.6vw,32px); font-weight:900; letter-spacing:.01em; }
+.season-tag{ margin-top:2px; font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:rgba(197,212,235,.76); }
 header .brand{ display:inline-flex; align-items:center; gap:12px; }
 .brand-img{
   width:clamp(30px,3.3vw,44px); height:clamp(30px,3.3vw,44px);
@@ -127,7 +109,10 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
   max-width:1200px;
   margin:20px auto 48px;
   padding:0 clamp(12px,4vw,36px);
-  display:grid; gap:var(--gutter); align-items:start; position:relative; z-index:1;
+  display:grid;
+  gap:var(--gutter);
+  align-items:start;
+  position:relative; z-index:1;
 }
 @media (min-width:980px){
   .container{ grid-template-columns:380px 1fr; }
@@ -150,48 +135,21 @@ header .brand{ display:inline-flex; align-items:center; gap:12px; }
 @keyframes card-in{ to{ transform:translateY(0); opacity:1; } }
 
 /* === Sticky left card with INTERNAL scroll (single source of truth) === */
-:root { --header-h: 84px; }  /* keep in sync with header height */
-
 .card.sidebar{
-  position: sticky;
-  top: var(--header-h);
+  position: sticky !important;
+  top: var(--header-h) !important;
 
-  /* Fixed viewport-height panel with its own scrollbar */
-  height: calc(100vh - var(--header-h) - 24px);
-  max-height: calc(100vh - var(--header-h) - 24px);
-  overflow: auto;
+  height: calc(100vh - var(--header-h) - 24px) !important;
+  max-height: calc(100vh - var(--header-h) - 24px) !important;
+  overflow: auto !important;
   -webkit-overflow-scrolling: touch;
 
-  /* Ensure it actually renders (no entrance transform on sticky) */
-  transform: none;
-  animation: none;
+  transform: none !important;
+  animation: none !important;
 
-  /* Never overlay the wheel/content */
-  z-index: 1;
-
-  /* Safety: don’t accidentally collapse */
-  display: block;
-  visibility: visible;
-  opacity: 1;
+  z-index: 1 !important;
 }
-
-/* Wheel card + bottom content always above the sidebar */
-.container > .card:not(.sidebar),
-#content{
-  position: relative;
-  z-index: 2;
-}
-
-/* Mobile: disable sticky (normal flow) */
-@media (max-width: 979.98px){
-  .card.sidebar{
-    position: static;
-    height: auto;
-    max-height: none;
-    overflow: visible;
-    z-index: auto;
-  }
-}
+.container > .card:not(.sidebar){ position:relative; z-index:2; } /* wheel above sidebar */
 
 /* Titles */
 .section-title{
@@ -260,7 +218,7 @@ button:hover::after, .chip-btn:hover::after{ transform:translateX(100%); }
   transform:scale(1); opacity:1;
 }
 
-/* Hide any empty label in Show on wheel (fixes blank chip in TEAM mode) */
+/* Hide accidental blank chip in TEAM mode */
 .showopts .chip:has(.chip-text:empty){ display:none!important; }
 
 #chips .chip .chip-text, #showOnWheel .chip .chip-text, .showopts .chip .chip-text{
@@ -331,7 +289,7 @@ canvas#wheel{
   .pointer{ border-left-width:12px; border-right-width:12px; border-top-width:20px; }
 }
 
-/* Spin FAB (kept centered even while sticky sidebar scrolls) */
+/* Spin button */
 .spin-fab{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5;
   width:clamp(88px,14vw,132px); height:clamp(88px,14vw,132px); border-radius:999px;
@@ -387,19 +345,6 @@ canvas#wheel{
 }
 .m-actions{ padding:14px 22px 20px; background:#0f1830; border-top:1px solid #234080; display:flex; justify-content:center; gap:10px; }
 
-/* Reveal helpers */
-.reveal-wrap{ position:relative; display:inline-block; z-index:0; }
-.reveal-overlay{ position:absolute; inset:0; border-radius:inherit; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); pointer-events:none; z-index:2; }
-.reveal-btn{
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:8px 14px; border-radius:10px; border:1px solid rgba(90,161,255,.6);
-  background:#152036; color:#fff; font-weight:800; letter-spacing:.03em; cursor:pointer;
-  transition:transform .12s var(--ease), border-color .12s var(--ease), box-shadow .12s var(--ease);
-  z-index:3;
-}
-.reveal-btn:hover{ transform:translate(-50%,-50%) scale(1.02); border-color:var(--accent-2); box-shadow:0 6px 18px rgba(34,211,238,.18); }
-
 /* =========================
    Content / FAQ (matches cards)
    ========================= */
@@ -410,14 +355,17 @@ canvas#wheel{
   border-radius:var(--radius);
   box-shadow:var(--shadow-1);
   padding:18px clamp(14px,3vw,26px);
+  position:relative; z-index:3;
+  margin-top:24px;
 }
 #content [id]{ scroll-margin-top:calc(var(--header-h) + 12px); }
 #content h2{ margin:0 0 10px; font-size:clamp(24px,2.4vw,30px); font-weight:800; }
 #content h3{ font-size:clamp(18px,2vw,22px); font-weight:800; margin:0; }
 #content p, #content li, #content dd{ font-size:clamp(15px,1.6vw,17px); line-height:1.7; color:#e8eefb; }
 #content dt{ font-size:clamp(13px,1.45vw,14px); color:var(--muted); font-weight:800; margin-top:12px; }
-
-#content .toc{ display:flex; flex-wrap:wrap; gap:10px 12px; margin:8px 0 18px; padding-top:6px; }
+#content .toc{
+  display:flex; flex-wrap:wrap; gap:10px 12px; margin:8px 0 18px; padding-top:6px;
+}
 #content .toc a{
   display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px;
   font-weight:700; font-size:clamp(13px,1.4vw,14px); text-decoration:none; color:#e9f5ff;
@@ -425,8 +373,6 @@ canvas#wheel{
   transition:transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease);
 }
 #content .toc a:hover{ transform:translateY(-1px); border-color:var(--accent-2); box-shadow:0 10px 22px rgba(34,211,238,.18); }
-
-/* Modern accordion */
 #content details{
   border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.02);
   border-radius:14px; margin:12px 0; overflow:hidden;
@@ -445,7 +391,9 @@ canvas#wheel{
 }
 #content details[open] > .panel{ padding:12px 16px 16px; max-height:1000px; opacity:1; }
 
-/* Focus rings */
+/* =========================
+   Accessibility
+   ========================= */
 button:focus-visible,
 .chip-btn:focus-visible,
 #chips .chip input[type="checkbox"]:focus-visible,
@@ -453,114 +401,17 @@ button:focus-visible,
 .showopts .chip input[type="checkbox"]:focus-visible{
   outline:2px solid var(--accent-2); outline-offset:3px; border-radius:12px;
 }
-/* ==== Sidebar: truly sticky, no drift, internal scroll, no overlay ==== */
-:root { --header-h: 84px; } /* keep in sync with header height */
 
-.card.sidebar{
-  position: sticky !important;
-  top: var(--header-h) !important;
+/* Safety: hide any stray blank chip */
+.showopts .chip .chip-text:empty{ display:none!important; }
 
-  /* fixed viewport-height box with its own scrollbar */
-  height: calc(100vh - var(--header-h) - 24px) !important;
-  max-height: calc(100vh - var(--header-h) - 24px) !important;
-  overflow: auto !important;
-  -webkit-overflow-scrolling: touch;
-
-  /* stop the generic .card entrance animation from shifting the sticky box */
-  transform: none !important;
-  animation: none !important;
-
-  /* sit under the wheel/content so it never covers them */
-  z-index: 1 !important;
-}
-
-/* Wheel card + bottom content always above the sidebar */
-.container > .card:not(.sidebar),
-#content{
-  position: relative;
-  z-index: 2;
-}
-
-/* Mobile: disable sticky so it behaves like a normal block */
-@media (max-width: 979.98px){
+/* Small screens: disable sticky so it behaves like normal block */
+@media (max-width:979.98px){
   .card.sidebar{
-    position: static !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-    z-index: auto !important;
+    position:static !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+    z-index:auto !important;
   }
-}
-
-/* Hide any accidental blank chip (TEAM mode stray pill) */
-.showopts .chip .chip-text:empty { display: none !important; }
-/* === FINAL FIX: Sticky left sidebar, internal scroll, equal height === */
-:root { --header-h: 84px; }
-
-.container {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  align-items: start;
-  gap: 22px;
-  max-width: 1200px;
-  margin: 20px auto 48px;
-  padding: 0 clamp(12px, 4vw, 36px);
-}
-
-/* --- Left Sidebar --- */
-.card.sidebar {
-  position: sticky;
-  top: var(--header-h);
-  height: calc(100vh - var(--header-h) - 24px);
-  max-height: calc(100vh - var(--header-h) - 24px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  z-index: 1;
-  transform: none;
-  animation: none;
-}
-
-/* --- Right Card (Wheel) --- */
-.container > .card:not(.sidebar) {
-  position: relative;
-  z-index: 2;
-  height: calc(100vh - var(--header-h) - 24px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-/* --- Content / FAQ --- */
-#content {
-  grid-column: 1 / -1;
-  margin-top: 24px;
-  position: relative;
-  z-index: 3;
-  background: var(--grad-card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
-  padding: 18px clamp(14px, 3vw, 26px);
-}
-
-/* --- Responsive: disable sticky on small screens --- */
-@media (max-width: 979.98px) {
-  .container {
-    display: block;
-  }
-  .card.sidebar {
-    position: static;
-    height: auto;
-    max-height: none;
-    overflow: visible;
-  }
-  .container > .card:not(.sidebar) {
-    height: auto;
-  }
-}
-
-/* --- Hide accidental blank chip --- */
-.showopts .chip .chip-text:empty {
-  display: none !important;
 }
