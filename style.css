@@ -438,3 +438,33 @@ section[aria-labelledby="wheel-title"].card { overflow: visible !important; }
 /* 3) Ensure the FAB is always clickable above the canvas */
 canvas#wheel { pointer-events: none !important; }
 .spin-fab { z-index: 50 !important; }
+/* === Final layout fix: keep the wheel below the sticky header === */
+
+/* Single source of truth for header height */
+:root { --header-safe: 96px; } /* adjust if your header height differs */
+
+/* Left column: unchanged behavior, just use the same offset */
+.card.sidebar[aria-labelledby="filter-title"]{
+  top: var(--header-safe) !important;
+  max-height: calc(100vh - var(--header-safe) - 12px) !important;
+  overflow: auto;
+}
+
+/* Right card: internal scroll is fine, but don't clip overlays */
+section.card[aria-labelledby="wheel-title"]{
+  overflow: auto;                    /* internal scroll */
+  max-height: calc(100vh - var(--header-safe) - 12px) !important;
+}
+
+/* Make the wheel module itself sticky inside the right card */
+section.card[aria-labelledby="wheel-title"] .wheel-wrap{
+  position: sticky !important;
+  top: calc(var(--header-safe) + 8px) !important;  /* sits below header */
+  z-index: 1;
+}
+
+/* Ensure overlays always render/click above the canvas */
+section.card[aria-labelledby="wheel-title"]{ overflow: visible !important; }
+canvas#wheel { pointer-events: none !important; }
+.spin-fab { z-index: 50 !important; }
+.pointer  { z-index: 40 !important; }
