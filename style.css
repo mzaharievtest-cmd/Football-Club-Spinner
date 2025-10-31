@@ -468,3 +468,32 @@ section.card[aria-labelledby="wheel-title"]{ overflow: visible !important; }
 canvas#wheel { pointer-events: none !important; }
 .spin-fab { z-index: 50 !important; }
 .pointer  { z-index: 40 !important; }
+/* === Keep both columns aligned under the sticky header === */
+:root{
+  /* real visible height of your header (tweak if needed: 84–100px) */
+  --header-safe: 96px;
+}
+
+/* Left column (already sticky) – keep for clarity */
+.card.sidebar[aria-labelledby="filter-title"]{
+  position: sticky;
+  top: var(--header-safe);
+  align-self: start;
+  max-height: calc(100vh - var(--header-safe) - 12px);
+  overflow: auto;
+}
+
+/* RIGHT column (wheel) — make it sticky to the same offset */
+section.card[aria-labelledby="wheel-title"]{
+  position: sticky;                 /* <— this was missing */
+  top: var(--header-safe);          /* align with left column */
+  align-self: start;
+  /* let the page scroll normally; don't clip overlays */
+  overflow: visible;
+  z-index: 2;                       /* under header, above background */
+}
+
+/* Ensure the FAB/pointer are clickable above the canvas */
+canvas#wheel { pointer-events: none; }
+.spin-fab { z-index: 50; }
+.pointer  { z-index: 40; }
