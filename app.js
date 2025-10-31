@@ -32,7 +32,7 @@ const chipsMore = document.getElementById('chipsMore');
 const toggleMore= document.getElementById('toggleMore');
 const qpAll     = document.getElementById('qpAll');
 const qpNone    = document.getElementById('qpNone');
-const qpTop5    = document.getElementById('qpTop5'); // matches index.html
+const qpTop5    = document.getElementById('qpTop5'); // “Top 5 Leagues” / “Top 6 Premier League Clubs”
 
 const optA = document.getElementById('optA'); // Logo/Image
 const optB = document.getElementById('optB'); // Name
@@ -59,7 +59,7 @@ const backdrop   = document.getElementById('backdrop');
 const modalEl    = document.getElementById('modal');
 const mClose     = document.getElementById('mClose');
 const mHead      = document.getElementById('mHead');
-const mSub       = document.getElementById('mSub');   // TEAM: League / PLAYER: (kept empty; use bottom row instead)
+const mSub       = document.getElementById('mSub');   // TEAM: League / PLAYER: (kept empty)
 const mLogo      = document.getElementById('mLogo');  // TEAM: Crest / PLAYER: Image
 
 const rowStadium = document.getElementById('rowStadium');
@@ -97,6 +97,8 @@ function getImage(url, onload){
   IMG_CACHE.set(url,{img});
   return img;
 }
+
+/* Keep CSS var --header-h in sync for sticky offsets */
 function syncHeaderHeight() {
   const hEl = document.querySelector('header');
   const h = hEl ? hEl.offsetHeight : 72;
@@ -130,22 +132,6 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weigh
   return {text:(s||'')+'…', fontPx:minPx};
 }
 
-(async function init(){
-  try {
-    await loadTeams();
-    await loadPlayers();
-  } catch (e) { console.error('Failed to load data:', e); }
-
-  // ...mode setup etc.
-
-  syncHeaderHeight();   // <-- add this
-  sizeCanvas();
-  updatePerfBanner();
-  drawWheel();
-  positionSpinFab();
-  wire();
-})();
-
 /* ---------- Chips helpers ---------- */
 function makeChip(value, text, checked){
   const label = document.createElement('label');
@@ -177,8 +163,8 @@ const LEAGUE_LABELS = {
 };
 const leagueLabel = c => LEAGUE_LABELS[c] || c;
 
-const TOP5 = ['EPL','SA','BUN','L1','LLA'];
-const PL_TOP6 = ['18','9','14','8','19','6']; // Chelsea, Man City, Man United, Liverpool, Arsenal, Spurs
+const TOP5 = ['EPL','SA','BUN','L1','LLA'];                 // top 5 leagues
+const PL_TOP6 = ['18','9','14','8','19','6'];               // Chelsea, Man City, Man United, Liverpool, Arsenal, Spurs
 
 /* ---------- PL fallback map (extendable) ---------- */
 const FALLBACK_CLUBS = {
@@ -237,10 +223,9 @@ function renderChips(){
     toggleMore.setAttribute('aria-expanded','false');
     chipsMore.hidden = true;
 
-    if (qpTop5) {
-      qpTop5.textContent = 'Top 6 Premier League Clubs';
-      qpTop5.title = 'Select the Big Six from the Premier League';
-    }
+    const filterTitleEl = document.getElementById('filter-title');
+    filterTitleEl && (filterTitleEl.textContent = 'Select Clubs');
+    if (qpTop5) { qpTop5.textContent = 'Top 6 Premier League Clubs'; qpTop5.title = 'Select the Big Six from the Premier League'; }
   } else {
     const codes = [...new Set(TEAMS.map(t=>t.league_code))];
     const top = TOP5.filter(c => codes.includes(c));
@@ -253,10 +238,9 @@ function renderChips(){
     toggleMore.setAttribute('aria-expanded','false');
     chipsMore.hidden = true;
 
-    if (qpTop5) {
-      qpTop5.textContent = 'Top 5 Leagues';
-      qpTop5.title = 'Select only the top 5 leagues';
-    }
+    const filterTitleEl = document.getElementById('filter-title');
+    filterTitleEl && (filterTitleEl.textContent = 'Select Leagues');
+    if (qpTop5) { qpTop5.textContent = 'Top 5 Leagues'; qpTop5.title = 'Select only the top 5 leagues'; }
   }
 }
 
@@ -272,7 +256,7 @@ function applyModeShowControls(){
     lblA.textContent='Logo';    optA.checked = true;
     lblB.textContent='Name';    optB.checked = true;
     if (lblC) { lblC.textContent='Stadium'; if (optC) optC.checked = false; }
-    if (lblD) { lblD.textContent='League';  if (optD) optD.checked = true; } // can be revealed in modal
+    if (lblD) { lblD.textContent='League';  if (optD) optD.checked = true; } // shown in modal if unchecked
     if (lblE && optE){ lblE.textContent=''; optE.checked=false; }     // hidden/ignored
   }
 }
@@ -369,7 +353,7 @@ function drawWheel(){
     ctx.fill();
   }
 
-  // If too many, add a modern tick ring and radial rings and bail out
+  // If too many, draw ambient ring & exit
   if (hideAll){
     ctx.restore();
     const ctx2 = wheel.getContext('2d');
@@ -518,7 +502,7 @@ function renderHistory(){
     const span=document.createElement('span');
     span.textContent = MODE==='player'
       ? `${h.team_name} (${CLUB_BY_ID.get(String(h.club_id)) || FALLBACK_CLUBS[String(h.club_id)] || 'Unknown Team'})`
-      : `${h.team_name} (${h.league_code})`;
+      : `${h.team_name} (${leagueLabel(h.league_code)})`;
     div.append(img,span); historyEl.append(div);
   });
 }
@@ -606,22 +590,6 @@ function setMode(next){
   MODE = (next === 'player') ? 'player' : 'team';
   localStorage.setItem('fsMode', MODE);
 
-  // Left sidebar: title + Top quick-pick label
-  const filterTitleEl = document.getElementById('filter-title');
-  if (MODE === 'player') {
-    filterTitleEl && (filterTitleEl.textContent = 'Select Clubs');
-    if (qpTop5){
-      qpTop5.textContent = 'Top 6 Premier League Clubs';
-      qpTop5.title = 'Select the Big Six from the Premier League';
-    }
-  } else {
-    filterTitleEl && (filterTitleEl.textContent = 'Select Leagues');
-    if (qpTop5){
-      qpTop5.textContent = 'Top 5 Leagues';
-      qpTop5.title = 'Select only the top 5 leagues';
-    }
-  }
-
   // Mode button UI state
   modeTeamBtn.classList.toggle('mode-btn-active', MODE==='team');
   modePlayerBtn.classList.toggle('mode-btn-active', MODE==='player');
@@ -631,7 +599,7 @@ function setMode(next){
   // Show-on-wheel labels & defaults
   applyModeShowControls();
 
-  // Rebuild chips for this mode
+  // Rebuild chips & left titles
   renderChips();
 
   // Reset selection + meter + redraw
@@ -766,12 +734,16 @@ function wire(){
     console.error('Failed to load data:', e);
   }
 
-  // Initial mode apply (sets labels, chips, meter, redraw)
+  // Apply current mode (sets labels, chips, meter, redraw)
   setMode(MODE);
+
+  // Ensure CSS offset for sticky header is correct
+  syncHeaderHeight();
 
   // History empty-state text on first load
   renderHistory();
 
+  // Canvas sizing & interactions
   sizeCanvas();
   positionSpinFab();
   wire();
