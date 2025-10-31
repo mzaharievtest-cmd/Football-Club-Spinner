@@ -14,14 +14,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>Football Club Spinner — 398 Clubs · 25 Leagues</title>
-  <meta name="description" content="Football Spinner is a free random football club generator. Spin across Premier League, La Liga, Serie A, Bundesliga and Ligue 1. Great for trivia and discovery.">
-  <meta name="keywords" content="football spinner, random football club, random club generator, european leagues, premier league, la liga, serie a, bundesliga, ligue 1, football trivia, stadium quiz">
+  <meta name="description" content="Football Spinner is a free random football club and player generator. Spin across the top 25 leagues. Great for trivia, discovery, and matchday fun." />
+  <meta name="keywords" content="football spinner, random football club, random player generator, premier league, la liga, serie a, bundesliga, ligue 1, trivia, wheel" />
   <link rel="canonical" href="https://footballspinner.com/">
   <meta name="robots" content="index,follow">
 
   <!-- Open Graph -->
-  <meta property="og:title" content="Football Club Spinner — Random Football Club Generator">
-  <meta property="og:description" content="Spin the wheel to discover clubs from the Premier League, La Liga, Serie A, Bundesliga, Ligue 1 and more. A fun tool for quizzes, watch parties, and learning new teams.">
+  <meta property="og:title" content="Football Club Spinner — Random Football Club & Player Generator">
+  <meta property="og:description" content="Spin the wheel to discover clubs and players from the top leagues. Perfect for quizzes, watch parties, and football debates." />
   <meta property="og:url" content="https://footballspinner.com/">
   <meta property="og:site_name" content="Football Spinner">
   <meta property="og:type" content="website">
@@ -59,7 +59,7 @@
     <img src="app-logo.png?v=1" alt="Football Club Spinner" class="brand-img" decoding="async">
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
-      <div class="season-tag">398 Clubs · 25 Leagues</div>
+      <div class="season-tag">Discover clubs and players from 25 leagues around the world.</div>
     </div>
   </div>
 
@@ -79,42 +79,44 @@
 <main class="container">
   <!-- LEFT: filters / quick actions / history -->
   <section class="card sidebar" aria-labelledby="filter-title">
-    <div class="section-title" id="filter-title">Leagues (filter)</div>
+    <div class="section-title" id="filter-title">Select Leagues</div>
 
-    <!-- Quick picks (mode-aware in JS) -->
+    <!-- Quick picks -->
     <div class="quick-picks" role="group" aria-label="Quick selections">
-      <button id="qpAll"  class="chip-btn" type="button">All</button>
-      <button id="qpNone" class="chip-btn" type="button">None</button>
-      <button id="qpTop"  class="chip-btn" type="button">Top</button>
+      <button id="qpAll"  class="chip-btn" type="button">All Leagues</button>
+      <button id="qpNone" class="chip-btn" type="button">Clear</button>
+      <button id="qpTop"  class="chip-btn" type="button">Top 5 Leagues</button>
     </div>
 
     <!-- Chips (TEAM: leagues · PLAYER: PL clubs generated from players.json) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
-      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more</button>
+      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show all leagues</button>
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
-    <!-- (Show on wheel moved to RIGHT card) -->
-
-    <button id="spinBtn" type="button">SPIN</button>
+    <button id="spinBtn" type="button">Spin Wheel</button>
 
     <div class="history-title">History</div>
-    <div class="history" id="history"></div>
+    <div class="history" id="history">
+      <div class="result"><div class="current-name">Your journey starts with a spin - try your luck!</div></div>
+    </div>
     <button id="resetHistoryBtn" type="button" style="margin-top:12px">Reset History</button>
   </section>
 
-  <!-- RIGHT: wheel (Show on wheel FIRST here) -->
+  <!-- RIGHT: wheel (Show on Wheel section sits above the wheel) -->
   <section class="card" aria-labelledby="wheel-title">
+    <!-- Title switches via JS based on mode -->
     <div class="section-title" id="wheel-title">Club Wheel</div>
 
-    <!-- Sub-header: meter + SHOW ON WHEEL (moved here) -->
+    <!-- Sub-header: meter + SHOW ON WHEEL -->
     <div class="wheel-subheader">
-      <div id="perfTip" class="perf-tip" aria-live="polite">
-        <span class="meter-text">0 items selected</span>
+      <div id="perfTip" class="perf-tip" aria-live="polite" data-clubs-text="clubs ready to spin" data-players-text="players loaded">
+        <!-- Default text for TEAM mode; app.js should update the number & noun -->
+        <span class="meter-text">0 clubs ready to spin</span>
       </div>
 
-      <div class="section-title" style="margin-top:8px">Show on wheel</div>
+      <div class="section-title" style="margin-top:8px">Show on Wheel</div>
       <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
         <!-- labels & checked state are set by JS (mode-aware) -->
         <label class="chip"><input type="checkbox" id="optA" checked aria-label="A"><span id="lblA" class="chip-text">A</span></label>
@@ -137,15 +139,16 @@
   <!-- Content -->
   <section id="content" style="grid-column:1 / -1">
     <nav aria-label="On this page" class="toc">
-      <a href="#what-is">What is Football Spinner?</a>
-      <a href="#how-it-works">How it works</a>
+      <a href="#about">About Football Spinner</a>
+      <a href="#how">How it works</a>
     </nav>
 
-    <h2 id="what-is">What is Football Spinner?</h2>
-    <p>Football Spinner is a free, fan-made random football club generator built for quick fun, discovery, and football trivia.</p>
+    <h2 id="about">About Football Spinner</h2>
+    <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
 
-    <h2 id="how-it-works">How it works</h2>
-    <p>Choose leagues (or Premier League clubs in PLAYER mode), pick what to show on the wheel, then spin. If too many entries are selected, the wheel switches to wedge-only for performance.</p>
+    <h2 id="how">How it works</h2>
+    <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
+    <p>The wheel will pick a random team or player - perfect for trivia nights, football debates, or discovering new favorites.</p>
   </section>
 </main>
 
@@ -189,5 +192,33 @@
 </div>
 
 <script src="app.js" defer></script>
+<script>
+  /* Optional helper to switch headings/meter nouns from JS without touching app.js internals */
+  (function(){
+    const titleEl = document.getElementById('wheel-title');
+    const perf = document.getElementById('perfTip');
+    const meterText = perf?.querySelector('.meter-text');
+
+    // Observe mode buttons to update the right title & noun (clubs/players)
+    const setTeam = () => {
+      if (titleEl) titleEl.textContent = 'Club Wheel';
+      if (meterText && perf?.dataset.clubsText) {
+        // Keep current number if present, replace noun phrasing:
+        const num = (meterText.textContent.match(/\d+/)||['0'])[0];
+        meterText.textContent = `${num} ${perf.dataset.clubsText}`;
+      }
+    };
+    const setPlayer = () => {
+      if (titleEl) titleEl.textContent = 'Player Wheel';
+      if (meterText && perf?.dataset.playersText) {
+        const num = (meterText.textContent.match(/\d+/)||['0'])[0];
+        meterText.textContent = `${num} ${perf.dataset.playersText}`;
+      }
+    };
+
+    document.getElementById('modeTeam')?.addEventListener('click', setTeam);
+    document.getElementById('modePlayer')?.addEventListener('click', setPlayer);
+  })();
+</script>
 </body>
 </html>
