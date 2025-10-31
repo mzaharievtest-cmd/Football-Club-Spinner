@@ -554,3 +554,20 @@ section.card[aria-labelledby="wheel-title"]{
 canvas#wheel { pointer-events: none !important; }
 .spin-fab { z-index: 50 !important; }
 .pointer  { z-index: 40 !important; }
+/* === Tighten header-to-cards gap === */
+:root {
+  --header-h: 72px;   /* fallback; JS will overwrite with the real height */
+  --header-gap: 10px; /* breathing space below header */
+}
+
+/* Reduce header padding a bit */
+header { padding-block: 12px 10px; }
+
+/* Cards start just below the header */
+.container { margin-top: var(--header-gap); }
+
+/* Sidebar sticky offset = header height + small gap */
+.card.sidebar { top: calc(var(--header-h) + var(--header-gap)); }
+
+/* Optional: slightly reduce the first card’s internal top padding */
+.container > .card:first-child { padding-top: 16px; }
