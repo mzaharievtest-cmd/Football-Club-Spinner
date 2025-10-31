@@ -19,6 +19,8 @@ let TOTAL_PLAYERS = 0;
 let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
+
+// Typed history store (so we can filter by MODE)
 let historyRaw = JSON.parse(localStorage.getItem('clubHistory')) || [];
 let history = historyRaw.map(h => (
   h && typeof h === 'object' && 'type' in h && 'item' in h
@@ -539,7 +541,7 @@ function renderHistory(){
   if (!visible.length){
     const empty = document.createElement('div');
     empty.className = 'item';
-    empty.textContent = 'Your journey starts with a spin - try your luck!';
+    empty.textContent = 'Your journey starts with a spin!';
     historyEl.appendChild(empty);
     return;
   }
@@ -558,9 +560,7 @@ function renderHistory(){
     }
 
     const span = document.createElement('span');
-    span.textContent = MODE === 'player'
-      ? item.team_name || 'Player'
-      : item.team_name || 'Team';
+    span.textContent = item.team_name || (MODE === 'player' ? 'Player' : 'Team');
 
     div.append(img, span);
     historyEl.appendChild(div);
@@ -687,6 +687,9 @@ function setMode(next){
   // Mode-specific SHOW options and rebuild chips with correct defaults
   applyModeShowControls();
   renderChips();
+
+  // IMPORTANT: refresh History to show only current mode’s entries
+  renderHistory();
 }
 
 /* ---------- Loaders ---------- */
@@ -800,10 +803,10 @@ function wire(){
   spinFab && (spinFab.onclick = spin);
 
   resetHistoryBtn && (resetHistoryBtn.onclick = ()=>{
-  history = [];
-  saveHistory();
-  renderHistory();
-});
+    history = [];
+    saveHistory();
+    renderHistory();
+  });
 
   mClose && (mClose.onclick = ()=> !spinning && closeModal());
   backdrop && backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop) closeModal(); });
