@@ -1,98 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Analytics (kept from your original) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date()); gtag('config', 'G-RK8RD59N8G');
+  </script>
+
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Football Spinner — Guess Team · Stadium · Player</title>
-  <meta name="description" content="Football Spinner — a modern football-themed spinning wheel game. Guess teams, stadiums, or players with smooth animations, confetti, and sound.">
-  <link rel="icon" href="app-logo.png">
+  <meta name="description" content="Football Spinner — a football quiz spinner. Guess Team, Stadium, or Player with multiple sub-modes.">
+  <link rel="canonical" href="https://footballspinner.com/"/>
+
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1">
+  <link rel="apple-touch-icon" href="app-logo.png?v=1">
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <header class="fs-header">
-    <div class="brand">
-      <img src="app-logo.png" alt="Football Spinner Logo" class="brand-img" />
-      <div class="brand-copy">
-        <h1>Football Spinner</h1>
-        <p class="season">Guess Team · Stadium · Player</p>
-      </div>
+<header>
+  <div class="brand">
+    <img src="app-logo.png?v=1" alt="Football Spinner" class="brand-img" decoding="async">
+    <div>
+      <h1 id="main-title">Football Spinner</h1>
+      <div class="season-tag">398 Clubs · 25 Leagues</div>
     </div>
-    <div class="brand-right">
-      <span class="tag">v1.0</span>
-    </div>
-  </header>
+  </div>
 
-  <!-- Mode bar -->
-  <nav class="fs-modebar" aria-label="Game modes">
-    <div class="fs-modebar-left" role="tablist" aria-label="Modes">
-      <button class="fs-mode-btn is-active" data-mode="team"    role="tab" aria-selected="true">Guess Team</button>
-      <button class="fs-mode-btn"           data-mode="stadium" role="tab" aria-selected="false">Guess Stadium</button>
-      <button class="fs-mode-btn"           data-mode="player"  role="tab" aria-selected="false">Guess Player</button>
-    </div>
-    <div class="fs-modebar-right">
-      <button class="fs-freespin-btn" id="fsFreeSpinBtn" type="button" aria-label="Free Spin">Free&nbsp;Spin</button>
-    </div>
-  </nav>
-
-  <!-- Sub-variants bar -->
-  <nav class="fs-subbar" id="fsSubbar" aria-label="Mode variants" role="tablist">
-    <!-- Default (team) is injected by JS on load -->
-  </nav>
-
-  <main class="fs-container">
-    <section class="fs-card fs-card-wheel" aria-labelledby="wheel-title">
-      <div class="fs-card-head">
-        <h2 id="wheel-title">Spin the Wheel</h2>
-        <p class="hint">Pick a mode and a variant · press SPIN</p>
+  <!-- NEW: top mode bar (keeps old IDs where useful) -->
+  <div class="header-right">
+    <div class="mode-switch-wrap">
+      <div class="mode-switch" role="tablist" aria-label="Mode selector">
+        <button id="modeTeam"    class="mode-btn" role="tab" aria-pressed="true">Guess Team</button>
+        <button id="modeStadium" class="mode-btn" role="tab" aria-pressed="false">Guess Stadium</button>
+        <button id="modePlayer"  class="mode-btn" role="tab" aria-pressed="false">Guess Player</button>
+        <button id="modeFree"    class="mode-btn ghost" role="tab" aria-pressed="false" title="Spin with current selections">Free Spin</button>
       </div>
 
-      <div class="wheel-wrap">
-        <div class="pointer" aria-hidden="true"></div>
-        <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN</button>
-        <canvas id="wheel" width="700" height="700" aria-label="Wheel"></canvas>
-        <canvas id="fx"    width="700" height="700" aria-hidden="true"></canvas>
+      <!-- NEW: sub-bar that changes per selected mode -->
+      <div id="subBar" class="subbar" role="tablist" aria-label="Mode variants">
+        <!-- Filled by JS; structure kept simple: .subbtn[data-variant] -->
       </div>
+    </div>
+  </div>
+</header>
 
-      <div class="fs-actions">
-        <button id="fsRevealBtn" class="fs-reveal-btn" type="button">Reveal</button>
-      </div>
+<main class="container">
+  <!-- LEFT: filters / toggles (unchanged IDs) -->
+  <section class="card sidebar" aria-labelledby="filter-title">
+    <div class="section-title" id="filter-title">Leagues (filter)</div>
 
-      <div id="fsResult" class="fs-result" aria-live="polite" hidden>
-        <div class="fs-result-media" id="fsResultMedia" aria-hidden="true"></div>
-        <div class="fs-result-text">
-          <div class="fs-result-title" id="fsResultTitle">—</div>
-          <div class="fs-result-sub"   id="fsResultSub">—</div>
+    <div class="quick-picks" role="group" aria-label="Quick selections">
+      <button id="qpAll"  class="chip-btn" type="button">All</button>
+      <button id="qpNone" class="chip-btn" type="button">None</button>
+      <button id="qpTop"  class="chip-btn" type="button">Top</button>
+    </div>
+
+    <div id="chips">
+      <div id="chipsTop" class="chips"></div>
+      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more</button>
+      <div id="chipsMore" class="chips" hidden></div>
+    </div>
+
+    <div class="section-title">Show on wheel</div>
+    <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
+      <!-- JS will rename these per mode; keeping your IDs -->
+      <label class="chip"><input type="checkbox" id="optA" checked aria-label="A"><span id="lblA" class="chip-text">A</span></label>
+      <label class="chip"><input type="checkbox" id="optB" checked aria-label="B"><span id="lblB" class="chip-text">B</span></label>
+      <label class="chip"><input type="checkbox" id="optC"         aria-label="C"><span id="lblC" class="chip-text">C</span></label>
+      <label class="chip"><input type="checkbox" id="optD"         aria-label="D"><span id="lblD" class="chip-text">D</span></label>
+      <label class="chip"><input type="checkbox" id="optE"         aria-label="E"><span id="lblE" class="chip-text">E</span></label>
+    </div>
+
+    <button id="spinBtn" type="button">SPIN</button>
+
+    <div class="history-title">History</div>
+    <div class="history" id="history"></div>
+    <button id="resetHistoryBtn" type="button" style="margin-top:12px">Reset History</button>
+  </section>
+
+  <!-- RIGHT: wheel -->
+  <section class="card" aria-labelledby="wheel-title">
+    <div class="section-title" id="wheel-title">Wheel</div>
+    <div id="perfTip" class="perf-tip" aria-live="polite"><span class="meter-text">0 items selected</span></div>
+
+    <div class="wheel-wrap">
+      <div class="pointer" aria-hidden="true"></div>
+      <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
+      <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
+      <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
+    </div>
+
+    <!-- NEW: Reveal + result card -->
+    <div class="reveal-wrap">
+      <button id="revealBtn" class="chip-btn reveal-btn" type="button" disabled>Reveal</button>
+      <div id="resultCard" class="result-card" hidden>
+        <img id="resultImg" alt="" />
+        <div class="result-meta">
+          <div id="resultTitle" class="result-title">—</div>
+          <div id="resultSub" class="result-sub">—</div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <audio id="fsCheer" preload="auto">
-        <source src="crowd-cheer.mp3" type="audio/mpeg">
-      </audio>
-    </section>
+  <!-- Content / FAQ kept minimal and card-styled -->
+  <section id="content" style="grid-column:1 / -1">
+    <nav aria-label="On this page" class="toc">
+      <a href="#what-is">What is Football Spinner?</a>
+      <a href="#how-it-works">How it works</a>
+    </nav>
 
-    <section class="fs-card fs-card-info">
-      <div class="fs-card-head">
-        <h2>How it works</h2>
+    <h2 id="what-is">What is Football Spinner?</h2>
+    <p>Spin to guess Team, Stadium, or Player. Pick a sub-mode, spin, then hit Reveal.</p>
+
+    <h2 id="how-it-works">How it works</h2>
+    <p>Sub-modes switch what appears on the wheel (logo, stadium, name, photo, or club+flag+number). The sidebar filters still work with Team data. Free Spin uses whatever is currently built.</p>
+  </section>
+</main>
+
+<!-- Modal (kept IDs, FIXED visibility through JS) -->
+<div id="backdrop" hidden>
+  <div id="modal">
+    <div id="mHead">Title</div>
+    <div id="mSub" class="small" aria-live="polite"></div>
+
+    <div class="m-body">
+      <img id="mLogo" alt="">
+
+      <div class="m-row" id="rowStadium">
+        <div class="label">Stadium</div>
+        <span id="mStadium" class="value-pill"></span>
       </div>
-      <div class="fs-card-body">
-        <ul class="info-list">
-          <li><strong>Guess Team</strong> → <em>By Logo</em> or <em>By Stadium (+ League)</em></li>
-          <li><strong>Guess Stadium</strong> → <em>By Team Name</em> or <em>By Logo</em></li>
-          <li><strong>Guess Player</strong> → <em>By Photo</em> or <em>By Club + Flag + Number</em></li>
-          <li>Click <b>SPIN</b>, then <b>Reveal</b> to show the answer.</li>
-          <li>Confetti pops and a crowd cheer plays on reveal (audio can be muted in your browser tab if needed).</li>
-        </ul>
+
+      <div class="m-row" id="rowClub" style="display:none">
+        <div class="label">Club</div>
+        <span id="mClub" class="value-pill"></span>
       </div>
-    </section>
-  </main>
 
-  <footer class="fs-footer">
-    <span>© Football Spinner</span>
-  </footer>
+      <div class="m-row" id="rowJersey" style="display:none">
+        <div class="label">Jersey</div>
+        <span id="mJersey" class="value-pill"></span>
+      </div>
 
-  <script src="app.js" defer></script>
+      <div class="m-row" id="rowNat" style="display:none">
+        <div class="label">Nationality</div>
+        <span id="mNat" class="value-pill"></span>
+      </div>
+    </div>
+
+    <div class="m-actions">
+      <button id="mClose" class="chip-btn" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js" defer></script>
 </body>
 </html>
