@@ -59,7 +59,7 @@
     <img src="app-logo.png?v=1" alt="Football Club Spinner" class="brand-img" decoding="async">
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
-      <!-- note: dot removed per request -->
+      <!-- dot removed as requested -->
       <div class="season-tag">Discover clubs and players from 25 leagues around the world</div>
     </div>
   </div>
@@ -92,7 +92,7 @@
     <!-- Chips (TEAM: leagues · PLAYER: PL clubs generated from players.json) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
-      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show all leagues</button>
+      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
@@ -134,47 +134,30 @@
     </div>
   </section>
 
-  <!-- DETAILS: full-width card under both columns (spans grid columns) -->
-  <section class="card" aria-labelledby="details-title" style="grid-column:1 / -1; margin-top:28px;">
-    <div id="details-title" class="section-title">Details</div>
+  <!-- Full-width info card: collapsible panels, closed by default.
+       This card spans both columns and matches the card width above. -->
+  <section class="card" style="grid-column:1 / -1; margin-top:28px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <details id="about-block" class="info-panel">
+        <summary class="info-summary">About Football Spinner</summary>
+        <div class="info-body">
+          <h2 id="about">About Football Spinner</h2>
+          <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
+        </div>
+      </details>
 
-    <!-- Use details panels (closed by default). They are inside a full-width card that matches the two cards above. -->
-<!-- DETAILS: full-width card under both columns (spans grid columns) -->
-<section class="card" style="grid-column:1 / -1; margin-top:28px;">
-  <!-- no "Details" heading — panels only -->
-  <div style="display:flex;flex-direction:column;gap:12px;">
-    <details id="about-block" class="info-panel">
-      <summary class="info-summary">About Football Spinner</summary>
-      <div class="info-body">
-        <h2 id="about">About Football Spinner</h2>
-        <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
-      </div>
-    </details>
+      <details id="how-block" class="info-panel">
+        <summary class="info-summary">How it works</summary>
+        <div class="info-body">
+          <h2 id="how">How it works</h2>
+          <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
+          <p>The wheel will pick a random team or player — perfect for trivia nights, football debates, or discovering new favorites.</p>
+        </div>
+      </details>
 
-    <details id="how-block" class="info-panel">
-      <summary class="info-summary">How it works</summary>
-      <div class="info-body">
-        <h2 id="how">How it works</h2>
-        <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
-        <p>The wheel will pick a random team or player — perfect for trivia nights, football debates, or discovering new favorites.</p>
-      </div>
-    </details>
-
-    <details id="why-block" class="info-panel">
-      <summary class="info-summary">Why use it?</summary>
-      <div class="info-body">
-        <h2 id="why">Why use it?</h2>
-        <p>Football Spinner makes football discovery fun again. Whether you're choosing a random team to support, planning a quiz night, or learning new leagues — every spin is a surprise.</p>
-      </div>
-    </details>
-  </div>
-</section>
-
-      <details id="why-block">
-        <summary style="cursor:pointer;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.03);background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));font-weight:700;">
-          Why use it?
-        </summary>
-        <div style="padding:12px 0 0;border-top:1px solid rgba(255,255,255,.04)">
+      <details id="why-block" class="info-panel">
+        <summary class="info-summary">Why use it?</summary>
+        <div class="info-body">
           <h2 id="why">Why use it?</h2>
           <p>Football Spinner makes football discovery fun again. Whether you're choosing a random team to support, planning a quiz night, or learning new leagues — every spin is a surprise.</p>
         </div>
@@ -222,13 +205,15 @@
 <script src="app.js" defer></script>
 <script>
   (function(){
+    // Small UI helper: swap texts when user toggles mode (team/player).
+    // Keeps meter wording and sidebar title correct.
     function applyModeTexts(mode){
       const titleRight = document.getElementById('wheel-title');
       const perf = document.getElementById('perfTip');
       const meterText = perf?.querySelector('.meter-text');
 
       const filterTitle = document.getElementById('filter-title');
-      const qpTop = document.getElementById('qpTop');
+      const qpTop = document.getElementById('qpTop'); // not required, but safe if present
 
       if(mode === 'player'){
         if (titleRight) titleRight.textContent = 'Player Wheel';
@@ -255,12 +240,15 @@
       }
     }
 
+    // ensure history empty text is exact
     const histEmpty = document.getElementById('historyEmpty');
     if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
 
+    // apply initial mode from localStorage (default: team)
     const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
     applyModeTexts(initial);
 
+    // wire mode buttons
     document.getElementById('modeTeam')?.addEventListener('click', () => {
       localStorage.setItem('fsMode', 'team');
       applyModeTexts('team');
@@ -270,10 +258,16 @@
       applyModeTexts('player');
     });
 
-    // keyboard toggles for summary
+    // keyboard support for details summaries (space/enter toggles)
     document.querySelectorAll('details summary').forEach(s=>{
       s.setAttribute('role','button');
-      s.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); s.parentElement.open = !s.parentElement.open; }});
+      s.addEventListener('keydown', e=>{
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          const d = s.parentElement;
+          d.open = !d.open;
+        }
+      });
     });
   })();
 </script>
