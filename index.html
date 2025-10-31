@@ -85,13 +85,13 @@
     <div class="quick-picks" role="group" aria-label="Quick selections">
       <button id="qpAll"  class="chip-btn" type="button" title="Select all leagues">All Leagues</button>
       <button id="qpNone" class="chip-btn" type="button" title="Deselect all leagues">Clear</button>
-      <button id="qpTop5" class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
+      <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
     </div>
 
     <!-- Chips (TEAM: leagues · PLAYER: PL clubs generated from players.json) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
-      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
+      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show all leagues</button>
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
@@ -133,23 +133,33 @@
     </div>
   </section>
 
-  <!-- Content -->
+  <!-- Content: replaced pill navigation with closed details (collapsed by default) -->
   <section id="content" style="grid-column:1 / -1">
-    <nav aria-label="On this page" class="toc">
-      <a href="#about">About Football Spinner</a>
-      <a href="#how">How it works</a>
-      <a href="#why">Why use it?</a>
-    </nav>
+    <!-- Each section is a closed <details> component. Users expand to read. -->
+    <details id="about-block">
+      <summary class="panel-summary">About Football Spinner</summary>
+      <div class="panel" role="region" aria-labelledby="about">
+        <h2 id="about">About Football Spinner</h2>
+        <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
+      </div>
+    </details>
 
-    <h2 id="about">About Football Spinner</h2>
-    <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
+    <details id="how-block">
+      <summary class="panel-summary">How it works</summary>
+      <div class="panel" role="region" aria-labelledby="how">
+        <h2 id="how">How it works</h2>
+        <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
+        <p>The wheel will pick a random team or player - perfect for trivia nights, football debates, or discovering new favorites.</p>
+      </div>
+    </details>
 
-    <h2 id="how">How it works</h2>
-    <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
-    <p>The wheel will pick a random team or player - perfect for trivia nights, football debates, or discovering new favorites.</p>
-
-    <h2 id="why">Why use it?</h2>
-    <p>Football Spinner makes football discovery fun again. Whether you're choosing a random team to support, planning a quiz night, or learning new leagues — every spin is a surprise.</p>
+    <details id="why-block">
+      <summary class="panel-summary">Why use it?</summary>
+      <div class="panel" role="region" aria-labelledby="why">
+        <h2 id="why">Why use it?</h2>
+        <p>Football Spinner makes football discovery fun again. Whether you're choosing a random team to support, planning a quiz night, or learning new leagues — every spin is a surprise.</p>
+      </div>
+    </details>
   </section>
 </main>
 
@@ -191,14 +201,16 @@
 
 <script src="app.js" defer></script>
 <script>
-  // Mode-driven UI text (kept minimal; app.js handles most logic)
-  document.addEventListener('DOMContentLoaded', () => {
+  // Helper: update UI text based on mode ('team' or 'player')
+  // (keeps previous behavior — dialed to the new structure)
+  (function(){
     function applyModeTexts(mode){
       const titleRight = document.getElementById('wheel-title');
       const perf = document.getElementById('perfTip');
       const meterText = perf?.querySelector('.meter-text');
+
       const filterTitle = document.getElementById('filter-title');
-      const qpTop5 = document.getElementById('qpTop5');
+      const qpTop = document.getElementById('qpTop');
 
       if(mode === 'player'){
         if (titleRight) titleRight.textContent = 'Player Wheel';
@@ -207,9 +219,9 @@
           meterText.textContent = `${num} ${perf.dataset.playersText}`;
         }
         if (filterTitle) filterTitle.textContent = 'Select Clubs';
-        if (qpTop5){
-          qpTop5.textContent = 'Top 6 Premier League Clubs';
-          qpTop5.title = 'Select the Big Six from the Premier League';
+        if (qpTop){
+          qpTop.textContent = 'Top 6 Premier League Clubs';
+          qpTop.title = 'Select the Big Six from the Premier League';
         }
       } else {
         if (titleRight) titleRight.textContent = 'Club Wheel';
@@ -218,9 +230,9 @@
           meterText.textContent = `${num} ${perf.dataset.clubsText}`;
         }
         if (filterTitle) filterTitle.textContent = 'Select Leagues';
-        if (qpTop5){
-          qpTop5.textContent = 'Top 5 Leagues';
-          qpTop5.title = 'Select only the top 5 leagues';
+        if (qpTop){
+          qpTop.textContent = 'Top 5 Leagues';
+          qpTop.title = 'Select only the top 5 leagues';
         }
       }
     }
@@ -229,11 +241,11 @@
     const histEmpty = document.getElementById('historyEmpty');
     if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
 
-    // Apply initial mode texts
+    // Apply mode texts on load from localStorage (default: team)
     const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
     applyModeTexts(initial);
 
-    // Wire mode buttons
+    // Wire up mode buttons to switch texts
     document.getElementById('modeTeam')?.addEventListener('click', () => {
       localStorage.setItem('fsMode', 'team');
       applyModeTexts('team');
@@ -242,7 +254,7 @@
       localStorage.setItem('fsMode', 'player');
       applyModeTexts('player');
     });
-  });
+  })();
 </script>
 </body>
 </html>
