@@ -353,3 +353,25 @@ button:focus-visible,.chip-btn:focus-visible,
   border-radius: 10px;
 }
 ::-webkit-scrollbar-track { background: transparent; }
+/* ——— FINAL OVERRIDES: tighten header gap, disable sticky on both cards ——— */
+
+/* Keep header; remove the big top gap before the cards */
+.container {
+  margin-top: 12px !important;   /* was 20px / var(--header-safe) in multiple places */
+}
+
+/* Make BOTH columns flow with the page (no sticky offsets) */
+.card.sidebar[aria-labelledby="filter-title"],
+section.card[aria-labelledby="wheel-title"] {
+  position: static !important;
+  top: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  mask-image: none !important;
+}
+
+/* Ensure wheel overlays (pointer/FAB) are clickable and not clipped */
+section.card[aria-labelledby="wheel-title"] { overflow: visible !important; }
+canvas#wheel { pointer-events: none !important; }
+.spin-fab { z-index: 50 !important; }
+.pointer  { z-index: 40 !important; }
