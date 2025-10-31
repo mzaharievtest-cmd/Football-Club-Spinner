@@ -63,16 +63,12 @@
     </div>
   </div>
 
-  <!-- Top toolbar (modes + variants) -->
-  <div class="toolbar">
-    <div class="toolbar-row">
-      <button id="btnGuessTeam"     class="mode-pill" aria-pressed="true">Guess Team</button>
-      <button id="btnGuessStadium"  class="mode-pill" aria-pressed="false">Guess Stadium</button>
-      <button id="btnGuessPlayer"   class="mode-pill" aria-pressed="false">Guess Player</button>
-      <button id="btnFreeSpin"      class="mode-pill pill-ghost" aria-pressed="false">Free Spin</button>
-    </div>
-    <div id="variantBar" class="toolbar-row toolbar-variants" aria-live="polite">
-      <!-- populated by JS; default is Guess Team: By Logo / By Stadium (+ League) -->
+  <div class="header-right">
+    <div class="mode-switch-wrap">
+      <div class="mode-switch" role="tablist" aria-label="View mode">
+        <button id="modeTeam"   role="tab" aria-pressed="true"  class="mode-btn mode-btn-active">TEAM</button>
+        <button id="modePlayer" role="tab" aria-pressed="false" class="mode-btn">PLAYER</button>
+      </div>
     </div>
   </div>
 </header>
