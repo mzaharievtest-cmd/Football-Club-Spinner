@@ -230,19 +230,6 @@
     }
   }
 
-  // Toggle text for "Show all leagues" / "Show fewer leagues"
-  document.addEventListener('DOMContentLoaded', () => {
-    const toggle = document.getElementById('toggleMore');
-    const chipsMore = document.getElementById('chipsMore');
-    if (toggle) {
-      toggle.addEventListener('click', () => {
-        const expanded = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', String(!expanded));
-        chipsMore.hidden = expanded;
-        toggle.textContent = expanded ? 'Show all leagues' : 'Show fewer leagues';
-      });
-    }
-
     // Ensure history empty text is correct on load
     const histEmpty = document.getElementById('historyEmpty');
     if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
