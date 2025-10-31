@@ -835,3 +835,38 @@ button:focus-visible,
   outline-offset: 3px;
   border-radius: 12px;
 }
+/* ======= Fix: Sidebar layout clipping / overlap ======= */
+
+/* Prevent left filter card from being cut off or overlapping */
+@media (min-width: 980px) {
+  .container {
+    align-items: flex-start;
+  }
+  .card.sidebar,
+  #teamView {
+    position: sticky;
+    top: 88px; /* below header */
+    align-self: start;
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Make sure the wheel (right column) doesn't overlap when scrolling */
+  .container > .card:not(#teamView):not(.sidebar) {
+    min-width: 0;
+    overflow: visible;
+  }
+}
+
+/* Subtle scrollbar for the sticky sidebar */
+#teamView::-webkit-scrollbar {
+  width: 8px;
+}
+#teamView::-webkit-scrollbar-thumb {
+  background: rgba(120,160,255,.25);
+  border-radius: 6px;
+}
+#teamView::-webkit-scrollbar-track {
+  background: transparent;
+}
