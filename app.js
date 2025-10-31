@@ -558,18 +558,19 @@ function renderHistory(){
   });
 }
 
-/* ---------- Reveal overlay helpers (compact inline chips) ---------- */
+/* ---------- Reveal overlay helpers (REAL hide for text, blur for images) ---------- */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
-    .reveal-wrap{display:inline-flex;align-items:center;gap:8px;position:relative}
+    .reveal-wrap{display:inline-flex;align-items:center;gap:10px;position:relative}
     .reveal-wrap.imgwrap{display:inline-block}
     .reveal-overlay{
       position:absolute;inset:0;border-radius:inherit;
       backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
       background:transparent;pointer-events:none;
     }
+    .reveal-hide{visibility:hidden}
     .reveal-btn{
       width:auto;padding:8px 12px;border-radius:10px;
       border:1px solid rgba(90,161,255,.6);
@@ -590,28 +591,51 @@ function wrap(el){
   if (el.tagName === 'IMG') w.classList.add('imgwrap');
   el.parentElement.insertBefore(w, el); w.appendChild(el); return w;
 }
-function blurEl(el){
-  if(!el) return;
-  el.style.filter='blur(8px)';
+function hideText(el){
+  const w = wrap(el);
+  el.classList.add('reveal-hide');
+  // no blur overlay for text (keeps layout clean)
+  return w;
+}
+function showText(el){
+  el.classList.remove('reveal-hide');
+  const w = el.parentElement;
+  const b=w && w.querySelector('.reveal-btn'); if(b) b.remove();
+}
+function blurImg(el){
   const w=wrap(el);
   if(w && !w.querySelector('.reveal-overlay')){
     const o=document.createElement('span'); o.className='reveal-overlay'; w.appendChild(o);
   }
+  el.style.filter='blur(8px)';
+  return w;
 }
-function unblurEl(el){
-  if(!el) return;
+function unblurImg(el){
   el.style.filter='';
   const w=el.parentElement;
   const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove();
   const b=w && w.querySelector('.reveal-btn'); if(b) b.remove();
 }
 function addReveal(key, el, enabled, label){
-  const w = wrap(el);
-  const prior = w.querySelector('.reveal-btn'); if (prior) prior.remove();
-  if (enabled || modalReveal[key]){ unblurEl(el); return; }
-  blurEl(el);
-  const b=document.createElement('button'); b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
-  b.onclick=()=>{ modalReveal[key]=true; unblurEl(el); };
+  // images get blur; text gets hidden
+  const isImg = el.tagName === 'IMG';
+  const alreadyOpen = modalReveal[key];
+
+  // remove any prior button
+  const pw = wrap(el);
+  const prior = pw.querySelector('.reveal-btn'); if (prior) prior.remove();
+
+  if (enabled || alreadyOpen){
+    if (isImg) unblurImg(el); else showText(el);
+    return;
+  }
+
+  let w;
+  if (isImg) w = blurImg(el); else w = hideText(el);
+
+  const b=document.createElement('button');
+  b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
+  b.onclick=()=>{ modalReveal[key]=true; if (isImg) unblurImg(el); else showText(el); };
   w.appendChild(b);
 }
 
