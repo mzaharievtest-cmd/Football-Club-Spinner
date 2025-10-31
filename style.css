@@ -529,3 +529,28 @@ canvas#wheel { pointer-events: none !important; }
 
 /* Keep the whole grid starting below the sticky header */
 .container { margin-top: var(--header-safe) !important; }
+/* === Make BOTH columns non-sticky; let the page flow normally === */
+:root { --header-safe: 96px; }                /* keep header spacing */
+.container { margin-top: var(--header-safe) !important; }
+
+/* Left card (filters): disable sticky + inner scrolling */
+.card.sidebar[aria-labelledby="filter-title"]{
+  position: static !important;
+  top: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  mask-image: none !important;
+}
+
+/* Right card (wheel): non-sticky, no clipping */
+section.card[aria-labelledby="wheel-title"]{
+  position: static !important;
+  top: auto !important;
+  max-height: none !important;
+  overflow: visible !important;   /* keep SPIN/pointer visible */
+}
+
+/* Ensure the SPIN button stays clickable above the canvas */
+canvas#wheel { pointer-events: none !important; }
+.spin-fab { z-index: 50 !important; }
+.pointer  { z-index: 40 !important; }
