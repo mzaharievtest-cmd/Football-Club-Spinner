@@ -1,433 +1,621 @@
-/* Football Spinner — modes, variants, wheel, reveal, confetti */
+/* Football Spinner app — modes, sub-variants, wheel + modal + reveal
+   Keeps your existing IDs/classes; adds mode/subbar + reveal + confetti & cheer.
+*/
 
-(() => {
-  // ---------- DOM HELPERS ----------
-  const $  = (s, r=document)=> r.querySelector(s);
-  const $$ = (s, r=document)=> Array.from(r.querySelectorAll(s));
+/* --------------------------
+   DOM Helpers
+---------------------------*/
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
 
-  const canvas = $('#wheel');
-  const ctx = canvas.getContext('2d');
-  const fx = $('#fx');
-  const spinBtn = $('#spinFab');
-  const freeBtn = $('#fsFreeSpinBtn');
-  const revealBtn = $('#fsRevealBtn');
-  const resultEl = $('#fsResult');
-  const resultTitle = $('#fsResultTitle');
-  const resultSub = $('#fsResultSub');
-  const resultMedia = $('#fsResultMedia');
-  const cheer = $('#fsCheer');
+/* --------------------------
+   Elements
+---------------------------*/
+const wheelCanvas = $('#wheel');
+const fxCanvas    = $('#fx');
+const ctx         = wheelCanvas.getContext('2d');
+const fxctx       = fxCanvas.getContext('2d');
 
-  const modeBtns = $$('.fs-mode-btn');
-  const subbar = $('#fsSubbar');
+const spinBtn  = $('#spinBtn');
+const spinFab  = $('#spinFab');
+const revealBtn= $('#revealBtn');
 
-  // ---------- DATA SOURCES (replace with your real assets) ----------
-  // Minimal demo data. Update paths or swap to your data builder.
-  const DATA_SOURCES = {
-    teamLogo: [
-      { id:'ars', title:'Arsenal', sub:'Premier League', img:'assets/clubs/arsenal.png' },
-      { id:'rm',  title:'Real Madrid', sub:'La Liga', img:'assets/clubs/realmadrid.png' },
-      { id:'bvb', title:'Dortmund', sub:'Bundesliga', img:'assets/clubs/dortmund.png' },
-      { id:'psg', title:'PSG', sub:'Ligue 1', img:'assets/clubs/psg.png' },
-    ],
-    teamStadium: [
-      { id:'ars', title:'Emirates Stadium', sub:'Arsenal · Premier League', img:'assets/stadiums/emirates.jpg' },
-      { id:'rm',  title:'Santiago Bernabéu', sub:'Real Madrid · La Liga', img:'assets/stadiums/bernabeu.jpg' },
-      { id:'bvb', title:'Signal Iduna Park', sub:'Borussia Dortmund · Bundesliga', img:'assets/stadiums/signal-iduna.jpg' },
-      { id:'psg', title:'Parc des Princes', sub:'PSG · Ligue 1', img:'assets/stadiums/parc.jpg' },
-    ],
-    stadiumByTeamName: [
-      { id:'ars', title:'Arsenal', sub:'Team Name', img:null },
-      { id:'rm',  title:'Real Madrid', sub:'Team Name', img:null },
-      { id:'bvb', title:'Borussia Dortmund', sub:'Team Name', img:null },
-      { id:'psg', title:'Paris Saint-Germain', sub:'Team Name', img:null },
-    ],
-    stadiumByLogo: [
-      { id:'ars', title:'Arsenal', sub:'By Logo', img:'assets/clubs/arsenal.png' },
-      { id:'rm',  title:'Real Madrid', sub:'By Logo', img:'assets/clubs/realmadrid.png' },
-      { id:'bvb', title:'Dortmund', sub:'By Logo', img:'assets/clubs/dortmund.png' },
-      { id:'psg', title:'PSG', sub:'By Logo', img:'assets/clubs/psg.png' },
-    ],
-    playerPhoto: [
-      { id:'p1', title:'Player A', sub:'Forward', img:'assets/players/p1.jpg' },
-      { id:'p2', title:'Player B', sub:'Midfielder', img:'assets/players/p2.jpg' },
-      { id:'p3', title:'Player C', sub:'Defender', img:'assets/players/p3.jpg' },
-      { id:'p4', title:'Player D', sub:'Goalkeeper', img:'assets/players/p4.jpg' },
-    ],
-    playerIcons: [
-      { id:'p1', title:'Player A', sub:'Club + Flag + #9',   img:null, icons:['assets/clubs/realmadrid.png','assets/flags/ar.png','assets/nums/9.svg'] },
-      { id:'p2', title:'Player B', sub:'Club + Flag + #7',   img:null, icons:['assets/clubs/arsenal.png','assets/flags/pt.png','assets/nums/7.svg'] },
-      { id:'p3', title:'Player C', sub:'Club + Flag + #10',  img:null, icons:['assets/clubs/psg.png','assets/flags/fr.png','assets/nums/10.svg'] },
-      { id:'p4', title:'Player D', sub:'Club + Flag + #1',   img:null, icons:['assets/clubs/dortmund.png','assets/flags/de.png','assets/nums/1.svg'] },
+const historyEl= $('#history');
+const perfTip  = $('#perfTip');
+
+const resultCard = $('#resultCard');
+const resultImg  = $('#resultImg');
+const resultTitle= $('#resultTitle');
+const resultSub  = $('#resultSub');
+
+const backdrop = $('#backdrop');
+const modal    = $('#modal');
+const mHead    = $('#mHead');
+const mSub     = $('#mSub');
+const mLogo    = $('#mLogo');
+const rowStadium = $('#rowStadium');
+const rowClub    = $('#rowClub');
+const rowJersey  = $('#rowJersey');
+const rowNat     = $('#rowNat');
+const mStadium = $('#mStadium');
+const mClub    = $('#mClub');
+const mJersey  = $('#mJersey');
+const mNat     = $('#mNat');
+const mClose   = $('#mClose');
+
+const modeTeamBtn    = $('#modeTeam');
+const modeStadiumBtn = $('#modeStadium');
+const modePlayerBtn  = $('#modePlayer');
+const modeFreeBtn    = $('#modeFree');
+const subBar         = $('#subBar');
+
+/* --------------------------
+   Data (small demo set)
+   You can replace these with your real datasets.
+---------------------------*/
+const TEAMS = [
+  { name: 'Arsenal',     crest: 'public/crests/arsenal.png',  stadium:'Emirates Stadium' },
+  { name: 'Barcelona',   crest: 'public/crests/barcelona.png',stadium:'Olympic Stadium' },
+  { name: 'Inter',       crest: 'public/crests/inter.png',    stadium:'San Siro' },
+  { name: 'Bayern',      crest: 'public/crests/bayern.png',   stadium:'Allianz Arena' },
+  { name: 'PSG',         crest: 'public/crests/psg.png',      stadium:'Parc des Princes' }
+];
+
+const STADIUMS = [
+  { stadium:'Emirates Stadium', team:'Arsenal',   image:'public/stadiums/emirates.jpg' },
+  { stadium:'San Siro',         team:'Inter',     image:'public/stadiums/sansiro.jpg' },
+  { stadium:'Allianz Arena',    team:'Bayern',    image:'public/stadiums/allianz.jpg' },
+  { stadium:'Parc des Princes', team:'PSG',       image:'public/stadiums/parc.jpg' }
+];
+
+const PLAYERS = [
+  { name:'Bukayo Saka', club:'Arsenal',    number:7,  nat:'England',   flag:'public/flags/gb.png',  photo:'public/players/saka.jpg',   crest:'public/crests/arsenal.png' },
+  { name:'Lautaro Martínez', club:'Inter', number:10, nat:'Argentina', flag:'public/flags/ar.png',  photo:'public/players/lautaro.jpg', crest:'public/crests/inter.png'  },
+  { name:'Kylian Mbappé', club:'PSG',      number:7,  nat:'France',    flag:'public/flags/fr.png',  photo:'public/players/mbappe.jpg',  crest:'public/crests/psg.png'    },
+];
+
+/* --------------------------
+   Mode & Variant state
+---------------------------*/
+const MODES = {
+  team: {
+    label: 'Guess Team',
+    variants: [
+      { key:'team_logo',     label:'By Logo' },
+      { key:'team_stadium',  label:'By Stadium (+ League)' }
     ]
-  };
-
-  // ---------- STATE ----------
-  const state = {
-    mode: 'team',          // 'team' | 'stadium' | 'player'
-    variant: 'team:logo',  // namespaced
-    renderType: 'logo',    // 'logo' | 'stadium' | 'name' | 'photo' | 'icons'
-    slices: [],            // built from variant
-    spinning: false,
-    angle: 0,
-    velocity: 0,
-    friction: 0.985,
-    picked: null
-  };
-
-  const VARIANTS = {
-    team: [
-      { label: 'By Logo',               key: 'team:logo',    render: 'logo' },
-      { label: 'By Stadium (+ League)', key: 'team:stadium', render: 'stadium' },
-    ],
-    stadium: [
-      { label: 'By Team Name', key: 'stadium:name',  render: 'name' },
-      { label: 'By Logo',      key: 'stadium:logo',  render: 'logo' },
-    ],
-    player: [
-      { label: 'By Photo',                 key: 'player:photo',  render: 'photo' },
-      { label: 'By Club + Flag + Number',  key: 'player:icons',  render: 'icons' },
+  },
+  stadium: {
+    label: 'Guess Stadium',
+    variants: [
+      { key:'stadium_name',  label:'By Team Name' },
+      { key:'stadium_logo',  label:'By Logo' }
     ]
-  };
+  },
+  player: {
+    label: 'Guess Player',
+    variants: [
+      { key:'player_photo',  label:'By Photo' },
+      { key:'player_combo',  label:'By Club + Flag + Number' }
+    ]
+  }
+};
 
-  // ---------- BUILD SLICES ----------
-  function buildSlices(mode, variant){
-    if (mode === 'team') {
-      state.renderType = variant==='team:stadium' ? 'stadium' : 'logo';
-      return variant==='team:stadium' ? DATA_SOURCES.teamStadium : DATA_SOURCES.teamLogo;
+let currentMode = 'team';
+let currentVariant = 'team_logo';
+
+let slices = [];           // current wheel entries (strings or drawable items)
+let spinning = false;
+let lastResult = null;     // { item, angle, label, img?, meta? }
+let animationRAF = null;
+
+/* --------------------------
+   Build top subbar
+---------------------------*/
+function renderSubBar() {
+  subBar.innerHTML = '';
+  const defs = MODES[currentMode].variants;
+  defs.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'subbtn';
+    btn.textContent = v.label;
+    btn.setAttribute('data-variant', v.key);
+    btn.setAttribute('aria-pressed', v.key === currentVariant ? 'true' : 'false');
+    btn.addEventListener('click', () => setVariant(v.key));
+    subBar.appendChild(btn);
+  });
+}
+
+function setMode(modeKey) {
+  currentMode = modeKey;
+  // default to first variant for that mode if variant not compatible
+  const first = MODES[modeKey].variants[0].key;
+  if (!MODES[modeKey].variants.find(v => v.key === currentVariant)) {
+    currentVariant = first;
+  }
+  // update pressed states
+  modeTeamBtn.setAttribute('aria-pressed', modeKey === 'team');
+  modeStadiumBtn.setAttribute('aria-pressed', modeKey === 'stadium');
+  modePlayerBtn.setAttribute('aria-pressed', modeKey === 'player');
+  modeFreeBtn.setAttribute('aria-pressed', 'false');
+
+  renderSubBar();
+  rebuildWheelData();
+}
+
+function setVariant(variantKey) {
+  currentVariant = variantKey;
+  renderSubBar();
+  rebuildWheelData();
+}
+
+/* --------------------------
+   Wheel data according to variant
+---------------------------*/
+function rebuildWheelData() {
+  // Compute slices + perf tip label
+  switch (currentVariant) {
+    case 'team_logo': {
+      slices = TEAMS.map(t => ({ label: t.name, img: t.crest, meta: {stadium:t.stadium, type:'team'} }));
+      setWheelLabels('Club crests'); break;
     }
-    if (mode === 'stadium') {
-      state.renderType = variant==='stadium:logo' ? 'logo' : 'name';
-      return variant==='stadium:logo' ? DATA_SOURCES.stadiumByLogo : DATA_SOURCES.stadiumByTeamName;
+    case 'team_stadium': {
+      slices = TEAMS.map(t => ({ label: t.stadium, meta: {team:t.name, type:'team_stadium'} }));
+      setWheelLabels('Stadium names'); break;
     }
-    if (mode === 'player') {
-      state.renderType = variant==='player:icons' ? 'icons' : 'photo';
-      return variant==='player:icons' ? DATA_SOURCES.playerIcons : DATA_SOURCES.playerPhoto;
+    case 'stadium_name': {
+      slices = STADIUMS.map(s => ({ label: s.team, meta:{stadium:s.stadium, type:'stadium_team'} }));
+      setWheelLabels('Team names'); break;
     }
-    return [];
+    case 'stadium_logo': {
+      // Using crest via team match
+      slices = STADIUMS.map(s => {
+        const team = TEAMS.find(t => t.name === s.team);
+        return { label: s.team, img: team?.crest, meta:{stadium:s.stadium, type:'stadium_logo'} };
+      });
+      setWheelLabels('Club crests'); break;
+    }
+    case 'player_photo': {
+      slices = PLAYERS.map(p => ({ label: p.name, img:p.photo, meta:{club:p.club, number:p.number, nat:p.nat, flag:p.flag, crest:p.crest, type:'player_photo'} }));
+      setWheelLabels('Player photos'); break;
+    }
+    case 'player_combo': {
+      slices = PLAYERS.map(p => ({ label: `${p.club} · #${p.number}`, small:[p.crest, p.flag], meta:{name:p.name, nat:p.nat, type:'player_combo'} }));
+      setWheelLabels('Club + Flag + Number'); break;
+    }
+    default:
+      slices = [];
   }
 
-  // ---------- SUBBAR RENDER ----------
-  function renderSubbar(mode) {
-    const variants = VARIANTS[mode] || [];
-    subbar.innerHTML = '';
-    variants.forEach((v, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'fs-variant-btn' + (idx===0 ? ' is-active' : '');
-      btn.textContent = v.label;
-      btn.setAttribute('role','tab');
-      btn.setAttribute('aria-selected', idx===0 ? 'true' : 'false');
-      btn.dataset.variant = v.key;
-      subbar.appendChild(btn);
-    });
-  }
+  // update perf tip
+  const n = slices.length;
+  perfTip.style.setProperty('--pct', Math.min(1, n/64));
+  perfTip.querySelector('.meter-text').textContent = `${n} items`;
 
-  // ---------- APPLY MODE/VARIANT ----------
-  function applyMode(nextMode){
-    if (nextMode === state.mode) return;
-    state.mode = nextMode;
-    modeBtns.forEach(b=>{
-      const active = b.dataset.mode === nextMode;
-      b.classList.toggle('is-active', active);
-      b.setAttribute('aria-selected', active ? 'true' : 'false');
-    });
-    renderSubbar(nextMode);
-    const first = subbar.querySelector('.fs-variant-btn');
-    if (first) applyVariant(first.dataset.variant);
-  }
+  drawWheel(0); // reset drawing
+  lastResult = null;
+  revealBtn.disabled = true;
+  resultCard.hidden = true;
+}
 
-  function applyVariant(key){
-    // toggle UI
-    $$('.fs-variant-btn', subbar).forEach(b=>{
-      const active = b.dataset.variant === key;
-      b.classList.toggle('is-active', active);
-      b.setAttribute('aria-selected', active ? 'true' : 'false');
-    });
-    state.variant = key;
-    state.slices = buildSlices(state.mode, state.variant);
-    // redraw
-    drawWheel();
-  }
+/* --------------------------
+   Drawing the wheel
+---------------------------*/
+function drawWheel(rotation = 0) {
+  const { width, height } = wheelCanvas;
+  ctx.clearRect(0,0,width,height);
+  const R = Math.min(width, height)/2 - 6;
+  const cx = width/2, cy = height/2;
 
-  // ---------- WHEEL DRAWING ----------
-  const TAU = Math.PI * 2;
+  const N = Math.max(1, slices.length);
+  const anglePer = (Math.PI*2)/N;
 
-  function drawWheel(){
-    const { width, height } = canvas;
-    const cx = width/2, cy = height/2;
-    ctx.clearRect(0,0,width,height);
+  // background
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(rotation);
 
-    const n = Math.max(1, state.slices.length);
-    const step = TAU / n;
-    const radius = Math.min(cx, cy) - 16;
+  for (let i=0;i<N;i++){
+    const start = i*anglePer;
+    const end   = start+anglePer;
+
+    // wedge fill (alternating football colors)
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.arc(0,0,R,start,end);
+    ctx.closePath();
+    const even = i%2===0;
+    const grad = ctx.createLinearGradient(0, -R, 0, R);
+    grad.addColorStop(0, even ? '#0b2a14' : '#0a1f3a');  // deep green / deep blue
+    grad.addColorStop(1, even ? '#134d2a' : '#12335a');  // brighter
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // border
+    ctx.strokeStyle = 'rgba(255,255,255,.08)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // label / image
+    const item = slices[i];
+    const mid = start + anglePer/2;
 
     ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(state.angle);
+    ctx.rotate(mid);
+    ctx.translate(R*0.68, 0);
+    ctx.rotate(Math.PI/2);
 
-    for (let i=0; i<n; i++){
-      const slice = state.slices[i];
-      const a0 = i * step;
-      const a1 = a0 + step;
-
-      // wedge
-      const hue = (i * (360/n)) | 0;
-      const bg = `hsl(${hue} 70% 38%)`;
-      const bg2 = `hsl(${(hue+20)%360} 70% 26%)`;
-
-      ctx.beginPath();
-      ctx.moveTo(0,0);
-      ctx.arc(0,0,radius,a0,a1);
-      ctx.closePath();
-      const grad = ctx.createLinearGradient(
-        Math.cos(a0)*radius, Math.sin(a0)*radius,
-        Math.cos(a1)*radius, Math.sin(a1)*radius
-      );
-      grad.addColorStop(0, bg);
-      grad.addColorStop(1, bg2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      // stroke
-      ctx.strokeStyle = 'rgba(255,255,255,.12)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // content
-      const mid = (a0 + a1)/2;
-      const tx = Math.cos(mid) * (radius * 0.68);
-      const ty = Math.sin(mid) * (radius * 0.68);
-
-      ctx.save();
-      ctx.translate(tx, ty);
-      ctx.rotate(mid);
-
-      // Render modes
-      if ((state.renderType === 'logo' || state.renderType === 'photo' || state.renderType === 'stadium') && slice.img){
-        // draw image if available
-        drawImageCached(slice.img, -28, -28, 56, 56);
-      } else if (state.renderType === 'icons' && Array.isArray(slice.icons)){
-        // 3 small icons inline
-        let x=-30;
-        slice.icons.slice(0,3).forEach(src=>{
-          drawImageCached(src, x, -16, 24, 24); x+=26;
-        });
-      } else {
-        // fallback: text
-        ctx.fillStyle = '#fff';
-        ctx.font = '700 14px Inter, system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        wrapText(ctx, slice.title, 0, 0, 120, 18);
-      }
-
-      ctx.restore();
+    if (item.img){
+      // draw image (logo/photo)
+      // cached loading
+      drawImageCenter(ctx, item.img, 74);
+      // text under image
+      ctx.fillStyle = '#eaf0fb';
+      ctx.font = '700 14px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      wrapText(ctx, item.label, 0, 56, 120, 16);
+    } else {
+      // text only
+      ctx.fillStyle = '#eaf0fb';
+      ctx.font = '800 16px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      wrapText(ctx, item.label, 0, 0, 140, 18);
     }
 
-    // center hub
-    ctx.beginPath();
-    ctx.arc(0,0,36,0,TAU);
-    ctx.fillStyle = '#0b1530';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(100,160,255,.5)';
-    ctx.stroke();
+    // optional small icons (for player_combo)
+    if (item.small && item.small.length){
+      ctx.translate(0, 56);
+      const size = 28, gap = 6;
+      const totalW = item.small.length*size + (item.small.length-1)*gap;
+      let x = -totalW/2 + size/2;
+      item.small.forEach(src=>{
+        drawImageCenter(ctx, src, size, x, 0, 6);
+        x += size + gap;
+      });
+    }
 
     ctx.restore();
   }
 
-  const IMG_CACHE = new Map();
-  function drawImageCached(src, x,y,w,h){
-    let obj = IMG_CACHE.get(src);
-    if (!obj){
-      const img = new Image();
-      img.decoding = 'async';
-      img.crossOrigin = 'anonymous';
-      img.src = src;
-      obj = { img, loaded:false };
-      img.onload = () => { obj.loaded=true; drawWheel(); };
-      img.onerror = () => { obj.error=true; };
-      IMG_CACHE.set(src, obj);
-    }
-    if (obj.loaded){
-      ctx.save();
-      roundRect(ctx, x,y,w,h, 8);
-      ctx.clip();
-      ctx.drawImage(obj.img, x,y,w,h);
-      ctx.restore();
-      ctx.strokeStyle = 'rgba(255,255,255,.18)';
-      ctx.lineWidth = 1;
-      roundRect(ctx, x,y,w,h, 8);
-      ctx.stroke();
+  // center cap
+  ctx.beginPath();
+  ctx.arc(0,0,26,0,Math.PI*2);
+  ctx.fillStyle = '#0b1530';
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(100,168,255,.55)';
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+const imageCache = new Map();
+function loadImage(src){
+  if (!src) return Promise.resolve(null);
+  if (imageCache.has(src)) return imageCache.get(src);
+  const p = new Promise(res=>{
+    const img = new Image();
+    img.onload = ()=>res(img);
+    img.onerror = ()=>res(null);
+    img.src = src;
+  });
+  imageCache.set(src,p);
+  return p;
+}
+
+function drawImageCenter(ctx, src, size=72, dx=0, dy=0, radius=12){
+  // draw async-ish: schedule then no-op if not ready
+  const draw = (img) => {
+    if (!img) return;
+    ctx.save();
+    // rounded rect clip
+    const w=size, h=size;
+    roundedRectPath(ctx, dx-w/2, dy-h/2, w, h, radius);
+    ctx.clip();
+    ctx.drawImage(img, dx-w/2, dy-h/2, w, h);
+    ctx.restore();
+    // border
+    ctx.save();
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = 'rgba(255,255,255,.18)';
+    roundedRectPath(ctx, dx-size/2, dy-size/2, size, size, radius);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  const cached = imageCache.get(src);
+  if (cached && cached.then){
+    cached.then(draw);
+  } else {
+    loadImage(src).then(draw);
+  }
+}
+
+function roundedRectPath(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH){
+  const words = String(text).split(' ');
+  let line = '';
+  let yy = y;
+  for (let i=0;i<words.length;i++){
+    const test = line ? `${line} ${words[i]}` : words[i];
+    if (ctx.measureText(test).width > maxW){
+      ctx.fillText(line, x, yy);
+      line = words[i];
+      yy += lineH;
     } else {
-      // placeholder
-      ctx.fillStyle = 'rgba(255,255,255,.12)';
-      roundRect(ctx, x,y,w,h, 8);
-      ctx.fill();
+      line = test;
     }
   }
+  ctx.fillText(line, x, yy);
+}
 
-  function roundRect(ctx, x,y,w,h,r){
-    const rr = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x+rr, y);
-    ctx.arcTo(x+w, y,   x+w, y+h, rr);
-    ctx.arcTo(x+w, y+h, x,   y+h, rr);
-    ctx.arcTo(x,   y+h, x,   y,   rr);
-    ctx.arcTo(x,   y,   x+w, y,   rr);
-    ctx.closePath();
-  }
+/* --------------------------
+   Spin logic
+---------------------------*/
+function spin(){
+  if (spinning || !slices.length) return;
+  spinning = true;
+  revealBtn.disabled = true;
+  resultCard.hidden = true;
 
-  function wrapText(context, text, x, y, maxWidth, lineHeight){
-    const words = (text || '').split(' ');
-    let line=''; let yy=y;
-    for (let n=0;n<words.length;n++){
-      const test = line + (line ? ' ' : '') + words[n];
-      const metrics = context.measureText(test);
-      if (metrics.width > maxWidth && n>0){
-        context.fillText(line, x, yy);
-        line = words[n];
-        yy += lineHeight;
-      } else line = test;
-    }
-    context.fillText(line, x, yy);
-  }
+  // target slice
+  const targetIndex = Math.floor(Math.random()*slices.length);
+  const N = slices.length;
+  const anglePer = (Math.PI*2)/N;
+  // pointer points "up" => rotation so that mid of slice hits pointer at 0 rad
+  const targetAngle = (Math.PI*2) - (targetIndex*anglePer + anglePer/2);
 
-  // ---------- SPIN ----------
-  function spin(){
-    if (state.spinning || state.slices.length===0) return;
-    state.spinning = true;
-    state.velocity = 0.35 + Math.random()*0.25; // initial angular velocity
-    animate();
-  }
+  const start = performance.now();
+  const duration = 2800 + Math.random()*900; // ms
+  const extraTurns = Math.PI*4 + Math.PI*2*Math.random(); // extra rotations
 
-  function animate(){
-    if (!state.spinning) return;
-    state.angle += state.velocity;
-    state.velocity *= state.friction;
+  function frame(now){
+    const t = Math.min(1, (now-start)/duration);
+    const ease = 1 - Math.pow(1-t, 3); // easeOutCubic
+    const rot = ease*(targetAngle + extraTurns);
+    drawWheel(rot);
 
-    // stop condition
-    if (state.velocity < 0.003){
-      state.spinning = false;
-      snapToWinner();
-      return;
-    }
-    drawWheel();
-    requestAnimationFrame(animate);
-  }
-
-  function snapToWinner(){
-    // pick wedge at pointer (top). Pointer is at angle=0 in screen space.
-    const n = Math.max(1, state.slices.length);
-    const step = TAU / n;
-    // Normalize angle so 0 is at top
-    const a = ((state.angle % TAU) + TAU) % TAU;
-    // Pointer at -PI/2 (canvas top) relative to the wheel rotation:
-    const pointerAngle = (-Math.PI/2 - a + TAU) % TAU;
-    const idx = Math.floor(pointerAngle / step);
-    const winner = state.slices[idx % n];
-    state.picked = winner;
-
-    // Subtle snap to center of that wedge:
-    const mid = (idx + 0.5) * step;
-    const target = -Math.PI/2 - mid;
-    state.angle = target;
-    drawWheel();
-  }
-
-  // ---------- REVEAL ----------
-  function reveal(){
-    const result = state.picked || randomPick();
-    if (!result) return;
-
-    // Result card
-    resultEl.hidden = false;
-    resultTitle.textContent = result.title || '—';
-    resultSub.textContent   = result.sub || '';
-
-    resultMedia.innerHTML = '';
-    if (state.renderType === 'icons' && Array.isArray(result.icons)){
-      const wrap = document.createElement('div');
-      wrap.style.display='flex'; wrap.style.gap='6px'; wrap.style.alignItems='center';
-      result.icons.forEach(src=>{
-        const img = document.createElement('img');
-        img.src = src; img.alt=''; img.width=20; img.height=20; img.style.objectFit='contain';
-        wrap.appendChild(img);
-      });
-      resultMedia.appendChild(wrap);
-    } else if (result.img){
-      const img = document.createElement('img');
-      img.src = result.img; img.alt = result.title || '';
-      resultMedia.appendChild(img);
+    if (t < 1){
+      animationRAF = requestAnimationFrame(frame);
     } else {
-      resultMedia.textContent = '🏆';
+      spinning = false;
+      const item = slices[targetIndex];
+      lastResult = { index:targetIndex, item };
+      revealBtn.disabled = false;
+      addHistory(item);
+      // optional subtle thump
+      thump();
     }
+  }
+  cancelAnimationFrame(animationRAF);
+  animationRAF = requestAnimationFrame(frame);
+}
 
-    // Cheer + confetti
-    try { cheer && cheer.play().catch(()=>{}); } catch(_) {}
-    burstConfetti(fx);
+function addHistory(item){
+  const div = document.createElement('div');
+  div.className = 'item';
+  const img = document.createElement('img');
+  img.alt = '';
+  if (item.img) img.src = item.img; else img.style.visibility='hidden';
+  const span = document.createElement('span');
+  span.textContent = item.label;
+  div.append(img, span);
+  historyEl.prepend(div);
+}
+
+function thump(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type='sine'; o.frequency.value = 140;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.18);
+    o.connect(g).connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime+0.2);
+  }catch{}
+}
+
+/* --------------------------
+   Reveal + Modal
+---------------------------*/
+function reveal(){
+  if (!lastResult) return;
+  const { item } = lastResult;
+
+  // Fill the small result card under the wheel
+  resultImg.src = item.img || '';
+  resultImg.style.visibility = item.img ? 'visible':'hidden';
+  resultTitle.textContent = item.label;
+
+  // context-dependent subtitle
+  let sub = '';
+  switch (currentVariant){
+    case 'team_logo': sub = item.meta?.stadium ? `Stadium: ${item.meta.stadium}` : ''; break;
+    case 'team_stadium': sub = item.meta?.team ? `Team: ${item.meta.team}` : ''; break;
+    case 'stadium_name': sub = item.meta?.stadium ? `Stadium: ${item.meta.stadium}` : ''; break;
+    case 'stadium_logo': sub = item.meta?.stadium ? `Stadium: ${item.meta.stadium}` : ''; break;
+    case 'player_photo': sub = `${item.meta?.club ?? ''} · #${item.meta?.number ?? ''} · ${item.meta?.nat ?? ''}`; break;
+    case 'player_combo': sub = `${item.meta?.name ?? ''} · ${item.meta?.nat ?? ''}`; break;
+  }
+  resultSub.textContent = sub.trim();
+  resultCard.hidden = false;
+
+  // Show modal with richer info (FIX: ensure visible)
+  showModalFor(item);
+
+  // Effects
+  confetti();
+  cheer();
+}
+
+function showModalFor(item){
+  // Header + sub
+  mHead.textContent = item.label;
+  mSub.textContent = MODES[currentMode].label;
+
+  // Image
+  if (item.img){ mLogo.src = item.img; mLogo.style.display='block'; }
+  else { mLogo.removeAttribute('src'); mLogo.style.display='none'; }
+
+  // Rows visibility
+  rowStadium.style.display = 'none';
+  rowClub.style.display    = 'none';
+  rowJersey.style.display  = 'none';
+  rowNat.style.display     = 'none';
+
+  switch (currentVariant){
+    case 'team_logo':
+      if (item.meta?.stadium){ rowStadium.style.display='flex'; mStadium.textContent=item.meta.stadium; }
+      break;
+    case 'team_stadium':
+      if (item.meta?.team){ rowClub.style.display='flex'; mClub.textContent=item.meta.team; }
+      break;
+    case 'stadium_name':
+    case 'stadium_logo':
+      if (item.meta?.stadium){ rowStadium.style.display='flex'; mStadium.textContent=item.meta.stadium; }
+      break;
+    case 'player_photo':
+      if (item.meta?.club){ rowClub.style.display='flex'; mClub.textContent=item.meta.club; }
+      if (item.meta?.number!=null){ rowJersey.style.display='flex'; mJersey.textContent = `#${item.meta.number}`; }
+      if (item.meta?.nat){ rowNat.style.display='flex'; mNat.textContent = item.meta.nat; }
+      break;
+    case 'player_combo':
+      if (item.meta?.name){ mHead.textContent = item.meta.name; }
+      if (item.meta?.name){ rowClub.style.display='flex'; mClub.textContent = item.label.split(' · ')[0]; }
+      if (item.meta?.nat){ rowNat.style.display='flex'; mNat.textContent = item.meta.nat; }
+      break;
   }
 
-  function randomPick(){
-    const s = state.slices;
-    return s.length ? s[(Math.random()*s.length)|0] : null;
-  }
+  // VISIBILITY FIX: use hidden attr on #backdrop
+  backdrop.hidden = false;
+  // animate modal
+  requestAnimationFrame(()=> modal.classList.add('show'));
+}
 
-  // ---------- CONFETTI ----------
-  function burstConfetti(canvas){
-    if (!canvas) return;
-    const ctx2 = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-    const N = 140;
-    const parts = Array.from({length:N},()=>({
-      x: W/2, y: H/2, r: 2+Math.random()*3,
-      vx: (Math.random()*2-1)*6, vy: (Math.random()*2-1)*6 - 2,
-      a: 1, c: `hsl(${Math.floor(Math.random()*360)} 90% 55%)`
-    }));
-    let t = 0;
-    function tick(){
-      t++;
-      ctx2.clearRect(0,0,W,H);
-      parts.forEach(p=>{
-        p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.a -= 0.012;
-        ctx2.globalAlpha = Math.max(p.a,0);
-        ctx2.beginPath(); ctx2.arc(p.x,p.y,p.r,0,Math.PI*2); ctx2.fillStyle=p.c; ctx2.fill();
-      });
-      ctx2.globalAlpha=1;
-      if (t<120) requestAnimationFrame(tick); else ctx2.clearRect(0,0,W,H);
-    }
-    tick();
-  }
+mClose.addEventListener('click', closeModal);
+backdrop.addEventListener('click', (e)=>{
+  if (e.target === backdrop) closeModal();
+});
+function closeModal(){
+  modal.classList.remove('show');
+  setTimeout(()=>{ backdrop.hidden = true; }, 160);
+}
 
-  // ---------- EVENTS ----------
-  // Mode buttons
-  modeBtns.forEach(b=>{
-    b.addEventListener('click', ()=>{
-      applyMode(b.dataset.mode);
+/* --------------------------
+   FX: Confetti + Cheer
+---------------------------*/
+function confetti(){
+  const W = fxCanvas.width, H = fxCanvas.height;
+  const pieces = 90;
+  const particles = [];
+  for(let i=0;i<pieces;i++){
+    particles.push({
+      x: W/2, y: H*0.2,
+      vx: (Math.random()-0.5)*6,
+      vy: 2+Math.random()*3,
+      g: 0.12 + Math.random()*0.06,
+      life: 60+Math.random()*40,
+      hue: Math.random()<0.33?120:(Math.random()<0.5?210:45) // green/blue/gold
     });
-  });
-
-  // Subbar clicks
-  subbar.addEventListener('click', (e)=>{
-    const btn = e.target.closest('.fs-variant-btn'); if (!btn) return;
-    applyVariant(btn.dataset.variant);
-  });
-
-  // Spin
-  spinBtn.addEventListener('click', spin);
-  freeBtn?.addEventListener('click', ()=> spinBtn.click());
-  revealBtn.addEventListener('click', reveal);
-
-  // ---------- INIT ----------
-  function init(){
-    // initial subbar + slices
-    renderSubbar(state.mode);
-    const first = subbar.querySelector('.fs-variant-btn');
-    if (first) applyVariant(first.dataset.variant);
-    drawWheel();
-    // expose small API if you want to integrate elsewhere
-    window.FS_getSlices   = () => state.slices.slice();
-    window.FS_renderType  = () => state.renderType;
-    window.FS_forceReveal = reveal;
   }
-  init();
-})();
+
+  let frame = 0;
+  function tick(){
+    fxctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{
+      p.vy += p.g; p.x += p.vx; p.y += p.vy; p.life--;
+      fxctx.save();
+      fxctx.translate(p.x,p.y);
+      fxctx.rotate(p.x*0.05);
+      fxctx.fillStyle = `hsl(${p.hue} 80% 60%)`;
+      fxctx.fillRect(-2,-4,4,8);
+      fxctx.restore();
+    });
+    particles.filter(p=>p.life>0);
+    frame++;
+    if (frame < 80) requestAnimationFrame(tick);
+    else fxctx.clearRect(0,0,W,H);
+  }
+  tick();
+}
+
+function cheer(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const noise = ctx.createBuffer(1, ctx.sampleRate*1.1, ctx.sampleRate);
+    const data = noise.getChannelData(0);
+    // pinkish crowd noise
+    for (let i=0;i<data.length;i++){
+      data[i] = (Math.random()*2-1) * (1 - i/data.length) * 0.3;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = noise;
+    const gain = ctx.createGain(); gain.gain.value = 0.35;
+    src.connect(gain).connect(ctx.destination);
+    src.start(0);
+  }catch{}
+}
+
+/* --------------------------
+   Hook up buttons
+---------------------------*/
+spinBtn.addEventListener('click', spin);
+spinFab.addEventListener('click', spin);
+revealBtn.addEventListener('click', reveal);
+
+// Top modes
+modeTeamBtn.addEventListener('click', ()=> setMode('team'));
+modeStadiumBtn.addEventListener('click', ()=> setMode('stadium'));
+modePlayerBtn.addEventListener('click', ()=> setMode('player'));
+modeFreeBtn.addEventListener('click', ()=>{
+  // "Free Spin" = spin with whatever slices are currently built
+  modeTeamBtn.setAttribute('aria-pressed','false');
+  modeStadiumBtn.setAttribute('aria-pressed','false');
+  modePlayerBtn.setAttribute('aria-pressed','false');
+  modeFreeBtn.setAttribute('aria-pressed','true');
+  // do not change variant/slices; just spin
+  spin();
+});
+
+/* --------------------------
+   Init
+---------------------------*/
+function setWheelLabels(desc){
+  $('#wheel-title').textContent = `Wheel — ${desc}`;
+}
+function resizeCanvas(){
+  // keep square, adapt DPR
+  const DPR = Math.max(1, window.devicePixelRatio || 1);
+  const display = Math.min(820, wheelCanvas.clientWidth || 640);
+  wheelCanvas.width = display * DPR;
+  wheelCanvas.height= display * DPR;
+  fxCanvas.width = wheelCanvas.width;
+  fxCanvas.height= wheelCanvas.height;
+  wheelCanvas.style.maxWidth = '820px';
+  wheelCanvas.style.width = '100%';
+  drawWheel(0);
+}
+window.addEventListener('resize', resizeCanvas);
+
+// modal start state — ensure hidden attribute is respected
+backdrop.hidden = true;
+
+// initial mode
+setMode('team'); // also builds subbar & slices
+resizeCanvas();
+drawWheel(0);
