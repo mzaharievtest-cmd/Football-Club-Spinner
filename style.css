@@ -497,3 +497,35 @@ section.card[aria-labelledby="wheel-title"]{
 canvas#wheel { pointer-events: none; }
 .spin-fab { z-index: 50; }
 .pointer  { z-index: 40; }
+/* === Layout: LEFT sticky, RIGHT not sticky (internal scroll), same heights === */
+:root { --header-safe: 96px; } /* adjust if your header differs */
+
+/* LEFT — keep sticky sidebar */
+.card.sidebar[aria-labelledby="filter-title"]{
+  position: sticky !important;
+  top: var(--header-safe) !important;
+  align-self: start;
+  max-height: calc(100vh - var(--header-safe) - 12px) !important;
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* RIGHT — make non-sticky, but limit height and give it its own scroll */
+section.card[aria-labelledby="wheel-title"]{
+  position: static !important;       /* <- not sticky */
+  top: auto !important;
+  align-self: start;
+  max-height: calc(100vh - var(--header-safe) - 12px) !important; /* matches left */
+  overflow: auto !important;         /* internal scroll if content is taller */
+  -webkit-overflow-scrolling: touch;
+  z-index: 2;
+}
+
+/* Do NOT clip the spin button / pointer */
+section.card[aria-labelledby="wheel-title"]{ overflow: visible !important; }
+canvas#wheel { pointer-events: none !important; }
+.spin-fab { z-index: 50 !important; }
+.pointer  { z-index: 40 !important; }
+
+/* Keep the whole grid starting below the sticky header */
+.container { margin-top: var(--header-safe) !important; }
