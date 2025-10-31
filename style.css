@@ -870,3 +870,31 @@ button:focus-visible,
 #teamView::-webkit-scrollbar-track {
   background: transparent;
 }
+/* === Fix: left filter card cut/overlap === */
+@media (min-width: 980px) {
+  .container { align-items: flex-start; }
+
+  /* Make the left card sticky under the header and not clipped */
+  #teamView {
+    position: sticky !important;
+    top: 88px;                 /* sits just below the sticky header */
+    align-self: start;
+    max-height: calc(100vh - 110px);
+    overflow: auto;            /* scroll inside the card if needed */
+    z-index: 10;               /* stay above the wheel canvas when adjacent */
+  }
+  /* Undo the global clip only for the sidebar so it doesn't cut */
+  #teamView.card { overflow: visible !important; }
+
+  /* Ensure the wheel/card column can’t overlay the sidebar */
+  .container > .card:not(#teamView) {
+    min-width: 0;
+    z-index: 1;
+    overflow: visible;
+  }
+}
+
+/* Optional: nicer scrollbar on the sticky sidebar */
+#teamView::-webkit-scrollbar{width:8px}
+#teamView::-webkit-scrollbar-thumb{background:rgba(120,160,255,.25);border-radius:6px}
+#teamView::-webkit-scrollbar-track{background:transparent}
