@@ -139,27 +139,36 @@
     <div id="details-title" class="section-title">Details</div>
 
     <!-- Use details panels (closed by default). They are inside a full-width card that matches the two cards above. -->
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <details id="about-block">
-        <summary style="cursor:pointer;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.03);background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));font-weight:700;">
-          About Football Spinner
-        </summary>
-        <div style="padding:12px 0 0;border-top:1px solid rgba(255,255,255,.04)">
-          <h2 id="about">About Football Spinner</h2>
-          <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
-        </div>
-      </details>
+<!-- DETAILS: full-width card under both columns (spans grid columns) -->
+<section class="card" style="grid-column:1 / -1; margin-top:28px;">
+  <!-- no "Details" heading — panels only -->
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <details id="about-block" class="info-panel">
+      <summary class="info-summary">About Football Spinner</summary>
+      <div class="info-body">
+        <h2 id="about">About Football Spinner</h2>
+        <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
+      </div>
+    </details>
 
-      <details id="how-block">
-        <summary style="cursor:pointer;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.03);background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));font-weight:700;">
-          How it works
-        </summary>
-        <div style="padding:12px 0 0;border-top:1px solid rgba(255,255,255,.04)">
-          <h2 id="how">How it works</h2>
-          <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
-          <p>The wheel will pick a random team or player — perfect for trivia nights, football debates, or discovering new favorites.</p>
-        </div>
-      </details>
+    <details id="how-block" class="info-panel">
+      <summary class="info-summary">How it works</summary>
+      <div class="info-body">
+        <h2 id="how">How it works</h2>
+        <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
+        <p>The wheel will pick a random team or player — perfect for trivia nights, football debates, or discovering new favorites.</p>
+      </div>
+    </details>
+
+    <details id="why-block" class="info-panel">
+      <summary class="info-summary">Why use it?</summary>
+      <div class="info-body">
+        <h2 id="why">Why use it?</h2>
+        <p>Football Spinner makes football discovery fun again. Whether you're choosing a random team to support, planning a quiz night, or learning new leagues — every spin is a surprise.</p>
+      </div>
+    </details>
+  </div>
+</section>
 
       <details id="why-block">
         <summary style="cursor:pointer;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.03);background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));font-weight:700;">
