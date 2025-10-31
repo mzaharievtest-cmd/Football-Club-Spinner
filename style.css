@@ -297,6 +297,26 @@ canvas#wheel{
 }
 .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02);border-color:var(--accent-2);box-shadow:0 6px 18px rgba(34,211,238,.18)}
 
+/* Modal polish — keep reveal chips compact and center the logo area */
+#modal .reveal-btn{ width:auto !important; }
+
+#modal .m-body{ align-items:center; }
+#modal #mHead{
+  font-size:22px; font-weight:900; text-align:center; line-height:1.2;
+  margin-top:6px;
+}
+#modal #mSub{ text-align:center; }
+
+#modal #mLogo{
+  border-radius:16px; padding:10px; background:#0b1220;
+  border:1px solid rgba(100,168,255,.35);
+  box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 30px rgba(90,161,255,.08);
+}
+
+#modal .m-row .label{
+  min-width:auto; margin-right:12px; font-weight:800; color:#d7e8ff;
+}
+#modal .m-actions .chip-btn{ width:100%; } /* keep Close button full width */
 /* =========================
    Optional #content section (kept for future)
    ========================= */
