@@ -63,17 +63,16 @@
     </div>
   </div>
 
-  <div class="header-right">
-    <div class="mode-switch-wrap">
-      <div class="mode-switch" role="tablist" aria-label="View mode">
-        <button id="modeTeam"    role="tab" aria-pressed="true"  class="mode-btn mode-btn-active">Guess Team</button>
-        <button id="modeStadium" role="tab" aria-pressed="false" class="mode-btn">Guess Stadium</button>
-        <button id="modePlayer"  role="tab" aria-pressed="false" class="mode-btn">Guess Player</button>
-        <button id="modeFree"    role="tab" aria-pressed="false" class="mode-btn ghost" title="Spin with current selection">Free Spin</button>
-      </div>
-
-      <!-- Sub-bar populated by app.js depending on selected mode -->
-      <div id="subBar" class="subbar" role="tablist" aria-label="Mode variants"></div>
+  <!-- Top toolbar (modes + variants) -->
+  <div class="toolbar">
+    <div class="toolbar-row">
+      <button id="btnGuessTeam"     class="mode-pill" aria-pressed="true">Guess Team</button>
+      <button id="btnGuessStadium"  class="mode-pill" aria-pressed="false">Guess Stadium</button>
+      <button id="btnGuessPlayer"   class="mode-pill" aria-pressed="false">Guess Player</button>
+      <button id="btnFreeSpin"      class="mode-pill pill-ghost" aria-pressed="false">Free Spin</button>
+    </div>
+    <div id="variantBar" class="toolbar-row toolbar-variants" aria-live="polite">
+      <!-- populated by JS; default is Guess Team: By Logo / By Stadium (+ League) -->
     </div>
   </div>
 </header>
@@ -93,7 +92,7 @@
       <button id="qpTop"  class="chip-btn" type="button">Top</button>
     </div>
 
-    <!-- Chips (TEAM/STADIUM: leagues · PLAYER: clubs derived from players.json) -->
+    <!-- Chips (TEAM: leagues · PLAYER: PL clubs generated from players.json) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
       <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more</button>
@@ -147,7 +146,7 @@
 
 <!-- Modal -->
 <div id="backdrop" style="display:none">
-  <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead">
+  <div id="modal">
     <div id="mHead">Title</div>
     <div id="mSub" class="small" aria-live="polite"></div>
 
@@ -155,7 +154,7 @@
       <!-- shared image (team logo or player image) -->
       <img id="mLogo" alt="">
 
-      <!-- TEAM/STADIUM row: Stadium -->
+      <!-- TEAM row: Stadium -->
       <div class="m-row" id="rowStadium">
         <div class="label">Stadium</div>
         <span id="mStadium" class="value-pill"></span>
