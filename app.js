@@ -156,14 +156,17 @@ const FALLBACK_TEAMS = {
 };
 
 /* ---------- Data selection ---------- */
-/* When MODE==='player' we filter out players without a usable image */
+/* -- REPLACE getCurrentData() -- */
 function getCurrentData(){
   const active = new Set(activeCodes());
   if (active.size === 0) return [];
   if (MODE === 'player'){
+    // exclude players without image OR with placeholder
     return PLAYERS.filter(p =>
       active.has(String(p.club_id)) &&
-      p.image_url && String(p.image_url).trim().length > 4
+      p.image_url &&
+      String(p.image_url).trim().length > 4 &&
+      !/placeholder\.png$/i.test(p.image_url)
     );
   }
   return TEAMS.filter(t => active.has(t.league_code));
@@ -204,12 +207,13 @@ function activeCodes(){
 }
 
 /* ---------- Chips render (mode aware) ---------- */
+/* -- REPLACE renderChips() -- */
 function renderChips(){
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
 
   if (MODE === 'player'){
-    // Build list from players.json → PL teams only, derived from their club_id(s)
+    // Build PL team list from players.json
     const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
     const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_TEAMS[id] || `Team #${id}`;
 
@@ -222,10 +226,17 @@ function renderChips(){
       .filter(id => !PL_TOP6.includes(id))
       .sort((a,b)=> labelFor(a).localeCompare(labelFor(b), 'en', {sensitivity:'base'}));
 
-    // Default: ALL PL teams selected
-    top6.forEach(id => chipsTop.appendChild(makeChip(id, labelFor(id), true)));
-    rest.forEach(id => chipsMore.appendChild(makeChip(id, labelFor(id), true)));
+    // DEFAULT: only Arsenal selected
+    const defaultSelected = new Set(['19']); // Arsenal
 
+    top6.forEach(id => chipsTop.appendChild(makeChip(id, labelFor(id), defaultSelected.has(id))));
+    rest.forEach(id => chipsMore.appendChild(makeChip(id, labelFor(id), defaultSelected.has(id))));
+
+    // Sidebar button labels for PLAYER
+    if (qpAll){
+      qpAll.textContent = 'All Premier League teams';
+      qpAll.title = 'Select all Premier League teams';
+    }
     toggleMore.textContent = 'Show more Premier League teams';
     toggleMore.setAttribute('aria-expanded','false');
     chipsMore.hidden = true;
@@ -235,14 +246,18 @@ function renderChips(){
       qpTopBtn.title = 'Select the Big Six from the Premier League';
     }
   } else {
-    // TEAM mode → all leagues available, EPL selected by default
+    // TEAM mode → all leagues; EPL selected by default
     const codes = [...new Set(TEAMS.map(t=>t.league_code))];
     const top = TOP5.filter(c => codes.includes(c));
     const more = codes.filter(c => !top.includes(c)).sort();
 
-    top.forEach(c => chipsTop.appendChild(makeChip(c, leagueLabel(c), c==='EPL'))); // EPL checked, others not
+    top.forEach(c => chipsTop.appendChild(makeChip(c, leagueLabel(c), c==='EPL'))); // EPL checked
     more.forEach(c => chipsMore.appendChild(makeChip(c, leagueLabel(c), false)));
 
+    if (qpAll){
+      qpAll.textContent = 'All Leagues';
+      qpAll.title = 'Select all leagues';
+    }
     toggleMore.textContent = 'Show more leagues';
     toggleMore.setAttribute('aria-expanded','false');
     chipsMore.hidden = true;
@@ -252,7 +267,13 @@ function renderChips(){
       qpTopBtn.title = 'Select only the top 5 leagues';
     }
   }
+
+  // refresh banner/wheel for new defaults
+  selectedIdx = -1;
+  updatePerfBanner();
+  drawWheel();
 }
+    
 
 /* ---------- Show-on-wheel controls (defaults) ---------- */
 function applyModeShowControls(){
@@ -596,6 +617,7 @@ function openModal(item){
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
 
 /* ---------- Mode switch ---------- */
+/* -- REPLACE setMode(next) -- */
 function setMode(next){
   MODE = (next === 'player') ? 'player' : 'team';
   localStorage.setItem('fsMode', MODE);
@@ -603,17 +625,31 @@ function setMode(next){
   const filterTitleEl = document.getElementById('filter-title');
   if (MODE === 'player') {
     filterTitleEl && (filterTitleEl.textContent = 'Select Teams');
+    if (qpAll){
+      qpAll.textContent = 'All Premier League teams';
+      qpAll.title = 'Select all Premier League teams';
+    }
     if (qpTopBtn){
       qpTopBtn.textContent = 'Top 6 Premier League Teams';
       qpTopBtn.title = 'Select the Big Six from the Premier League';
     }
   } else {
     filterTitleEl && (filterTitleEl.textContent = 'Select Leagues');
+    if (qpAll){
+      qpAll.textContent = 'All Leagues';
+      qpAll.title = 'Select all leagues';
+    }
     if (qpTopBtn){
       qpTopBtn.textContent = 'Top 5 Leagues';
       qpTopBtn.title = 'Select only the top 5 leagues';
     }
   }
+
+  // Mode-specific SHOW options
+  applyModeShowControls();
+  // Rebuild chips with the correct defaults
+  renderChips();
+}
 
   // Defaults per mode
   applyModeShowControls();
