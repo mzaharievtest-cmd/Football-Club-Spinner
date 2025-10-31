@@ -1,7 +1,6 @@
 /* Main stylesheet for Football Spinner
    - Dark theme, responsive grid cards, chip UI, wheel, modal
-   - Includes clean details/summary (accordion) styling for the SEO section (#content)
-   - Inter font is loaded via <link> in index.html (no @import here for better performance)
+   - Inter font is loaded via <link> in index.html (no @import here)
 */
 
 /* =========================
@@ -21,7 +20,7 @@
   --line: rgba(120,160,255,.16);
   --line-2: rgba(120,160,255,.10);
 
-  --accent: #64a8ff;  /* main blue */
+  --accent: #64a8ff;   /* main blue */
   --accent-2: #22d3ee; /* cyan */
   --accent-3: #0ea5e9; /* sky */
 
@@ -96,10 +95,7 @@ header h1 {
   min-width: 0;
 }
 .brand > div { min-width: 0; }
-#main-title {
-  white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-}
+#main-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .brand-img {
   width: clamp(34px, 4.5vw, 48px);
@@ -136,6 +132,7 @@ header h1 {
   gap: 22px;
   position: relative;
   z-index: 1;
+  align-items: stretch;        /* both columns grow with content */
 }
 @media (min-width: 980px) {
   .container { grid-template-columns: 380px 1fr; }
@@ -153,14 +150,13 @@ header h1 {
   padding: 18px clamp(14px,3vw,26px);
   border: 1px solid var(--line);
   box-shadow: var(--shadow-1);
-  overflow: clip;
+  overflow: visible;           /* <— no clipping; prevents “cut” content */
   transform: translateY(8px);
   opacity: 0;
   animation: card-in .6s var(--ease-out) forwards;
 }
-@keyframes card-in {
-  to { transform: none; opacity: 1; }
-}
+@keyframes card-in { to { transform: none; opacity: 1; } }
+
 .section-title {
   color: var(--text-0);
   font-weight: 900;
@@ -353,7 +349,7 @@ header h1 {
 #wheel { display: block; max-width: min(92vw, 100%); height: auto; }
 #fx { position: absolute; inset: 0; pointer-events: none; }
 
-/* Pointer (float) */
+/* Pointer */
 .pointer {
   position: absolute;
   top: clamp(4px, 1vw, 12px);
@@ -364,20 +360,12 @@ header h1 {
   z-index: 3;
   animation: pointer-float 3.5s ease-in-out infinite;
 }
-@keyframes pointer-float {
-  0%,100% { transform: translateY(0); }
-  50%     { transform: translateY(-3px); }
-}
+@keyframes pointer-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @media (max-width: 600px) {
-  .pointer {
-    border-left-width: 12px;
-    border-right-width: 12px;
-    border-top-width: 20px;
-  }
+  .pointer { border-left-width: 12px; border-right-width: 12px; border-top-width: 20px; }
 }
 
-/* Spin FAB with animated ring
-   (centered by JS with left/top; fallback keeps it centered) */
+/* Spin FAB */
 .spin-fab {
   position: absolute;
   inset: 50% auto auto 50%;
@@ -405,11 +393,7 @@ header h1 {
   box-shadow: 0 0 0 0 rgba(34,211,238,.35);
   animation: ring 2.4s ease-out infinite;
 }
-@keyframes ring {
-  0% { box-shadow: 0 0 0 0 rgba(34,211,238,.35); }
-  70% { box-shadow: 0 0 0 14px rgba(34,211,238,0); }
-  100% { box-shadow: 0 0 0 0 rgba(34,211,238,0); }
-}
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(34,211,238,.35); } 70% { box-shadow: 0 0 0 14px rgba(34,211,238,0); } 100% { box-shadow: 0 0 0 0 rgba(34,211,238,0); } }
 .spin-fab:disabled { opacity: .6; filter: grayscale(.2); cursor: default; }
 
 /* =========================
@@ -572,7 +556,7 @@ header h1 {
   background: linear-gradient(180deg, rgba(0,180,216,.05), rgba(255,255,255,.02));
 }
 
-/* Summary row: hide native marker and add hover/focus states */
+/* Summary row */
 #content summary {
   list-style: none;
   display: grid;
@@ -637,13 +621,10 @@ img { max-width: 100%; }
   scrollbar-color: rgba(120,160,255,.35) transparent;
 }
 .history::-webkit-scrollbar { width: 8px; }
-.history::-webkit-scrollbar-thumb {
-  background: rgba(120,160,255,.28);
-  border-radius: 8px;
-}
+.history::-webkit-scrollbar-thumb { background: rgba(120,160,255,.28); border-radius: 8px; }
 .history::-webkit-scrollbar-track { background: transparent; }
 
-/* 6) Perf-tip progress meter (set --pct: 0..1 via JS; wrap text in .meter-text) */
+/* 6) Perf-tip meter */
 .perf-tip { position: relative; overflow: hidden; }
 .perf-tip::before {
   content: "";
@@ -656,7 +637,7 @@ img { max-width: 100%; }
 }
 .perf-tip .meter-text { position: relative; z-index: 1; }
 
-/* 7) Slightly larger tap targets for chips on mobile */
+/* 7) Larger tap targets on mobile */
 @media (max-width: 560px) {
   #chips .chip,
   #showOnWheel .chip,
@@ -665,34 +646,3 @@ img { max-width: 100%; }
   #showOnWheel .chip input[type="checkbox"],
   .showopts .chip input[type="checkbox"] { width: 20px; height: 20px; }
 }
-
-/* =========================================================
-   Sidebar sticky/overflow fix (prevents left card being cut
-   and overlapping when scrolling under sticky header)
-   ========================================================= */
-@media (min-width: 980px) {
-  .container { align-items: flex-start; }
-
-  /* Left filter card (sidebar) */
-  #teamView {
-    position: sticky !important;
-    top: 84px; /* below sticky header; tweak if header size changes */
-    align-self: start;
-    max-height: calc(100vh - 96px);
-    overflow: auto;                 /* internal scroll, not clipped */
-    overscroll-behavior: contain;
-    z-index: 5;                     /* above right card’s canvas/pointer */
-  }
-
-  /* Ensure right column can’t overlay the sticky sidebar */
-  .container > .card:not(#teamView) {
-    min-width: 0;
-    z-index: 1;
-    overflow: visible;
-  }
-}
-
-/* Nicer scrollbar for the sticky sidebar */
-#teamView::-webkit-scrollbar { width: 8px; }
-#teamView::-webkit-scrollbar-thumb { background: rgba(120,160,255,.28); border-radius: 8px; }
-#teamView::-webkit-scrollbar-track { background: transparent; }
