@@ -1,7 +1,7 @@
 /* Football Spinner — TEAM / PLAYER unified (defaults + PL sorting + no-image filter)
    - TEAM defaults: Premier League selected; Show on Wheel = Logo only.
-   - PLAYER defaults: All Premier League teams selected; Show on Wheel = Image only.
-   - PLAYER: exclude players without a usable image from the wheel.
+   - PLAYER defaults: only Arsenal selected; Show on Wheel = Image only; “All Premier League teams” quick-pick.
+   - PLAYER: exclude players without a usable image from the wheel (incl. placeholder.png).
    - Top 6 PL teams shown first and sorted alphabetically in chips.
    - Prefer "team/teams" wording in the UI.
 */
@@ -38,7 +38,7 @@ const optA = document.getElementById('optA'); // Logo/Image
 const optB = document.getElementById('optB'); // Name
 const optC = document.getElementById('optC'); // Stadium (team) / Jersey (player)
 const optD = document.getElementById('optD'); // League (team) / Nationality (player)
-const optE = document.getElementById('optE'); // Nationality/Club (player – used in modal)
+const optE = document.getElementById('optE'); // Team (player – modal extra)
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -156,7 +156,12 @@ const FALLBACK_TEAMS = {
 };
 
 /* ---------- Data selection ---------- */
-/* -- REPLACE getCurrentData() -- */
+function activeCodes(){
+  const arr=[];
+  chipsWrap.querySelectorAll('input[type="checkbox"]:checked').forEach(i => arr.push(i.value));
+  return arr;
+}
+
 function getCurrentData(){
   const active = new Set(activeCodes());
   if (active.size === 0) return [];
@@ -200,14 +205,8 @@ function visibleCodesAll(){
   chipsMore.querySelectorAll('input[type="checkbox"]').forEach(i => out.push(i.value));
   return out;
 }
-function activeCodes(){
-  const arr=[];
-  chipsWrap.querySelectorAll('input[type="checkbox"]:checked').forEach(i => arr.push(i.value));
-  return arr;
-}
 
 /* ---------- Chips render (mode aware) ---------- */
-/* -- REPLACE renderChips() -- */
 function renderChips(){
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
@@ -273,7 +272,6 @@ function renderChips(){
   updatePerfBanner();
   drawWheel();
 }
-    
 
 /* ---------- Show-on-wheel controls (defaults) ---------- */
 function applyModeShowControls(){
@@ -617,7 +615,6 @@ function openModal(item){
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
 
 /* ---------- Mode switch ---------- */
-/* -- REPLACE setMode(next) -- */
 function setMode(next){
   MODE = (next === 'player') ? 'player' : 'team';
   localStorage.setItem('fsMode', MODE);
@@ -645,19 +642,9 @@ function setMode(next){
     }
   }
 
-  // Mode-specific SHOW options
-  applyModeShowControls();
-  // Rebuild chips with the correct defaults
-  renderChips();
-}
-
-  // Defaults per mode
+  // Mode-specific SHOW options and rebuild chips with correct defaults
   applyModeShowControls();
   renderChips();
-
-  selectedIdx = -1;
-  updatePerfBanner();
-  drawWheel();
 }
 
 /* ---------- Loaders ---------- */
@@ -687,7 +674,7 @@ async function loadPlayers(){
   PLAYERS = (raw||[]).map(p=>{
     const displayName = p.name || p.player_name || 'Player';
     const clubId = String(p.club_id ?? p.team_id ?? '');
-    // Try to capture club/team name from players.json if teams.json doesn’t have it
+    // capture club/team name from players.json if teams.json doesn’t have it
     const clubNameFromPlayer = p.club_name || p.club || p.team || null;
     if (clubId && clubNameFromPlayer && !CLUB_BY_ID.has(clubId)) {
       CLUB_BY_ID.set(clubId, clubNameFromPlayer);
@@ -710,7 +697,6 @@ async function loadPlayers(){
     };
   });
 
-  // TOTAL for meter uses filtered set logic in getCurrentData, but keep raw length here
   TOTAL_PLAYERS = PLAYERS.length;
 
   // Ensure name for every club_id appearing in players.json
