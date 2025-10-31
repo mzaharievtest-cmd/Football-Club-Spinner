@@ -98,6 +98,10 @@ function getImage(url, onload){
   return img;
 }
 
+// Defaults
+const DEFAULT_TEAM_LEAGUE = 'EPL';
+const DEFAULT_PLAYER_CLUB = '19'; // Arsenal
+
 /* Keep CSS var --header-h in sync for sticky offsets */
 function syncHeaderHeight() {
   const hEl = document.querySelector('header');
@@ -212,52 +216,71 @@ function renderChips(){
     const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
     const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_CLUBS[id] || `Club #${id}`;
 
-    const top6 = ids.filter(id => PL_TOP6.includes(id));
-    const rest = ids.filter(id => !PL_TOP6.includes(id))
-                    .sort((a,b)=> labelFor(a).localeCompare(labelFor(b)));
+    // Top 6 PL club IDs (from your mapping) — sort ALPHABETICALLY by club name
+    const top6 = ids
+      .filter(id => PL_TOP6.includes(id))
+      .sort((a,b)=> labelFor(a).localeCompare(labelFor(b))); // <-- alphabetical (Arsenal first)
 
-    top6.forEach(id => chipsTop.appendChild(makeChip(id, labelFor(id), true)));
-    rest.forEach(id => chipsMore.appendChild(makeChip(id, labelFor(id), true)));
+    const rest = ids
+      .filter(id => !PL_TOP6.includes(id))
+      .sort((a,b)=> labelFor(a).localeCompare(labelFor(b)));
+
+    // DEFAULT: Only Arsenal checked in PLAYER mode
+    top6.forEach(id => {
+      const isDefault = (id === DEFAULT_PLAYER_CLUB); // Arsenal only
+      chipsTop.appendChild(makeChip(id, labelFor(id), isDefault));
+    });
+    rest.forEach(id => chipsMore.appendChild(makeChip(id, labelFor(id), false)));
 
     toggleMore.textContent = 'Show more Premier League clubs';
     toggleMore.setAttribute('aria-expanded','false');
     chipsMore.hidden = true;
 
-    const filterTitleEl = document.getElementById('filter-title');
-    filterTitleEl && (filterTitleEl.textContent = 'Select Clubs');
-    if (qpTop5) { qpTop5.textContent = 'Top 6 Premier League Clubs'; qpTop5.title = 'Select the Big Six from the Premier League'; }
+    if (qpTop5) {
+      qpTop5.textContent = 'Top 6 Premier League Clubs';
+      qpTop5.title = 'Select the Big Six from the Premier League';
+    }
   } else {
+    // TEAM mode chips: DEFAULT only EPL checked
     const codes = [...new Set(TEAMS.map(t=>t.league_code))];
     const top = TOP5.filter(c => codes.includes(c));
     const more = codes.filter(c => !top.includes(c)).sort();
 
-    top.forEach(c => chipsTop.appendChild(makeChip(c, leagueLabel(c), c==='EPL')));
+    top.forEach(c => {
+      const checked = (c === DEFAULT_TEAM_LEAGUE); // EPL only by default
+      chipsTop.appendChild(makeChip(c, leagueLabel(c), checked));
+    });
     more.forEach(c => chipsMore.appendChild(makeChip(c, leagueLabel(c), false)));
 
     toggleMore.textContent = 'Show more leagues';
     toggleMore.setAttribute('aria-expanded','false');
     chipsMore.hidden = true;
 
-    const filterTitleEl = document.getElementById('filter-title');
-    filterTitleEl && (filterTitleEl.textContent = 'Select Leagues');
-    if (qpTop5) { qpTop5.textContent = 'Top 5 Leagues'; qpTop5.title = 'Select only the top 5 leagues'; }
+    if (qpTop5) {
+      qpTop5.textContent = 'Top 5 Leagues';
+      qpTop5.title = 'Select only the top 5 leagues';
+    }
   }
 }
+
+
 
 /* ---------- Show-on-wheel controls ---------- */
 function applyModeShowControls(){
   if (MODE==='player'){
+    // PLAYER — Image only by default
     lblA.textContent='Image';         optA.checked = true;
-    lblB.textContent='Name';          optB.checked = true;
+    lblB.textContent='Name';          optB.checked = false;
     if (lblC) { lblC.textContent='Jersey Number'; if (optC) optC.checked = false; }
-    if (lblD) { lblD.textContent='Nationality';   if (optD) optD.checked = false; } // bottom-row reveal
-    if (lblE && optE){ lblE.textContent='Club';   optE.checked=false; } // modal reveal
+    if (lblD) { lblD.textContent='Nationality';   if (optD) optD.checked = false; }
+    if (lblE && optE){ lblE.textContent='Club';   optE.checked=false; }
   } else {
+    // TEAM — Logo only by default
     lblA.textContent='Logo';    optA.checked = true;
-    lblB.textContent='Name';    optB.checked = true;
+    lblB.textContent='Name';    optB.checked = false;
     if (lblC) { lblC.textContent='Stadium'; if (optC) optC.checked = false; }
-    if (lblD) { lblD.textContent='League';  if (optD) optD.checked = true; } // shown in modal if unchecked
-    if (lblE && optE){ lblE.textContent=''; optE.checked=false; }     // hidden/ignored
+    if (lblD) { lblD.textContent='League';  if (optD) optD.checked = false; }
+    if (lblE && optE){ lblE.textContent=''; optE.checked=false; }
   }
 }
 
