@@ -427,3 +427,14 @@ canvas#wheel { pointer-events: none !important; }
 
 /* Optional: remove any accidental vertical divider between columns */
 .container > .card { border-right-color: rgba(0,0,0,0) !important; }
+/* 1) Give the page a safe top offset equal to the sticky header height */
+:root { --header-safe: 96px; }                     /* tune if your header is taller/shorter */
+.container { margin-top: var(--header-safe) !important; }
+.card.sidebar { top: var(--header-safe) !important; max-height: calc(100vh - (var(--header-safe) + 12px)) !important; }
+
+/* 2) Wheel card must not clip the SPIN button/pointer */
+section[aria-labelledby="wheel-title"].card { overflow: visible !important; }
+
+/* 3) Ensure the FAB is always clickable above the canvas */
+canvas#wheel { pointer-events: none !important; }
+.spin-fab { z-index: 50 !important; }
