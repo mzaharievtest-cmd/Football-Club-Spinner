@@ -19,7 +19,13 @@ let TOTAL_PLAYERS = 0;
 let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
-let history = JSON.parse(localStorage.getItem('clubHistory')) || [];
+let historyRaw = JSON.parse(localStorage.getItem('clubHistory')) || [];
+let history = historyRaw.map(h => (
+  h && typeof h === 'object' && 'type' in h && 'item' in h
+    ? h
+    : { type: (h && (h.image_url || h.club_id)) ? 'player' : 'team', item: h }
+));
+const saveHistory = () => localStorage.setItem('clubHistory', JSON.stringify(history));
 
 /* ---------- DOM ---------- */
 const modeTeamBtn   = document.getElementById('modeTeam');
@@ -513,9 +519,12 @@ function showResult(idx){
   const data = getCurrentData();
   const item = data[idx];
   if (!item) return;
-  history.unshift(item);
-  if (history.length>50) history = history.slice(0,50);
-  localStorage.setItem('clubHistory', JSON.stringify(history));
+
+  // Store with explicit type so we can filter later
+  history.unshift({ type: MODE, item });
+  if (history.length > 50) history.length = 50;
+  saveHistory();
+
   renderHistory();
   openModal(item);
 }
@@ -523,20 +532,38 @@ function showResult(idx){
 /* ---------- History ---------- */
 function renderHistory(){
   historyEl.innerHTML = '';
-  if (!history.length){
-    historyEl.innerHTML = '<div class="item">Your journey starts with a spin - try your luck!</div>';
+
+  // Only entries from the active MODE
+  const visible = history.filter(h => h.type === MODE);
+
+  if (!visible.length){
+    const empty = document.createElement('div');
+    empty.className = 'item';
+    empty.textContent = 'Your journey starts with a spin - try your luck!';
+    historyEl.appendChild(empty);
     return;
   }
-  history.forEach(h=>{
-    const div=document.createElement('div'); div.className='item';
-    const img=document.createElement('img');
-    img.src = MODE==='player' ? (h.image_url||'') : (h.logo_url||'');
-    img.alt = MODE==='player' ? h.team_name : `${h.team_name} logo`;
-    const span=document.createElement('span');
-    span.textContent = MODE==='player'
-      ? `${h.team_name} (${CLUB_BY_ID.get(String(h.club_id)) || FALLBACK_TEAMS[String(h.club_id)] || 'Unknown Team'})`
-      : `${h.team_name} (${h.league_code})`;
-    div.append(img,span); historyEl.append(div);
+
+  visible.forEach(({ item }) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+
+    const img = document.createElement('img');
+    if (MODE === 'player') {
+      img.src = item.image_url || '';
+      img.alt = item.team_name || 'Player';
+    } else {
+      img.src = item.logo_url || '';
+      img.alt = `${item.team_name || 'Team'} logo`;
+    }
+
+    const span = document.createElement('span');
+    span.textContent = MODE === 'player'
+      ? item.team_name || 'Player'
+      : item.team_name || 'Team';
+
+    div.append(img, span);
+    historyEl.appendChild(div);
   });
 }
 
@@ -772,7 +799,11 @@ function wire(){
   spinBtn && (spinBtn.onclick = spin);
   spinFab && (spinFab.onclick = spin);
 
-  resetHistoryBtn && (resetHistoryBtn.onclick = ()=>{ history=[]; localStorage.setItem('clubHistory', JSON.stringify(history)); renderHistory(); });
+  resetHistoryBtn && (resetHistoryBtn.onclick = ()=>{
+  history = [];
+  saveHistory();
+  renderHistory();
+});
 
   mClose && (mClose.onclick = ()=> !spinning && closeModal());
   backdrop && backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop) closeModal(); });
