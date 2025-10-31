@@ -389,3 +389,41 @@ section[aria-labelledby="wheel-title"].card {
   border-radius: 10px;
 }
 ::-webkit-scrollbar-track { background: transparent; }
+/* === FINAL FIX: keep wheel below the sticky header, keep columns matched, no clipping === */
+
+/* A single source of truth for header height */
+:root {
+  --header-safe: 96px;          /* visible height of the sticky header */
+}
+
+/* Push the content below the header so it doesn't get blurred by header's backdrop-filter */
+.container {
+  margin-top: var(--header-safe) !important;
+}
+
+/* Sidebar sticky math uses the same header-safe offset */
+.card.sidebar {
+  top: var(--header-safe) !important;
+  max-height: calc(100vh - (var(--header-safe) + 12px)) !important;
+  mask-image: linear-gradient(black 97%, transparent) !important; /* keep soft fade only on its own box */
+}
+
+/* Right/wheel card: match sidebar height & allow internal scroll; never clip overlays */
+@media (min-width: 980px) {
+  section[aria-labelledby="wheel-title"] {
+    max-height: calc(100vh - (var(--header-safe) + 12px)) !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+/* Make sure the SPIN FAB and pointer can render above the canvas */
+section[aria-labelledby="wheel-title"].card {
+  overflow: visible !important;
+}
+
+/* Canvas should not eat clicks, and SPIN must be on top */
+canvas#wheel { pointer-events: none !important; }
+.spin-fab { z-index: 50 !important; }
+
+/* Optional: remove any accidental vertical divider between columns */
+.container > .card { border-right-color: rgba(0,0,0,0) !important; }
