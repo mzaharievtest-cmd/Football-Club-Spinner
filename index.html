@@ -14,14 +14,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>Football Club Spinner — 398 Clubs · 25 Leagues</title>
-  <meta name="description" content="Football Spinner is a free random football club and player generator. Spin across the top 25 leagues. Great for trivia, discovery, and matchday fun." />
-  <meta name="keywords" content="football spinner, random football club, random player generator, premier league, la liga, serie a, bundesliga, ligue 1, trivia, wheel" />
+  <meta name="description" content="Football Spinner is a free random football club and player generator. Spin across the top 25 leagues. Great for trivia, discovery, and matchday fun.">
+  <meta name="keywords" content="football spinner, random football club, random player generator, premier league, la liga, serie a, bundesliga, ligue 1, trivia, wheel">
   <link rel="canonical" href="https://footballspinner.com/">
   <meta name="robots" content="index,follow">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Football Club Spinner — Random Football Club & Player Generator">
-  <meta property="og:description" content="Spin the wheel to discover clubs and players from the top leagues. Perfect for quizzes, watch parties, and football debates." />
+  <meta property="og:description" content="Spin the wheel to discover clubs and players from the top leagues. Perfect for quizzes, watch parties, and football debates.">
   <meta property="og:url" content="https://footballspinner.com/">
   <meta property="og:site_name" content="Football Spinner">
   <meta property="og:type" content="website">
@@ -59,15 +59,15 @@
     <img src="app-logo.png?v=1" alt="Football Club Spinner" class="brand-img" decoding="async">
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
-      <div class="season-tag">Discover clubs and players from 25 leagues around the world.</div>
+      <div class="season-tag">Discover clubs and players from 25 leagues around the world</div>
     </div>
   </div>
 
   <div class="header-right">
     <div class="mode-switch-wrap">
       <div class="mode-switch" role="tablist" aria-label="View mode">
-        <button id="modeTeam"   role="tab" aria-pressed="true"  class="mode-btn mode-btn-active">TEAM</button>
-        <button id="modePlayer" role="tab" aria-pressed="false" class="mode-btn">PLAYER</button>
+        <button id="modeTeam"   role="tab" aria-pressed="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
+        <button id="modePlayer" role="tab" aria-pressed="false" class="mode-btn" title="Spin among players from top leagues">PLAYER</button>
       </div>
     </div>
   </div>
@@ -83,9 +83,9 @@
 
     <!-- Quick picks -->
     <div class="quick-picks" role="group" aria-label="Quick selections">
-      <button id="qpAll"  class="chip-btn" type="button">All Leagues</button>
-      <button id="qpNone" class="chip-btn" type="button">Clear</button>
-      <button id="qpTop"  class="chip-btn" type="button">Top 5 Leagues</button>
+      <button id="qpAll"  class="chip-btn" type="button" title="Select all leagues">All Leagues</button>
+      <button id="qpNone" class="chip-btn" type="button" title="Deselect all leagues">Clear</button>
+      <button id="qpTop"  class="chip-btn" type="button" title="Select only the top 5 leagues">Top 5 Leagues</button>
     </div>
 
     <!-- Chips (TEAM: leagues · PLAYER: PL clubs generated from players.json) -->
@@ -95,42 +95,39 @@
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
-    <button id="spinBtn" type="button">Spin Wheel</button>
+    <button id="spinBtn" type="button" title="Click to spin the wheel">Spin Wheel</button>
 
     <div class="history-title">History</div>
     <div class="history" id="history">
       <div class="result"><div class="current-name">Your journey starts with a spin - try your luck!</div></div>
     </div>
-    <button id="resetHistoryBtn" type="button" style="margin-top:12px">Reset History</button>
+    <button id="resetHistoryBtn" type="button" style="margin-top:12px" title="Clear all previous results">Clear History</button>
   </section>
 
-  <!-- RIGHT: wheel (Show on Wheel section sits above the wheel) -->
+  <!-- RIGHT: wheel -->
   <section class="card" aria-labelledby="wheel-title">
-    <!-- Title switches via JS based on mode -->
     <div class="section-title" id="wheel-title">Club Wheel</div>
 
     <!-- Sub-header: meter + SHOW ON WHEEL -->
     <div class="wheel-subheader">
       <div id="perfTip" class="perf-tip" aria-live="polite" data-clubs-text="clubs ready to spin" data-players-text="players loaded">
-        <!-- Default text for TEAM mode; app.js should update the number & noun -->
         <span class="meter-text">0 clubs ready to spin</span>
       </div>
 
       <div class="section-title" style="margin-top:8px">Show on Wheel</div>
       <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
-        <!-- labels & checked state are set by JS (mode-aware) -->
-        <label class="chip"><input type="checkbox" id="optA" checked aria-label="A"><span id="lblA" class="chip-text">A</span></label>
-        <label class="chip"><input type="checkbox" id="optB" checked aria-label="B"><span id="lblB" class="chip-text">B</span></label>
-        <label class="chip"><input type="checkbox" id="optC"         aria-label="C"><span id="lblC" class="chip-text">C</span></label>
-        <label class="chip"><input type="checkbox" id="optD"         aria-label="D"><span id="lblD" class="chip-text">D</span></label>
-        <label class="chip"><input type="checkbox" id="optE"         aria-label="E"><span id="lblE" class="chip-text">E</span></label>
+        <label class="chip" title="Display club logos on the wheel"><input type="checkbox" id="optA" checked aria-label="Logo"><span id="lblA" class="chip-text">Logo</span></label>
+        <label class="chip" title="Show club or player names"><input type="checkbox" id="optB" checked aria-label="Name"><span id="lblB" class="chip-text">Name</span></label>
+        <label class="chip" title="Show stadium names (Team mode)"><input type="checkbox" id="optC" aria-label="Stadium"><span id="lblC" class="chip-text">Stadium</span></label>
+        <label class="chip" title="Display the league name"><input type="checkbox" id="optD" aria-label="League"><span id="lblD" class="chip-text">League</span></label>
+        <label class="chip" title="Show player nationality flags (Player mode)"><input type="checkbox" id="optE" aria-label="Nationality"><span id="lblE" class="chip-text">Nationality</span></label>
       </div>
     </div>
 
     <!-- Wheel -->
     <div class="wheel-wrap">
       <div class="pointer" aria-hidden="true"></div>
-      <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
+      <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
       <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
       <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
     </div>
@@ -141,6 +138,7 @@
     <nav aria-label="On this page" class="toc">
       <a href="#about">About Football Spinner</a>
       <a href="#how">How it works</a>
+      <a href="#why">Why use it?</a>
     </nav>
 
     <h2 id="about">About Football Spinner</h2>
@@ -149,26 +147,26 @@
     <h2 id="how">How it works</h2>
     <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
     <p>The wheel will pick a random team or player - perfect for trivia nights, football debates, or discovering new favorites.</p>
+
+    <h2 id="why">Why use it?</h2>
+    <p>Football Spinner makes football discovery fun again. Whether you're choosing a random team to support, planning a quiz night, or learning new leagues — every spin is a surprise.</p>
   </section>
 </main>
 
 <!-- Modal -->
 <div id="backdrop" style="display:none">
   <div id="modal">
-    <div id="mHead">Title</div>
-    <div id="mSub" class="small" aria-live="polite"></div>
+    <div id="mHead">Result</div>
+    <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
 
     <div class="m-body">
-      <!-- shared image (team logo or player image) -->
       <img id="mLogo" alt="">
 
-      <!-- TEAM row: Stadium -->
       <div class="m-row" id="rowStadium">
         <div class="label">Stadium</div>
         <span id="mStadium" class="value-pill"></span>
       </div>
 
-      <!-- PLAYER rows: Club / Jersey / Nationality -->
       <div class="m-row" id="rowClub" style="display:none">
         <div class="label">Club</div>
         <span id="mClub" class="value-pill"></span>
@@ -186,24 +184,36 @@
     </div>
 
     <div class="m-actions">
-      <button id="mClose" class="chip-btn" type="button">Close</button>
+      <button id="mClose" class="chip-btn" type="button" title="Close this window">Close Window</button>
     </div>
   </div>
 </div>
 
 <script src="app.js" defer></script>
 <script>
-  /* Optional helper to switch headings/meter nouns from JS without touching app.js internals */
+  // Toggle text for "Show all leagues" / "Show fewer leagues"
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('toggleMore');
+    const chipsMore = document.getElementById('chipsMore');
+    if (!toggle) return;
+
+    toggle.addEventListener('click', () => {
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
+      chipsMore.hidden = expanded;
+      toggle.textContent = expanded ? 'Show all leagues' : 'Show fewer leagues';
+    });
+  });
+
+  // Mode-based heading and meter updates
   (function(){
     const titleEl = document.getElementById('wheel-title');
     const perf = document.getElementById('perfTip');
     const meterText = perf?.querySelector('.meter-text');
 
-    // Observe mode buttons to update the right title & noun (clubs/players)
     const setTeam = () => {
       if (titleEl) titleEl.textContent = 'Club Wheel';
       if (meterText && perf?.dataset.clubsText) {
-        // Keep current number if present, replace noun phrasing:
         const num = (meterText.textContent.match(/\d+/)||['0'])[0];
         meterText.textContent = `${num} ${perf.dataset.clubsText}`;
       }
