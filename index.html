@@ -59,6 +59,7 @@
     <img src="app-logo.png?v=1" alt="Football Club Spinner" class="brand-img" decoding="async">
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
+      <!-- note: dot removed per request -->
       <div class="season-tag">Discover clubs and players from 25 leagues around the world</div>
     </div>
   </div>
@@ -133,54 +134,44 @@
     </div>
   </section>
 
-  <!-- Content: details area aligned to the same two-column grid width as main cards -->
-  <div style="max-width:1240px; margin:28px auto 0; padding:0 18px; box-sizing:border-box;">
-    <!-- create a two-column grid identical to .container at >=980px, fallback single column on small screens -->
-    <div style="
-         display:grid;
-         grid-template-columns: 380px 1fr;
-         gap:22px;
-         align-items:start;
-    ">
-      <!-- Empty left column (keeps alignment with left card) -->
-      <div aria-hidden="true"></div>
+  <!-- DETAILS: full-width card under both columns (spans grid columns) -->
+  <section class="card" aria-labelledby="details-title" style="grid-column:1 / -1; margin-top:28px;">
+    <div id="details-title" class="section-title">Details</div>
 
-      <!-- Right column: the details box that visually spans the same total width as the cards above -->
-      <div style="
-           background:var(--card-grad);
-           border:1px solid var(--line);
-           border-radius:var(--radius);
-           padding:18px clamp(14px,3vw,26px);
-           box-shadow:var(--shadow-1);
-          ">
-        <!-- stacked collapsed details (closed by default) -->
-        <details id="about-block">
-          <summary class="panel-summary" style="cursor:pointer;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.03);margin-bottom:12px;background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));">About Football Spinner</summary>
-          <div class="panel" role="region" aria-labelledby="about" style="padding:12px 0 0;border-top:1px solid rgba(255,255,255,.04)">
-            <h2 id="about">About Football Spinner</h2>
-            <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
-          </div>
-        </details>
+    <!-- Use details panels (closed by default). They are inside a full-width card that matches the two cards above. -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <details id="about-block">
+        <summary style="cursor:pointer;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.03);background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));font-weight:700;">
+          About Football Spinner
+        </summary>
+        <div style="padding:12px 0 0;border-top:1px solid rgba(255,255,255,.04)">
+          <h2 id="about">About Football Spinner</h2>
+          <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
+        </div>
+      </details>
 
-        <details id="how-block">
-          <summary class="panel-summary" style="cursor:pointer;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.03);margin-bottom:12px;background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));">How it works</summary>
-          <div class="panel" role="region" aria-labelledby="how" style="padding:12px 0 0;border-top:1px solid rgba(255,255,255,.04)">
-            <h2 id="how">How it works</h2>
-            <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
-            <p>The wheel will pick a random team or player - perfect for trivia nights, football debates, or discovering new favorites.</p>
-          </div>
-        </details>
+      <details id="how-block">
+        <summary style="cursor:pointer;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.03);background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));font-weight:700;">
+          How it works
+        </summary>
+        <div style="padding:12px 0 0;border-top:1px solid rgba(255,255,255,.04)">
+          <h2 id="how">How it works</h2>
+          <p>Choose your leagues or clubs, select what to show on the wheel, and hit <strong>Spin</strong>.</p>
+          <p>The wheel will pick a random team or player — perfect for trivia nights, football debates, or discovering new favorites.</p>
+        </div>
+      </details>
 
-        <details id="why-block">
-          <summary class="panel-summary" style="cursor:pointer;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.03);margin-bottom:12px;background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));">Why use it?</summary>
-          <div class="panel" role="region" aria-labelledby="why" style="padding:12px 0 0;border-top:1px solid rgba(255,255,255,.04)">
-            <h2 id="why">Why use it?</h2>
-            <p>Football Spinner makes football discovery fun again. Whether you're choosing a random team to support, planning a quiz night, or learning new leagues — every spin is a surprise.</p>
-          </div>
-        </details>
-      </div>
+      <details id="why-block">
+        <summary style="cursor:pointer;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.03);background:linear-gradient(180deg, rgba(24,40,72,.9), rgba(14,24,48,.88));font-weight:700;">
+          Why use it?
+        </summary>
+        <div style="padding:12px 0 0;border-top:1px solid rgba(255,255,255,.04)">
+          <h2 id="why">Why use it?</h2>
+          <p>Football Spinner makes football discovery fun again. Whether you're choosing a random team to support, planning a quiz night, or learning new leagues — every spin is a surprise.</p>
+        </div>
+      </details>
     </div>
-  </div>
+  </section>
 </main>
 
 <!-- Modal -->
@@ -255,15 +246,12 @@
       }
     }
 
-    // Ensure history empty text is correct on load
     const histEmpty = document.getElementById('historyEmpty');
     if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
 
-    // Apply mode texts on load from localStorage (default: team)
     const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
     applyModeTexts(initial);
 
-    // Wire up mode buttons to switch texts
     document.getElementById('modeTeam')?.addEventListener('click', () => {
       localStorage.setItem('fsMode', 'team');
       applyModeTexts('team');
@@ -273,12 +261,11 @@
       applyModeTexts('player');
     });
 
-    // Optional: make <summary> click area larger and keyboard accessible
+    // keyboard toggles for summary
     document.querySelectorAll('details summary').forEach(s=>{
       s.setAttribute('role','button');
       s.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); s.parentElement.open = !s.parentElement.open; }});
     });
-
   })();
 </script>
 </body>
