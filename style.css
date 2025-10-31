@@ -1,6 +1,6 @@
 /* Main stylesheet for Football Spinner
    - Dark theme, responsive grid cards, chip UI, wheel, modal
-   - Sticky left sidebar with its own scroll, no overlay on wheel
+   - Sticky left sidebar with its own scroll, right card matches height & scrolls
    - FAQ block matches card visuals
    - Inter font is loaded via <link> in index.html
 */
@@ -41,6 +41,10 @@
   /* Motion */
   --ease: cubic-bezier(.2,.7,.1,1);
   --ease-out: cubic-bezier(.16,1,.3,1);
+
+  /* Layout constants (match both columns) */
+  --sticky-top: 84px;                 /* just below sticky header */
+  --track-max-h: calc(100vh - 96px);  /* viewport minus header/margins */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -201,28 +205,40 @@ header .brand { display: inline-flex; align-items: center; gap: 12px; }
    ========================= */
 .card.sidebar{
   position: sticky;
-  top: 84px;                       /* below sticky header */
+  top: var(--sticky-top);          /* below sticky header */
   align-self: start;
   z-index: 1;                      /* under the wheel card */
-  max-height: calc(100vh - 96px);  /* viewport minus header & margin */
+  max-height: var(--track-max-h);  /* viewport minus header & margin */
   overflow: auto;                  /* internal scrolling */
   -webkit-overflow-scrolling: touch;
   mask-image: linear-gradient(black 92%, transparent); /* subtle bottom fade */
 }
 
-/* Right card (wheel) always above the sidebar */
-.container > .card:not(.sidebar){
-  position: relative;
-  z-index: 2;
+/* Right card (wheel) should match sidebar height & scroll internally on desktop */
+@media (min-width: 980px){
+  section[aria-labelledby="wheel-title"]{
+    display: flex;
+    flex-direction: column;
+    max-height: var(--track-max-h);  /* match left */
+    overflow: auto;                  /* internal scroll if needed */
+    -webkit-overflow-scrolling: touch;
+    z-index: 2;                      /* above sidebar so pointer/canvas sit on top */
+  }
+  /* keep the wheel area from forcing extra height */
+  .wheel-wrap{ flex: 0 0 auto; }
 }
 
-/* Disable sticky on mobile */
+/* Disable sticky/constraints on mobile */
 @media (max-width: 979.98px){
   .card.sidebar{
     position: static;
     max-height: none;
     overflow: visible;
     mask-image: none;
+  }
+  section[aria-labelledby="wheel-title"]{
+    max-height: none;
+    overflow: visible;
   }
 }
 
@@ -370,7 +386,7 @@ button:hover::after, .chip-btn:hover::after { transform: translateX(100%); }
   max-width: 28ch;
 }
 
-/* Hide any empty Show-on-wheel chip (TEAM sometimes had a blank slot) */
+/* Hide any empty Show-on-wheel chip */
 .showopts .chip:has(.chip-text:empty){ display: none !important; }
 
 @media (max-width: 560px) {
