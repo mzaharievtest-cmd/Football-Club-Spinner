@@ -469,7 +469,7 @@ function showResult(idx){
 function renderHistory(){
   historyEl.innerHTML = '';
   if (!history.length){
-    historyEl.innerHTML = '<div class="item">Spin the wheel to start your club journey</div>';
+    historyEl.innerHTML = '<div class="item">Your journey starts with a spin - try your luck!</div>';
     return;
   }
   history.forEach(h=>{
@@ -564,10 +564,23 @@ function openModal(item){
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
 
 /* ---------- Mode switch ---------- */
-function setMode(next){
-  if (next===MODE) return;
-  MODE = next;
-  localStorage.setItem('fsMode', MODE);
+  // --- Update left sidebar texts by mode ---
+  const filterTitleEl = document.getElementById('filter-title');
+  const qpTop5Btn = document.getElementById('qpTop5');
+
+  if (MODE === 'player') {
+    filterTitleEl && (filterTitleEl.textContent = 'Select Clubs');
+    if (qpTop5Btn) {
+      qpTop5Btn.textContent = 'Top 6 Premier League Clubs';
+      qpTop5Btn.title = 'Select the Big Six from the Premier League';
+    }
+  } else {
+    filterTitleEl && (filterTitleEl.textContent = 'Select Leagues');
+    if (qpTop5Btn) {
+      qpTop5Btn.textContent = 'Top 5 Leagues';
+      qpTop5Btn.title = 'Select only the top 5 leagues';
+    }
+  }
 
   modeTeamBtn.classList.toggle('mode-btn-active', MODE==='team');
   modePlayerBtn.classList.toggle('mode-btn-active', MODE==='player');
