@@ -20,13 +20,15 @@ let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
 
-// Typed history store (so we can filter by MODE)
-let historyRaw = JSON.parse(localStorage.getItem('clubHistory')) || [];
-let history = historyRaw.map(h => (
-  h && typeof h === 'object' && 'type' in h && 'item' in h
-    ? h
-    : { type: (h && (h.image_url || h.club_id)) ? 'player' : 'team', item: h }
-));
+// history now stores typed entries: { type: 'team'|'player', item: {...} }
+let history = (() => {
+  try {
+    const raw = JSON.parse(localStorage.getItem('clubHistory')) || [];
+    return raw.map(h => (h && typeof h === 'object' && 'type' in h && 'item' in h)
+      ? h
+      : { type: (h && (h.image_url || h.club_id)) ? 'player' : 'team', item: h });
+  } catch { return []; }
+})();
 const saveHistory = () => localStorage.setItem('clubHistory', JSON.stringify(history));
 
 /* ---------- DOM ---------- */
@@ -66,8 +68,8 @@ const resetHistoryBtn = document.getElementById('resetHistoryBtn');
 const backdrop   = document.getElementById('backdrop');
 const modalEl    = document.getElementById('modal');
 const mClose     = document.getElementById('mClose');
-const mHead      = document.getElementById('mHead');
-const mSub       = document.getElementById('mSub');
+const mHead      = document.getElementById('mHead');  // title (name)
+const mSub       = document.getElementById('mSub');   // subtitle (league)
 const mLogo      = document.getElementById('mLogo');
 const rowStadium = document.getElementById('rowStadium');
 const mStadium   = document.getElementById('mStadium');
@@ -147,7 +149,6 @@ const LEAGUE_LABELS = {
   SWE:"Allsvenskan", SUI:"Super League", TUR:"Süper Lig", UKR:"Ukrainian Premier League"
 };
 const leagueLabel = c => LEAGUE_LABELS[c] || c;
-
 const TOP5 = ['EPL','SA','BUN','L1','LLA'];
 
 /* PL Big Six IDs in your data */
@@ -169,7 +170,6 @@ function activeCodes(){
   chipsWrap.querySelectorAll('input[type="checkbox"]:checked').forEach(i => arr.push(i.value));
   return arr;
 }
-
 function getCurrentData(){
   const active = new Set(activeCodes());
   if (active.size === 0) return [];
@@ -310,7 +310,6 @@ function sizeCanvas(){
   fx.style.width = cssSize+'px'; fx.style.height = cssSize+'px';
   requestAnimationFrame(positionSpinFab);
 }
-
 function positionSpinFab(){
   const wrap = wheel.parentElement;
   const wr = wrap.getBoundingClientRect();
@@ -331,7 +330,6 @@ function drawIdle(ctx,W,H){
   const g = ctx.createRadialGradient(0,0,r*0.1, 0,0,r);
   g.addColorStop(0,'#1A2C5A'); g.addColorStop(0.35,'#21386F'); g.addColorStop(0.65,'#0E2A57'); g.addColorStop(1,'#0B1B38');
   ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fillStyle=g; ctx.fill();
-  // soft rings
   ctx.lineWidth=1;
   for(let i=1;i<=5;i++){
     ctx.beginPath(); ctx.arc(0,0,r*i/5,0,TAU);
@@ -341,7 +339,6 @@ function drawIdle(ctx,W,H){
   }
   ctx.restore();
 }
-
 function drawTickRing(ctx, R, ticks=120){
   ctx.save();
   ctx.rotate(mod(currentAngle, TAU));
@@ -370,7 +367,6 @@ function drawWheel(){
   const W = wheel.width / DPR, H = wheel.height / DPR;
 
   updatePerfBanner();
-
   if (N===0){ drawIdle(ctx,W,H); return; }
 
   const hideAll = N >= PERF.hideTextThreshold;
@@ -395,8 +391,6 @@ function drawWheel(){
     const ctx2 = wheel.getContext('2d');
     ctx2.save(); ctx2.translate(W/2,H/2);
     drawTickRing(ctx2, r*0.98, Math.min(180, Math.max(100, Math.round(N/2))));
-    // subtle rings
-    ctx2.lineWidth=1;
     for(let i=1;i<=4;i++){
       ctx2.beginPath(); ctx2.arc(0,0,r*i/5,0,TAU);
       ctx2.strokeStyle=`rgba(140,170,220,${0.06 + i*0.02})`;
@@ -415,7 +409,7 @@ function drawWheel(){
 
     const canLogoOrImg = (MODE==='team')
       ? (optA.checked && !!t.logo_url)
-      : (optA.checked && !!t.image_url); // player image
+      : (optA.checked && !!t.image_url);
 
     const canName = optB.checked && !!t.team_name;
 
@@ -460,12 +454,9 @@ function drawWheel(){
         const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
         const s = Math.min(box/iw, box/ih);
         ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
-      } else {
-        // TEAM placeholder only; in PLAYER mode we already filtered out no-image entries
-        if (MODE==='team'){
-          ctx.fillStyle='rgba(255,255,255,.14)';
-          const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
-        }
+      } else if (MODE==='team'){
+        ctx.fillStyle='rgba(255,255,255,.14)';
+        const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
       }
       ctx.restore(); ctx.restore();
     }
@@ -522,7 +513,6 @@ function showResult(idx){
   const item = data[idx];
   if (!item) return;
 
-  // Store with explicit type so we can filter later
   history.unshift({ type: MODE, item });
   if (history.length > 50) history.length = 50;
   saveHistory();
@@ -535,7 +525,6 @@ function showResult(idx){
 function renderHistory(){
   historyEl.innerHTML = '';
 
-  // Only entries from the active MODE
   const visible = history.filter(h => h.type === MODE);
 
   if (!visible.length){
@@ -560,36 +549,37 @@ function renderHistory(){
     }
 
     const span = document.createElement('span');
-    span.textContent = item.team_name || (MODE === 'player' ? 'Player' : 'Team');
+    span.textContent = MODE === 'player'
+      ? item.team_name || 'Player'
+      : item.team_name || 'Team';
 
     div.append(img, span);
     historyEl.appendChild(div);
   });
 }
 
-/* ---------- Reveal overlay helpers ---------- */
+/* ---------- Reveal overlay helpers (compact inline chips) ---------- */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
-    .reveal-wrap{position:relative;display:inline-block}
+    .reveal-wrap{display:inline-flex;align-items:center;gap:8px;position:relative}
+    .reveal-wrap.imgwrap{display:inline-block}
     .reveal-overlay{
       position:absolute;inset:0;border-radius:inherit;
-      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
       background:transparent;pointer-events:none;
     }
-    /* Make the “Show …” chip float over the blurred element, not full width */
     .reveal-btn{
-      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-      width:auto !important;              /* override global 100% */
-      padding:8px 14px;border-radius:10px;
+      width:auto;padding:8px 12px;border-radius:10px;
       border:1px solid rgba(90,161,255,.6);
-      background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;
+      background:#152036;color:#fff;font-weight:800;letter-spacing:.02em;
       cursor:pointer;user-select:none;white-space:nowrap;z-index:3;
-      text-transform:none;
-      box-shadow:0 6px 18px rgba(34,211,238,.18);
+      text-transform:none;box-shadow:0 6px 18px rgba(34,211,238,.18)
     }
-    .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02)}
+    .reveal-wrap.imgwrap .reveal-btn{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    }
   `;
   document.head.appendChild(s);
 }
@@ -597,11 +587,24 @@ function wrap(el){
   if (!el) return null;
   if (el.parentElement && el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
   const w=document.createElement('span'); w.className='reveal-wrap';
+  if (el.tagName === 'IMG') w.classList.add('imgwrap');
   el.parentElement.insertBefore(w, el); w.appendChild(el); return w;
 }
-function blurEl(el){ if(!el) return; el.style.filter='blur(14px)'; const w=wrap(el); if(w&&!w.querySelector('.reveal-overlay')){const o=document.createElement('span');o.className='reveal-overlay';w.appendChild(o);} }
-function unblurEl(el){ if(!el) return; el.style.filter=''; const w=el.parentElement; const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove(); const b=w && w.querySelector('.reveal-btn'); if(b) b.remove(); }
-
+function blurEl(el){
+  if(!el) return;
+  el.style.filter='blur(8px)';
+  const w=wrap(el);
+  if(w && !w.querySelector('.reveal-overlay')){
+    const o=document.createElement('span'); o.className='reveal-overlay'; w.appendChild(o);
+  }
+}
+function unblurEl(el){
+  if(!el) return;
+  el.style.filter='';
+  const w=el.parentElement;
+  const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove();
+  const b=w && w.querySelector('.reveal-btn'); if(b) b.remove();
+}
 function addReveal(key, el, enabled, label){
   const w = wrap(el);
   const prior = w.querySelector('.reveal-btn'); if (prior) prior.remove();
@@ -620,7 +623,7 @@ function openModal(item){
   if (MODE==='player'){
     mHead.textContent = item.team_name || '—';
     mLogo.src = item.image_url || '';
-    mSub.textContent  = ''; // keep bottom rows
+    mSub.textContent  = ''; // no league line for player
     rowStadium.style.display='none';
     rowClub.style.display='';
     rowJersey.style.display='';
@@ -684,12 +687,8 @@ function setMode(next){
     }
   }
 
-  // Mode-specific SHOW options and rebuild chips with correct defaults
   applyModeShowControls();
   renderChips();
-
-  // IMPORTANT: refresh History to show only current mode’s entries
-  renderHistory();
 }
 
 /* ---------- Loaders ---------- */
@@ -704,7 +703,6 @@ async function loadTeams(){
     TEAM_BY_ID.set(id, t);
     CLUB_BY_ID.set(id, t.team_name);
   }
-  // seed fallbacks so all ids resolve
   for (const [id,name] of Object.entries(FALLBACK_TEAMS)){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, name);
   }
@@ -719,7 +717,6 @@ async function loadPlayers(){
   PLAYERS = (raw||[]).map(p=>{
     const displayName = p.name || p.player_name || 'Player';
     const clubId = String(p.club_id ?? p.team_id ?? '');
-    // capture club/team name from players.json if teams.json doesn’t have it
     const clubNameFromPlayer = p.club_name || p.club || p.team || null;
     if (clubId && clubNameFromPlayer && !CLUB_BY_ID.has(clubId)) {
       CLUB_BY_ID.set(clubId, clubNameFromPlayer);
@@ -744,7 +741,6 @@ async function loadPlayers(){
 
   TOTAL_PLAYERS = PLAYERS.length;
 
-  // Ensure name for every club_id appearing in players.json
   for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_TEAMS[id] || `Team #${id}`);
   }
@@ -828,11 +824,8 @@ function wire(){
     console.error('Failed to load data:', e);
   }
 
-  // Apply initial mode UI & defaults
-  setMode(MODE);
-
-  // History empty-state text on first load
-  renderHistory();
+  setMode(MODE);        // apply initial mode UI & defaults
+  renderHistory();      // show empty or filtered list
 
   sizeCanvas();
   positionSpinFab();
