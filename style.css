@@ -132,7 +132,7 @@ header h1 {
   gap: 22px;
   position: relative;
   z-index: 1;
-  align-items: stretch;        /* both columns grow with content */
+  align-items: stretch;               /* same row = same height */
 }
 @media (min-width: 980px) {
   .container { grid-template-columns: 380px 1fr; }
@@ -150,7 +150,7 @@ header h1 {
   padding: 18px clamp(14px,3vw,26px);
   border: 1px solid var(--line);
   box-shadow: var(--shadow-1);
-  overflow: visible;           /* <— no clipping; prevents “cut” content */
+  overflow: clip;                      /* keep original behavior on ALL cards */
   transform: translateY(8px);
   opacity: 0;
   animation: card-in .6s var(--ease-out) forwards;
@@ -165,6 +165,18 @@ header h1 {
   font-size: 12px;
   margin-bottom: 10px;
   opacity: .9;
+}
+
+/* =========================
+   Make RIGHT card match LEFT height and scroll internally
+   ========================= */
+/* Select the wheel card via its aria-labelledby */
+@media (min-width: 980px) {
+  section[aria-labelledby="wheel-title"] {
+    height: 100%;          /* fill the grid track height (same as left) */
+    overflow: auto;        /* internal scroll if content exceeds */
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* =========================
