@@ -85,13 +85,13 @@
     <div class="quick-picks" role="group" aria-label="Quick selections">
       <button id="qpAll"  class="chip-btn" type="button" title="Select all leagues">All Leagues</button>
       <button id="qpNone" class="chip-btn" type="button" title="Deselect all leagues">Clear</button>
-      <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
+      <button id="qpTop5" class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
     </div>
 
     <!-- Chips (TEAM: leagues · PLAYER: PL clubs generated from players.json) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
-      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show all leagues</button>
+      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
@@ -191,54 +191,49 @@
 
 <script src="app.js" defer></script>
 <script>
-  // Helper: update UI text based on mode ('team' or 'player')
-  function applyModeTexts(mode){
-    const titleRight = document.getElementById('wheel-title');
-    const perf = document.getElementById('perfTip');
-    const meterText = perf?.querySelector('.meter-text');
+  // Mode-driven UI text (kept minimal; app.js handles most logic)
+  document.addEventListener('DOMContentLoaded', () => {
+    function applyModeTexts(mode){
+      const titleRight = document.getElementById('wheel-title');
+      const perf = document.getElementById('perfTip');
+      const meterText = perf?.querySelector('.meter-text');
+      const filterTitle = document.getElementById('filter-title');
+      const qpTop5 = document.getElementById('qpTop5');
 
-    const filterTitle = document.getElementById('filter-title');
-    const qpTop = document.getElementById('qpTop');
-
-    if(mode === 'player'){
-      // Right card title
-      if (titleRight) titleRight.textContent = 'Player Wheel';
-      // Meter noun
-      if (meterText && perf?.dataset.playersText){
-        const num = (meterText.textContent.match(/\d+/)||['0'])[0];
-        meterText.textContent = `${num} ${perf.dataset.playersText}`; // “X players loaded”
-      }
-      // Left sidebar labels
-      if (filterTitle) filterTitle.textContent = 'Select Clubs';
-      if (qpTop){
-        qpTop.textContent = 'Top 6 Premier League Clubs';
-        qpTop.title = 'Select the Big Six from the Premier League';
-      }
-      // Show-more button wording stays “leagues” (JS can swap if you ever list clubs there)
-    } else {
-      // TEAM (default)
-      if (titleRight) titleRight.textContent = 'Club Wheel';
-      if (meterText && perf?.dataset.clubsText){
-        const num = (meterText.textContent.match(/\d+/)||['0'])[0];
-        meterText.textContent = `${num} ${perf.dataset.clubsText}`; // “X clubs ready to spin”
-      }
-      if (filterTitle) filterTitle.textContent = 'Select Leagues';
-      if (qpTop){
-        qpTop.textContent = 'Top 5 Leagues';
-        qpTop.title = 'Select only the top 5 leagues';
+      if(mode === 'player'){
+        if (titleRight) titleRight.textContent = 'Player Wheel';
+        if (meterText && perf?.dataset.playersText){
+          const num = (meterText.textContent.match(/\d+/)||['0'])[0];
+          meterText.textContent = `${num} ${perf.dataset.playersText}`;
+        }
+        if (filterTitle) filterTitle.textContent = 'Select Clubs';
+        if (qpTop5){
+          qpTop5.textContent = 'Top 6 Premier League Clubs';
+          qpTop5.title = 'Select the Big Six from the Premier League';
+        }
+      } else {
+        if (titleRight) titleRight.textContent = 'Club Wheel';
+        if (meterText && perf?.dataset.clubsText){
+          const num = (meterText.textContent.match(/\d+/)||['0'])[0];
+          meterText.textContent = `${num} ${perf.dataset.clubsText}`;
+        }
+        if (filterTitle) filterTitle.textContent = 'Select Leagues';
+        if (qpTop5){
+          qpTop5.textContent = 'Top 5 Leagues';
+          qpTop5.title = 'Select only the top 5 leagues';
+        }
       }
     }
-  }
 
     // Ensure history empty text is correct on load
     const histEmpty = document.getElementById('historyEmpty');
     if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
 
-    // Apply mode texts on load from localStorage (default: team)
+    // Apply initial mode texts
     const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
     applyModeTexts(initial);
 
-    // Wire up mode buttons to switch texts
+    // Wire mode buttons
     document.getElementById('modeTeam')?.addEventListener('click', () => {
       localStorage.setItem('fsMode', 'team');
       applyModeTexts('team');
