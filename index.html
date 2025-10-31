@@ -6,7 +6,8 @@
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date()); gtag('config', 'G-RK8RD59N8G');
+    gtag('js', new Date());
+    gtag('config', 'G-RK8RD59N8G');
   </script>
 
   <meta charset="utf-8" />
@@ -63,15 +64,17 @@
   </div>
 
   <div class="header-right">
-    <!-- NEW top mode bar -->
-    <div class="mode-bar" role="tablist" aria-label="Game modes">
-      <button class="pill mode-pill is-active" data-mode="team">Guess Team</button>
-      <button class="pill mode-pill" data-mode="stadium">Guess Stadium</button>
-      <button class="pill mode-pill" data-mode="player">Guess Player</button>
-      <button class="pill pill-ghost" id="freeSpinBtn" title="Spin with current selections">Free Spin</button>
+    <div class="mode-switch-wrap">
+      <div class="mode-switch" role="tablist" aria-label="View mode">
+        <button id="modeTeam"    role="tab" aria-pressed="true"  class="mode-btn mode-btn-active">Guess Team</button>
+        <button id="modeStadium" role="tab" aria-pressed="false" class="mode-btn">Guess Stadium</button>
+        <button id="modePlayer"  role="tab" aria-pressed="false" class="mode-btn">Guess Player</button>
+        <button id="modeFree"    role="tab" aria-pressed="false" class="mode-btn ghost" title="Spin with current selection">Free Spin</button>
+      </div>
+
+      <!-- Sub-bar populated by app.js depending on selected mode -->
+      <div id="subBar" class="subbar" role="tablist" aria-label="Mode variants"></div>
     </div>
-    <!-- NEW variant bar (populates per mode) -->
-    <div class="variant-bar" id="variantBar" aria-live="polite"></div>
   </div>
 </header>
 
@@ -90,7 +93,7 @@
       <button id="qpTop"  class="chip-btn" type="button">Top</button>
     </div>
 
-    <!-- Chips (TEAM: leagues · PLAYER: PL clubs generated from players.json) -->
+    <!-- Chips (TEAM/STADIUM: leagues · PLAYER: clubs derived from players.json) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
       <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more</button>
@@ -99,11 +102,12 @@
 
     <div class="section-title">Show on wheel</div>
     <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
+      <!-- labels & checked state are set by JS (mode-aware) -->
       <label class="chip"><input type="checkbox" id="optA" checked aria-label="A"><span id="lblA" class="chip-text">A</span></label>
       <label class="chip"><input type="checkbox" id="optB" checked aria-label="B"><span id="lblB" class="chip-text">B</span></label>
       <label class="chip"><input type="checkbox" id="optC"         aria-label="C"><span id="lblC" class="chip-text">C</span></label>
       <label class="chip"><input type="checkbox" id="optD"         aria-label="D"><span id="lblD" class="chip-text">D</span></label>
-      <label class="chip"><input type="checkbox" id="optE"         aria-label="E"><span id="lblE" class="chip-text">E</span></label>
+      <label class="chip"><input type="checkbox" id="optE" aria-label="E"><span id="lblE" class="chip-text">E</span></label>
     </div>
 
     <button id="spinBtn" type="button">SPIN</button>
@@ -148,19 +152,26 @@
     <div id="mSub" class="small" aria-live="polite"></div>
 
     <div class="m-body">
+      <!-- shared image (team logo or player image) -->
       <img id="mLogo" alt="">
+
+      <!-- TEAM/STADIUM row: Stadium -->
       <div class="m-row" id="rowStadium">
         <div class="label">Stadium</div>
         <span id="mStadium" class="value-pill"></span>
       </div>
+
+      <!-- PLAYER rows: Club / Jersey / Nationality -->
       <div class="m-row" id="rowClub" style="display:none">
         <div class="label">Club</div>
         <span id="mClub" class="value-pill"></span>
       </div>
+
       <div class="m-row" id="rowJersey" style="display:none">
         <div class="label">Jersey</div>
         <span id="mJersey" class="value-pill"></span>
       </div>
+
       <div class="m-row" id="rowNat" style="display:none">
         <div class="label">Nationality</div>
         <span id="mNat" class="value-pill"></span>
