@@ -546,8 +546,23 @@ function ensureRevealStyles(){
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
     .reveal-wrap{position:relative;display:inline-block}
-    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:transparent;pointer-events:none}
-    .reveal-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;user-select:none;white-space:nowrap;z-index:3}
+    .reveal-overlay{
+      position:absolute;inset:0;border-radius:inherit;
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      background:transparent;pointer-events:none;
+    }
+    /* Make the “Show …” chip float over the blurred element, not full width */
+    .reveal-btn{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      width:auto !important;              /* override global 100% */
+      padding:8px 14px;border-radius:10px;
+      border:1px solid rgba(90,161,255,.6);
+      background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;
+      cursor:pointer;user-select:none;white-space:nowrap;z-index:3;
+      text-transform:none;
+      box-shadow:0 6px 18px rgba(34,211,238,.18);
+    }
+    .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02)}
   `;
   document.head.appendChild(s);
 }
