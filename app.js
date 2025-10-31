@@ -97,6 +97,16 @@ function getImage(url, onload){
   IMG_CACHE.set(url,{img});
   return img;
 }
+function syncHeaderHeight() {
+  const hEl = document.querySelector('header');
+  const h = hEl ? hEl.offsetHeight : 72;
+  document.documentElement.style.setProperty('--header-h', h + 'px');
+}
+window.addEventListener('load', syncHeaderHeight, { once: true });
+window.addEventListener('resize', () => {
+  clearTimeout(window.__hdrT);
+  window.__hdrT = setTimeout(syncHeaderHeight, 120);
+});
 
 function textColorFor(hex){
   if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
@@ -119,6 +129,22 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weigh
   while (s && ctx.measureText(s+'…').width > maxWidth) s = s.slice(0,-1);
   return {text:(s||'')+'…', fontPx:minPx};
 }
+
+(async function init(){
+  try {
+    await loadTeams();
+    await loadPlayers();
+  } catch (e) { console.error('Failed to load data:', e); }
+
+  // ...mode setup etc.
+
+  syncHeaderHeight();   // <-- add this
+  sizeCanvas();
+  updatePerfBanner();
+  drawWheel();
+  positionSpinFab();
+  wire();
+})();
 
 /* ---------- Chips helpers ---------- */
 function makeChip(value, text, checked){
