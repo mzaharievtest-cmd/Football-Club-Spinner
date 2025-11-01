@@ -510,26 +510,52 @@ function showResult(idx){
 }
 
 /* ---------- History ---------- */
+/* Create and keep a single styled empty-state card inside #history */
+function ensureHistoryEmptyCard() {
+  const wrap = document.getElementById('history');
+  if (!wrap) return;
+  const hasCard = wrap.querySelector('.result .current-name#historyEmpty');
+  if (hasCard) return;
+
+  wrap.innerHTML = '';
+  const card = document.createElement('div');
+  card.className = 'result';
+
+  const label = document.createElement('div');
+  label.id = 'historyEmpty';
+  label.className = 'current-name';
+  label.textContent = 'Your journey starts with a spin - try your luck!';
+
+  card.appendChild(label);
+  wrap.appendChild(card);
+}
+
 function renderHistory(){
-  historyEl.innerHTML = '';
+  const wrap = document.getElementById('history');
+  if (!wrap) return;
+
+  wrap.innerHTML = '';
+
   const visible = history.filter(h => h.type === MODE);
 
   if (!visible.length){
-    const empty = document.createElement('div');
-    empty.className = 'item';
-    empty.textContent = 'Your journey starts with a spin - try your luck!';
-    historyEl.appendChild(empty);
+    ensureHistoryEmptyCard();
     return;
   }
 
   visible.forEach(({ item }) => {
-    const div = document.createElement('div'); div.className='item';
+    const div = document.createElement('div'); 
+    div.className='item';
+
     const img = document.createElement('img');
     if (MODE==='player'){ img.src=item.image_url||''; img.alt=item.team_name||'Player'; }
     else { img.src=item.logo_url||''; img.alt=`${item.team_name||'Team'} logo`; }
+
     const span=document.createElement('span');
     span.textContent = item.team_name || (MODE==='player'?'Player':'Team');
-    div.append(img,span); historyEl.append(div);
+
+    div.append(img,span); 
+    wrap.append(div);
   });
 }
 
@@ -810,8 +836,9 @@ function wire(){
     console.error('Failed to load data:', e);
   }
 
-  setMode(MODE);      // apply initial mode + UI
-  renderHistory();    // per-mode history
+  setMode(MODE);                 // apply initial mode + UI
+  ensureHistoryEmptyCard();      // ensure styled empty-state pill exists
+  renderHistory();               // per-mode history
 
   sizeCanvas();
   positionSpinFab();
