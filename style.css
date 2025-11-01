@@ -28,8 +28,8 @@
   --ease:cubic-bezier(.2,.7,.1,1); --ease-out:cubic-bezier(.16,1,.3,1);
   --radius:18px;
 
-  /* Header spacing */
-  --header-h: 84px;
+  /* Header spacing (JS updates --header-h live) */
+  --header-h: 84px; /* fallback until JS measures header */
 }
 @media (prefers-reduced-motion:reduce){
   :root{--ease:linear;--ease-out:linear}
@@ -42,6 +42,9 @@
    Global / Background
    ========================= */
 html,body{height:100%}
+/* ✅ stop any horizontal scrolling on iOS */
+html,body{overflow-x:hidden !important}
+
 body{
   margin:0; min-height:100vh;
   font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -82,7 +85,10 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
   background:#0b1220; transition:transform .25s var(--ease), border-color .25s var(--ease);
 }
 .brand-img:hover{transform:translateY(-1px) scale(1.03); border-color:#9ad1ff}
-#main-title{margin:0; font-weight:900; font-size:clamp(22px,2.5vw,32px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+#main-title{
+  margin:0; font-weight:900; font-size:clamp(22px,2.5vw,32px);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 .season-tag{margin-top:2px;font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim)}
 
 /* =========================
@@ -90,27 +96,20 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
    ========================= */
 .container{
   max-width:1240px;
+  width:100%;                /* ✅ never wider than viewport */
   margin:calc(var(--header-h) + 12px) auto 48px;
   padding:0 clamp(12px,4vw,36px);
   display:grid; gap:22px; position:relative; z-index:1; align-items:start;
+  overflow-x:hidden;         /* ✅ clip any accidental child overflow */
 }
-@media (min-width:980px){
-  .container{grid-template-columns:380px 1fr}
-}
+@media (min-width:980px){ .container{grid-template-columns:380px 1fr} }
 
-/* —— MOBILE ORDER CHANGE: Wheel first, then Filters, then Details —— */
+/* —— MOBILE ORDER: Wheel, Filters, Details —— */
 @media (max-width:979.98px){
-  .container{
-    display:flex;
-    flex-direction:column;
-  }
-  /* 1) Wheel card */
+  .container{ display:flex; flex-direction:column; }
   section.card[aria-labelledby="wheel-title"]{ order:1; }
-  /* 2) Select Leagues (sidebar) */
   .card.sidebar{ order:2; }
-  /* 3) Details (full-width accordion) — keep it at the bottom */
   .container > section.card:has(#details-title){ order:3; }
-
   .card{margin-bottom:16px}
 }
 
@@ -223,10 +222,20 @@ button:hover::after,.chip-btn:hover::after{transform:translateX(100%)}
   border: 1px solid rgba(120,160,255,.14);
   border-radius: 20px;
   box-shadow: inset 0 0 30px rgba(30,50,90,.25), 0 20px 40px rgba(0,0,0,.35);
+  width:100%;            /* ✅ never exceed card */
+  max-width:100%;        /* ✅ safety */
+  overflow:hidden;       /* ✅ clip absolute children (pointer/fab) */
 }
 @media (max-width:560px){
-  .wheel-wrap{min-height:440px; box-shadow: inset 0 0 18px rgba(30,50,90,.22), 0 10px 20px rgba(0,0,0,.28);}
+  .wheel-wrap{
+    min-height:440px;
+    padding:20px 10px 16px; /* ✅ tighter to avoid edges */
+    box-shadow: inset 0 0 18px rgba(30,50,90,.22), 0 10px 20px rgba(0,0,0,.28);
+  }
 }
+
+/* ✅ canvases cannot create inline overflow */
+canvas{display:block;max-width:100%;height:auto}
 canvas#wheel{
   width:100%; max-width:820px; height:auto; border-radius:50%;
   filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));
@@ -244,9 +253,9 @@ canvas#wheel{
   filter:drop-shadow(0 6px 10px rgba(0,0,0,.35)) drop-shadow(0 0 6px rgba(100,180,255,.3));
   animation:pointer-float 3.6s ease-in-out infinite
 }
-@keyframes pointer-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @media (max-width:560px){ .pointer{border-left-width:12px;border-right-width:12px;border-top-width:20px; animation:none;} }
 
+/* Central SPIN button overlay */
 .spin-fab{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   width:clamp(86px,13vw,128px); height:clamp(86px,13vw,128px);
@@ -269,7 +278,6 @@ canvas#wheel{
 .spin-fab:hover{transform:translate(-50%,-50%) scale(1.03);border-color:#22d3ee;box-shadow:0 14px 34px rgba(34,211,238,.25)}
 .spin-fab:active{transform:translate(-50%,-50%) scale(.985)}
 .spin-fab:disabled{opacity:.7;cursor:wait}
-@media (max-width:560px){ .spin-fab::before{animation:none} }
 
 /* =========================
    Modal
@@ -304,21 +312,29 @@ canvas#wheel{
 }
 .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02);border-color:var(--accent-2);box-shadow:0 6px 18px rgba(34,211,238,.18)}
 
-/* Modal polish */
+/* Modal polish — keep reveal chips compact and center the logo area */
 #modal .reveal-btn{ width:auto !important; }
+
 #modal .m-body{ align-items:center; }
-#modal #mHead{ font-size:22px; font-weight:900; text-align:center; line-height:1.2; margin-top:6px; }
+#modal #mHead{
+  font-size:22px; font-weight:900; text-align:center; line-height:1.2;
+  margin-top:6px;
+}
 #modal #mSub{ text-align:center; }
+
 #modal #mLogo{
   border-radius:16px; padding:10px; background:#0b1220;
   border:1px solid rgba(100,168,255,.35);
   box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 30px rgba(90,161,255,.08);
 }
-#modal .m-row .label{ min-width:auto; margin-right:12px; font-weight:800; color:#d7e8ff; }
+
+#modal .m-row .label{
+  min-width:auto; margin-right:12px; font-weight:800; color:#d7e8ff;
+}
 #modal .m-actions .chip-btn{ width:100%; }
 
 /* =========================
-   Optional #content section
+   Optional #content section (kept for future)
    ========================= */
 #content{
   --anchor-offset: calc(var(--header-h) + 12px);
@@ -332,7 +348,7 @@ canvas#wheel{
 #content dt{font-size:13px;color:var(--muted);font-weight:800;margin-top:12px}
 
 /* =========================
-   Modern Accordion
+   Modern Accordion (matches card styling)
    ========================= */
 .accordion { display:flex; flex-direction:column; gap:12px; width:100%; }
 .ac-panel {
@@ -389,7 +405,7 @@ button:focus-visible,.chip-btn:focus-visible,
 }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* ——— FINAL OVERRIDES ——— */
+/* ——— FINAL OVERRIDES: tighten header gap, disable sticky on both cards ——— */
 .container { margin-top: 12px !important; }
 .card.sidebar[aria-labelledby="filter-title"],
 section.card[aria-labelledby="wheel-title"] {
@@ -401,11 +417,11 @@ canvas#wheel { pointer-events: none !important; }
 .spin-fab { z-index: 50 !important; }
 .pointer  { z-index: 40 !important; }
 
-/* Modal row alignment fixes */
+/* Modal row alignment fix */
 #mHead { text-align:left; }
 .m-row{
   display:grid !important;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: max-content 1fr;  /* Label | Value */
   align-items:center;
   gap:18px;
 }
@@ -417,12 +433,27 @@ canvas#wheel { pointer-events: none !important; }
 }
 .m-row .reveal-wrap{ width:100%; justify-items:center; }
 #modal .m-body{ gap:20px; }
-.m-row{ grid-template-columns: 140px 1fr; }
+
+.m-row{
+  display:grid !important;
+  grid-template-columns: 140px 1fr;   /* Label | Value */
+  align-items:center;
+  gap:18px;
+}
 .m-row .label{ font-weight:800; color:#cfe2ff; }
 .m-row .value-pill{
-  position:relative; display:inline-flex; align-items:center; justify-content:center;
-  width:100%; min-height:48px; padding:10px 16px; border-radius:14px;
-  background:rgba(17,28,48,.85); border:1px solid rgba(90,161,255,.16); color:#d7e8ff; font-weight:800;
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:48px;
+  padding:10px 16px;
+  border-radius:14px;
+  background:rgba(17,28,48,.85);
+  border:1px solid rgba(90,161,255,.16);
+  color:#d7e8ff;
+  font-weight:800;
 }
 .m-row .reveal-wrap{ width:auto; }
 @media (max-width:560px){
