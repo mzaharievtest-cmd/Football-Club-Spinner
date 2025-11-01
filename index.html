@@ -14,14 +14,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>Football Club Spinner — 398 Clubs · 25 Leagues</title>
-  <meta name="description" content="Football Spinner is a free random football club generator. Spin across Premier League, La Liga, Serie A, Bundesliga and Ligue 1. Great for trivia and discovery.">
-  <meta name="keywords" content="football spinner, random football club, random club generator, european leagues, premier league, la liga, serie a, bundesliga, ligue 1, football trivia, stadium quiz">
+  <meta name="description" content="Football Spinner is a free random football club and player generator. Spin across the top 25 leagues. Great for trivia, discovery, and matchday fun.">
+  <meta name="keywords" content="football spinner, random football club, random player generator, premier league, la liga, serie a, bundesliga, ligue 1, trivia, wheel">
   <link rel="canonical" href="https://footballspinner.com/">
   <meta name="robots" content="index,follow">
 
   <!-- Open Graph -->
-  <meta property="og:title" content="Football Club Spinner — Random Football Club Generator">
-  <meta property="og:description" content="Spin the wheel to discover clubs from the Premier League, La Liga, Serie A, Bundesliga, Ligue 1 and more. A fun tool for quizzes, watch parties, and learning new teams.">
+  <meta property="og:title" content="Football Club Spinner — Random Football Club & Player Generator">
+  <meta property="og:description" content="Spin the wheel to discover clubs and players from the top leagues. Perfect for quizzes, watch parties, and football debates.">
   <meta property="og:url" content="https://footballspinner.com/">
   <meta property="og:site_name" content="Football Spinner">
   <meta property="og:type" content="website">
@@ -51,21 +51,6 @@
       j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl; f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-KS5K7Z4T');
   </script>
-
-  <!-- Paste this right before your closing </head> tag -->
-<script type="text/javascript">
-  (function(e,c){if(!c.__SV){var l,h;window.mixpanel=c;c._i=[];c.init=function(q,r,f){function t(d,a){var g=a.split(".");2==g.length&&(d=d[g[0]],a=g[1]);d[a]=function(){d.push([a].concat(Array.prototype.slice.call(arguments,0)))}}var b=c;"undefined"!==typeof f?b=c[f]=[]:f="mixpanel";b.people=b.people||[];b.toString=function(d){var a="mixpanel";"mixpanel"!==f&&(a+="."+f);d||(a+=" (stub)");return a};b.people.toString=function(){return b.toString(1)+".people (stub)"};l="disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders start_session_recording stop_session_recording people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove".split(" ");
-  for(h=0;h<l.length;h++)t(b,l[h]);var n="set set_once union unset remove delete".split(" ");b.get_group=function(){function d(p){a[p]=function(){b.push([g,[p].concat(Array.prototype.slice.call(arguments,0))])}}for(var a={},g=["get_group"].concat(Array.prototype.slice.call(arguments,0)),m=0;m<n.length;m++)d(n[m]);return a};c._i.push([q,r,f])};c.__SV=1.2;var k=e.createElement("script");k.type="text/javascript";k.async=!0;k.src="undefined"!==typeof MIXPANEL_CUSTOM_LIB_URL?MIXPANEL_CUSTOM_LIB_URL:"file:"===
-  e.location.protocol&&"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js".match(/^\/\//)?"https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js":"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";e=e.getElementsByTagName("script")[0];e.parentNode.insertBefore(k,e)}})(document,window.mixpanel||[])
-
-  
-  mixpanel.init('51fdd3ad50645765391a60b84024ad96', {
-    autocapture: true,
-    record_sessions_percent: 100,
-    api_host: 'https://api-eu.mixpanel.com',
-  })
-
-</script>
 </head>
 
 <body>
@@ -74,15 +59,16 @@
     <img src="app-logo.png?v=1" alt="Football Club Spinner" class="brand-img" decoding="async">
     <div>
       <h1 id="main-title">Football Club Spinner</h1>
-      <div class="season-tag">398 Clubs · 25 Leagues</div>
+      <!-- dot removed as requested -->
+      <div class="season-tag">Discover clubs and players from 25 leagues around the world</div>
     </div>
   </div>
 
   <div class="header-right">
     <div class="mode-switch-wrap">
       <div class="mode-switch" role="tablist" aria-label="View mode">
-        <button id="modeTeam"   role="tab" aria-pressed="true"  class="mode-btn mode-btn-active">TEAM</button>
-        <button id="modePlayer" role="tab" aria-pressed="false" class="mode-btn">PLAYER</button>
+        <button id="modeTeam"   role="tab" aria-pressed="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
+        <button id="modePlayer" role="tab" aria-pressed="false" class="mode-btn" title="Spin among players from top leagues">PLAYER</button>
       </div>
     </div>
   </div>
@@ -92,86 +78,123 @@
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <main class="container">
-  <!-- LEFT: filters / toggles -->
+  <!-- LEFT: filters / quick actions / history -->
   <section class="card sidebar" aria-labelledby="filter-title">
-    <div class="section-title" id="filter-title">Leagues (filter)</div>
+    <div class="section-title" id="filter-title">Select Leagues</div>
 
-    <!-- Quick picks (mode-aware in JS) -->
+    <!-- Quick picks -->
     <div class="quick-picks" role="group" aria-label="Quick selections">
-      <button id="qpAll"  class="chip-btn" type="button">All</button>
-      <button id="qpNone" class="chip-btn" type="button">None</button>
-      <button id="qpTop"  class="chip-btn" type="button">Top</button>
+      <button id="qpAll"  class="chip-btn" type="button" title="Select all leagues">All Leagues</button>
+      <button id="qpNone" class="chip-btn" type="button" title="Deselect all leagues">Clear</button>
+      <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
     </div>
 
     <!-- Chips (TEAM: leagues · PLAYER: PL clubs generated from players.json) -->
     <div id="chips">
       <div id="chipsTop" class="chips"></div>
-      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more</button>
+      <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
       <div id="chipsMore" class="chips" hidden></div>
     </div>
 
-    <div class="section-title">Show on wheel</div>
-    <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
-      <!-- labels & checked state are set by JS (mode-aware) -->
-      <label class="chip"><input type="checkbox" id="optA" checked aria-label="A"><span id="lblA" class="chip-text">A</span></label>
-      <label class="chip"><input type="checkbox" id="optB" checked aria-label="B"><span id="lblB" class="chip-text">B</span></label>
-      <label class="chip"><input type="checkbox" id="optC"         aria-label="C"><span id="lblC" class="chip-text">C</span></label>
-      <label class="chip"><input type="checkbox" id="optD"         aria-label="D"><span id="lblD" class="chip-text">D</span></label>
-      <label class="chip"><input type="checkbox" id="optE" aria-label="E"><span id="lblE" class="chip-text">E</span></label>
-    </div>
-
-    <button id="spinBtn" type="button">SPIN</button>
+    <button id="spinBtn" type="button" title="Click to spin the wheel">Spin Wheel</button>
 
     <div class="history-title">History</div>
-    <div class="history" id="history"></div>
-    <button id="resetHistoryBtn" type="button" style="margin-top:12px">Reset History</button>
+    <div class="history" id="history">
+      <div class="result"><div id="historyEmpty" class="current-name">Your journey starts with a spin - try your luck!</div></div>
+    </div>
+    <button id="resetHistoryBtn" type="button" style="margin-top:12px" title="Clear all previous results">Clear History</button>
   </section>
 
   <!-- RIGHT: wheel -->
   <section class="card" aria-labelledby="wheel-title">
     <div class="section-title" id="wheel-title">Club Wheel</div>
-    <div id="perfTip" class="perf-tip" aria-live="polite"><span class="meter-text">0 items selected</span></div>
 
+    <!-- Sub-header: meter + SHOW ON WHEEL -->
+    <div class="wheel-subheader">
+      <div id="perfTip" class="perf-tip" aria-live="polite" data-clubs-text="clubs ready to spin" data-players-text="players loaded">
+        <span class="meter-text">0 clubs ready to spin</span>
+      </div>
+
+      <div class="section-title" style="margin-top:8px">Show on Wheel</div>
+      <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
+        <label class="chip" title="Display club logos on the wheel"><input type="checkbox" id="optA" checked aria-label="Logo"><span id="lblA" class="chip-text">Logo</span></label>
+        <label class="chip" title="Show club or player names"><input type="checkbox" id="optB" checked aria-label="Name"><span id="lblB" class="chip-text">Name</span></label>
+        <label class="chip" title="Show stadium names (Team mode)"><input type="checkbox" id="optC" aria-label="Stadium"><span id="lblC" class="chip-text">Stadium</span></label>
+        <label class="chip" title="Display the league name"><input type="checkbox" id="optD" aria-label="League"><span id="lblD" class="chip-text">League</span></label>
+        <label class="chip" title="Show player nationality flags (Player mode)"><input type="checkbox" id="optE" aria-label="Nationality"><span id="lblE" class="chip-text">Nationality</span></label>
+      </div>
+    </div>
+
+    <!-- Wheel -->
     <div class="wheel-wrap">
       <div class="pointer" aria-hidden="true"></div>
-      <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
+      <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
       <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
       <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
     </div>
   </section>
 
-  <!-- Content -->
-  <section id="content" style="grid-column:1 / -1">
-    <nav aria-label="On this page" class="toc">
-      <a href="#what-is">What is Football Spinner?</a>
-      <a href="#how-it-works">How it works</a>
-    </nav>
+  <!-- Full-width modern accordion: spans both columns -->
+  <section class="card" style="grid-column:1 / -1; margin-top:28px;">
+    <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
+      <div class="section-title" id="details-title">Details</div>
 
-    <h2 id="what-is">What is Football Spinner?</h2>
-    <p>Football Spinner is a free, fan-made random football club generator built for quick fun, discovery, and football trivia.</p>
+      <div class="ac-panel" id="panel-about" role="region" aria-labelledby="panel-about-summary">
+        <div class="ac-summary" id="panel-about-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-about-body">
+          <div class="ac-title">About Football Spinner</div>
+          <span class="ac-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="ac-body" id="panel-about-body" aria-labelledby="panel-about-summary">
+          <h2>About Football Spinner</h2>
+          <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams, test your knowledge, or decide who to support next matchday.</p>
+        </div>
+      </div>
 
-    <h2 id="how-it-works">How it works</h2>
-    <p>Choose leagues (or Premier League clubs in PLAYER mode), pick what to show on the wheel, then spin. If too many entries are selected, the wheel switches to wedge-only for performance.</p>
+      <div class="ac-panel" id="panel-how" role="region" aria-labelledby="panel-how-summary">
+        <div class="ac-summary" id="panel-how-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-how-body">
+          <div class="ac-title">How it works</div>
+          <span class="ac-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="ac-body" id="panel-how-body" aria-labelledby="panel-how-summary">
+          <h2>How it works</h2>
+          <p>Choose your leagues or clubs, select what to show on the wheel, and hit Spin. The wheel will pick a random team or player - perfect for trivia nights, football debates, or discovering new favorites.</p>
+        </div>
+      </div>
+
+      <div class="ac-panel" id="panel-why" role="region" aria-labelledby="panel-why-summary">
+        <div class="ac-summary" id="panel-why-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-why-body">
+          <div class="ac-title">Why use it?</div>
+          <span class="ac-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div class="ac-body" id="panel-why-body" aria-labelledby="panel-why-summary">
+          <h2>Why use it?</h2>
+          <p>Football Spinner makes football discovery fun again. Whether you're choosing a random team to support, planning a quiz night, or learning new leagues - every spin is a surprise.</p>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 
 <!-- Modal -->
 <div id="backdrop" style="display:none">
   <div id="modal">
-    <div id="mHead">Title</div>
-    <div id="mSub" class="small" aria-live="polite"></div>
+    <div id="mHead">Result</div>
+    <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
 
     <div class="m-body">
-      <!-- shared image (team logo or player image) -->
       <img id="mLogo" alt="">
 
-      <!-- TEAM row: Stadium -->
       <div class="m-row" id="rowStadium">
         <div class="label">Stadium</div>
         <span id="mStadium" class="value-pill"></span>
       </div>
 
-      <!-- PLAYER rows: Club / Jersey / Nationality -->
       <div class="m-row" id="rowClub" style="display:none">
         <div class="label">Club</div>
         <span id="mClub" class="value-pill"></span>
@@ -189,11 +212,81 @@
     </div>
 
     <div class="m-actions">
-      <button id="mClose" class="chip-btn" type="button">Close</button>
+      <button id="mClose" class="chip-btn" type="button" title="Close this window">Close Window</button>
     </div>
   </div>
 </div>
 
 <script src="app.js" defer></script>
+<script>
+  (function(){
+    // ----- Mode text sync -----
+    function applyModeTexts(mode){
+      const titleRight = document.getElementById('wheel-title');
+      const perf = document.getElementById('perfTip');
+      const meterText = perf?.querySelector('.meter-text');
+
+      const filterTitle = document.getElementById('filter-title');
+      const qpTop = document.getElementById('qpTop'); // may not exist
+
+      if(mode === 'player'){
+        if (titleRight) titleRight.textContent = 'Player Wheel';
+        if (meterText && perf?.dataset.playersText){
+          const num = (meterText.textContent.match(/\d+/)||['0'])[0];
+          meterText.textContent = `${num} ${perf.dataset.playersText}`;
+        }
+        if (filterTitle) filterTitle.textContent = 'Select Clubs';
+        if (qpTop){ qpTop.textContent = 'Top 6 Premier League Clubs'; qpTop.title = 'Select the Big Six from the Premier League'; }
+      } else {
+        if (titleRight) titleRight.textContent = 'Club Wheel';
+        if (meterText && perf?.dataset.clubsText){
+          const num = (meterText.textContent.match(/\d+/)||['0'])[0];
+          meterText.textContent = `${num} ${perf.dataset.clubsText}`;
+        }
+        if (filterTitle) filterTitle.textContent = 'Select Leagues';
+        if (qpTop){ qpTop.textContent = 'Top 5 Leagues'; qpTop.title = 'Select only the top 5 leagues'; }
+      }
+    }
+    const histEmpty = document.getElementById('historyEmpty');
+    if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
+    const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
+    applyModeTexts(initial);
+    document.getElementById('modeTeam')?.addEventListener('click', () => { localStorage.setItem('fsMode', 'team'); applyModeTexts('team'); });
+    document.getElementById('modePlayer')?.addEventListener('click', () => { localStorage.setItem('fsMode', 'player'); applyModeTexts('player'); });
+
+    // ----- Accordion (modern details replacement) -----
+    const accordion = document.getElementById('infoAccordion');
+    if (accordion){
+      const panels = Array.from(accordion.querySelectorAll('.ac-panel'));
+      panels.forEach(panel=>{
+        const summary = panel.querySelector('.ac-summary');
+        const body = panel.querySelector('.ac-body');
+
+        const setOpen = (open) => {
+          panel.toggleAttribute('open', !!open);
+          summary.setAttribute('aria-expanded', !!open);
+          if (open) { body.style.maxHeight = body.scrollHeight + 40 + 'px'; }
+          else { body.style.maxHeight = null; }
+        };
+
+        summary.addEventListener('click', ()=>{
+          const willOpen = !panel.hasAttribute('open');
+          // Only one open at a time:
+          panels.forEach(p=>{ if (p!==panel){ p.removeAttribute('open'); p.querySelector('.ac-summary').setAttribute('aria-expanded','false'); p.querySelector('.ac-body').style.maxHeight=null; }});
+          setOpen(willOpen);
+        });
+        summary.addEventListener('keydown', (e)=>{
+          if (e.key==='Enter' || e.key===' '){ e.preventDefault(); summary.click(); }
+          if (e.key==='ArrowDown'){ e.preventDefault(); (panels[panels.indexOf(panel)+1]||panels[0]).querySelector('.ac-summary').focus(); }
+          if (e.key==='ArrowUp'){ e.preventDefault(); (panels[panels.indexOf(panel)-1]||panels[panels.length-1]).querySelector('.ac-summary').focus(); }
+        });
+
+        // start collapsed
+        panel.removeAttribute('open');
+        summary.setAttribute('aria-expanded','false');
+      });
+    }
+  })();
+</script>
 </body>
 </html>
