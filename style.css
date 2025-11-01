@@ -76,7 +76,7 @@ header{
 header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .brand-img{
   width:clamp(30px,3.6vw,46px); height:clamp(30px,3.6vw,46px);
-  border-radius:12px; object-fit:cover;
+  border-radius:12px; object-fit:cover; aspect-ratio:1/1;
   border:1px solid rgba(100,160,255,.45);
   box-shadow:0 4px 14px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.05);
   background:#0b1220; transition:transform .25s var(--ease), border-color .25s var(--ease);
@@ -93,7 +93,7 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
    ========================= */
 .container{
   max-width:1240px;
-  margin:calc(var(--header-h) + 12px) auto 48px;     /* sits just below sticky header */
+  margin:calc(var(--header-h) + 12px) auto 48px;
   padding:0 clamp(12px,4vw,36px);
   display:grid; gap:22px; position:relative; z-index:1; align-items:start;
 }
@@ -110,15 +110,15 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .section-title{margin:0 0 10px;font-size:12px;letter-spacing:.36em;text-transform:uppercase;color:var(--muted)}
 
 /* =========================
-   Columns scrolling (both move with the page)
+   Columns scrolling
    ========================= */
-.card.sidebar{               /* NO sticky sidebar */
+.card.sidebar{
   position:static;
   max-height:none;
   overflow:visible;
   mask-image:none;
 }
-section[aria-labelledby="wheel-title"].card{  /* right card should not clip overlays */
+section[aria-labelledby="wheel-title"].card{
   position:static;
   overflow:visible;
   z-index:2;
@@ -183,19 +183,21 @@ button:hover::after,.chip-btn:hover::after{transform:translateX(100%)}
   padding:12px 14px;border-radius:14px;border:1px solid var(--line);
   background:linear-gradient(135deg, rgba(14,22,40,.9), rgba(8,14,28,.88)); backdrop-filter:blur(6px)
 }
-.result img,.item img{width:38px;height:38px;border-radius:12px;object-fit:contain;background:#0b1220;border:1px solid rgba(90,161,255,.22);box-shadow:0 2px 8px rgba(16,24,48,.28)}
+.result img,.item img{
+  width:38px;height:38px;border-radius:12px;object-fit:contain;aspect-ratio:1/1;
+  background:#0b1220;border:1px solid rgba(90,161,255,.22);box-shadow:0 2px 8px rgba(16,24,48,.28)
+}
 .current-name{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .history-title{margin:16px 0 8px;color:var(--muted);font-size:12px;letter-spacing:.34em;text-transform:uppercase}
-.history{max-height:260px;overflow:auto;display:grid;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(120,160,255,.35) transparent}
+.history{
+  max-height:260px;overflow:auto;display:grid;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(120,160,255,.35) transparent;
+  content-visibility:auto; contain-intrinsic-size: 400px 260px;
+}
 .history::-webkit-scrollbar{width:8px}
 .history::-webkit-scrollbar-thumb{background:rgba(120,160,255,.28);border-radius:8px}
 .item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(17,28,48,.85);border:1px solid rgba(90,161,255,.12);transition:transform .16s var(--ease)}
 .item:hover{transform:translateY(-1px)}
-
-.brand-img,
-.result img,
-.item img { aspect-ratio: 1 / 1; }
 
 /* =========================
    Selection meter
@@ -229,7 +231,7 @@ canvas#wheel{
   filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));
   background:transparent;
   -webkit-font-smoothing:antialiased;
-  pointer-events:none;                 /* canvas won’t block clicks */
+  pointer-events:none;
   animation:wheel-pop .5s var(--ease-out);
 }
 @keyframes wheel-pop{from{transform:scale(.985);opacity:.85}to{transform:none;opacity:1}}
@@ -253,7 +255,7 @@ canvas#wheel{
   color:#f4f7ff; font-weight:900; letter-spacing:.16em; text-transform:uppercase;
   background:radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
   box-shadow:0 10px 30px rgba(0,0,0,.45), inset 0 0 30px rgba(90,161,255,.15);
-  z-index:50;                          /* ensure above everything */
+  z-index:50;
   transition:transform .12s var(--ease), box-shadow .12s var(--ease), border-color .12s var(--ease)
 }
 .spin-fab::before{
@@ -301,28 +303,26 @@ canvas#wheel{
 }
 .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02);border-color:var(--accent-2);box-shadow:0 6px 18px rgba(34,211,238,.18)}
 
-/* Modal polish — keep reveal chips compact and center the logo area */
+/* Modal polish */
 #modal .reveal-btn{ width:auto !important; }
-
 #modal .m-body{ align-items:center; }
 #modal #mHead{
   font-size:22px; font-weight:900; text-align:center; line-height:1.2;
   margin-top:6px;
 }
 #modal #mSub{ text-align:center; }
-
 #modal #mLogo{
   border-radius:16px; padding:10px; background:#0b1220;
   border:1px solid rgba(100,168,255,.35);
   box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 30px rgba(90,161,255,.08);
 }
-
 #modal .m-row .label{
   min-width:auto; margin-right:12px; font-weight:800; color:#d7e8ff;
 }
-#modal .m-actions .chip-btn{ width:100%; } /* keep Close button full width */
+#modal .m-actions .chip-btn{ width:100%; }
+
 /* =========================
-   Optional #content section (kept for future)
+   Optional #content
    ========================= */
 #content{
   --anchor-offset: calc(var(--header-h) + 12px);
@@ -336,9 +336,12 @@ canvas#wheel{
 #content dt{font-size:13px;color:var(--muted);font-weight:800;margin-top:12px}
 
 /* =========================
-   Modern Accordion (matches card styling)
+   Modern Accordion
    ========================= */
-.accordion { display:flex; flex-direction:column; gap:12px; width:100%; }
+.accordion {
+  display:flex; flex-direction:column; gap:12px; width:100%;
+  content-visibility:auto; contain-intrinsic-size: 800px 500px;
+}
 .ac-panel {
   border-radius:14px;
   background:linear-gradient(180deg, rgba(14,22,40,.9), rgba(8,14,28,.88));
@@ -392,7 +395,7 @@ button:focus-visible,.chip-btn:focus-visible,
 }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* ——— FINAL OVERRIDES: tighten header gap, disable sticky on both cards ——— */
+/* ——— FINAL OVERRIDES ——— */
 .container { margin-top: 12px !important; }
 .card.sidebar[aria-labelledby="filter-title"],
 section.card[aria-labelledby="wheel-title"] {
@@ -403,61 +406,30 @@ section.card[aria-labelledby="wheel-title"] { overflow: visible !important; }
 canvas#wheel { pointer-events: none !important; }
 .spin-fab { z-index: 50 !important; }
 .pointer  { z-index: 40 !important; }
-/* Modal row alignment fix */
-#mHead { text-align:left; } /* keep title left like your screenshot */
+
+/* Modal grid align + hidden rows */
+#mHead { text-align:left; }
 .m-row{
   display:grid !important;
-  grid-template-columns: max-content 1fr;  /* Label | Value */
+  grid-template-columns: 140px 1fr;
   align-items:center;
   gap:18px;
 }
+.m-row .label{ font-weight:800; color:#cfe2ff; }
 .m-row .value-pill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:44px;         /* gives the button a stable center to lock onto */
+  position:relative; display:inline-flex; align-items:center; justify-content:center;
+  width:100%; min-height:48px; padding:10px 16px; border-radius:14px;
+  background:rgba(17,28,48,.85); border:1px solid rgba(90,161,255,.16); color:#d7e8ff; font-weight:800;
 }
-.m-row .reveal-wrap{
-  width:100%;              /* the overlay/button follows the pill’s width */
-  justify-items:center;    /* center within the grid cell */
-}
-/* --- Modal layout & alignment (fixed) --- */
-#modal .m-body{ gap:20px; }
-
-.m-row{
-  display:grid !important;
-  grid-template-columns: 140px 1fr;   /* Label | Value */
-  align-items:center;
-  gap:18px;
-}
-
-.m-row .label{
-  font-weight:800;
-  color:#cfe2ff;
-}
-
-.m-row .value-pill{
-  position:relative;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:100%;
-  min-height:48px;                    /* stable height for center overlay */
-  padding:10px 16px;
-  border-radius:14px;
-  background:rgba(17,28,48,.85);
-  border:1px solid rgba(90,161,255,.16);
-  color:#d7e8ff;
-  font-weight:800;
-}
-
-.m-row .reveal-wrap{
-  width:auto;                         /* keep wrapper as tight as the pill */
-}
-
+.m-row .reveal-wrap{ width:auto; }
 @media (max-width:560px){
   .m-row{ grid-template-columns: 1fr; gap:10px; }
   .m-row .label{ margin-bottom:2px; }
 }
-/* ensure hidden rows in modal are really gone, even with grid */
 .m-row[hidden] { display: none !important; }
+
+/* ---- Mobile: reduce heavy animations to lower main-thread cost ---- */
+@media (max-width:560px){
+  body::before { animation: none !important; opacity:.6; }
+  .spin-fab::before { animation: none !important; }
+}
