@@ -424,11 +424,24 @@ function drawWheel(){
   ctx.restore();
 }
 
+/* ---------- Analytics ---------- */
+function track(eventName, params = {}) {
+  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+    const base = { mode: MODE, screen: 'wheel' };
+    window.gtag('event', eventName, { ...base, ...params });
+    if (localStorage.debugFS === '1') {
+      console.log('[GA4]', eventName, { ...base, ...params });
+    }
+  }
+}
+
 /* ---------- Spin ---------- */
 function spin(){
   if (spinning) return;
   const data = getCurrentData();
   if (!data.length) return;
+
+  track('spin_click', { items_available: data.length });
 
   spinning = true;
   document.body.classList.add('ui-locked');
@@ -469,6 +482,24 @@ function showResult(idx){
   const data = getCurrentData();
   const item = data[idx];
   if (!item) return;
+
+  if (MODE === 'team') {
+    track('spin_result', {
+      result_type: 'team',
+      team_name: item.team_name || '(unknown)',
+      league_code: item.league_code || '',
+      stadium_present: !!item.stadium
+    });
+  } else {
+    track('spin_result', {
+      result_type: 'player',
+      player_name: item.team_name || '(unknown)', // player display name is kept in team_name field
+      club_id: String(item.club_id || ''),
+      has_image: !!(item.image_url && !/placeholder\.png$/i.test(item.image_url)),
+      nationality: item.nationality || '',
+      jersey: item.jersey || ''
+    });
+  }
 
   history.unshift({ type: MODE, item });
   if (history.length > 50) history.length = 50;
@@ -560,7 +591,7 @@ function addReveal(key, el, enabled, label){
 
   blurEl(el);
   const b=document.createElement('button'); b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
-  b.onclick=()=>{ modalReveal[key]=true; unblurEl(el); };
+  b.onclick=()=>{ modalReveal[key]=true; track('reveal_click', { field: label }); unblurEl(el); };
   w.appendChild(b);
 }
 
@@ -637,6 +668,8 @@ function setMode(next){
 
   applyModeShowControls();
   renderChips();
+
+  track('mode_set', { mode_after: MODE });
 }
 
 /* ---------- Loaders ---------- */
@@ -720,28 +753,32 @@ function wire(){
     const all = visibleCodesAll();
     chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = all.includes(i.value); });
     selectedIdx=-1; updatePerfBanner(); drawWheel();
+    track('quickpick', { pick: (MODE==='player' ? 'all_pl_teams' : 'all_leagues') });
   });
   qpNone && (qpNone.onclick = () => {
     chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = false; });
     selectedIdx=-1; updatePerfBanner(); drawWheel();
+    track('quickpick', { pick: 'clear' });
   });
   qpTopBtn && (qpTopBtn.onclick = () => {
     if (MODE==='player'){
       const allow = new Set(PL_TOP6);
       chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = allow.has(i.value); });
+      track('quickpick', { pick: 'top6_pl' });
     } else {
       const allow = new Set(TOP5);
       chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = allow.has(i.value); });
+      track('quickpick', { pick: 'top5_leagues' });
     }
     selectedIdx=-1; updatePerfBanner(); drawWheel();
   });
 
   const refresh = ()=>{ if (!spinning){ selectedIdx=-1; drawWheel(); } };
-  optA.addEventListener('change', refresh);
-  optB.addEventListener('change', refresh);
-  optC?.addEventListener('change', refresh);
-  optD?.addEventListener('change', refresh);
-  optE?.addEventListener('change', refresh);
+  optA.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: (MODE==='player'?'image':'logo'), enabled: !!optA.checked }); });
+  optB.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: 'name', enabled: !!optB.checked }); });
+  optC?.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: (MODE==='player'?'jersey':'stadium'), enabled: !!optC.checked }); });
+  optD?.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: (MODE==='player'?'nationality':'league'), enabled: !!optD.checked }); });
+  optE?.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: 'team_label', enabled: !!optE.checked }); });
 
   spinBtn && (spinBtn.onclick = spin);
   spinFab && (spinFab.onclick = spin);
@@ -750,11 +787,12 @@ function wire(){
     history = [];
     saveHistory();
     renderHistory();
+    track('history_cleared');
   });
 
-  mClose && (mClose.onclick = ()=> !spinning && closeModal());
-  backdrop && backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop) closeModal(); });
-  window.addEventListener('keydown', e=> { if (e.key==='Escape' && !spinning) closeModal(); });
+  mClose && (mClose.onclick = ()=> { if (!spinning){ closeModal(); track('modal_close'); } });
+  backdrop && backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop){ closeModal(); track('modal_close_backdrop'); }});
+  window.addEventListener('keydown', e=> { if (e.key==='Escape' && !spinning){ closeModal(); track('modal_close_escape'); }});
 
   let t; 
   window.addEventListener('resize', ()=>{
