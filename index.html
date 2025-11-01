@@ -32,9 +32,16 @@
   <!-- Preconnects -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Fonts (non-blocking load) -->
+  <link rel="preload"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+        as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+  </noscript>
 
   <!-- Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1" />
@@ -49,7 +56,7 @@
   <link rel="stylesheet" href="style.css?v=1" />
 
   <!-- Google Analytics 4 -->
-  <!-- Stream ID (ref): 12320499339 | Measurement ID used by tag: G-RK8RD59N8G -->
+  <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -147,7 +154,12 @@
 
   <header>
     <div class="brand">
-      <img src="app-logo.png?v=1" alt="Football Spinner logo" class="brand-img" decoding="async" />
+      <!-- Above-the-fold logo: keep eager load, but add explicit size -->
+      <img src="app-logo.png?v=1"
+           alt="Football Spinner logo"
+           class="brand-img"
+           decoding="async"
+           width="128" height="128" />
       <div>
         <h1 id="main-title">Football Spinner</h1>
         <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
@@ -156,10 +168,12 @@
 
     <div class="header-right">
       <div class="mode-switch-wrap">
+        <!-- ARIA: tabs use aria-selected (not aria-pressed) -->
         <div class="mode-switch" role="tablist" aria-label="View mode">
-          <button id="modeTeam" role="tab" aria-pressed="true" class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
-          <button id="modePlayer" role="tab" aria-pressed="false" class="mode-btn" title="Spin among players">PLAYER</button>
+          <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
+          <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
         </div>
+        <!-- Dynamic note shown only in PLAYER mode -->
         <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
       </div>
     </div>
@@ -295,7 +309,8 @@
       <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
 
       <div class="m-body">
-        <img id="mLogo" alt="" />
+        <!-- Not above-the-fold: lazy + dimensions -->
+        <img id="mLogo" alt="" loading="lazy" width="256" height="256" />
 
         <div class="m-row" id="rowStadium">
           <div class="label">Stadium</div>
@@ -327,7 +342,7 @@
   <!-- App -->
   <script src="app.js" defer></script>
 
-  <!-- Mode text + accordion helpers -->
+  <!-- Mode text + accordion helpers (ARIA fix for tabs included) -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -359,19 +374,33 @@
         }
       }
 
+      // Update aria-selected on tabs
+      function setTabSelection(mode){
+        const teamBtn = document.getElementById('modeTeam');
+        const playerBtn = document.getElementById('modePlayer');
+        const teamActive = mode !== 'player';
+        teamBtn?.setAttribute('aria-selected', String(teamActive));
+        playerBtn?.setAttribute('aria-selected', String(!teamActive));
+        teamBtn?.classList.toggle('mode-btn-active', teamActive);
+        playerBtn?.classList.toggle('mode-btn-active', !teamActive);
+      }
+
       const histEmpty = document.getElementById('historyEmpty');
       if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
 
       const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
       applyModeTexts(initial);
+      setTabSelection(initial);
 
       document.getElementById('modeTeam')?.addEventListener('click', () => {
         localStorage.setItem('fsMode', 'team');
         applyModeTexts('team');
+        setTabSelection('team');
       });
       document.getElementById('modePlayer')?.addEventListener('click', () => {
         localStorage.setItem('fsMode', 'player');
         applyModeTexts('player');
+        setTabSelection('player');
       });
 
       // Accordion
