@@ -21,6 +21,8 @@
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://footballspinner.com/app-og.png" />
   <meta property="og:image:alt" content="Football Spinner app preview" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:locale" content="en_GB" />
 
   <!-- Twitter -->
@@ -29,7 +31,7 @@
   <meta name="twitter:description" content="Spin teams from 25 European leagues or random Premier League players. Free, no login." />
   <meta name="twitter:image" content="https://footballspinner.com/app-og.png" />
 
-  <!-- Preloads (perf hints) -->
+  <!-- Preloads (perf) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -40,7 +42,7 @@
   <link rel="apple-touch-icon" href="app-logo.png?v=1" />
   <link rel="shortcut icon" href="app-logo.png?v=1" />
 
-  <!-- Manifest (optional; safe if present/missing) -->
+  <!-- Manifest (optional) -->
   <link rel="manifest" href="/manifest.webmanifest" />
 
   <!-- Styles -->
@@ -77,11 +79,11 @@
     "description":"Spin a random football team from 25 European leagues, or a random Premier League player. Free, fast, no login.",
     "inLanguage":"en",
     "isFamilyFriendly": true,
-    "potentialAction": {
+    "potentialAction": [{
       "@type":"SearchAction",
       "target":"https://footballspinner.com/?q={query}",
       "query-input":"required name=query"
-    }
+    }]
   }
   </script>
 </head>
@@ -92,7 +94,7 @@
 
   <header>
     <div class="brand">
-      <img src="app-logo.png?v=1" alt="Football Spinner logo" class="brand-img" decoding="async" />
+      <img src="app-logo.png?v=1" width="128" height="128" alt="Football Spinner logo" class="brand-img" decoding="async" />
       <div>
         <h1 id="main-title">Football Spinner</h1>
         <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
@@ -105,7 +107,7 @@
           <button id="modeTeam" role="tab" aria-pressed="true" class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
           <button id="modePlayer" role="tab" aria-pressed="false" class="mode-btn" title="Spin among players">PLAYER</button>
         </div>
-        <!-- Dynamic note shown only in PLAYER mode -->
+        <!-- Shown only in PLAYER mode -->
         <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
       </div>
     </div>
@@ -123,7 +125,7 @@
         <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
       </div>
 
-      <!-- Chips (TEAM: leagues · PLAYER: PL teams generated from players.json) -->
+      <!-- Chips (TEAM: leagues · PLAYER: PL teams from players.json) -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
         <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
