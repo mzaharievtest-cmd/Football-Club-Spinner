@@ -79,6 +79,9 @@ const mJersey    = document.getElementById('mJersey');
 const rowNat     = document.getElementById('rowNat');
 const mNat       = document.getElementById('mNat');
 
+/* Reveal state (global) */
+let modalReveal = { a:false, b:false, c:false, d:false, e:false };
+
 /* ---------- Utils ---------- */
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI/2)+TAU)%TAU;
@@ -504,10 +507,9 @@ function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
-    /* Keep wrapper tight to the element we blur */
     .reveal-wrap{
       position:relative;
-      display:inline-block;           /* DO NOT stretch across the row */
+      display:inline-block;
       vertical-align:middle;
     }
     .reveal-overlay{
@@ -549,17 +551,16 @@ function unblurEl(el){
   const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove();
   const b=w && w.querySelector('.reveal-btn'); if(b) b.remove();
 }
-function addReveal(key, el, enabled, label, state){
-  // state is an object holding booleans; we flip key on click
+function addReveal(key, el, enabled, label){
   ensureRevealStyles();
   const w = wrap(el);
   const prior = w.querySelector('.reveal-btn'); if (prior) prior.remove();
 
-  if (enabled || state[key]){ unblurEl(el); return; }
+  if (enabled || modalReveal[key]){ unblurEl(el); return; }
 
   blurEl(el);
   const b=document.createElement('button'); b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
-  b.onclick=()=>{ state[key]=true; unblurEl(el); };
+  b.onclick=()=>{ modalReveal[key]=true; unblurEl(el); };
   w.appendChild(b);
 }
 
@@ -568,36 +569,26 @@ function openModal(item){
   ensureRevealStyles();
   modalReveal = {a:false,b:false,c:false,d:false,e:false};
 
-  // Helper to hard-toggle whole rows
   const showRow = (rowEl, on) => {
     if (!rowEl) return;
-    if (on) {
-      rowEl.hidden = false;
-      rowEl.style.display = '';  // clear inline overrides
-    } else {
-      rowEl.hidden = true;
-      rowEl.style.display = 'none';
-    }
+    if (on) { rowEl.hidden = false; rowEl.style.display = ''; }
+    else    { rowEl.hidden = true;  rowEl.style.display = 'none'; }
   };
 
   if (MODE === 'player') {
-    // HEADER
     mHead.textContent = item.team_name || '—';
-    mSub.textContent  = ''; // no league line in player modal
+    mSub.textContent  = '';
     mLogo.src = item.image_url || '';
 
-    // ROWS – player uses Club/Jersey/Nationality; stadium off
     showRow(rowStadium, false);
     showRow(rowClub,    true);
     showRow(rowJersey,  true);
     showRow(rowNat,     true);
 
-    // Values
     mClub.textContent   = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '—';
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
     mNat.textContent    = item.nationality || '—';
 
-    // Reveal chips (centered over each element)
     addReveal('a', mLogo, !!optA.checked, 'image');
     addReveal('b', mHead, !!optB.checked, 'name');
     if (optC) addReveal('c', mJersey, !!optC.checked, 'jersey number');
@@ -605,28 +596,23 @@ function openModal(item){
     if (optE) addReveal('e', mClub,   !!optE.checked, 'team');
 
   } else {
-    // TEAM mode
     mHead.textContent = item.team_name || '—';
     mSub.textContent  = leagueLabel(item.league_code) || '';
     mLogo.src = item.logo_url || '';
 
-    // ROWS – team uses Stadium only; others off
     showRow(rowStadium, true);
     showRow(rowClub,    false);
     showRow(rowJersey,  false);
     showRow(rowNat,     false);
 
-    // Value
     mStadium.textContent = item.stadium || '—';
 
-    // Reveal chips
     addReveal('a', mLogo,   !!optA.checked, 'logo');
     addReveal('b', mHead,   !!optB.checked, 'name');
     if (optC) addReveal('c', mStadium, !!optC.checked, 'stadium');
     if (optD) addReveal('d', mSub,     !!optD.checked, 'league');
   }
 
-  // Open modal
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
