@@ -774,21 +774,3 @@ function wire(){
   positionSpinFab();
   wire();
 })();
-/* Modal row alignment fix */
-#mHead { text-align:left; } /* keep title left like your screenshot */
-.m-row{
-  display:grid !important;
-  grid-template-columns: max-content 1fr;  /* Label | Value */
-  align-items:center;
-  gap:18px;
-}
-.m-row .value-pill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:44px;         /* gives the button a stable center to lock onto */
-}
-.m-row .reveal-wrap{
-  width:100%;              /* the overlay/button follows the pill’s width */
-  justify-items:center;    /* center within the grid cell */
-}
