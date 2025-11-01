@@ -512,7 +512,7 @@ function showResult(idx){
 /* ---------- History ---------- */
 /* Create and keep a single styled empty-state card inside #history */
 function ensureHistoryEmptyCard() {
-  const wrap = document.getElementById('history');
+  const wrap = historyEl;
   if (!wrap) return;
   const hasCard = wrap.querySelector('.result .current-name#historyEmpty');
   if (hasCard) return;
@@ -531,7 +531,7 @@ function ensureHistoryEmptyCard() {
 }
 
 function renderHistory(){
-  const wrap = document.getElementById('history');
+  const wrap = historyEl;
   if (!wrap) return;
 
   wrap.innerHTML = '';
@@ -628,8 +628,8 @@ function openModal(item){
 
   const showRow = (rowEl, on) => {
     if (!rowEl) return;
-    if (on) { rowEl.hidden = false; rowEl.style.display = ''; }
-    else    { rowEl.hidden = true;  rowEl.style.display = 'none'; }
+    rowEl.hidden = !on;
+    rowEl.style.display = on ? '' : 'none';
   };
 
   if (MODE === 'player') {
@@ -670,32 +670,19 @@ function openModal(item){
     if (optD) addReveal('d', mSub,     !!optD.checked, 'league');
   }
 
-  backdrop.style.display='flex';
-  requestAnimationFrame(()=> modalEl.classList.add('show'));
-}
-  if (MODE === 'team') {
-    hardHide(rowStadium, true);
-    hardHide(rowClub, false);
-    hardHide(rowJersey, false);
-    hardHide(rowNat, false);
-  } else {
-    // PLAYER mode — show/hide by options as before
-  }
-
-  // Final sweep: if anything is still empty, hide it.
+  // Safety sweep (ensures only valid rows remain visible)
   hideEmptyRows();
 
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
-function hardHide(el, on) {
+
+function hardHide(el, on){
   if (!el) return;
   el.hidden = !on;
   el.style.display = on ? '' : 'none';
 }
-
-function hideEmptyRows() {
-  // Hide any modal row whose value pill has no visible text and no reveal
+function hideEmptyRows(){
   const rows = modalEl.querySelectorAll('.m-row');
   rows.forEach(r => {
     const val = r.querySelector('.value-pill');
