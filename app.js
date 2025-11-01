@@ -517,7 +517,7 @@ function renderHistory(){
   if (!visible.length){
     const empty = document.createElement('div');
     empty.className = 'item';
-    empty.textContent = 'Your journey starts with a spin - try your luck!';
+    empty.textContent = 'Your journey starts with a spin!';
     historyEl.appendChild(empty);
     return;
   }
