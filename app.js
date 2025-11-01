@@ -1,6 +1,10 @@
-/* Football Spinner — TEAM / PLAYER unified (perf patch 2)
-   - Adds explicit width/height + lazy/async for history images.
-   - Keeps all prior functionality from previous version.
+/* Football Spinner — TEAM / PLAYER unified
+   - TEAM defaults: Premier League selected; Show on Wheel = Logo only.
+   - PLAYER defaults: only Arsenal selected; Show on Wheel = Image only; “All Premier League teams” quick-pick.
+   - PLAYER: exclude players without a usable image (incl. placeholder.png) from the wheel.
+   - PL Top-6 sorted first alphabetically.
+   - History stored per item with type {type:'team'|'player', item:{…}} and rendered per active mode.
+   - Modal: clean layout + modern “Show …” reveal buttons (centered over blurred element).
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -17,7 +21,7 @@ let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
 
-/* -------- history -------- */
+// History migrate → [{type,item}]
 let historyRaw = JSON.parse(localStorage.getItem('clubHistory')) || [];
 let history = historyRaw.map(h =>
   (h && typeof h === 'object' && 'type' in h && 'item' in h)
@@ -26,7 +30,7 @@ let history = historyRaw.map(h =>
 );
 const saveHistory = () => localStorage.setItem('clubHistory', JSON.stringify(history));
 
-/* -------- DOM -------- */
+/* ---------- DOM ---------- */
 const modeTeamBtn   = document.getElementById('modeTeam');
 const modePlayerBtn = document.getElementById('modePlayer');
 
@@ -39,11 +43,11 @@ const qpAll     = document.getElementById('qpAll');
 const qpNone    = document.getElementById('qpNone');
 const qpTopBtn  = document.getElementById('qpTop');
 
-const optA = document.getElementById('optA');
-const optB = document.getElementById('optB');
-const optC = document.getElementById('optC');
-const optD = document.getElementById('optD');
-const optE = document.getElementById('optE');
+const optA = document.getElementById('optA'); // Logo/Image
+const optB = document.getElementById('optB'); // Name
+const optC = document.getElementById('optC'); // Stadium (team) / Jersey (player)
+const optD = document.getElementById('optD'); // League (team) / Nationality (player)
+const optE = document.getElementById('optE'); // Team (player – modal extra)
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -78,7 +82,7 @@ const mNat       = document.getElementById('mNat');
 /* Reveal state (global) */
 let modalReveal = { a:false, b:false, c:false, d:false, e:false };
 
-/* -------- utils -------- */
+/* ---------- Utils ---------- */
 const TAU = Math.PI * 2;
 const POINTER_ANGLE = ((-Math.PI/2)+TAU)%TAU;
 const clamp = (a,x,b)=>Math.max(a,Math.min(b,x));
@@ -122,7 +126,7 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weigh
   return {text:(s||'')+'…', fontPx:minPx};
 }
 
-/* -------- labels -------- */
+/* ---------- Labels & presets ---------- */
 const LEAGUE_LABELS = {
   AUT:"Austrian Bundesliga", BEL:"Jupiler Pro League", BUL:"efbet Liga",
   CRO:"SuperSport HNL", CZE:"Fortuna Liga", DEN:"Superliga",
@@ -135,8 +139,9 @@ const LEAGUE_LABELS = {
 const leagueLabel = c => LEAGUE_LABELS[c] || c;
 
 const TOP5 = ['EPL','SA','BUN','L1','LLA'];
-const PL_TOP6 = ['19','18','8','9','14','6'];
+const PL_TOP6 = ['19','18','8','9','14','6']; // Arsenal, Chelsea, Liverpool, Man City, Man United, Spurs
 
+/* ---------- Fallback team names ---------- */
 const FALLBACK_TEAMS = {
   '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
   '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
@@ -146,26 +151,28 @@ const FALLBACK_TEAMS = {
   '236':'Brentford'
 };
 
-/* -------- selection -------- */
+/* ---------- Data selection ---------- */
 function activeCodes(){
   const arr=[];
   chipsWrap.querySelectorAll('input[type="checkbox"]:checked').forEach(i => arr.push(i.value));
   return arr;
 }
+
 function getCurrentData(){
   const active = new Set(activeCodes());
   if (active.size === 0) return [];
   if (MODE === 'player'){
     return PLAYERS.filter(p =>
       active.has(String(p.club_id)) &&
-      p.image_url && String(p.image_url).trim().length > 4 &&
+      p.image_url &&
+      String(p.image_url).trim().length > 4 &&
       !/placeholder\.png$/i.test(p.image_url)
     );
   }
   return TEAMS.filter(t => active.has(t.league_code));
 }
 
-/* -------- perf meter -------- */
+/* ---------- Perf banner ---------- */
 function updatePerfBanner(){
   const n = getCurrentData().length;
   const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
@@ -176,7 +183,7 @@ function updatePerfBanner(){
   spinBtn.disabled = disabled; spinFab.disabled = disabled;
 }
 
-/* -------- chips -------- */
+/* ---------- Chips helpers & render ---------- */
 function makeChip(value, text, checked){
   const label = document.createElement('label');
   label.className='chip';
@@ -189,6 +196,7 @@ function visibleCodesAll(){
   chipsMore.querySelectorAll('input[type="checkbox"]').forEach(i => out.push(i.value));
   return out;
 }
+
 function renderChips(){
   chipsTop.innerHTML = '';
   chipsMore.innerHTML = '';
@@ -228,24 +236,24 @@ function renderChips(){
   drawWheel();
 }
 
-/* -------- show-on-wheel defaults -------- */
+/* ---------- Show-on-wheel defaults ---------- */
 function applyModeShowControls(){
   if (MODE==='player'){
     lblA.textContent='Image';  optA.checked = true;
     lblB.textContent='Name';   optB.checked = false;
-    lblC.textContent='Jersey Number'; optC && (optC.checked=false);
-    lblD.textContent='Nationality';   optD && (optD.checked=false);
-    lblE.textContent='Team';          optE && (optE.checked=false);
+    if (lblC){ lblC.textContent='Jersey Number'; if (optC) optC.checked=false; }
+    if (lblD){ lblD.textContent='Nationality';   if (optD) optD.checked=false; }
+    if (lblE && optE){ lblE.textContent='Team';  optE.checked=false; }
   } else {
     lblA.textContent='Logo';   optA.checked = true;
     lblB.textContent='Name';   optB.checked = false;
-    lblC.textContent='Stadium'; optC && (optC.checked=false);
-    lblD.textContent='League';  optD && (optD.checked=false);
-    lblE.textContent='';        optE && (optE.checked=false);
+    if (lblC){ lblC.textContent='Stadium'; if (optC) optC.checked=false; }
+    if (lblD){ lblD.textContent='League';  if (optD) optD.checked=false; }
+    if (lblE && optE){ lblE.textContent=''; optE.checked=false; }
   }
 }
 
-/* -------- canvas sizing -------- */
+/* ---------- Canvas sizing ---------- */
 function sizeCanvas(){
   const rect = (wheel.parentElement||wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width||640), 1200);
@@ -267,7 +275,7 @@ function positionSpinFab(){
   spinFab.style.top  = `${cy}px`;
 }
 
-/* -------- wheel draw -------- */
+/* ---------- Wheel ---------- */
 const PERF = { hideTextThreshold: 50, minTextWidth: 44, minLogoBox: 26 };
 
 function drawIdle(ctx,W,H){
@@ -316,7 +324,6 @@ function drawWheel(){
   if (N===0){ drawIdle(ctx,W,H); return; }
 
   const hideAll = N >= PERF.hideTextThreshold;
-  const allowImages = N <= 24;
   ctx.imageSmoothingEnabled = !hideAll;
 
   ctx.clearRect(0,0,W,H);
@@ -326,6 +333,7 @@ function drawWheel(){
   const r = Math.min(W,H)*0.48;
   const slice = TAU/N;
 
+  // wedges
   for (let i=0;i<N;i++){
     ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*slice,(i+1)*slice); ctx.closePath();
     ctx.fillStyle = data[i].primary_color || '#243e6b';
@@ -348,15 +356,16 @@ function drawWheel(){
     return;
   }
 
+  // contents
   for (let i=0;i<N;i++){
     const t = data[i];
     const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
     const arcLen = r*(a1-a0);
 
-    const canLogoOrImg = allowImages && (
-      (MODE==='team') ? (optA.checked && !!t.logo_url)
-                      : (optA.checked && !!t.image_url)
-    );
+    const canLogoOrImg = (MODE==='team')
+      ? (optA.checked && !!t.logo_url)
+      : (optA.checked && !!t.image_url);
+
     const canName = optB.checked && !!t.team_name;
 
     ctx.save();
@@ -415,16 +424,18 @@ function drawWheel(){
   ctx.restore();
 }
 
-/* -------- analytics (noop if gtag missing) -------- */
+/* ---------- Analytics ---------- */
 function track(eventName, params = {}) {
   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
     const base = { mode: MODE, screen: 'wheel' };
     window.gtag('event', eventName, { ...base, ...params });
-    if (localStorage.debugFS === '1') console.log('[GA4]', eventName, { ...base, ...params });
+    if (localStorage.debugFS === '1') {
+      console.log('[GA4]', eventName, { ...base, ...params });
+    }
   }
 }
 
-/* -------- spin -------- */
+/* ---------- Spin ---------- */
 function spin(){
   if (spinning) return;
   const data = getCurrentData();
@@ -482,7 +493,7 @@ function showResult(idx){
   } else {
     track('spin_result', {
       result_type: 'player',
-      player_name: item.team_name || '(unknown)',
+      player_name: item.team_name || '(unknown)', // player display name is kept in team_name field
       club_id: String(item.club_id || ''),
       has_image: !!(item.image_url && !/placeholder\.png$/i.test(item.image_url)),
       nationality: item.nationality || '',
@@ -498,49 +509,52 @@ function showResult(idx){
   openModal(item);
 }
 
-/* -------- history render (with fixed sizes + lazy) -------- */
+/* ---------- History ---------- */
 function renderHistory(){
   historyEl.innerHTML = '';
   const visible = history.filter(h => h.type === MODE);
 
+  // EMPTY STATE (fixed): keep designed .result + .current-name structure
   if (!visible.length){
-    const empty = document.createElement('div');
-    empty.className = 'item';
-    empty.textContent = 'Your journey starts with a spin!';
-    historyEl.appendChild(empty);
+    const result = document.createElement('div');
+    result.className = 'result';
+    const txt = document.createElement('div');
+    txt.id = 'historyEmpty';
+    txt.className = 'current-name';
+    txt.textContent = 'Your journey starts with a spin - try your luck!';
+    result.appendChild(txt);
+    historyEl.appendChild(result);
     return;
   }
 
+  // Items
   visible.forEach(({ item }) => {
     const div = document.createElement('div'); div.className='item';
     const img = document.createElement('img');
-    if (MODE==='player'){
-      img.src = item.image_url || '';
-      img.alt = item.team_name || 'Player';
-    } else {
-      img.src = item.logo_url || '';
-      img.alt = (item.team_name ? `${item.team_name} logo` : 'Team logo');
-    }
-    img.width = 38; img.height = 38;
-    img.loading = 'lazy'; img.decoding = 'async';
+    if (MODE==='player'){ img.src=item.image_url||''; img.alt=item.team_name||'Player'; }
+    else { img.src=item.logo_url||''; img.alt=`${item.team_name||'Team'} logo`; }
     const span=document.createElement('span');
     span.textContent = item.team_name || (MODE==='player'?'Player':'Team');
     div.append(img,span); historyEl.append(div);
   });
 }
 
-/* -------- reveal helpers -------- */
+/* ---------- Reveal helpers (Show buttons) ---------- */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
     .reveal-wrap{ position:relative; display:inline-block; vertical-align:middle; }
     .reveal-overlay{ position:absolute; inset:0; border-radius:inherit;
-      background:rgba(10,16,32,.28); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); pointer-events:none; }
-    .reveal-btn{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      background:rgba(10,16,32,.28); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      pointer-events:none;
+    }
+    .reveal-btn{
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
       padding:8px 14px; border-radius:999px; border:1px solid rgba(90,161,255,.6);
       background:#152036; color:#fff; font-weight:800; letter-spacing:.02em; white-space:nowrap; z-index:3;
-      box-shadow:0 6px 18px rgba(34,211,238,.18); text-transform:none; }
+      box-shadow:0 6px 18px rgba(34,211,238,.18); text-transform:none;
+    }
     .reveal-btn:hover{ transform:translate(-50%,-50%) scale(1.03); }
   `;
   document.head.appendChild(s);
@@ -579,7 +593,7 @@ function addReveal(key, el, enabled, label){
   w.appendChild(b);
 }
 
-/* -------- modal -------- */
+/* ---------- Modal ---------- */
 function openModal(item){
   ensureRevealStyles();
   modalReveal = {a:false,b:false,c:false,d:false,e:false};
@@ -631,9 +645,10 @@ function openModal(item){
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
+
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
 
-/* -------- mode switch -------- */
+/* ---------- Mode switch ---------- */
 function setMode(next){
   MODE = (next === 'player') ? 'player' : 'team';
   localStorage.setItem('fsMode', MODE);
@@ -651,10 +666,11 @@ function setMode(next){
 
   applyModeShowControls();
   renderChips();
+
   track('mode_set', { mode_after: MODE });
 }
 
-/* -------- data -------- */
+/* ---------- Loaders ---------- */
 async function loadTeams(){
   const res = await fetch('./teams.json?v='+Date.now());
   if (!res.ok) throw new Error('teams.json not found');
@@ -709,7 +725,7 @@ async function loadPlayers(){
   }
 }
 
-/* -------- events -------- */
+/* ---------- Events ---------- */
 function wire(){
   modeTeamBtn?.addEventListener('click', ()=> setMode('team'));
   modePlayerBtn?.addEventListener('click', ()=> setMode('player'));
@@ -783,7 +799,7 @@ function wire(){
   }, {passive:true});
 }
 
-/* -------- boot -------- */
+/* ---------- Boot ---------- */
 (async function init(){
   try{
     await loadTeams();
@@ -792,8 +808,8 @@ function wire(){
     console.error('Failed to load data:', e);
   }
 
-  setMode(MODE);
-  renderHistory();
+  setMode(MODE);      // apply initial mode + UI
+  renderHistory();    // per-mode history
 
   sizeCanvas();
   positionSpinFab();
