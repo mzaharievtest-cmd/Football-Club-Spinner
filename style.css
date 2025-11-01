@@ -455,3 +455,5 @@ canvas#wheel { pointer-events: none !important; }
   .m-row{ grid-template-columns: 1fr; gap:10px; }
   .m-row .label{ margin-bottom:2px; }
 }
+/* ensure hidden rows in modal are really gone, even with grid */
+.m-row[hidden] { display: none !important; }
