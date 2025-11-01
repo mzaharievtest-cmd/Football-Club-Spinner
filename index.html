@@ -32,8 +32,9 @@
   <!-- Preconnects -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
 
-  <!-- Fonts (non-blocking) -->
+  <!-- Fonts (non-blocking load) -->
   <link rel="preload"
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
         as="style"
@@ -48,12 +49,33 @@
   <link rel="apple-touch-icon" href="app-logo.png?v=1" />
   <link rel="shortcut icon" href="app-logo.png?v=1" />
 
-  <!-- Manifest -->
+  <!-- Manifest (optional) -->
   <link rel="manifest" href="/manifest.webmanifest" />
 
-  <!-- Styles (non-blocking) -->
-  <link rel="preload" href="style.css?v=2" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="style.css?v=2"></noscript>
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css?v=1" />
+
+  <!-- Google Analytics 4 -->
+  <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-RK8RD59N8G');
+  </script>
+
+  <!-- Google Tag Manager -->
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;
+    j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+    f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KS5K7Z4T');
+  </script>
+
+  <!-- AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
 
   <!-- Enhanced Structured Data (JSON-LD) -->
   <script type="application/ld+json">
@@ -75,6 +97,11 @@
         "width": 512,
         "height": 512
       }
+    },
+    "potentialAction": {
+      "@type":"SearchAction",
+      "target":"https://footballspinner.com/?q={query}",
+      "query-input":"required name=query"
     }
   }
   </script>
@@ -122,17 +149,12 @@
 </head>
 
 <body>
-  <!-- GTM (noscript) — kept for JS-disabled users -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- GTM (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <header>
     <div class="brand">
-      <img src="app-logo.png?v=1"
-           alt="Football Spinner logo"
-           class="brand-img"
-           width="128" height="128"
-           decoding="async" fetchpriority="high" />
+      <img src="app-logo.png?v=1" alt="Football Spinner logo" class="brand-img" decoding="async" width="128" height="128" />
       <div>
         <h1 id="main-title">Football Spinner</h1>
         <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
@@ -142,7 +164,7 @@
     <div class="header-right">
       <div class="mode-switch-wrap">
         <div class="mode-switch" role="tablist" aria-label="View mode">
-          <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
+          <button id="modeTeam" role="tab" aria-selected="true" class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
           <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
         </div>
         <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
@@ -151,7 +173,7 @@
   </header>
 
   <main class="container">
-    <!-- LEFT: filters / history -->
+    <!-- LEFT: filters / quick actions / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
 
@@ -161,6 +183,7 @@
         <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
       </div>
 
+      <!-- Chips (TEAM: leagues · PLAYER: PL teams) -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
         <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
@@ -227,6 +250,7 @@
       <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
         <div class="section-title" id="details-title">Details</div>
 
+        <!-- About -->
         <div class="ac-panel" id="panel-about" role="region" aria-labelledby="panel-about-summary">
           <div class="ac-summary" id="panel-about-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-about-body">
             <div class="ac-title">About Football Spinner</div>
@@ -240,6 +264,7 @@
           </div>
         </div>
 
+        <!-- How it works -->
         <div class="ac-panel" id="panel-how" role="region" aria-labelledby="panel-how-summary">
           <div class="ac-summary" id="panel-how-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-how-body">
             <div class="ac-title">How it works</div>
@@ -253,6 +278,7 @@
           </div>
         </div>
 
+        <!-- Why use it -->
         <div class="ac-panel" id="panel-why" role="region" aria-labelledby="panel-why-summary">
           <div class="ac-summary" id="panel-why-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-why-body">
             <div class="ac-title">Why use it?</div>
@@ -306,39 +332,108 @@
   </div>
 
   <!-- App -->
-  <script src="app.js?v=2" defer></script>
+  <script src="app.js" defer></script>
 
-  <!-- Defer 3rd-party (GA4, GTM, AdSense) to idle -->
+  <!-- Mode text + accordion helpers (ARIA + reflow fix) -->
   <script>
-    function loadScript(src, attrs = {}) {
-      const s = document.createElement('script');
-      s.src = src; s.async = true;
-      Object.entries(attrs).forEach(([k,v]) => s.setAttribute(k, v));
-      document.head.appendChild(s);
-    }
-    function loadThirdParties(){
-      // GA4 (G-RK8RD59N8G)
-      loadScript('https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G');
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = function(){ dataLayer.push(arguments); };
-      gtag('js', new Date()); gtag('config', 'G-RK8RD59N8G');
+    (function(){
+      function applyModeTexts(mode){
+        const titleRight = document.getElementById('wheel-title');
+        const perf = document.getElementById('perfTip');
+        const meterText = perf?.querySelector('.meter-text');
+        const filterTitle = document.getElementById('filter-title');
+        const qpTop = document.getElementById('qpTop');
+        const modeNote = document.getElementById('modeNote');
 
-      // GTM
-      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;
-        j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-        f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','GTM-KS5K7Z4T');
+        if(mode === 'player'){
+          if (titleRight) titleRight.textContent = 'Player Wheel';
+          if (meterText && perf?.dataset.playersText){
+            const num = (meterText.textContent.match(/\d+/)||['0'])[0];
+            meterText.textContent = `${num} ${perf.dataset.playersText}`;
+          }
+          if (filterTitle) filterTitle.textContent = 'Select Teams';
+          if (qpTop){ qpTop.textContent = 'Top 6 Premier League Teams'; qpTop.title = 'Select the Big Six from the Premier League'; }
+          if (modeNote){ modeNote.style.display = 'inline'; modeNote.textContent = 'Players: Premier League only'; }
+        } else {
+          if (titleRight) titleRight.textContent = 'Club Wheel';
+          if (meterText && perf?.dataset.clubsText){
+            const num = (meterText.textContent.match(/\d+/)||['0'])[0];
+            meterText.textContent = `${num} ${perf.dataset.clubsText}`;
+          }
+          if (filterTitle) filterTitle.textContent = 'Select Leagues';
+          if (qpTop){ qpTop.textContent = 'Top 5 Leagues'; qpTop.title = 'Select only the top 5 leagues'; }
+          if (modeNote){ modeNote.style.display = 'none'; }
+        }
+      }
 
-      // AdSense
-      loadScript('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010', { crossorigin:'anonymous' });
-    }
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(loadThirdParties, { timeout: 3000 });
-    } else {
-      setTimeout(loadThirdParties, 2000);
-    }
+      function setTabSelection(mode){
+        const teamBtn = document.getElementById('modeTeam');
+        const playerBtn = document.getElementById('modePlayer');
+        const teamActive = mode !== 'player';
+        teamBtn?.setAttribute('aria-selected', String(teamActive));
+        playerBtn?.setAttribute('aria-selected', String(!teamActive));
+        teamBtn?.classList.toggle('mode-btn-active', teamActive);
+        playerBtn?.classList.toggle('mode-btn-active', !teamActive);
+      }
+
+      const histEmpty = document.getElementById('historyEmpty');
+      if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
+
+      const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
+      applyModeTexts(initial);
+      setTabSelection(initial);
+
+      document.getElementById('modeTeam')?.addEventListener('click', () => {
+        localStorage.setItem('fsMode', 'team');
+        applyModeTexts('team');
+        setTabSelection('team');
+      });
+      document.getElementById('modePlayer')?.addEventListener('click', () => {
+        localStorage.setItem('fsMode', 'player');
+        applyModeTexts('player');
+        setTabSelection('player');
+      });
+
+      // Accordion (batch read/write to avoid forced reflow)
+      const accordion = document.getElementById('infoAccordion');
+      if (accordion){
+        const panels = Array.from(accordion.querySelectorAll('.ac-panel'));
+        panels.forEach(panel=>{
+          const summary = panel.querySelector('.ac-summary');
+          const body = panel.querySelector('.ac-body');
+
+          const setOpen = (open) => {
+            const h = open ? (body.scrollHeight + 40) : 0;  // read once
+            panel.toggleAttribute('open', !!open);
+            summary.setAttribute('aria-expanded', !!open);
+            requestAnimationFrame(() => {                    // write later
+              body.style.maxHeight = open ? h + 'px' : null;
+            });
+          };
+
+          summary.addEventListener('click', ()=>{
+            const willOpen = !panel.hasAttribute('open');
+            panels.forEach(p=>{
+              if (p!==panel){
+                p.removeAttribute('open');
+                p.querySelector('.ac-summary').setAttribute('aria-expanded','false');
+                p.querySelector('.ac-body').style.maxHeight=null;
+              }
+            });
+            setOpen(willOpen);
+          });
+
+          summary.addEventListener('keydown', (e)=>{
+            if (e.key==='Enter' || e.key===' '){ e.preventDefault(); summary.click(); }
+            if (e.key==='ArrowDown'){ e.preventDefault(); (panels[panels.indexOf(panel)+1]||panels[0]).querySelector('.ac-summary').focus(); }
+            if (e.key==='ArrowUp'){ e.preventDefault(); (panels[panels.indexOf(panel)-1]||panels[panels.length-1]).querySelector('.ac-summary').focus(); }
+          });
+
+          panel.removeAttribute('open');
+          summary.setAttribute('aria-expanded','false');
+        });
+      }
+    })();
   </script>
 </body>
 </html>
