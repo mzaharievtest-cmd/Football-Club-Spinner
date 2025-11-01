@@ -1,10 +1,10 @@
-/* Football Spinner — TEAM / PLAYER unified (defaults + PL sorting + no-image filter)
+/* Football Spinner — TEAM / PLAYER unified (modern modal, defaults, PL sorting, no-image filter)
    - TEAM defaults: Premier League selected; Show on Wheel = Logo only.
    - PLAYER defaults: only Arsenal selected; Show on Wheel = Image only; “All Premier League teams” quick-pick.
    - PLAYER: exclude players without a usable image from the wheel (incl. placeholder.png).
    - Top 6 PL teams shown first and sorted alphabetically in chips.
-   - History stores typed entries; list shows only the active mode.
-   - Modal UI: aligned header/rows; modern “Show …” chips + frosted reveal zones (injected styles).
+   - “team/teams” wording in the UI.
+   - Modal now ALWAYS shows clean details (no “Show …” overlays).
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -21,13 +21,13 @@ let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
 
-// ---- typed history (fallback to old shape) ----
+// History is stored as { type: 'team'|'player', item: {...} }
 let historyRaw = JSON.parse(localStorage.getItem('clubHistory')) || [];
-let history = historyRaw.map(h => (
-  h && typeof h === 'object' && 'type' in h && 'item' in h
+let history = historyRaw.map(h =>
+  (h && typeof h === 'object' && 'type' in h && 'item' in h)
     ? h
     : { type: (h && (h.image_url || h.club_id)) ? 'player' : 'team', item: h }
-));
+);
 const saveHistory = () => localStorage.setItem('clubHistory', JSON.stringify(history));
 
 /* ---------- DOM ---------- */
@@ -47,7 +47,7 @@ const optA = document.getElementById('optA'); // Logo/Image
 const optB = document.getElementById('optB'); // Name
 const optC = document.getElementById('optC'); // Stadium (team) / Jersey (player)
 const optD = document.getElementById('optD'); // League (team) / Nationality (player)
-const optE = document.getElementById('optE'); // Team (player – modal extra)
+const optE = document.getElementById('optE'); // Team (player – extra in modal if needed)
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -78,8 +78,6 @@ const rowJersey  = document.getElementById('rowJersey');
 const mJersey    = document.getElementById('mJersey');
 const rowNat     = document.getElementById('rowNat');
 const mNat       = document.getElementById('mNat');
-
-let modalReveal = { a:false,b:false,c:false,d:false,e:false };
 
 /* ---------- Utils ---------- */
 const TAU = Math.PI * 2;
@@ -154,7 +152,7 @@ const TOP5 = ['EPL','SA','BUN','L1','LLA'];
 /* PL Big Six IDs in your data */
 const PL_TOP6 = ['19','18','8','9','14','6']; // Arsenal, Chelsea, Liverpool, Man City, Man United, Spurs
 
-/* ---------- Fallback team names (extendable) ---------- */
+/* ---------- Fallback team names ---------- */
 const FALLBACK_TEAMS = {
   '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
   '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
@@ -164,19 +162,17 @@ const FALLBACK_TEAMS = {
   '236':'Brentford'
 };
 
-/* ---------- Selection helpers ---------- */
+/* ---------- Data selection ---------- */
 function activeCodes(){
   const arr=[];
   chipsWrap.querySelectorAll('input[type="checkbox"]:checked').forEach(i => arr.push(i.value));
   return arr;
 }
 
-/* ---------- Current dataset ---------- */
 function getCurrentData(){
   const active = new Set(activeCodes());
   if (active.size === 0) return [];
   if (MODE === 'player'){
-    // exclude players without image OR with placeholder
     return PLAYERS.filter(p =>
       active.has(String(p.club_id)) &&
       p.image_url &&
@@ -187,22 +183,20 @@ function getCurrentData(){
   return TEAMS.filter(t => active.has(t.league_code));
 }
 
-/* ---------- Perf / meter ---------- */
+/* ---------- Progress banner ---------- */
 function updatePerfBanner(){
   const n = getCurrentData().length;
   const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
   const pct = Math.max(0, Math.min(1, n / total));
   perfTip.style.setProperty('--pct', pct);
-
   const noun = (MODE === 'player') ? 'players loaded' : 'teams ready to spin';
   perfTip.innerHTML = `<span class="meter-text">${n} ${noun}</span>`;
-
   const disabled = n===0;
   spinBtn.disabled = disabled;
   spinFab.disabled = disabled;
 }
 
-/* ---------- Chips ---------- */
+/* ---------- Chips helpers & render ---------- */
 function makeChip(value, text, checked){
   const label = document.createElement('label');
   label.className='chip';
@@ -221,11 +215,11 @@ function renderChips(){
   chipsMore.innerHTML = '';
 
   if (MODE === 'player'){
-    // PL team list from players.json
+    // Build PL team list from players.json
     const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
     const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_TEAMS[id] || `Team #${id}`;
 
-    // Big Six first (alphabetical), then the rest (alphabetical)
+    // Big Six first (alphabetically), rest alphabetical
     const top6 = PL_TOP6
       .filter(id => ids.includes(id))
       .sort((a,b)=> labelFor(a).localeCompare(labelFor(b), 'en', {sensitivity:'base'}));
@@ -234,13 +228,11 @@ function renderChips(){
       .filter(id => !PL_TOP6.includes(id))
       .sort((a,b)=> labelFor(a).localeCompare(labelFor(b), 'en', {sensitivity:'base'}));
 
-    // DEFAULT: only Arsenal selected
-    const defaultSelected = new Set(['19']); // Arsenal
-
+    // Default: only Arsenal selected
+    const defaultSelected = new Set(['19']);
     top6.forEach(id => chipsTop.appendChild(makeChip(id, labelFor(id), defaultSelected.has(id))));
     rest.forEach(id => chipsMore.appendChild(makeChip(id, labelFor(id), defaultSelected.has(id))));
 
-    // Sidebar labels for PLAYER
     if (qpAll){
       qpAll.textContent = 'All Premier League teams';
       qpAll.title = 'Select all Premier League teams';
@@ -254,7 +246,7 @@ function renderChips(){
       qpTopBtn.title = 'Select the Big Six from the Premier League';
     }
   } else {
-    // TEAM → all leagues; EPL checked by default
+    // TEAM mode → all leagues; EPL checked by default
     const codes = [...new Set(TEAMS.map(t=>t.league_code))];
     const top = TOP5.filter(c => codes.includes(c));
     const more = codes.filter(c => !top.includes(c)).sort();
@@ -285,20 +277,20 @@ function renderChips(){
 function applyModeShowControls(){
   if (MODE==='player'){
     lblA.textContent='Image';         optA.checked = true;
-    lblB.textContent='Name';          optB.checked = false; // image only by default
+    lblB.textContent='Name';          optB.checked = false; // image-only by default
     if (lblC) { lblC.textContent='Jersey Number'; if (optC) optC.checked = false; }
     if (lblD) { lblD.textContent='Nationality';   if (optD) optD.checked = false; }
     if (lblE && optE){ lblE.textContent='Team';   optE.checked=false; }
   } else {
     lblA.textContent='Logo';    optA.checked = true;
-    lblB.textContent='Name';    optB.checked = false; // logo only by default
+    lblB.textContent='Name';    optB.checked = false; // logo-only by default
     if (lblC) { lblC.textContent='Stadium'; if (optC) optC.checked = false; }
     if (lblD) { lblD.textContent='League';  if (optD) optD.checked = false; }
     if (lblE && optE){ lblE.textContent=''; optE.checked=false; }
   }
 }
 
-/* ---------- Canvas sizing ---------- */
+/* ---------- Canvas sizing & FAB centering ---------- */
 function sizeCanvas(){
   const rect = (wheel.parentElement||wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width||640), 1200);
@@ -310,6 +302,7 @@ function sizeCanvas(){
   fx.style.width = cssSize+'px'; fx.style.height = cssSize+'px';
   requestAnimationFrame(positionSpinFab);
 }
+
 function positionSpinFab(){
   const wrap = wheel.parentElement;
   const wr = wrap.getBoundingClientRect();
@@ -339,6 +332,7 @@ function drawIdle(ctx,W,H){
   }
   ctx.restore();
 }
+
 function drawTickRing(ctx, R, ticks=120){
   ctx.save();
   ctx.rotate(mod(currentAngle, TAU));
@@ -512,7 +506,6 @@ function spin(){
   requestAnimationFrame(step);
 }
 
-/* ---------- History ---------- */
 function showResult(idx){
   const data = getCurrentData();
   const item = data[idx];
@@ -526,14 +519,17 @@ function showResult(idx){
   openModal(item);
 }
 
+/* ---------- History ---------- */
 function renderHistory(){
   historyEl.innerHTML = '';
+
+  // Only entries from the active MODE
   const visible = history.filter(h => h.type === MODE);
 
   if (!visible.length){
     const empty = document.createElement('div');
     empty.className = 'item';
-    empty.textContent = 'Your journey starts with a spin!';
+    empty.textContent = 'Your journey starts with a spin - try your luck!';
     historyEl.appendChild(empty);
     return;
   }
@@ -552,132 +548,28 @@ function renderHistory(){
     }
 
     const span = document.createElement('span');
-    span.textContent = MODE === 'player'
-      ? item.team_name || 'Player'
-      : item.team_name || 'Team';
+    span.textContent = item.team_name || (MODE==='player' ? 'Player' : 'Team');
 
     div.append(img, span);
     historyEl.appendChild(div);
   });
 }
 
-/* ---------- Reveal styles & helpers (modal) ---------- */
-function ensureRevealStyles(){
-  if (document.getElementById('reveal-style')) return;
-  const s=document.createElement('style'); s.id='reveal-style';
-  s.textContent = `
-    /* Modal layout refinements + reveal chips */
-    #modal { text-align:center; }
-    #mHead { text-align:center !important; margin: 10px 0 2px; }
-    #mSub  { text-align:center !important; margin: 0 0 10px; }
-
-    #modal .m-body { gap: 14px; }
-
-    #modal .m-row{
-      width:100%;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      align-items: center; /* keeps label/value aligned */
-    }
-    #modal .m-row .label{
-      justify-self: end;
-      font-weight: 800;
-      font-size: 22px;
-      color: #d9e6ff;
-    }
-    #modal .m-row .value-pill{
-      justify-self: start;
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      padding: 10px 18px;
-      border-radius: 12px;
-      background: rgba(17,28,48,.85);
-      border: 1px solid rgba(90,161,255,.22);
-      color: #d7e8ff;
-      font-weight: 800;
-    }
-
-    /* Reveal wrappers -> frosted zones that keep the button centered and tidy */
-    .reveal-wrap{
-      position:relative;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    /* when we wrap a value pill, mimic the pill container so the button sits on it */
-    .reveal-wrap.reveal-for-pill{
-      min-height:44px;
-      padding:10px 18px;
-      background: rgba(17,28,48,.6);
-      border:1px solid rgba(90,161,255,.22);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
-    }
-
-    .reveal-wrap.reveal-for-img{
-      width: 220px; height: 220px; border-radius: 18px;
-      background: radial-gradient(60% 60% at 50% 40%, rgba(255,255,255,.06), rgba(12,18,34,.7));
-      border:1px solid rgba(90,161,255,.28);
-      box-shadow: 0 12px 32px rgba(0,0,0,.35), inset 0 0 32px rgba(90,161,255,.10);
-    }
-
-    .reveal-overlay{
-      position:absolute; inset:0; border-radius:inherit;
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      background: linear-gradient(180deg, rgba(24,40,72,.25), rgba(14,24,48,.20));
-      pointer-events:none;
-    }
-
-    .reveal-btn{
-      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-      width:auto; padding:10px 16px;
-      border-radius: 12px;
-      border: 1px solid rgba(120,160,255,.45);
-      background: linear-gradient(180deg, rgba(22,34,64,.96), rgba(12,18,34,.92));
-      color:#f3f7ff; font-weight:900; letter-spacing:.03em;
-      box-shadow: 0 10px 22px rgba(34,211,238,.14);
-      text-transform: none;
-      cursor: pointer;
-    }
-    .reveal-btn:hover{ transform:translate(-50%,-50%) scale(1.03); border-color:#22d3ee; }
-  `;
-  document.head.appendChild(s);
-}
-function wrap(el, kind='text'){
-  if (!el) return null;
-  if (el.parentElement && el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
-  const w=document.createElement('span'); w.className='reveal-wrap';
-  if (kind==='pill') w.classList.add('reveal-for-pill');
-  if (kind==='img')  w.classList.add('reveal-for-img');
-  el.parentElement.insertBefore(w, el); w.appendChild(el); return w;
-}
-function blurEl(el, kind){ if(!el) return; el.style.filter='blur(14px)'; const w=wrap(el, kind); if(w&&!w.querySelector('.reveal-overlay')){const o=document.createElement('span');o.className='reveal-overlay';w.appendChild(o);} }
-function unblurEl(el){ if(!el) return; el.style.filter=''; const w=el.parentElement; const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove(); const b=w && w.querySelector('.reveal-btn'); if(b) b.remove(); }
-
-function addReveal(key, el, enabled, label){
-  const kind = (el === mLogo) ? 'img' : (el.classList.contains('value-pill') ? 'pill' : 'text');
-  const w = wrap(el, kind);
-  const prior = w.querySelector('.reveal-btn'); if (prior) prior.remove();
-  if (enabled || modalReveal[key]){ unblurEl(el); return; }
-  blurEl(el, kind);
-  const b=document.createElement('button'); b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
-  b.onclick=()=>{ modalReveal[key]=true; unblurEl(el); };
-  w.appendChild(b);
-}
-
-/* ---------- Modal ---------- */
+/* ---------- Modal (clean, always-on details) ---------- */
 function openModal(item){
-  ensureRevealStyles();
-  modalReveal = {a:false,b:false,c:false,d:false,e:false};
+  // Title / subtitle
+  mHead.textContent = item.team_name || '—';
+  if (MODE === 'player') {
+    mSub.textContent = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '';
+  } else {
+    mSub.textContent = leagueLabel(item.league_code) || '';
+  }
 
-  if (MODE==='player'){
-    mHead.textContent = item.team_name || '—';
-    mLogo.src = item.image_url || '';
-    mSub.textContent  = '';
+  // Image/logo
+  mLogo.src = (MODE === 'player') ? (item.image_url || '') : (item.logo_url || '');
+
+  // Rows visibility & content
+  if (MODE === 'player') {
     rowStadium.style.display='none';
     rowClub.style.display='';
     rowJersey.style.display='';
@@ -686,28 +578,16 @@ function openModal(item){
     mClub.textContent   = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '—';
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
     mNat.textContent    = item.nationality || '—';
-
-    addReveal('a', mLogo,   !!optA.checked, 'image');
-    addReveal('b', mHead,   !!optB.checked, 'name');
-    if (optC) addReveal('c', mJersey, !!optC.checked, 'jersey number');
-    if (optD) addReveal('d', mNat,    !!optD.checked, 'nationality');
-    if (optE) addReveal('e', mClub,   !!optE.checked, 'team');
   } else {
-    mHead.textContent = item.team_name || '—';
-    mLogo.src = item.logo_url || '';
-    mSub.textContent  = leagueLabel(item.league_code) || '';
     rowStadium.style.display='';
     rowClub.style.display='none';
     rowJersey.style.display='none';
     rowNat.style.display='none';
-    mStadium.textContent = item.stadium || '—';
 
-    addReveal('a', mLogo,    !!optA.checked, 'logo');
-    addReveal('b', mHead,    !!optB.checked, 'name');
-    if (optC) addReveal('c', mStadium, !!optC.checked, 'stadium');
-    if (optD) addReveal('d', mSub,     !!optD.checked, 'league');
+    mStadium.textContent = item.stadium || '—';
   }
 
+  // Show
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
@@ -757,7 +637,6 @@ async function loadTeams(){
     TEAM_BY_ID.set(id, t);
     CLUB_BY_ID.set(id, t.team_name);
   }
-  // seed fallbacks so all ids resolve
   for (const [id,name] of Object.entries(FALLBACK_TEAMS)){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, name);
   }
@@ -796,7 +675,6 @@ async function loadPlayers(){
 
   TOTAL_PLAYERS = PLAYERS.length;
 
-  // Ensure name for every club_id appearing in players.json
   for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_TEAMS[id] || `Team #${id}`);
   }
@@ -880,11 +758,8 @@ function wire(){
     console.error('Failed to load data:', e);
   }
 
-  // Apply initial mode UI & defaults
-  setMode(MODE);
-
-  // History empty-state text on first load
-  renderHistory();
+  setMode(MODE);          // apply initial mode + chips + show-on-wheel defaults
+  renderHistory();        // show filtered history for current mode
 
   sizeCanvas();
   positionSpinFab();
