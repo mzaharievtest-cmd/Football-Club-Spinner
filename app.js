@@ -504,24 +504,25 @@ function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
-    /* Make the wrapper the positioning context and center the button on the target */
+    /* Keep wrapper tight to the element we blur */
     .reveal-wrap{
       position:relative;
-      display:inline-grid;              /* fixes off-center buttons */
-      place-items:center;               /* centers overlay/button on the pill or image */
+      display:inline-block;           /* DO NOT stretch across the row */
+      vertical-align:middle;
     }
     .reveal-overlay{
       position:absolute; inset:0; border-radius:inherit;
+      background:rgba(10,16,32,.28);
       backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-      background:rgba(10,16,32,.14); pointer-events:none;
+      pointer-events:none;
     }
     .reveal-btn{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-      padding:8px 14px; border-radius:999px; font-weight:800;
+      padding:8px 14px; border-radius:999px;
       border:1px solid rgba(90,161,255,.6);
-      background:#152036; color:#fff; letter-spacing:.02em;
-      white-space:nowrap; z-index:3;
-      box-shadow:0 6px 18px rgba(34,211,238,.18);
+      background:#152036; color:#fff; font-weight:800; letter-spacing:.02em;
+      white-space:nowrap; z-index:3; box-shadow:0 6px 18px rgba(34,211,238,.18);
+      text-transform:none;
     }
     .reveal-btn:hover{ transform:translate(-50%,-50%) scale(1.03); }
   `;
