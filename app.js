@@ -504,10 +504,17 @@ function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
-    .reveal-wrap{position:relative;display:inline-block}
-    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;
-      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-      background:rgba(10,16,32,.15); pointer-events:none}
+    /* Make the wrapper the positioning context and center the button on the target */
+    .reveal-wrap{
+      position:relative;
+      display:inline-grid;              /* fixes off-center buttons */
+      place-items:center;               /* centers overlay/button on the pill or image */
+    }
+    .reveal-overlay{
+      position:absolute; inset:0; border-radius:inherit;
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      background:rgba(10,16,32,.14); pointer-events:none;
+    }
     .reveal-btn{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
       padding:8px 14px; border-radius:999px; font-weight:800;
@@ -516,7 +523,7 @@ function ensureRevealStyles(){
       white-space:nowrap; z-index:3;
       box-shadow:0 6px 18px rgba(34,211,238,.18);
     }
-    .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02)}
+    .reveal-btn:hover{ transform:translate(-50%,-50%) scale(1.03); }
   `;
   document.head.appendChild(s);
 }
@@ -767,3 +774,21 @@ function wire(){
   positionSpinFab();
   wire();
 })();
+/* Modal row alignment fix */
+#mHead { text-align:left; } /* keep title left like your screenshot */
+.m-row{
+  display:grid !important;
+  grid-template-columns: max-content 1fr;  /* Label | Value */
+  align-items:center;
+  gap:18px;
+}
+.m-row .value-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;         /* gives the button a stable center to lock onto */
+}
+.m-row .reveal-wrap{
+  width:100%;              /* the overlay/button follows the pill’s width */
+  justify-items:center;    /* center within the grid cell */
+}
