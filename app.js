@@ -565,54 +565,72 @@ function addReveal(key, el, enabled, label, state){
 
 /* ---------- Modal ---------- */
 function openModal(item){
-  // Per-open state for reveals
-  const flags = { a:false,b:false,c:false,d:false,e:false };
+  ensureRevealStyles();
+  modalReveal = {a:false,b:false,c:false,d:false,e:false};
 
-  // Title & subtitle
-  mHead.textContent = item.team_name || '—';
-  if (MODE==='player'){
-    mSub.textContent = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '';
-  } else {
-    mSub.textContent = leagueLabel(item.league_code) || '';
-  }
+  // Helper to hard-toggle whole rows
+  const showRow = (rowEl, on) => {
+    if (!rowEl) return;
+    if (on) {
+      rowEl.hidden = false;
+      rowEl.style.display = '';  // clear inline overrides
+    } else {
+      rowEl.hidden = true;
+      rowEl.style.display = 'none';
+    }
+  };
 
-  // Image / logo
-  mLogo.src = (MODE==='player') ? (item.image_url || '') : (item.logo_url || '');
+  if (MODE === 'player') {
+    // HEADER
+    mHead.textContent = item.team_name || '—';
+    mSub.textContent  = ''; // no league line in player modal
+    mLogo.src = item.image_url || '';
 
-  if (MODE==='player'){
-    // Rows visibility
-    rowStadium.style.display='none';
-    rowClub.style.display=''; rowJersey.style.display=''; rowNat.style.display='';
+    // ROWS – player uses Club/Jersey/Nationality; stadium off
+    showRow(rowStadium, false);
+    showRow(rowClub,    true);
+    showRow(rowJersey,  true);
+    showRow(rowNat,     true);
 
     // Values
     mClub.textContent   = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '—';
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
     mNat.textContent    = item.nationality || '—';
 
-    // Reveal (based on show-on-wheel)
-    addReveal('a', mLogo,   !!optA.checked, 'image',          flags);
-    addReveal('b', mHead,   !!optB.checked, 'name',           flags);
-    if (optE) addReveal('e', mClub,   !!optE.checked, 'team',           flags);
-    if (optC) addReveal('c', mJersey, !!optC.checked, 'jersey number',  flags);
-    if (optD) addReveal('d', mNat,    !!optD.checked, 'nationality',    flags);
+    // Reveal chips (centered over each element)
+    addReveal('a', mLogo, !!optA.checked, 'image');
+    addReveal('b', mHead, !!optB.checked, 'name');
+    if (optC) addReveal('c', mJersey, !!optC.checked, 'jersey number');
+    if (optD) addReveal('d', mNat,    !!optD.checked, 'nationality');
+    if (optE) addReveal('e', mClub,   !!optE.checked, 'team');
 
   } else {
-    rowStadium.style.display='';
-    rowClub.style.display='none';
-    rowJersey.style.display='none';
-    rowNat.style.display='none';
+    // TEAM mode
+    mHead.textContent = item.team_name || '—';
+    mSub.textContent  = leagueLabel(item.league_code) || '';
+    mLogo.src = item.logo_url || '';
 
+    // ROWS – team uses Stadium only; others off
+    showRow(rowStadium, true);
+    showRow(rowClub,    false);
+    showRow(rowJersey,  false);
+    showRow(rowNat,     false);
+
+    // Value
     mStadium.textContent = item.stadium || '—';
 
-    addReveal('a', mLogo,  !!optA.checked, 'logo',    flags);
-    addReveal('b', mHead,  !!optB.checked, 'name',    flags);
-    if (optD) addReveal('d', mSub,     !!optD.checked, 'league',  flags);
-    if (optC) addReveal('c', mStadium, !!optC.checked, 'stadium', flags);
+    // Reveal chips
+    addReveal('a', mLogo,   !!optA.checked, 'logo');
+    addReveal('b', mHead,   !!optB.checked, 'name');
+    if (optC) addReveal('c', mStadium, !!optC.checked, 'stadium');
+    if (optD) addReveal('d', mSub,     !!optD.checked, 'league');
   }
 
+  // Open modal
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
+
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
 
 /* ---------- Mode switch ---------- */
