@@ -1,10 +1,10 @@
-/* Football Spinner — TEAM / PLAYER unified (modern modal, defaults, PL sorting, no-image filter)
+/* Football Spinner — TEAM / PLAYER unified
    - TEAM defaults: Premier League selected; Show on Wheel = Logo only.
    - PLAYER defaults: only Arsenal selected; Show on Wheel = Image only; “All Premier League teams” quick-pick.
-   - PLAYER: exclude players without a usable image from the wheel (incl. placeholder.png).
-   - Top 6 PL teams shown first and sorted alphabetically in chips.
-   - “team/teams” wording in the UI.
-   - Modal now ALWAYS shows clean details (no “Show …” overlays).
+   - PLAYER: exclude players without a usable image (incl. placeholder.png) from the wheel.
+   - PL Top-6 sorted first alphabetically.
+   - History stored per item with type {type:'team'|'player', item:{…}} and rendered per active mode.
+   - Modal: clean layout + modern “Show …” reveal buttons (centered over blurred element).
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -21,7 +21,7 @@ let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
 
-// History is stored as { type: 'team'|'player', item: {...} }
+// History migrate → [{type,item}]
 let historyRaw = JSON.parse(localStorage.getItem('clubHistory')) || [];
 let history = historyRaw.map(h =>
   (h && typeof h === 'object' && 'type' in h && 'item' in h)
@@ -47,7 +47,7 @@ const optA = document.getElementById('optA'); // Logo/Image
 const optB = document.getElementById('optB'); // Name
 const optC = document.getElementById('optC'); // Stadium (team) / Jersey (player)
 const optD = document.getElementById('optD'); // League (team) / Nationality (player)
-const optE = document.getElementById('optE'); // Team (player – extra in modal if needed)
+const optE = document.getElementById('optE'); // Team (player – modal extra)
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -123,18 +123,6 @@ function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weigh
   return {text:(s||'')+'…', fontPx:minPx};
 }
 
-/* ---------- Header spacing (CSS var) ---------- */
-function syncHeaderHeight() {
-  const hEl = document.querySelector('header');
-  const h = hEl ? hEl.offsetHeight : 72;
-  document.documentElement.style.setProperty('--header-h', h + 'px');
-}
-window.addEventListener('load', syncHeaderHeight, { once: true });
-window.addEventListener('resize', () => {
-  clearTimeout(window.__hdrT);
-  window.__hdrT = setTimeout(syncHeaderHeight, 120);
-});
-
 /* ---------- Labels & presets ---------- */
 const LEAGUE_LABELS = {
   AUT:"Austrian Bundesliga", BEL:"Jupiler Pro League", BUL:"efbet Liga",
@@ -148,8 +136,6 @@ const LEAGUE_LABELS = {
 const leagueLabel = c => LEAGUE_LABELS[c] || c;
 
 const TOP5 = ['EPL','SA','BUN','L1','LLA'];
-
-/* PL Big Six IDs in your data */
 const PL_TOP6 = ['19','18','8','9','14','6']; // Arsenal, Chelsea, Liverpool, Man City, Man United, Spurs
 
 /* ---------- Fallback team names ---------- */
@@ -183,17 +169,15 @@ function getCurrentData(){
   return TEAMS.filter(t => active.has(t.league_code));
 }
 
-/* ---------- Progress banner ---------- */
+/* ---------- Perf banner ---------- */
 function updatePerfBanner(){
   const n = getCurrentData().length;
   const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
   const pct = Math.max(0, Math.min(1, n / total));
   perfTip.style.setProperty('--pct', pct);
-  const noun = (MODE === 'player') ? 'players loaded' : 'teams ready to spin';
-  perfTip.innerHTML = `<span class="meter-text">${n} ${noun}</span>`;
+  perfTip.innerHTML = `<span class="meter-text">${n} ${MODE==='player'?'players loaded':'teams ready to spin'}</span>`;
   const disabled = n===0;
-  spinBtn.disabled = disabled;
-  spinFab.disabled = disabled;
+  spinBtn.disabled = disabled; spinFab.disabled = disabled;
 }
 
 /* ---------- Chips helpers & render ---------- */
@@ -215,38 +199,23 @@ function renderChips(){
   chipsMore.innerHTML = '';
 
   if (MODE === 'player'){
-    // Build PL team list from players.json
     const ids = Array.from(new Set(PLAYERS.map(p => String(p.club_id))));
     const labelFor = id => CLUB_BY_ID.get(id) || FALLBACK_TEAMS[id] || `Team #${id}`;
 
-    // Big Six first (alphabetically), rest alphabetical
-    const top6 = PL_TOP6
-      .filter(id => ids.includes(id))
-      .sort((a,b)=> labelFor(a).localeCompare(labelFor(b), 'en', {sensitivity:'base'}));
+    const top6 = PL_TOP6.filter(id => ids.includes(id))
+      .sort((a,b)=> labelFor(a).localeCompare(labelFor(b),'en',{sensitivity:'base'}));
+    const rest = ids.filter(id => !PL_TOP6.includes(id))
+      .sort((a,b)=> labelFor(a).localeCompare(labelFor(b),'en',{sensitivity:'base'}));
 
-    const rest = ids
-      .filter(id => !PL_TOP6.includes(id))
-      .sort((a,b)=> labelFor(a).localeCompare(labelFor(b), 'en', {sensitivity:'base'}));
-
-    // Default: only Arsenal selected
-    const defaultSelected = new Set(['19']);
+    const defaultSelected = new Set(['19']); // Arsenal only
     top6.forEach(id => chipsTop.appendChild(makeChip(id, labelFor(id), defaultSelected.has(id))));
     rest.forEach(id => chipsMore.appendChild(makeChip(id, labelFor(id), defaultSelected.has(id))));
 
-    if (qpAll){
-      qpAll.textContent = 'All Premier League teams';
-      qpAll.title = 'Select all Premier League teams';
-    }
-    toggleMore.textContent = 'Show more Premier League teams';
-    toggleMore.setAttribute('aria-expanded','false');
-    chipsMore.hidden = true;
+    if (qpAll){ qpAll.textContent='All Premier League teams'; qpAll.title='Select all Premier League teams'; }
+    toggleMore.textContent='Show more Premier League teams'; toggleMore.setAttribute('aria-expanded','false'); chipsMore.hidden=true;
+    if (qpTopBtn){ qpTopBtn.textContent='Top 6 Premier League Teams'; qpTopBtn.title='Select the Big Six from the Premier League'; }
 
-    if (qpTopBtn) {
-      qpTopBtn.textContent = 'Top 6 Premier League Teams';
-      qpTopBtn.title = 'Select the Big Six from the Premier League';
-    }
   } else {
-    // TEAM mode → all leagues; EPL checked by default
     const codes = [...new Set(TEAMS.map(t=>t.league_code))];
     const top = TOP5.filter(c => codes.includes(c));
     const more = codes.filter(c => !top.includes(c)).sort();
@@ -254,18 +223,9 @@ function renderChips(){
     top.forEach(c => chipsTop.appendChild(makeChip(c, leagueLabel(c), c==='EPL')));
     more.forEach(c => chipsMore.appendChild(makeChip(c, leagueLabel(c), false)));
 
-    if (qpAll){
-      qpAll.textContent = 'All Leagues';
-      qpAll.title = 'Select all leagues';
-    }
-    toggleMore.textContent = 'Show more leagues';
-    toggleMore.setAttribute('aria-expanded','false');
-    chipsMore.hidden = true;
-
-    if (qpTopBtn) {
-      qpTopBtn.textContent = 'Top 5 Leagues';
-      qpTopBtn.title = 'Select only the top 5 leagues';
-    }
+    if (qpAll){ qpAll.textContent='All Leagues'; qpAll.title='Select all leagues'; }
+    toggleMore.textContent='Show more leagues'; toggleMore.setAttribute('aria-expanded','false'); chipsMore.hidden=true;
+    if (qpTopBtn){ qpTopBtn.textContent='Top 5 Leagues'; qpTopBtn.title='Select only the top 5 leagues'; }
   }
 
   selectedIdx = -1;
@@ -276,21 +236,21 @@ function renderChips(){
 /* ---------- Show-on-wheel defaults ---------- */
 function applyModeShowControls(){
   if (MODE==='player'){
-    lblA.textContent='Image';         optA.checked = true;
-    lblB.textContent='Name';          optB.checked = false; // image-only by default
-    if (lblC) { lblC.textContent='Jersey Number'; if (optC) optC.checked = false; }
-    if (lblD) { lblD.textContent='Nationality';   if (optD) optD.checked = false; }
-    if (lblE && optE){ lblE.textContent='Team';   optE.checked=false; }
+    lblA.textContent='Image';  optA.checked = true;
+    lblB.textContent='Name';   optB.checked = false;
+    if (lblC){ lblC.textContent='Jersey Number'; if (optC) optC.checked=false; }
+    if (lblD){ lblD.textContent='Nationality';   if (optD) optD.checked=false; }
+    if (lblE && optE){ lblE.textContent='Team';  optE.checked=false; }
   } else {
-    lblA.textContent='Logo';    optA.checked = true;
-    lblB.textContent='Name';    optB.checked = false; // logo-only by default
-    if (lblC) { lblC.textContent='Stadium'; if (optC) optC.checked = false; }
-    if (lblD) { lblD.textContent='League';  if (optD) optD.checked = false; }
+    lblA.textContent='Logo';   optA.checked = true;
+    lblB.textContent='Name';   optB.checked = false;
+    if (lblC){ lblC.textContent='Stadium'; if (optC) optC.checked=false; }
+    if (lblD){ lblD.textContent='League';  if (optD) optD.checked=false; }
     if (lblE && optE){ lblE.textContent=''; optE.checked=false; }
   }
 }
 
-/* ---------- Canvas sizing & FAB centering ---------- */
+/* ---------- Canvas sizing ---------- */
 function sizeCanvas(){
   const rect = (wheel.parentElement||wheel).getBoundingClientRect();
   const cssSize = clamp(300, Math.round(rect.width||640), 1200);
@@ -302,18 +262,17 @@ function sizeCanvas(){
   fx.style.width = cssSize+'px'; fx.style.height = cssSize+'px';
   requestAnimationFrame(positionSpinFab);
 }
-
 function positionSpinFab(){
   const wrap = wheel.parentElement;
   const wr = wrap.getBoundingClientRect();
   const cr = wheel.getBoundingClientRect();
-  const cx = (cr.left + cr.width  / 2) - wr.left;
-  const cy = (cr.top  + cr.height / 2) - wr.top;
+  const cx = (cr.left + cr.width/2) - wr.left;
+  const cy = (cr.top  + cr.height/2) - wr.top;
   spinFab.style.left = `${cx}px`;
   spinFab.style.top  = `${cy}px`;
 }
 
-/* ---------- Wheel drawing ---------- */
+/* ---------- Wheel ---------- */
 const PERF = { hideTextThreshold: 50, minTextWidth: 44, minLogoBox: 26 };
 
 function drawIdle(ctx,W,H){
@@ -332,20 +291,17 @@ function drawIdle(ctx,W,H){
   }
   ctx.restore();
 }
-
 function drawTickRing(ctx, R, ticks=120){
   ctx.save();
   ctx.rotate(mod(currentAngle, TAU));
   const h = Math.max(6, R*0.02);
   for(let i=0;i<ticks;i++){
-    const a = i * (TAU/ticks);
-    const x = Math.cos(a) * (R-h/2);
-    const y = Math.sin(a) * (R-h/2);
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.rotate(a);
+    const a = i*(TAU/ticks);
+    const x = Math.cos(a)*(R-h/2);
+    const y = Math.sin(a)*(R-h/2);
+    ctx.save(); ctx.translate(x,y); ctx.rotate(a);
     ctx.fillStyle = (i%5===0) ? 'rgba(200,220,255,.22)' : 'rgba(200,220,255,.12)';
-    ctx.fillRect(-1, -h/2, 2, h);
+    ctx.fillRect(-1,-h/2,2,h);
     ctx.restore();
   }
   ctx.restore();
@@ -522,8 +478,6 @@ function showResult(idx){
 /* ---------- History ---------- */
 function renderHistory(){
   historyEl.innerHTML = '';
-
-  // Only entries from the active MODE
   const visible = history.filter(h => h.type === MODE);
 
   if (!visible.length){
@@ -535,49 +489,105 @@ function renderHistory(){
   }
 
   visible.forEach(({ item }) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-
+    const div = document.createElement('div'); div.className='item';
     const img = document.createElement('img');
-    if (MODE === 'player') {
-      img.src = item.image_url || '';
-      img.alt = item.team_name || 'Player';
-    } else {
-      img.src = item.logo_url || '';
-      img.alt = `${item.team_name || 'Team'} logo`;
-    }
-
-    const span = document.createElement('span');
-    span.textContent = item.team_name || (MODE==='player' ? 'Player' : 'Team');
-
-    div.append(img, span);
-    historyEl.appendChild(div);
+    if (MODE==='player'){ img.src=item.image_url||''; img.alt=item.team_name||'Player'; }
+    else { img.src=item.logo_url||''; img.alt=`${item.team_name||'Team'} logo`; }
+    const span=document.createElement('span');
+    span.textContent = item.team_name || (MODE==='player'?'Player':'Team');
+    div.append(img,span); historyEl.append(div);
   });
 }
 
-/* ---------- Modal (clean, always-on details) ---------- */
+/* ---------- Reveal helpers (Show buttons) ---------- */
+function ensureRevealStyles(){
+  if (document.getElementById('reveal-style')) return;
+  const s=document.createElement('style'); s.id='reveal-style';
+  s.textContent = `
+    .reveal-wrap{position:relative;display:inline-block}
+    .reveal-overlay{position:absolute;inset:0;border-radius:inherit;
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      background:rgba(10,16,32,.15); pointer-events:none}
+    .reveal-btn{
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      padding:8px 14px; border-radius:999px; font-weight:800;
+      border:1px solid rgba(90,161,255,.6);
+      background:#152036; color:#fff; letter-spacing:.02em;
+      white-space:nowrap; z-index:3;
+      box-shadow:0 6px 18px rgba(34,211,238,.18);
+    }
+    .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02)}
+  `;
+  document.head.appendChild(s);
+}
+function wrap(el){
+  if (!el) return null;
+  if (el.parentElement && el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
+  const w=document.createElement('span'); w.className='reveal-wrap';
+  el.parentElement.insertBefore(w, el); w.appendChild(el); return w;
+}
+function blurEl(el){
+  if(!el) return;
+  const w = wrap(el);
+  el.style.filter='blur(14px)';
+  if(!w.querySelector('.reveal-overlay')){
+    const o=document.createElement('span'); o.className='reveal-overlay'; w.appendChild(o);
+  }
+}
+function unblurEl(el){
+  if(!el) return;
+  const w=el.parentElement;
+  el.style.filter='';
+  const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove();
+  const b=w && w.querySelector('.reveal-btn'); if(b) b.remove();
+}
+function addReveal(key, el, enabled, label, state){
+  // state is an object holding booleans; we flip key on click
+  ensureRevealStyles();
+  const w = wrap(el);
+  const prior = w.querySelector('.reveal-btn'); if (prior) prior.remove();
+
+  if (enabled || state[key]){ unblurEl(el); return; }
+
+  blurEl(el);
+  const b=document.createElement('button'); b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
+  b.onclick=()=>{ state[key]=true; unblurEl(el); };
+  w.appendChild(b);
+}
+
+/* ---------- Modal ---------- */
 function openModal(item){
-  // Title / subtitle
+  // Per-open state for reveals
+  const flags = { a:false,b:false,c:false,d:false,e:false };
+
+  // Title & subtitle
   mHead.textContent = item.team_name || '—';
-  if (MODE === 'player') {
+  if (MODE==='player'){
     mSub.textContent = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '';
   } else {
     mSub.textContent = leagueLabel(item.league_code) || '';
   }
 
-  // Image/logo
-  mLogo.src = (MODE === 'player') ? (item.image_url || '') : (item.logo_url || '');
+  // Image / logo
+  mLogo.src = (MODE==='player') ? (item.image_url || '') : (item.logo_url || '');
 
-  // Rows visibility & content
-  if (MODE === 'player') {
+  if (MODE==='player'){
+    // Rows visibility
     rowStadium.style.display='none';
-    rowClub.style.display='';
-    rowJersey.style.display='';
-    rowNat.style.display='';
+    rowClub.style.display=''; rowJersey.style.display=''; rowNat.style.display='';
 
+    // Values
     mClub.textContent   = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '—';
     mJersey.textContent = item.jersey ? `#${item.jersey}` : '—';
     mNat.textContent    = item.nationality || '—';
+
+    // Reveal (based on show-on-wheel)
+    addReveal('a', mLogo,   !!optA.checked, 'image',          flags);
+    addReveal('b', mHead,   !!optB.checked, 'name',           flags);
+    if (optE) addReveal('e', mClub,   !!optE.checked, 'team',           flags);
+    if (optC) addReveal('c', mJersey, !!optC.checked, 'jersey number',  flags);
+    if (optD) addReveal('d', mNat,    !!optD.checked, 'nationality',    flags);
+
   } else {
     rowStadium.style.display='';
     rowClub.style.display='none';
@@ -585,9 +595,13 @@ function openModal(item){
     rowNat.style.display='none';
 
     mStadium.textContent = item.stadium || '—';
+
+    addReveal('a', mLogo,  !!optA.checked, 'logo',    flags);
+    addReveal('b', mHead,  !!optB.checked, 'name',    flags);
+    if (optD) addReveal('d', mSub,     !!optD.checked, 'league',  flags);
+    if (optC) addReveal('c', mStadium, !!optC.checked, 'stadium', flags);
   }
 
-  // Show
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
@@ -601,24 +615,12 @@ function setMode(next){
   const filterTitleEl = document.getElementById('filter-title');
   if (MODE === 'player') {
     filterTitleEl && (filterTitleEl.textContent = 'Select Teams');
-    if (qpAll){
-      qpAll.textContent = 'All Premier League teams';
-      qpAll.title = 'Select all Premier League teams';
-    }
-    if (qpTopBtn){
-      qpTopBtn.textContent = 'Top 6 Premier League Teams';
-      qpTopBtn.title = 'Select the Big Six from the Premier League';
-    }
+    if (qpAll){ qpAll.textContent = 'All Premier League teams'; qpAll.title = 'Select all Premier League teams'; }
+    if (qpTopBtn){ qpTopBtn.textContent = 'Top 6 Premier League Teams'; qpTopBtn.title = 'Select the Big Six from the Premier League'; }
   } else {
     filterTitleEl && (filterTitleEl.textContent = 'Select Leagues');
-    if (qpAll){
-      qpAll.textContent = 'All Leagues';
-      qpAll.title = 'Select all leagues';
-    }
-    if (qpTopBtn){
-      qpTopBtn.textContent = 'Top 5 Leagues';
-      qpTopBtn.title = 'Select only the top 5 leagues';
-    }
+    if (qpAll){ qpAll.textContent = 'All Leagues'; qpAll.title = 'Select all leagues'; }
+    if (qpTopBtn){ qpTopBtn.textContent = 'Top 5 Leagues'; qpTopBtn.title = 'Select only the top 5 leagues'; }
   }
 
   applyModeShowControls();
@@ -758,8 +760,8 @@ function wire(){
     console.error('Failed to load data:', e);
   }
 
-  setMode(MODE);          // apply initial mode + chips + show-on-wheel defaults
-  renderHistory();        // show filtered history for current mode
+  setMode(MODE);      // apply initial mode + UI
+  renderHistory();    // per-mode history
 
   sizeCanvas();
   positionSpinFab();
