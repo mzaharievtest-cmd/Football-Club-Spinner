@@ -193,6 +193,10 @@ button:hover::after,.chip-btn:hover::after{transform:translateX(100%)}
 .item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(17,28,48,.85);border:1px solid rgba(90,161,255,.12);transition:transform .16s var(--ease)}
 .item:hover{transform:translateY(-1px)}
 
+.brand-img,
+.result img,
+.item img { aspect-ratio: 1 / 1; }
+
 /* =========================
    Selection meter
    ========================= */
