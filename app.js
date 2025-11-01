@@ -673,6 +673,37 @@ function openModal(item){
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
+  if (MODE === 'team') {
+    hardHide(rowStadium, true);
+    hardHide(rowClub, false);
+    hardHide(rowJersey, false);
+    hardHide(rowNat, false);
+  } else {
+    // PLAYER mode — show/hide by options as before
+  }
+
+  // Final sweep: if anything is still empty, hide it.
+  hideEmptyRows();
+
+  backdrop.style.display='flex';
+  requestAnimationFrame(()=> modalEl.classList.add('show'));
+}
+function hardHide(el, on) {
+  if (!el) return;
+  el.hidden = !on;
+  el.style.display = on ? '' : 'none';
+}
+
+function hideEmptyRows() {
+  // Hide any modal row whose value pill has no visible text and no reveal
+  const rows = modalEl.querySelectorAll('.m-row');
+  rows.forEach(r => {
+    const val = r.querySelector('.value-pill');
+    const hasText = val && val.textContent && val.textContent.trim().length > 0;
+    const hasReveal = !!val?.querySelector('.reveal-btn');
+    hardHide(r, hasText || hasReveal);
+  });
+}
 
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
 
