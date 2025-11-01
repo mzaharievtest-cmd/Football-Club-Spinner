@@ -8,7 +8,6 @@
   <!-- Primary SEO -->
   <title>Football Spinner — 25 European Leagues · Premier League Players</title>
   <meta name="description" content="Spin a random football team from 25 European leagues, or a random Premier League player. Free, fast, no login — perfect for quizzes, watch parties, and football debates." />
-  <meta name="keywords" content="football spinner, random team generator, random player generator, premier league players, european leagues, trivia, wheel, football quiz" />
   <link rel="canonical" href="https://footballspinner.com/" />
   <meta name="robots" content="index,follow" />
   <meta name="theme-color" content="#0b1530" />
@@ -23,18 +22,12 @@
   <meta property="og:image:alt" content="Football Spinner app preview" />
   <meta property="og:locale" content="en_GB" />
 
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Football Spinner — 25 European Leagues · Premier League Players" />
-  <meta name="twitter:description" content="Spin teams from 25 European leagues or random Premier League players. Free, no login." />
-  <meta name="twitter:image" content="https://footballspinner.com/app-og.png" />
-
   <!-- Preconnects -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
 
-  <!-- Fonts (non-blocking load) -->
+  <!-- Fonts (non-blocking) -->
   <link rel="preload"
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
         as="style"
@@ -43,118 +36,26 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
   </noscript>
 
-  <!-- Icons -->
+  <!-- Critical CSS load (render-blocking removed) -->
+  <link rel="preload" href="style.css?v=2" as="style" />
+  <link rel="stylesheet" href="style.css?v=2" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="style.css?v=2"></noscript>
+
+  <!-- Icons (explicit sizes) -->
   <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1" />
   <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png?v=1" />
   <link rel="apple-touch-icon" href="app-logo.png?v=1" />
-  <link rel="shortcut icon" href="app-logo.png?v=1" />
 
-  <!-- Manifest (optional) -->
+  <!-- Manifest -->
   <link rel="manifest" href="/manifest.webmanifest" />
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css?v=1" />
-
-  <!-- Google Analytics 4 -->
-  <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-RK8RD59N8G');
-  </script>
-
-  <!-- Google Tag Manager -->
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;
-    j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-    f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KS5K7Z4T');
-  </script>
-
-  <!-- AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
-
-  <!-- Enhanced Structured Data (JSON-LD) -->
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"WebSite",
-    "name":"Football Spinner",
-    "url":"https://footballspinner.com/",
-    "description":"Spin a random football team from 25 European leagues, or a random Premier League player. Free, fast, no login.",
-    "inLanguage":"en",
-    "isFamilyFriendly": true,
-    "publisher": {
-      "@type": "Organization",
-      "name": "Football Spinner",
-      "url": "https://footballspinner.com/",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://footballspinner.com/app-logo.png",
-        "width": 512,
-        "height": 512
-      }
-    },
-    "potentialAction": {
-      "@type":"SearchAction",
-      "target":"https://footballspinner.com/?q={query}",
-      "query-input":"required name=query"
-    }
-  }
-  </script>
-
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"WebPage",
-    "name":"Football Spinner",
-    "url":"https://footballspinner.com/",
-    "description":"Random football team and Premier League player spinner. No login, free to use.",
-    "primaryImageOfPage": {
-      "@type":"ImageObject",
-      "url":"https://footballspinner.com/app-og.png",
-      "width":1200,
-      "height":630
-    },
-    "breadcrumb": {
-      "@type":"BreadcrumbList",
-      "itemListElement":[
-        {"@type":"ListItem","position":1,"name":"Home","item":"https://footballspinner.com/"}
-      ]
-    }
-  }
-  </script>
-
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"WebApplication",
-    "name":"Football Spinner",
-    "url":"https://footballspinner.com/",
-    "applicationCategory":"SportsApplication",
-    "operatingSystem":"Web",
-    "image":"https://footballspinner.com/app-og.png",
-    "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
-    "featureList":[
-      "Random team generator (25 European leagues)",
-      "Random Premier League player generator",
-      "Customizable wheel display",
-      "No login required"
-    ]
-  }
-  </script>
 </head>
 
 <body>
-  <!-- GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-
   <header>
     <div class="brand">
-      <img src="app-logo.png?v=1" alt="Football Spinner logo" class="brand-img" decoding="async" width="128" height="128" />
+      <!-- explicit width/height to avoid CLS -->
+      <img src="app-logo.png?v=1" alt="Football Spinner logo" class="brand-img"
+           decoding="async" fetchpriority="low" width="46" height="46" />
       <div>
         <h1 id="main-title">Football Spinner</h1>
         <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
@@ -195,6 +96,7 @@
       <div class="history-title">History</div>
       <div class="history" id="history">
         <div class="result">
+          <img src="app-logo.png?v=1" alt="" width="38" height="38" loading="lazy" decoding="async" />
           <div id="historyEmpty" class="current-name">Your journey starts with a spin - try your luck!</div>
         </div>
       </div>
@@ -219,7 +121,7 @@
             <span id="lblA" class="chip-text">Logo</span>
           </label>
           <label class="chip" title="Show team or player names">
-            <input type="checkbox" id="optB" checked aria-label="Name" />
+            <input type="checkbox" id="optB" aria-label="Name" />
             <span id="lblB" class="chip-text">Name</span>
           </label>
           <label class="chip" title="Team mode: Stadium · Player mode: Jersey">
@@ -240,12 +142,13 @@
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
         <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
+        <!-- canvases have fixed sizes; they don’t affect CLS -->
         <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
         <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
       </div>
     </section>
 
-    <!-- Full-width accordion -->
+    <!-- Full-width accordion (DETAILS content preserved) -->
     <section class="card" style="grid-column:1 / -1; margin-top:28px;">
       <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
         <div class="section-title" id="details-title">Details</div>
@@ -255,7 +158,7 @@
           <div class="ac-summary" id="panel-about-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-about-body">
             <div class="ac-title">About Football Spinner</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
           <div class="ac-body" id="panel-about-body" aria-labelledby="panel-about-summary">
@@ -269,7 +172,7 @@
           <div class="ac-summary" id="panel-how-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-how-body">
             <div class="ac-title">How it works</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
           <div class="ac-body" id="panel-how-body" aria-labelledby="panel-how-summary">
@@ -283,7 +186,7 @@
           <div class="ac-summary" id="panel-why-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-why-body">
             <div class="ac-title">Why use it?</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
           <div class="ac-body" id="panel-why-body" aria-labelledby="panel-why-summary">
@@ -302,7 +205,7 @@
       <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
 
       <div class="m-body">
-        <img id="mLogo" alt="" loading="lazy" width="256" height="256" />
+        <img id="mLogo" alt="" loading="lazy" decoding="async" width="256" height="256" />
 
         <div class="m-row" id="rowStadium">
           <div class="label">Stadium</div>
@@ -332,9 +235,24 @@
   </div>
 
   <!-- App -->
-  <script src="app.js" defer></script>
+  <script src="app.js?v=2" defer></script>
 
-  <!-- Mode text + accordion helpers (ARIA + reflow fix) -->
+  <!-- Analytics (async; loaded last) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date()); gtag('config', 'G-RK8RD59N8G');
+  </script>
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;
+      j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+      f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KS5K7Z4T');
+  </script>
+
+  <!-- Small helpers (mode text + accordion ARIA) -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -346,21 +264,21 @@
         const modeNote = document.getElementById('modeNote');
 
         if(mode === 'player'){
-          if (titleRight) titleRight.textContent = 'Player Wheel';
+          titleRight.textContent = 'Player Wheel';
           if (meterText && perf?.dataset.playersText){
             const num = (meterText.textContent.match(/\d+/)||['0'])[0];
             meterText.textContent = `${num} ${perf.dataset.playersText}`;
           }
-          if (filterTitle) filterTitle.textContent = 'Select Teams';
+          filterTitle.textContent = 'Select Teams';
           if (qpTop){ qpTop.textContent = 'Top 6 Premier League Teams'; qpTop.title = 'Select the Big Six from the Premier League'; }
           if (modeNote){ modeNote.style.display = 'inline'; modeNote.textContent = 'Players: Premier League only'; }
         } else {
-          if (titleRight) titleRight.textContent = 'Club Wheel';
+          titleRight.textContent = 'Club Wheel';
           if (meterText && perf?.dataset.clubsText){
             const num = (meterText.textContent.match(/\d+/)||['0'])[0];
             meterText.textContent = `${num} ${perf.dataset.clubsText}`;
           }
-          if (filterTitle) filterTitle.textContent = 'Select Leagues';
+          filterTitle.textContent = 'Select Leagues';
           if (qpTop){ qpTop.textContent = 'Top 5 Leagues'; qpTop.title = 'Select only the top 5 leagues'; }
           if (modeNote){ modeNote.style.display = 'none'; }
         }
@@ -370,31 +288,26 @@
         const teamBtn = document.getElementById('modeTeam');
         const playerBtn = document.getElementById('modePlayer');
         const teamActive = mode !== 'player';
-        teamBtn?.setAttribute('aria-selected', String(teamActive));
-        playerBtn?.setAttribute('aria-selected', String(!teamActive));
-        teamBtn?.classList.toggle('mode-btn-active', teamActive);
-        playerBtn?.classList.toggle('mode-btn-active', !teamActive);
+        teamBtn.setAttribute('aria-selected', String(teamActive));
+        playerBtn.setAttribute('aria-selected', String(!teamActive));
+        teamBtn.classList.toggle('mode-btn-active', teamActive);
+        playerBtn.classList.toggle('mode-btn-active', !teamActive);
       }
 
       const histEmpty = document.getElementById('historyEmpty');
       if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
 
       const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
-      applyModeTexts(initial);
-      setTabSelection(initial);
+      applyModeTexts(initial); setTabSelection(initial);
 
       document.getElementById('modeTeam')?.addEventListener('click', () => {
-        localStorage.setItem('fsMode', 'team');
-        applyModeTexts('team');
-        setTabSelection('team');
+        localStorage.setItem('fsMode', 'team'); applyModeTexts('team'); setTabSelection('team');
       });
       document.getElementById('modePlayer')?.addEventListener('click', () => {
-        localStorage.setItem('fsMode', 'player');
-        applyModeTexts('player');
-        setTabSelection('player');
+        localStorage.setItem('fsMode', 'player'); applyModeTexts('player'); setTabSelection('player');
       });
 
-      // Accordion (batch read/write to avoid forced reflow)
+      // Accordion
       const accordion = document.getElementById('infoAccordion');
       if (accordion){
         const panels = Array.from(accordion.querySelectorAll('.ac-panel'));
@@ -403,12 +316,10 @@
           const body = panel.querySelector('.ac-body');
 
           const setOpen = (open) => {
-            const h = open ? (body.scrollHeight + 40) : 0;  // read once
+            const h = open ? (body.scrollHeight + 40) : 0;
             panel.toggleAttribute('open', !!open);
             summary.setAttribute('aria-expanded', !!open);
-            requestAnimationFrame(() => {                    // write later
-              body.style.maxHeight = open ? h + 'px' : null;
-            });
+            requestAnimationFrame(() => { body.style.maxHeight = open ? h + 'px' : null; });
           };
 
           summary.addEventListener('click', ()=>{
