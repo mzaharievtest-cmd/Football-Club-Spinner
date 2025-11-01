@@ -103,7 +103,7 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 }
 @media (min-width:980px){ .container{grid-template-columns:380px 1fr} }
 
-/* —— MOBILE ORDER + ALIGN —— */
+/* —— MOBILE ORDER —— */
 @media (max-width:979.98px){
   .container{ display:flex; flex-direction:column; align-items:stretch; }
   .container > .card{ width:100%; margin-inline:0; }
@@ -236,6 +236,7 @@ canvas#wheel{
 }
 @media (max-width:560px){ .pointer{border-left-width:12px;border-right-width:12px;border-top-width:20px; animation:none;} }
 
+/* Central SPIN button overlay */
 .spin-fab{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   width:clamp(86px,13vw,128px); height:clamp(86px,13vw,128px);
@@ -264,67 +265,77 @@ canvas#wheel{
    ========================= */
 #backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(4,10,24,.82);backdrop-filter:blur(12px);z-index:1000}
 #modal{
-  width:min(92vw,440px);border-radius:18px;overflow:hidden;
+  width:min(92vw,740px); /* a bit wider for cleaner alignment */
+  border-radius:18px;overflow:hidden;
   background:linear-gradient(180deg, rgba(16,24,42,.96), rgba(13,20,38,.92));
   border:1px solid #4f82ff; box-shadow:var(--shadow-2);
   display:flex;flex-direction:column;transform:translateY(6px) scale(.985);opacity:0;
   transition:transform .22s var(--ease-out),opacity .22s var(--ease-out)
 }
 #modal.show{transform:none;opacity:1}
-#mHead{padding:22px 26px 0;font-weight:900;font-size:24px;color:#f4f7ff;text-align:center}
-#mSub{font-size:14px;color:#a3b8e7;margin:6px 0 2px;text-align:center}
-.m-body{padding:10px 22px 14px;display:flex;flex-direction:column;align-items:center;gap:10px}
-#mLogo{width:110px;height:110px;object-fit:contain;border-radius:16px;margin:10px auto 6px;background:#0b1220;border:1px solid #5aa1ff;box-shadow:0 2px 10px rgba(16,24,48,.45)}
-.m-row{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0}
-.m-sep{width:100%;height:1px;background:#234080;margin:8px 0}
-#mStadium,#mClub,#mJersey,#mNat{
-  display:inline-block;min-width:180px;max-width:260px;text-align:center;padding:8px 12px;border-radius:10px;
-  background:rgba(17,28,48,.85);border:1px solid rgba(90,161,255,.16);color:#d7e8ff;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+#mHead{padding:22px 26px 0;font-weight:900;font-size:clamp(24px,3.2vw,34px);color:#f4f7ff;text-align:center}
+#mSub{font-size:16px;color:#a3b8e7;margin:6px 0 14px;text-align:center}
+.m-body{padding:10px 26px 16px;display:flex;flex-direction:column;align-items:center;gap:16px}
+#mLogo{
+  width:140px;height:140px;object-fit:contain;border-radius:16px;margin:10px auto 6px;background:#0b1220;
+  border:1px solid #5aa1ff;box-shadow:0 2px 10px rgba(16,24,48,.45)
 }
-.m-actions{padding:14px 22px 20px;background:#0f1830;border-top:1px solid #234080;display:flex;gap:10px;justify-content:center}
 
-/* Reveal controls — make buttons perfectly centered inside blurred box */
-.reveal-wrap{
-  position:relative;
-  display:grid;
-  place-items:center;            /* << center contents both axes */
+/* Row: label + value */
+.m-row{
   width:100%;
+  display:grid !important;
+  grid-template-columns: 160px 1fr;
+  align-items:center; /* vertical center */
+  gap:22px;
+  margin:10px 0;
 }
-.reveal-overlay{
+.m-row .label{ font-weight:800; color:#cfe2ff; font-size:20px; }
+
+/* Value pill + reveal centering */
+.m-row .value-pill{
+  position:relative;
+  display:grid;                       /* center baseline content */
+  place-items:center;                 /* ⬅ center text */
+  min-height:64px;
+  padding:12px 18px;
+  border-radius:14px;
+  background:rgba(17,28,48,.85);
+  border:1px solid rgba(90,161,255,.16);
+  color:#d7e8ff; font-weight:800; font-size:22px;
+}
+
+/* Ensure reveal overlay + button are centered inside the value pill */
+.value-pill .reveal-overlay{
   position:absolute; inset:0; border-radius:inherit;
-  background:rgba(10,16,32,.28);
+  display:grid; place-items:center;               /* ⬅ perfect centering */
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   pointer-events:none;
 }
+.value-pill .reveal-btn{
+  position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%);
+}
+
+/* Name/League “Show …” buttons (for text areas) — keep centered inside their blurred regions */
+.reveal-wrap{position:relative;display:block}
 .reveal-btn{
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   display:inline-flex; align-items:center; justify-content:center;
-  padding:8px 14px; border-radius:999px;
+  padding:10px 18px; border-radius:999px;
   border:1px solid rgba(90,161,255,.6);
   background:#152036; color:#fff; font-weight:800; letter-spacing:.03em;
-  white-space:nowrap; z-index:3; box-shadow:0 6px 18px rgba(34,211,238,.18);
-  text-transform:none;
   transition:transform .12s var(--ease),border-color .12s var(--ease),box-shadow .12s var(--ease);
 }
-.reveal-btn:hover{ transform:translate(-50%,-50%) scale(1.02); border-color:var(--accent-2); box-shadow:0 6px 18px rgba(34,211,238,.18); }
+.reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02);border-color:var(--accent-2);box-shadow:0 6px 18px rgba(34,211,238,.18)}
 
-/* Modal polish */
-#modal .reveal-btn{ width:auto !important; }
-#modal .m-body{ align-items:center; }
-#modal #mHead{
-  font-size:22px; font-weight:900; text-align:center; line-height:1.2;
-  margin-top:6px;
-}
-#modal #mSub{ text-align:center; }
-#modal #mLogo{
-  border-radius:16px; padding:10px; background:#0b1220;
-  border:1px solid rgba(100,168,255,.35);
-  box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 30px rgba(90,161,255,.08);
-}
-#modal .m-row .label{
-  min-width:auto; margin-right:12px; font-weight:800; color:#d7e8ff;
-}
+.m-actions{padding:14px 26px 20px;background:#0f1830;border-top:1px solid #234080;display:flex;gap:10px;justify-content:center}
 #modal .m-actions .chip-btn{ width:100%; }
+
+/* Responsive modal rows */
+@media (max-width:640px){
+  .m-row{ grid-template-columns: 1fr; gap:10px; }
+  .m-row .label{ justify-self:start; }
+}
 
 /* =========================
    Optional #content
@@ -369,7 +380,7 @@ canvas#wheel{
 .ac-panel[open] .ac-summary { border-bottom:1px solid rgba(100,168,255,.08); box-shadow: inset 0 -4px 18px rgba(16,28,56,.28); }
 .ac-panel[open] .ac-chevron { background:linear-gradient(180deg, rgba(34,211,238,.08), rgba(90,161,255,.06)); }
 .ac-body {
-  padding:0 18px 16px; color:var(--muted); line-height:1.7; font-size:15px;
+  padding:0 18px 16px; color:#muted; line-height:1.7; font-size:15px;
   max-height:0; overflow:hidden; transition:max-height .32s var(--ease-out), padding .28s var(--ease);
 }
 .ac-panel[open] .ac-body { max-height:800px; padding:12px 18px 18px; }
@@ -377,43 +388,37 @@ canvas#wheel{
 @media (max-width:979.98px){ .ac-body{font-size:15px} .ac-summary{padding:12px 14px} }
 
 /* =========================
-   History (styled as a card like the filter)
+   HISTORY — card matches “Select Leagues”
    ========================= */
-#history{
-  display:flex; flex-direction:column; gap:14px;
-  padding:16px;
-  border-radius:14px;
+.history-card{
+  background:var(--card-grad);
   border:1px solid var(--line);
-  background:linear-gradient(180deg, rgba(18,28,52,.55), rgba(10,16,30,.45));
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-1);
+  padding:18px clamp(14px,3vw,26px);
+}
+.history-card .section-title{
+  margin:0 0 12px;
+  font-size:12px; letter-spacing:.36em; text-transform:uppercase; color:var(--muted);
+}
+.history-list{ display:flex; flex-direction:column; gap:14px; }
+.history-list .item{
+  display:flex; align-items:center; gap:16px;
+  padding:16px; border-radius:16px;
+  background:linear-gradient(180deg, rgba(18,28,52,.40), rgba(10,16,30,.36));
+  border:1px solid rgba(120,160,255,.16);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
 }
-#history::before{
-  content:"History";
-  display:block;
-  margin:0 0 10px;
-  font-size:12px;
-  letter-spacing:.36em;
-  text-transform:uppercase;
-  color:var(--muted);
+.history-list .item img{
+  width:70px; height:70px; object-fit:contain; border-radius:14px;
+  background:#0b1220; border:1px solid rgba(100,168,255,.24);
 }
-#history .item{
-  display:flex; align-items:center; gap:14px;
-  padding:14px 16px;
-  border-radius:14px;
-  background:linear-gradient(180deg, rgba(15,24,44,.85), rgba(10,16,30,.82));
-  border:1px solid rgba(120,160,255,.12);
-  box-shadow:0 8px 24px rgba(2,6,20,.28) inset;
+.history-list .item span{
+  font-size:22px; font-weight:900; color:#f2f6ff; letter-spacing:.01em;
 }
-#history .item img{
-  width:64px; height:64px; object-fit:contain;
-  border-radius:12px; background:#0b1220;
-  border:1px solid rgba(100,168,255,.22);
-  box-shadow:inset 0 0 24px rgba(34,211,238,.06);
-}
-#history .item span{
-  font-weight:900; font-size:18px; letter-spacing:.01em;
-  color:#f2f6ff;
-}
+
+/* Hide old stray heading if it exists just above the history card */
+.container :is(h1,h2,h3,h4,p,div):has(+ .history-card){ display:none !important; }
 
 /* =========================
    Misc
@@ -448,167 +453,3 @@ section.card[aria-labelledby="wheel-title"] { overflow: visible !important; }
 canvas#wheel { pointer-events: none !important; }
 .spin-fab { z-index: 50 !important; }
 .pointer  { z-index: 40 !important; }
-
-/* Modal layout tweaks */
-#mHead { text-align:left; }
-.m-row{
-  display:grid !important;
-  grid-template-columns: 140px 1fr;
-  align-items:center;
-  gap:18px;
-}
-.m-row .label{ font-weight:800; color:#cfe2ff; }
-.m-row .value-pill{
-  position:relative; display:inline-flex; align-items:center; justify-content:center;
-  width:100%; min-height:48px; padding:10px 16px; border-radius:14px;
-  background:rgba(17,28,48,.85); border:1px solid rgba(90,161,255,.16);
-  color:#d7e8ff; font-weight:800;
-}
-.m-row .reveal-wrap{ width:100% !important; height:100%; } /* << ensure full-box centering */
-@media (max-width:560px){
-  .m-row{ grid-template-columns: 1fr; gap:10px; }
-  .m-row .label{ margin-bottom:2px; }
-}
-.m-row[hidden] { display: none !important; }
-/* =========================
-   HISTORY — match "Select Leagues"
-   ========================= */
-
-/* Hide any loose heading above the card, if present */
-#historyHeading,
-.history-heading { display:none !important; }
-/* If the loose heading is an h2/h3 right before the history card, hide it too */
-.sidebar > :where(h1,h2,h3,p):has(+ #historyCard) { display:none !important; }
-
-/* Card shell for history */
-#historyCard{
-  background: var(--card-grad);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
-  padding: 18px clamp(14px,3vw,26px);
-}
-
-/* Inside title to mirror "SELECT LEAGUES" */
-#historyCard .section-title{
-  margin: 0 0 10px;
-  font-size: 12px;
-  letter-spacing: .36em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-/* History list + items */
-#history{
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 6px 0 0;
-}
-
-#history .item{
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 18px;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(18,28,52,.96), rgba(10,16,30,.92));
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
-}
-
-#history .item img{
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  border-radius: 12px;
-  background: #0b1220;
-  border: 1px solid rgba(100,168,255,.28);
-  box-shadow: 0 2px 8px rgba(0,0,0,.35);
-}
-
-#history .item span{
-  font-weight: 900;
-  font-size: clamp(16px, 2.8vw, 22px);
-  letter-spacing: .01em;
-  color: #f3f7ff;
-}
-
-/* Empty state inside the card */
-#history:empty::before{
-  content: "Your journey starts with a spin - try your luck!";
-  display: block;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px dashed var(--line);
-  color: var(--dim);
-  background: rgba(16,28,56,.25);
-  text-align: center;
-  font-weight: 700;
-}
-
-/* Button under the card keeps same spacing */
-#resetHistoryBtn, #clearHistoryBtn{
-  margin-top: 16px;
-}
-
-/* =========================
-   MODAL — center “Show …” buttons in blurred boxes
-   ========================= */
-
-/* Make the auto-created wrapper fill its box and center content */
-.reveal-wrap{
-  position: relative;
-  display: grid !important;
-  width: 100%;
-  height: 100%;
-  place-items: center;             /* ⬅ horizontal + vertical center */
-}
-
-/* The blur overlay already stretches via inset:0; keep it above content */
-.reveal-overlay{
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  pointer-events: none;
-}
-
-/* Center the button precisely */
-.reveal-btn{
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%,-50%); /* ⬅ perfect center */
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(90,161,255,.6);
-  background: #152036;
-  color: #fff;
-  font-weight: 800;
-  letter-spacing: .02em;
-  z-index: 3;
-  white-space: nowrap;
-  box-shadow: 0 6px 18px rgba(34,211,238,.18);
-}
-
-/* Ensure value pills in rows provide a bounding box for centering */
-.m-row .value-pill,
-.m-row .reveal-wrap{
-  width: 100%;
-  min-height: 56px;                /* gives a proper rectangle to center within */
-}
-
-/* The player/club image tile should also allow a centered button */
-#mLogo{
-  display: block;
-  width: 130px;
-  height: 130px;
-}
-
-/* On very small screens reduce min-height so layout stays tight */
-@media (max-width:560px){
-  .m-row .value-pill,
-  .m-row .reveal-wrap{ min-height: 48px; }
-}
