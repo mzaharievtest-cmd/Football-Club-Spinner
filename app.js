@@ -551,6 +551,85 @@ function ensureRevealStyles(){
   `;
   document.head.appendChild(s);
 }
+
+/* ---------- Preset helpers ---------- */
+function setShowOptions({logo=false,name=false,stadium=false,league=false,team=false,jersey=false,nationality=false}) {
+  // Team mode uses: logo,name,stadium,league
+  // Player mode uses: image(logo switch), name, jersey, nationality, team(label in modal)
+  optA.checked = !!logo;          // Logo / Image
+  optB.checked = !!name;          // Name
+  if (optC) optC.checked = !!(MODE === 'team' ? stadium : jersey);
+  if (optD) optD.checked = !!(MODE === 'team' ? league  : nationality);
+  if (optE) optE.checked = !!(MODE === 'player' ? team : false);
+  drawWheel();
+}
+
+function banner(msg){
+  const el = document.getElementById('presetBanner');
+  if (!el) return;
+  if (!msg){ el.hidden = true; el.textContent = ''; return; }
+  el.textContent = msg; el.hidden = false;
+}
+
+/* Apply presets from the Modes dropdown */
+function applyPreset(key){
+  banner(null);
+
+  switch (key){
+    /* Guess Team */
+    case 'team_logo':     MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({logo:true}); break;
+    case 'team_stadium':  MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({stadium:true}); break;
+    case 'team_league':   MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({league:true}); banner('Pure luck mode: guessing by LEAGUE only'); break;
+
+    /* Guess Stadium */
+    case 'stadium_name':  MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({name:true}); break;
+    case 'stadium_logo':  MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({logo:true}); break;
+
+    /* Guess Player */
+    case 'player_club':   MODE='player';localStorage.setItem('fsMode','player');applyModeShowControls(); setShowOptions({team:true}); break;
+    case 'player_jersey': MODE='player';localStorage.setItem('fsMode','player');applyModeShowControls(); setShowOptions({jersey:true}); break;
+    case 'player_nat':    MODE='player';localStorage.setItem('fsMode','player');applyModeShowControls(); setShowOptions({nationality:true}); break;
+
+    /* Free spin */
+    case 'classic':       banner('Classic: your current wheel settings'); break;
+  }
+
+  // sync tab visuals & labels already on page
+  document.getElementById('modeTeam')?.classList.toggle('mode-btn-active', MODE==='team');
+  document.getElementById('modePlayer')?.classList.toggle('mode-btn-active', MODE==='player');
+  setMode(MODE); // refresh chips, texts, GA event
+}
+
+/* Wire the dropdown buttons (IDs from index.html) */
+(function wireModes(){
+  const map = {
+    'modeTeamLogo'   : 'team_logo',
+    'modeTeamStadium': 'team_stadium',
+    'modeTeamLeague' : 'team_league',
+    'modeStName'     : 'stadium_name',
+    'modeStLogo'     : 'stadium_logo',
+    'modePlClub'     : 'player_club',
+    'modePlJersey'   : 'player_jersey',
+    'modePlNat'      : 'player_nat',
+    'modeClassic'    : 'classic'
+  };
+  Object.entries(map).forEach(([id,key])=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', ()=> applyPreset(key));
+  });
+
+  // open/close dropdown
+  const dd = document.querySelector('.dd');
+  const btn = document.getElementById('modesBtn');
+  if (dd && btn){
+    btn.addEventListener('click', ()=>{
+      dd.classList.toggle('open');
+    });
+    document.addEventListener('click', (e)=>{
+      if (!dd.contains(e.target)) dd.classList.remove('open');
+    });
+  }
+})();
 function wrap(el){
   if (!el) return null;
   if (el.parentElement && el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
