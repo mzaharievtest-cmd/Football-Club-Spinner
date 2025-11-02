@@ -37,9 +37,9 @@
   </noscript>
 
   <!-- Critical CSS load (render-blocking removed) -->
-  <link rel="preload" href="style.css?v=2" as="style" />
-  <link rel="stylesheet" href="style.css?v=2" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="style.css?v=2"></noscript>
+  <link rel="preload" href="style.css?v=3" as="style" />
+  <link rel="stylesheet" href="style.css?v=3" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="style.css?v=3"></noscript>
 
   <!-- Icons (explicit sizes) -->
   <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1" />
@@ -53,7 +53,6 @@
 <body>
   <header>
     <div class="brand">
-      <!-- explicit width/height to avoid CLS -->
       <img src="app-logo.png?v=1" alt="Football Spinner logo" class="brand-img"
            decoding="async" fetchpriority="low" width="46" height="46" />
       <div>
@@ -62,7 +61,56 @@
       </div>
     </div>
 
+    <!-- NAV + MODES -->
     <div class="header-right">
+      <!-- mobile burger -->
+      <button class="nav-toggle" aria-label="Menu" aria-controls="topnav" aria-expanded="false">☰</button>
+
+      <!-- primary nav -->
+      <nav id="topnav" class="top-nav" aria-label="Primary" aria-hidden="true">
+        <a class="nav-link" href="/">Free Spin</a>
+
+        <div class="nav-group">
+          <button class="nav-link" type="button" aria-haspopup="true" aria-expanded="false">Guess Team ▾</button>
+          <div class="nav-menu">
+            <a href="/guess-team-by-logo">by Logo</a>
+            <a href="/guess-team-by-stadium">by Stadium</a>
+            <a href="/guess-team-by-league">by League</a>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <button class="nav-link" type="button" aria-haspopup="true" aria-expanded="false">Guess Stadium ▾</button>
+          <div class="nav-menu">
+            <a href="/guess-stadium-by-name">by Name</a>
+            <a href="/guess-stadium-by-logo">by Logo</a>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <button class="nav-link" type="button" aria-haspopup="true" aria-expanded="false">Guess Player ▾</button>
+          <div class="nav-menu">
+            <a href="/guess-player-by-photo">by Photo</a>
+            <a href="/guess-player-by-club-flag-number">by Club · Flag · #</a>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <button class="nav-link" type="button" aria-haspopup="true" aria-expanded="false">Leagues ▾</button>
+          <div class="nav-menu">
+            <a href="/premier-league-random-team">Premier League</a>
+            <a href="/laliga-random-team">LaLiga</a>
+            <a href="/serie-a-random-team">Serie A</a>
+            <a href="/bundesliga-random-team">Bundesliga</a>
+            <a href="/ligue-1-random-team">Ligue 1</a>
+            <a href="/champions-league-random-team">Champions League</a>
+          </div>
+        </div>
+
+        <a class="nav-link cta" href="/guess-the-player">Start a Quiz</a>
+      </nav>
+
+      <!-- mode switch -->
       <div class="mode-switch-wrap">
         <div class="mode-switch" role="tablist" aria-label="View mode">
           <button id="modeTeam" role="tab" aria-selected="true" class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
@@ -84,7 +132,6 @@
         <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
       </div>
 
-      <!-- Chips (TEAM: leagues · PLAYER: PL teams) -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
         <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
@@ -142,24 +189,20 @@
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
         <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
-        <!-- canvases have fixed sizes; they don’t affect CLS -->
         <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
         <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
       </div>
     </section>
 
-    <!-- Full-width accordion (DETAILS content preserved) -->
+    <!-- DETAILS -->
     <section class="card" style="grid-column:1 / -1; margin-top:28px;">
       <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
         <div class="section-title" id="details-title">Details</div>
 
-        <!-- About -->
         <div class="ac-panel" id="panel-about" role="region" aria-labelledby="panel-about-summary">
           <div class="ac-summary" id="panel-about-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-about-body">
             <div class="ac-title">About Football Spinner</div>
-            <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
+            <span class="ac-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           </div>
           <div class="ac-body" id="panel-about-body" aria-labelledby="panel-about-summary">
             <h2>About Football Spinner</h2>
@@ -167,13 +210,10 @@
           </div>
         </div>
 
-        <!-- How it works -->
         <div class="ac-panel" id="panel-how" role="region" aria-labelledby="panel-how-summary">
           <div class="ac-summary" id="panel-how-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-how-body">
             <div class="ac-title">How it works</div>
-            <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
+            <span class="ac-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           </div>
           <div class="ac-body" id="panel-how-body" aria-labelledby="panel-how-summary">
             <h2>How it works</h2>
@@ -181,13 +221,10 @@
           </div>
         </div>
 
-        <!-- Why use it -->
         <div class="ac-panel" id="panel-why" role="region" aria-labelledby="panel-why-summary">
           <div class="ac-summary" id="panel-why-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-why-body">
             <div class="ac-title">Why use it?</div>
-            <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
+            <span class="ac-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           </div>
           <div class="ac-body" id="panel-why-body" aria-labelledby="panel-why-summary">
             <h2>Why use it?</h2>
@@ -235,7 +272,7 @@
   </div>
 
   <!-- App -->
-  <script src="app.js?v=2" defer></script>
+  <script src="app.js?v=3" defer></script>
 
   <!-- Analytics (async; loaded last) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
@@ -307,7 +344,7 @@
         localStorage.setItem('fsMode', 'player'); applyModeTexts('player'); setTabSelection('player');
       });
 
-      // Accordion
+      // Accordion a11y
       const accordion = document.getElementById('infoAccordion');
       if (accordion){
         const panels = Array.from(accordion.querySelectorAll('.ac-panel'));
