@@ -1,206 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Meta -->
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
   <title>Football Spinner — 25 European Leagues · Premier League Players</title>
-  <meta name="description" content="Spin a random football team from 25 European leagues, or a random Premier League player. Free, fast, no login — perfect for quizzes, watch parties, and football debates." />
-  <link rel="canonical" href="https://footballspinner.com/" />
-  <meta name="robots" content="index,follow" />
-  <meta name="theme-color" content="#0b1530" />
+  <meta name="description" content="Spin a random football team from 25 European leagues, or a random Premier League player. Free, fast, no login — perfect for quizzes, watch parties, and football debates."/>
+  <link rel="canonical" href="https://footballspinner.com/"/>
+  <meta name="robots" content="index,follow"/>
+  <meta name="theme-color" content="#0b1530"/>
 
   <!-- Open Graph -->
-  <meta property="og:title" content="Football Spinner — 25 European Leagues · Premier League Players" />
-  <meta property="og:description" content="Spin teams from 25 European leagues or random Premier League players. Free, no login." />
-  <meta property="og:url" content="https://footballspinner.com/" />
-  <meta property="og:site_name" content="Football Spinner" />
-  <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://footballspinner.com/app-og.png" />
-  <meta property="og:image:alt" content="Football Spinner app preview" />
-  <meta property="og:locale" content="en_GB" />
+  <meta property="og:title" content="Football Spinner — 25 European Leagues · Premier League Players"/>
+  <meta property="og:description" content="Spin teams from 25 European leagues or random Premier League players. Free, no login."/>
+  <meta property="og:url" content="https://footballspinner.com/"/>
+  <meta property="og:site_name" content="Football Spinner"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:image" content="https://footballspinner.com/app-og.png"/>
+  <meta property="og:image:alt" content="Football Spinner app preview"/>
+  <meta property="og:locale" content="en_GB"/>
 
-  <!-- Preconnects + Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Perf: preconnect & fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"></noscript>
 
   <!-- CSS -->
-  <link rel="preload" href="style.css?v=4" as="style" />
-  <link rel="stylesheet" href="style.css?v=4" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="style.css?v=4"></noscript>
+  <link rel="preload" href="style.css?v=3" as="style"/>
+  <link rel="stylesheet" href="style.css?v=3" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="style.css?v=3"></noscript>
 
-  <!-- Icons + Manifest -->
-  <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1" />
-  <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png?v=1" />
-  <link rel="apple-touch-icon" href="app-logo.png?v=1" />
-  <link rel="manifest" href="/manifest.webmanifest" />
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png?v=1"/>
+  <link rel="apple-touch-icon" href="app-logo.png?v=1"/>
+
+  <link rel="manifest" href="/manifest.webmanifest"/>
 </head>
 
 <body>
   <header>
     <div class="brand">
-      <img src="app-logo.png?v=1" alt="Football Spinner logo" class="brand-img" decoding="async" fetchpriority="low" width="46" height="46" />
+      <img src="app-logo.png?v=1" alt="Football Spinner logo" class="brand-img" decoding="async" width="46" height="46"/>
       <div>
         <h1 id="main-title">Football Spinner</h1>
         <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
       </div>
     </div>
 
-    <!-- MODE tabs + Mega menu -->
     <div class="header-right">
-      <div class="mode-switch-wrap">
-        <div class="mode-switch" role="tablist" aria-label="View mode">
-          <button id="modeTeam" role="tab" aria-selected="true" class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
-          <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
-        </div>
-        <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
+      <!-- TEAM / PLAYER switch -->
+      <div class="mode-switch" role="tablist" aria-label="View mode">
+        <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active">TEAM</button>
+        <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn">PLAYER</button>
       </div>
 
-      <!-- Mega menu trigger -->
-      <details class="mega">
-        <summary class="mega-btn" aria-label="Open game modes">Modes ▾</summary>
-        <div class="mega-panel" role="menu" aria-label="Game modes">
-          <div class="mega-col">
-            <div class="mega-head">Guess Team</div>
-            <button class="mega-item" data-preset="team-logo">by Logo</button>
-            <button class="mega-item" data-preset="team-stadium">by Stadium</button>
-            <button class="mega-item" data-preset="team-league">by League</button>
+      <!-- MODES dropdown -->
+      <div class="modes">
+        <button id="modesBtn" class="modes-btn" aria-haspopup="true" aria-expanded="false">▸ Modes ▾</button>
+        <div id="modesMenu" class="modes-menu" role="menu" aria-labelledby="modesBtn">
+          <div class="modes-group" aria-label="Guess Team">
+            <div class="modes-label">Guess Team</div>
+            <button class="modes-item" role="menuitem" data-preset="team-logo">by Logo</button>
+            <button class="modes-item" role="menuitem" data-preset="team-stadium">by Stadium</button>
+            <button class="modes-item" role="menuitem" data-preset="team-league">by League</button>
           </div>
-          <div class="mega-col">
-            <div class="mega-head">Guess Stadium</div>
-            <button class="mega-item" data-preset="stadium-by-name">by Name</button>
-            <button class="mega-item" data-preset="stadium-by-logo">by Logo</button>
+          <div class="modes-group" aria-label="Guess Stadium">
+            <div class="modes-label">Guess Stadium</div>
+            <button class="modes-item" role="menuitem" data-preset="stadium-name">by Name</button>
+            <button class="modes-item" role="menuitem" data-preset="stadium-logo">by Logo</button>
           </div>
-          <div class="mega-col">
-            <div class="mega-head">Guess Player</div>
-            <button class="mega-item" data-preset="player-photo">by Photo</button>
-            <button class="mega-item" data-preset="player-club-flag-number">by Club · Flag · #</button>
+          <div class="modes-group" aria-label="Guess Player">
+            <div class="modes-label">Guess Player</div>
+            <button class="modes-item" role="menuitem" data-preset="player-jersey">by Jersey Number</button>
+            <button class="modes-item" role="menuitem" data-preset="player-nation">by Nationality</button>
+            <button class="modes-item" role="menuitem" data-preset="player-photo">by Photo</button>
           </div>
-          <div class="mega-col">
-            <div class="mega-head">Free Spin</div>
-            <button class="mega-item mega-accent" data-preset="free-spin">Classic wheel</button>
+          <div class="modes-group">
+            <button class="modes-item strong" role="menuitem" data-preset="free-spin">Free Spin</button>
           </div>
         </div>
-      </details>
+      </div>
     </div>
   </header>
 
   <main class="container">
-    <!-- LEFT: filters / quick actions / history -->
+    <!-- LEFT: filters / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
 
       <div class="quick-picks" role="group" aria-label="Quick selections">
-        <button id="qpAll"  class="chip-btn" type="button" title="Select all">All Leagues</button>
-        <button id="qpNone" class="chip-btn" type="button" title="Deselect all">Clear</button>
-        <button id="qpTop"  class="chip-btn" type="button" title="Top leagues">Top 5 Leagues</button>
+        <button id="qpAll"  class="chip-btn" type="button">All Leagues</button>
+        <button id="qpNone" class="chip-btn" type="button">Clear</button>
+        <button id="qpTop"  class="chip-btn" type="button">Top 5 Leagues</button>
       </div>
 
-      <!-- Chips -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
         <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
         <div id="chipsMore" class="chips" hidden></div>
       </div>
 
-      <button id="spinBtn" type="button" title="Click to spin the wheel">Spin Wheel</button>
+      <button id="spinBtn" type="button">Spin Wheel</button>
 
       <div class="history-title">History</div>
       <div class="history" id="history">
         <div class="result">
-          <img src="app-logo.png?v=1" alt="" width="38" height="38" loading="lazy" decoding="async" />
+          <img src="app-logo.png?v=1" alt="" width="38" height="38" loading="lazy"/>
           <div id="historyEmpty" class="current-name">Your journey starts with a spin - try your luck!</div>
         </div>
       </div>
-      <button id="resetHistoryBtn" type="button" style="margin-top:12px" title="Clear all previous results">Clear History</button>
+      <button id="resetHistoryBtn" type="button" style="margin-top:12px">Clear History</button>
     </section>
 
     <!-- RIGHT: wheel -->
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
+      <!-- “Pure Luck” badge (shown for Team by League preset) -->
+      <div id="luckBadge" class="luck-badge" hidden>P U R E &nbsp; L U C K</div>
+
       <div class="wheel-subheader">
-        <div class="perf-tip" id="perfTip" aria-live="polite" data-clubs-text="teams ready to spin" data-players-text="players loaded">
+        <div id="perfTip" class="perf-tip" aria-live="polite"
+             data-clubs-text="teams ready to spin"
+             data-players-text="players loaded">
           <span class="meter-text">0 teams ready to spin</span>
         </div>
 
         <div class="section-title" style="margin-top:8px">Show on Wheel</div>
         <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
-          <label class="chip" title="Display club logos or player images on the wheel">
-            <input type="checkbox" id="optA" checked aria-label="Logo / Image" />
-            <span id="lblA" class="chip-text">Logo</span>
-          </label>
-          <label class="chip" title="Show team or player names">
-            <input type="checkbox" id="optB" aria-label="Name" />
-            <span id="lblB" class="chip-text">Name</span>
-          </label>
-          <label class="chip" title="Team mode: Stadium · Player mode: Jersey">
-            <input type="checkbox" id="optC" aria-label="Stadium / Jersey" />
-            <span id="lblC" class="chip-text">Stadium</span>
-          </label>
-          <label class="chip" title="Team mode: League · Player mode: Nationality">
-            <input type="checkbox" id="optD" aria-label="League / Nationality" />
-            <span id="lblD" class="chip-text">League</span>
-          </label>
-          <label class="chip" title="Player mode: Team (club) label in modal">
-            <input type="checkbox" id="optE" aria-label="Team (Player modal)" />
-            <span id="lblE" class="chip-text">Team</span>
-          </label>
+          <label class="chip"><input type="checkbox" id="optA" checked/><span id="lblA" class="chip-text">Logo</span></label>
+          <label class="chip"><input type="checkbox" id="optB"/><span id="lblB" class="chip-text">Name</span></label>
+          <label class="chip"><input type="checkbox" id="optC"/><span id="lblC" class="chip-text">Stadium</span></label>
+          <label class="chip"><input type="checkbox" id="optD"/><span id="lblD" class="chip-text">League</span></label>
+          <label class="chip"><input type="checkbox" id="optE"/><span id="lblE" class="chip-text">Nationality</span></label>
         </div>
       </div>
 
-      <div class="wheel-wrap" id="wheelWrap">
+      <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
-        <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
+        <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
         <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
-        <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
+        <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
       </div>
     </section>
 
-    <!-- Full-width accordion -->
-    <section class="card" style="grid-column:1 / -1; margin-top:28px;">
+    <!-- DETAILS (accordion) -->
+    <section class="card details-card">
       <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
         <div class="section-title" id="details-title">Details</div>
 
-        <div class="ac-panel" id="panel-about" role="region" aria-labelledby="panel-about-summary">
-          <div class="ac-summary" id="panel-about-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-about-body">
+        <div class="ac-panel" id="panel-about">
+          <div class="ac-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-about-body">
             <div class="ac-title">About Football Spinner</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-about-body" aria-labelledby="panel-about-summary">
+          <div class="ac-body" id="panel-about-body">
             <h2>About Football Spinner</h2>
             <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams from <strong>25 European leagues</strong> or get a <strong>random Premier League player</strong> for your next quiz.</p>
           </div>
         </div>
 
-        <div class="ac-panel" id="panel-how" role="region" aria-labelledby="panel-how-summary">
-          <div class="ac-summary" id="panel-how-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-how-body">
+        <div class="ac-panel" id="panel-how">
+          <div class="ac-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-how-body">
             <div class="ac-title">How it works</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-how-body" aria-labelledby="panel-how-summary">
+          <div class="ac-body" id="panel-how-body">
             <h2>How it works</h2>
-            <p>Choose your filters: in <strong>TEAM</strong> mode pick leagues (25 European leagues supported); in <strong>PLAYER</strong> mode pick <strong>Premier League teams</strong>. Set what to show on the wheel and hit <em>Spin</em>. The wheel lands on a random result.</p>
+            <p>Choose your filters: in <strong>TEAM</strong> mode pick leagues; in <strong>PLAYER</strong> mode pick Premier League teams. Set what to show on the wheel and hit <em>Spin</em>.</p>
           </div>
         </div>
 
-        <div class="ac-panel" id="panel-why" role="region" aria-labelledby="panel-why-summary">
-          <div class="ac-summary" id="panel-why-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-why-body">
+        <div class="ac-panel" id="panel-why">
+          <div class="ac-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-why-body">
             <div class="ac-title">Why use it?</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-why-body" aria-labelledby="panel-why-summary">
+          <div class="ac-body" id="panel-why-body">
             <h2>Why use it?</h2>
-            <p>It makes football discovery fun again — ideal for trivia nights, deciding who to support, or learning about new clubs and players. Free, fast, and no login required.</p>
+            <p>Perfect for trivia nights, deciding who to support, or learning about new clubs and players. Free, fast, and no login required.</p>
           </div>
         </div>
       </div>
@@ -212,41 +198,20 @@
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
       <div id="mHead">Result</div>
       <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
-
       <div class="m-body">
-        <img id="mLogo" alt="" loading="lazy" decoding="async" width="256" height="256" />
-
-        <div class="m-row" id="rowStadium">
-          <div class="label">Stadium</div>
-          <span id="mStadium" class="value-pill"></span>
-        </div>
-
-        <div class="m-row" id="rowClub" style="display:none">
-          <div class="label">Team</div>
-          <span id="mClub" class="value-pill"></span>
-        </div>
-
-        <div class="m-row" id="rowJersey" style="display:none">
-          <div class="label">Jersey</div>
-          <span id="mJersey" class="value-pill"></span>
-        </div>
-
-        <div class="m-row" id="rowNat" style="display:none">
-          <div class="label">Nationality</div>
-          <span id="mNat" class="value-pill"></span>
-        </div>
+        <img id="mLogo" alt="" loading="lazy" decoding="async" width="256" height="256"/>
+        <div class="m-row" id="rowStadium"><div class="label">Stadium</div><span id="mStadium" class="value-pill"></span></div>
+        <div class="m-row" id="rowClub" style="display:none"><div class="label">Team</div><span id="mClub" class="value-pill"></span></div>
+        <div class="m-row" id="rowJersey" style="display:none"><div class="label">Jersey</div><span id="mJersey" class="value-pill"></span></div>
+        <div class="m-row" id="rowNat" style="display:none"><div class="label">Nationality</div><span id="mNat" class="value-pill"></span></div>
       </div>
-
-      <div class="m-actions">
-        <button id="mClose" class="chip-btn" type="button" title="Close this window">Close Window</button>
-      </div>
+      <div class="m-actions"><button id="mClose" class="chip-btn" type="button">Close Window</button></div>
     </div>
   </div>
 
-  <!-- App -->
-  <script src="app.js?v=4" defer></script>
+  <script src="app.js?v=3" defer></script>
 
-  <!-- GA (async last) -->
+  <!-- GA (async) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
