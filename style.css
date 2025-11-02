@@ -446,3 +446,59 @@ button:focus-visible,.chip-btn:focus-visible,
 
 /* Tighten top margin (just below sticky header) */
 .container { margin-top: 12px !important; }
+/* ===== MODE TABS – clearer selected outline ===== */
+.mode-switch { display:flex; gap:10px; padding:6px; border:1px solid rgba(120,160,255,.18); border-radius:14px; background:linear-gradient(180deg, rgba(18,28,48,.6), rgba(12,18,34,.56)); }
+.mode-btn{
+  min-width:92px; padding:10px 16px; border-radius:12px; border:1px solid rgba(120,160,255,.18);
+  background:linear-gradient(180deg, rgba(18,28,48,.82), rgba(10,16,26,.82));
+  color:#cfe2ff; font-weight:900; letter-spacing:.14em;
+}
+.mode-btn-active{
+  color:#fff; border-color:#69d3ff;
+  box-shadow:0 0 0 2px rgba(105,211,255,.18), 0 10px 28px rgba(34,211,238,.14) inset;
+}
+
+/* ===== MODES DROPDOWN – compact, tidy, right-aligned ===== */
+.dd { position:relative; }
+.dd-btn{
+  padding:10px 16px; border-radius:12px; border:1px solid rgba(120,160,255,.18);
+  background:linear-gradient(180deg, rgba(18,28,48,.82), rgba(10,16,26,.82));
+  color:#e8f1ff; font-weight:900; letter-spacing:.12em;
+}
+.dd-menu{
+  position:absolute; right:0; top:calc(100% + 8px); width:290px; max-height:70vh; overflow:auto;
+  border-radius:14px; border:1px solid rgba(120,160,255,.22);
+  background:linear-gradient(180deg, rgba(16,24,42,.96), rgba(13,20,38,.92));
+  box-shadow:0 24px 60px rgba(2,8,20,.55);
+  padding:10px; display:none; z-index:60;
+}
+.dd.open .dd-menu{ display:block; }
+.dd-group{ padding:8px 8px 10px; }
+.dd-head{ color:#9fb5df; font-size:11px; letter-spacing:.28em; text-transform:uppercase; margin:2px 6px 8px; }
+.dd-action{
+  width:100%; text-align:left; display:block; padding:10px 12px; margin:6px 0;
+  border-radius:10px; border:1px solid rgba(120,160,255,.14);
+  background:linear-gradient(180deg, rgba(18,28,48,.86), rgba(10,14,26,.84));
+  color:#eaf2ff; font-weight:800;
+}
+.dd-action:hover{ border-color:#22d3ee; transform:translateY(-1px); }
+
+/* ===== PRESET BANNER ===== */
+.preset-banner{
+  margin:8px 0 0; padding:8px 12px; border-radius:10px;
+  border:1px dashed rgba(120,160,255,.35);
+  background:linear-gradient(180deg, rgba(18,28,48,.7), rgba(10,16,26,.66));
+  color:#d9ecff; font-weight:800; letter-spacing:.02em;
+}
+
+/* Keep DETAILS card styling intact (safety net) */
+section.card:has(#infoAccordion){
+  background:var(--card-grad); border:1px solid var(--line); box-shadow:var(--shadow-1);
+}
+
+/* Mobile order unchanged from your last good state */
+@media (max-width: 979.98px){
+  section.card[aria-labelledby="wheel-title"]{ order:1; }
+  .card.sidebar{ order:2; }
+  .container > section.card:has(#infoAccordion){ order:3; }
+}
