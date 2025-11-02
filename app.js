@@ -1,10 +1,6 @@
-/* Football Spinner — TEAM / PLAYER unified
-   - TEAM defaults: Premier League selected; Show on Wheel = Logo only.
-   - PLAYER defaults: only Arsenal selected; Show on Wheel = Image only; “All Premier League teams” quick-pick.
-   - PLAYER: exclude players without a usable image (incl. placeholder.png) from the wheel.
-   - PL Top-6 sorted first alphabetically.
-   - History stored per item with type {type:'team'|'player', item:{…}} and rendered per active mode.
-   - Modal: clean layout + modern “Show …” reveal buttons (centered over blurred element).
+/* Football Spinner — v4
+   - New header mega-menu presets
+   - TEAM/PLAYER unified, history per mode, reveal-on-modal controls
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -157,7 +153,6 @@ function activeCodes(){
   chipsWrap.querySelectorAll('input[type="checkbox"]:checked').forEach(i => arr.push(i.value));
   return arr;
 }
-
 function getCurrentData(){
   const active = new Set(activeCodes());
   if (active.size === 0) return [];
@@ -249,7 +244,7 @@ function applyModeShowControls(){
     lblB.textContent='Name';   optB.checked = false;
     if (lblC){ lblC.textContent='Stadium'; if (optC) optC.checked=false; }
     if (lblD){ lblD.textContent='League';  if (optD) optD.checked=false; }
-    if (lblE && optE){ lblE.textContent=''; optE.checked=false; }
+    if (lblE && optE){ lblE.textContent='Team';  optE.checked=false; }
   }
 }
 
@@ -271,8 +266,11 @@ function positionSpinFab(){
   const cr = wheel.getBoundingClientRect();
   const cx = (cr.left + cr.width/2) - wr.left;
   const cy = (cr.top  + cr.height/2) - wr.top;
-  spinFab.style.left = `${cx}px`;
-  spinFab.style.top  = `${cy}px`;
+  const spinFab = document.getElementById('spinFab');
+  if (spinFab){
+    spinFab.style.left = `${cx}px`;
+    spinFab.style.top  = `${cy}px`;
+  }
 }
 
 /* ---------- Wheel ---------- */
@@ -445,7 +443,9 @@ function spin(){
 
   spinning = true;
   document.body.classList.add('ui-locked');
-  spinBtn.disabled = true; spinFab.disabled = true;
+  spinBtn.disabled = true;
+  const spinFab = document.getElementById('spinFab');
+  if (spinFab) spinFab.disabled = true;
 
   const N = data.length;
   const slice = TAU/N;
@@ -469,7 +469,8 @@ function spin(){
 
       spinning=false;
       document.body.classList.remove('ui-locked');
-      spinBtn.disabled=false; spinFab.disabled=false;
+      spinBtn.disabled=false;
+      if (spinFab) spinFab.disabled=false;
       selectedIdx = idx;
       drawWheel();
       showResult(idx);
@@ -493,7 +494,7 @@ function showResult(idx){
   } else {
     track('spin_result', {
       result_type: 'player',
-      player_name: item.team_name || '(unknown)', // player display name is kept in team_name field
+      player_name: item.team_name || '(unknown)',
       club_id: String(item.club_id || ''),
       has_image: !!(item.image_url && !/placeholder\.png$/i.test(item.image_url)),
       nationality: item.nationality || '',
@@ -538,25 +539,12 @@ function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
-    .reveal-wrap{
-      position:relative;
-      display:inline-block;
-      vertical-align:middle;
-    }
-    .reveal-overlay{
-      position:absolute; inset:0; border-radius:inherit;
-      background:rgba(10,16,32,.28);
-      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-      pointer-events:none;
-    }
-    .reveal-btn{
-      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-      padding:8px 14px; border-radius:999px;
-      border:1px solid rgba(90,161,255,.6);
-      background:#152036; color:#fff; font-weight:800; letter-spacing:.02em;
-      white-space:nowrap; z-index:3; box-shadow:0 6px 18px rgba(34,211,238,.18);
-      text-transform:none;
-    }
+    .reveal-wrap{ position:relative; display:inline-block; vertical-align:middle; }
+    .reveal-overlay{ position:absolute; inset:0; border-radius:inherit;
+      background:rgba(10,16,32,.28); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); pointer-events:none; }
+    .reveal-btn{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      padding:8px 14px; border-radius:999px; border:1px solid rgba(90,161,255,.6);
+      background:#152036; color:#fff; font-weight:800; letter-spacing:.02em; white-space:nowrap; z-index:3; box-shadow:0 6px 18px rgba(34,211,238,.18); }
     .reveal-btn:hover{ transform:translate(-50%,-50%) scale(1.03); }
   `;
   document.head.appendChild(s);
@@ -647,7 +635,6 @@ function openModal(item){
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
-
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
 
 /* ---------- Mode switch ---------- */
@@ -669,7 +656,93 @@ function setMode(next){
   applyModeShowControls();
   renderChips();
 
+  // Update right card title + perf label line
+  const perf = document.getElementById('perfTip');
+  const meterText = perf?.querySelector('.meter-text');
+  const titleRight = document.getElementById('wheel-title');
+  if (MODE === 'player'){
+    titleRight.textContent = 'Player Wheel';
+    if (meterText){ const n = (meterText.textContent.match(/\d+/)||['0'])[0]; meterText.textContent = `${n} ${perf.dataset.playersText}`; }
+  } else {
+    titleRight.textContent = 'Club Wheel';
+    if (meterText){ const n = (meterText.textContent.match(/\d+/)||['0'])[0]; meterText.textContent = `${n} ${perf.dataset.clubsText}`; }
+  }
+
   track('mode_set', { mode_after: MODE });
+}
+
+/* ---------- Mega menu presets ---------- */
+function scrollToWheel(){
+  const wrap = document.getElementById('wheelWrap');
+  if (wrap) wrap.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function applyPreset(key){
+  // Default: reset all show options
+  optA.checked = false; optB.checked = false; optC.checked = false; optD.checked = false; if (optE) optE.checked = false;
+
+  switch(key){
+    /* Guess Team */
+    case 'team-logo':
+      setMode('team');
+      optA.checked = true;                 // show logo
+      optB.checked = false; optC.checked=false; optD.checked=false;
+      break;
+    case 'team-stadium':
+      setMode('team');
+      optC.checked = true;                 // show stadium pill (others hidden)
+      break;
+    case 'team-league':
+      setMode('team');
+      optD.checked = true;                 // show league pill
+      break;
+
+    /* Guess Stadium (team mode, stadium hidden until reveal) */
+    case 'stadium-by-name':
+      setMode('team');
+      optB.checked = true;                 // show team name
+      optC.checked = false;                // stadium blurred until reveal
+      break;
+    case 'stadium-by-logo':
+      setMode('team');
+      optA.checked = true;                 // show logo
+      optC.checked = false;                // stadium blurred until reveal
+      break;
+
+    /* Guess Player */
+    case 'player-photo':
+      setMode('player');
+      optA.checked = true;                 // show player image
+      break;
+    case 'player-club-flag-number':
+      setMode('player');
+      optC.checked = true;                 // jersey #
+      optD.checked = true;                 // nationality
+      if (optE){ optE.checked = true; }    // club
+      break;
+
+    /* Free Spin */
+    case 'free-spin':
+      // keep current mode + selections; just spin
+      drawWheel(); scrollToWheel(); spin(); return;
+  }
+
+  // Refresh UI & wheel
+  updatePerfBanner();
+  drawWheel();
+  scrollToWheel();
+}
+
+function wireMegaMenu(){
+  document.querySelectorAll('.mega-item[data-preset]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      const key = e.currentTarget.getAttribute('data-preset');
+      applyPreset(key);
+      // close <details>
+      const dd = e.currentTarget.closest('details.mega');
+      if (dd) dd.open = false;
+      track('preset_select', { preset: key });
+    });
+  });
 }
 
 /* ---------- Loaders ---------- */
@@ -689,7 +762,6 @@ async function loadTeams(){
   }
   TOTAL_TEAMS = TEAMS.length;
 }
-
 async function loadPlayers(){
   const res = await fetch('/data/players.json', {cache:'no-store'});
   if (!res.ok) throw new Error('players.json not found');
@@ -781,7 +853,8 @@ function wire(){
   optE?.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: 'team_label', enabled: !!optE.checked }); });
 
   spinBtn && (spinBtn.onclick = spin);
-  spinFab && (spinFab.onclick = spin);
+  const spinFabBtn = document.getElementById('spinFab');
+  spinFabBtn && (spinFabBtn.onclick = spin);
 
   resetHistoryBtn && (resetHistoryBtn.onclick = ()=>{
     history = [];
@@ -799,6 +872,8 @@ function wire(){
     clearTimeout(t);
     t=setTimeout(()=>{ sizeCanvas(); positionSpinFab(); drawWheel(); },120);
   }, {passive:true});
+
+  wireMegaMenu();
 }
 
 /* ---------- Boot ---------- */
@@ -810,10 +885,12 @@ function wire(){
     console.error('Failed to load data:', e);
   }
 
-  setMode(MODE);      // apply initial mode + UI
-  renderHistory();    // per-mode history
+  setMode(MODE);
+  renderChips();
+  renderHistory();
 
   sizeCanvas();
   positionSpinFab();
+  drawWheel();
   wire();
 })();
