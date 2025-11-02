@@ -1,12 +1,4 @@
-/* ------------------------------------------------------------------
-   Football Spinner — TEAM / PLAYER unified (with Header Presets)
-   - Presets in header set the active mode and which “Show on wheel”
-     chips are ON (all others OFF), plus an optional banner.
-   - TEAM defaults: Top-5 leagues chips visible; “Logo” only on wheel.
-   - PLAYER defaults: Arsenal only selected; “Image” only on wheel.
-   - PLAYER wheel excludes players without a usable image.
-   - History stored per item with type {type:'team'|'player', item:{…}}.
-   ------------------------------------------------------------------ */
+/* Football Spinner — TEAM / PLAYER unified (v7, presets) */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
 
@@ -22,9 +14,7 @@ let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
 
-/* ---------- History (migrate) ---------- */
-let historyRaw = JSON.parse(localStorage.getItem('clubHistory')) || [];
-let history = historyRaw.map(h =>
+let history = (JSON.parse(localStorage.getItem('clubHistory')) || []).map(h =>
   (h && typeof h === 'object' && 'type' in h && 'item' in h)
     ? h
     : { type: (h && (h.image_url || h.club_id)) ? 'player' : 'team', item: h }
@@ -34,10 +24,6 @@ const saveHistory = () => localStorage.setItem('clubHistory', JSON.stringify(his
 /* ---------- DOM ---------- */
 const modeTeamBtn   = document.getElementById('modeTeam');
 const modePlayerBtn = document.getElementById('modePlayer');
-
-const modeMenuBtn   = document.getElementById('modeMenuBtn');
-const modeMenu      = document.getElementById('modeMenu');
-const presetBanner  = document.getElementById('presetBanner');
 
 const chipsWrap = document.getElementById('chips');
 const chipsTop  = document.getElementById('chipsTop');
@@ -50,9 +36,9 @@ const qpTopBtn  = document.getElementById('qpTop');
 
 const optA = document.getElementById('optA'); // Logo/Image
 const optB = document.getElementById('optB'); // Name
-const optC = document.getElementById('optC'); // Stadium / Jersey
-const optD = document.getElementById('optD'); // League  / Nationality
-const optE = document.getElementById('optE'); // Team (Player modal)
+const optC = document.getElementById('optC'); // Stadium (team) / Jersey (player)
+const optD = document.getElementById('optD'); // League (team) / Nationality (player)
+const optE = document.getElementById('optE'); // Team (player – modal extra)
 const lblA = document.getElementById('lblA');
 const lblB = document.getElementById('lblB');
 const lblC = document.getElementById('lblC');
@@ -64,6 +50,8 @@ const spinFab = document.getElementById('spinFab');
 const perfTip = document.getElementById('perfTip');
 const wheel   = document.getElementById('wheel');
 const fx      = document.getElementById('fx');
+
+const presetBanner = document.getElementById('presetBanner');
 
 const historyEl = document.getElementById('history');
 const resetHistoryBtn = document.getElementById('resetHistoryBtn');
@@ -84,7 +72,6 @@ const mJersey    = document.getElementById('mJersey');
 const rowNat     = document.getElementById('rowNat');
 const mNat       = document.getElementById('mNat');
 
-/* Reveal state (global) */
 let modalReveal = { a:false, b:false, c:false, d:false, e:false };
 
 /* ---------- Utils ---------- */
@@ -144,9 +131,8 @@ const LEAGUE_LABELS = {
 const leagueLabel = c => LEAGUE_LABELS[c] || c;
 
 const TOP5 = ['EPL','SA','BUN','L1','LLA'];
-const PL_TOP6 = ['19','18','8','9','14','6']; // Arsenal, Chelsea, Liverpool, Man City, Man United, Spurs
+const PL_TOP6 = ['19','18','8','9','14','6'];
 
-/* ---------- Fallback team names ---------- */
 const FALLBACK_TEAMS = {
   '6':'Tottenham Hotspur','8':'Liverpool','9':'Manchester City','10':'Southampton',
   '11':'Fulham','13':'Everton','14':'Manchester United','15':'Aston Villa','18':'Chelsea',
@@ -188,7 +174,7 @@ function updatePerfBanner(){
   spinBtn.disabled = disabled; spinFab.disabled = disabled;
 }
 
-/* ---------- Chips helpers & render ---------- */
+/* ---------- Chips render ---------- */
 function makeChip(value, text, checked){
   const label = document.createElement('label');
   label.className='chip';
@@ -256,7 +242,6 @@ function applyModeShowControls(){
     if (lblD){ lblD.textContent='League';  if (optD) optD.checked=false; }
     if (lblE && optE){ lblE.textContent=''; optE.checked=false; }
   }
-  hidePresetBanner();
 }
 
 /* ---------- Canvas sizing ---------- */
@@ -339,7 +324,6 @@ function drawWheel(){
   const r = Math.min(W,H)*0.48;
   const slice = TAU/N;
 
-  // wedges
   for (let i=0;i<N;i++){
     ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*slice,(i+1)*slice); ctx.closePath();
     ctx.fillStyle = data[i].primary_color || '#243e6b';
@@ -362,7 +346,6 @@ function drawWheel(){
     return;
   }
 
-  // contents
   for (let i=0;i<N;i++){
     const t = data[i];
     const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
@@ -371,7 +354,6 @@ function drawWheel(){
     const canLogoOrImg = (MODE==='team')
       ? (optA.checked && !!t.logo_url)
       : (optA.checked && !!t.image_url);
-
     const canName = optB.checked && !!t.team_name;
 
     ctx.save();
@@ -415,11 +397,6 @@ function drawWheel(){
         const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
         const s = Math.min(box/iw, box/ih);
         ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
-      } else {
-        if (MODE==='team'){
-          ctx.fillStyle='rgba(255,255,255,.14)';
-          const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
-        }
       }
       ctx.restore(); ctx.restore();
     }
@@ -430,24 +407,14 @@ function drawWheel(){
   ctx.restore();
 }
 
-/* ---------- Analytics ---------- */
-function track(eventName, params = {}) {
-  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
-    const base = { mode: MODE, screen: 'wheel' };
-    window.gtag('event', eventName, { ...base, ...params });
-    if (localStorage.debugFS === '1') {
-      console.log('[GA4]', eventName, { ...base, ...params });
-    }
-  }
-}
+/* ---------- Analytics (no-op if GA not present) ---------- */
+function track(){}
 
 /* ---------- Spin ---------- */
 function spin(){
   if (spinning) return;
   const data = getCurrentData();
   if (!data.length) return;
-
-  track('spin_click', { items_available: data.length });
 
   spinning = true;
   document.body.classList.add('ui-locked');
@@ -489,24 +456,6 @@ function showResult(idx){
   const item = data[idx];
   if (!item) return;
 
-  if (MODE === 'team') {
-    track('spin_result', {
-      result_type: 'team',
-      team_name: item.team_name || '(unknown)',
-      league_code: item.league_code || '',
-      stadium_present: !!item.stadium
-    });
-  } else {
-    track('spin_result', {
-      result_type: 'player',
-      player_name: item.team_name || '(unknown)', // display name stored in team_name field
-      club_id: String(item.club_id || ''),
-      has_image: !!(item.image_url && !/placeholder\.png$/i.test(item.image_url)),
-      nationality: item.nationality || '',
-      jersey: item.jersey || ''
-    });
-  }
-
   history.unshift({ type: MODE, item });
   if (history.length > 50) history.length = 50;
   saveHistory();
@@ -539,97 +488,18 @@ function renderHistory(){
   });
 }
 
-/* ---------- Reveal helpers (Show buttons) ---------- */
+/* ---------- Reveal helpers (modal) ---------- */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
   const s=document.createElement('style'); s.id='reveal-style';
   s.textContent = `
-    .reveal-wrap{ position:relative; display:inline-block; vertical-align:middle; }
+    .reveal-wrap{ position:relative; display:inline-block; }
     .reveal-overlay{ position:absolute; inset:0; border-radius:inherit; background:rgba(10,16,32,.28); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); pointer-events:none; }
-    .reveal-btn{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); padding:8px 14px; border-radius:999px; border:1px solid rgba(90,161,255,.6); background:#152036; color:#fff; font-weight:800; letter-spacing:.02em; white-space:nowrap; z-index:3; box-shadow:0 6px 18px rgba(34,211,238,.18); text-transform:none; }
+    .reveal-btn{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); padding:8px 14px; border-radius:999px; border:1px solid rgba(90,161,255,.6); background:#152036; color:#fff; font-weight:800; white-space:nowrap; z-index:3; box-shadow:0 6px 18px rgba(34,211,238,.18); }
     .reveal-btn:hover{ transform:translate(-50%,-50%) scale(1.03); }
   `;
   document.head.appendChild(s);
 }
-
-/* ---------- Preset helpers ---------- */
-function setShowOptions({logo=false,name=false,stadium=false,league=false,team=false,jersey=false,nationality=false}) {
-  // Team mode uses: logo,name,stadium,league
-  // Player mode uses: image(logo switch), name, jersey, nationality, team(label in modal)
-  optA.checked = !!logo;          // Logo / Image
-  optB.checked = !!name;          // Name
-  if (optC) optC.checked = !!(MODE === 'team' ? stadium : jersey);
-  if (optD) optD.checked = !!(MODE === 'team' ? league  : nationality);
-  if (optE) optE.checked = !!(MODE === 'player' ? team : false);
-  drawWheel();
-}
-
-function banner(msg){
-  const el = document.getElementById('presetBanner');
-  if (!el) return;
-  if (!msg){ el.hidden = true; el.textContent = ''; return; }
-  el.textContent = msg; el.hidden = false;
-}
-
-/* Apply presets from the Modes dropdown */
-function applyPreset(key){
-  banner(null);
-
-  switch (key){
-    /* Guess Team */
-    case 'team_logo':     MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({logo:true}); break;
-    case 'team_stadium':  MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({stadium:true}); break;
-    case 'team_league':   MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({league:true}); banner('Pure luck mode: guessing by LEAGUE only'); break;
-
-    /* Guess Stadium */
-    case 'stadium_name':  MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({name:true}); break;
-    case 'stadium_logo':  MODE='team';  localStorage.setItem('fsMode','team');  applyModeShowControls(); setShowOptions({logo:true}); break;
-
-    /* Guess Player */
-    case 'player_club':   MODE='player';localStorage.setItem('fsMode','player');applyModeShowControls(); setShowOptions({team:true}); break;
-    case 'player_jersey': MODE='player';localStorage.setItem('fsMode','player');applyModeShowControls(); setShowOptions({jersey:true}); break;
-    case 'player_nat':    MODE='player';localStorage.setItem('fsMode','player');applyModeShowControls(); setShowOptions({nationality:true}); break;
-
-    /* Free spin */
-    case 'classic':       banner('Classic: your current wheel settings'); break;
-  }
-
-  // sync tab visuals & labels already on page
-  document.getElementById('modeTeam')?.classList.toggle('mode-btn-active', MODE==='team');
-  document.getElementById('modePlayer')?.classList.toggle('mode-btn-active', MODE==='player');
-  setMode(MODE); // refresh chips, texts, GA event
-}
-
-/* Wire the dropdown buttons (IDs from index.html) */
-(function wireModes(){
-  const map = {
-    'modeTeamLogo'   : 'team_logo',
-    'modeTeamStadium': 'team_stadium',
-    'modeTeamLeague' : 'team_league',
-    'modeStName'     : 'stadium_name',
-    'modeStLogo'     : 'stadium_logo',
-    'modePlClub'     : 'player_club',
-    'modePlJersey'   : 'player_jersey',
-    'modePlNat'      : 'player_nat',
-    'modeClassic'    : 'classic'
-  };
-  Object.entries(map).forEach(([id,key])=>{
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('click', ()=> applyPreset(key));
-  });
-
-  // open/close dropdown
-  const dd = document.querySelector('.dd');
-  const btn = document.getElementById('modesBtn');
-  if (dd && btn){
-    btn.addEventListener('click', ()=>{
-      dd.classList.toggle('open');
-    });
-    document.addEventListener('click', (e)=>{
-      if (!dd.contains(e.target)) dd.classList.remove('open');
-    });
-  }
-})();
 function wrap(el){
   if (!el) return null;
   if (el.parentElement && el.parentElement.classList.contains('reveal-wrap')) return el.parentElement;
@@ -660,7 +530,7 @@ function addReveal(key, el, enabled, label){
 
   blurEl(el);
   const b=document.createElement('button'); b.type='button'; b.className='reveal-btn'; b.textContent=`Show ${label}`;
-  b.onclick=()=>{ modalReveal[key]=true; track('reveal_click', { field: label }); unblurEl(el); };
+  b.onclick=()=>{ modalReveal[key]=true; unblurEl(el); };
   w.appendChild(b);
 }
 
@@ -716,85 +586,7 @@ function openModal(item){
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
-
 function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
-
-/* ---------- Mode visuals from JS (outline on selected tab) ---------- */
-function setTabSelection(mode){
-  const teamActive = mode !== 'player';
-  modeTeamBtn.setAttribute('aria-selected', String(teamActive));
-  modePlayerBtn.setAttribute('aria-selected', String(!teamActive));
-  modeTeamBtn.classList.toggle('mode-btn-active', teamActive);
-  modePlayerBtn.classList.toggle('mode-btn-active', !teamActive);
-}
-
-/* ---------- Preset helpers ---------- */
-function showPresetBanner(text){
-  if (!presetBanner) return;
-  if (!text) { hidePresetBanner(); return; }
-  presetBanner.textContent = text;
-  presetBanner.hidden = false;
-  presetBanner.classList.add('show');
-}
-function hidePresetBanner(){
-  if (!presetBanner) return;
-  presetBanner.hidden = true;
-  presetBanner.classList.remove('show');
-}
-
-/** Apply one of the requested header presets. */
-function applyPreset(preset){
-  // Reset banner by default; individual presets may set it.
-  hidePresetBanner();
-
-  // Ensure we target the right mode for the preset:
-  const teamPresets = new Set(['team-logo','team-stadium','team-league','stadium-name','stadium-logo','free-spin']);
-  const playerPresets = new Set(['player-club','player-jersey','player-nationality']);
-
-  if (teamPresets.has(preset) && MODE!=='team') setMode('team');
-  if (playerPresets.has(preset) && MODE!=='player') setMode('player');
-
-  // turn all OFF first
-  [optA,optB,optC,optD,optE].forEach(o => o && (o.checked = false));
-
-  switch(preset){
-    /* Guess Team */
-    case 'team-logo':        // only Logo
-      optA.checked = true; break;
-    case 'team-stadium':     // only Stadium
-      optC.checked = true; break;
-    case 'team-league':      // only League (+ banner)
-      optD.checked = true; showPresetBanner('Pure luck'); break;
-
-    /* Guess Stadium (team mode) */
-    case 'stadium-name':     // only Name
-      optB.checked = true; break;
-    case 'stadium-logo':     // only Logo
-      optA.checked = true; break;
-
-    /* Guess Player */
-    case 'player-club':      // only Club (Team label lives on optE)
-      optE.checked = true; break;
-    case 'player-jersey':    // only Jersey
-      optC.checked = true; break;
-    case 'player-nationality': // only Nationality
-      optD.checked = true; break;
-
-    /* Free spin */
-    case 'free-spin':
-      optA.checked = true; break;
-
-    default:
-      // fallback to mode defaults
-      applyModeShowControls();
-  }
-
-  // Redraw with new visibility configuration
-  selectedIdx = -1;
-  drawWheel();
-
-  track('preset_apply', { preset, mode_after: MODE });
-}
 
 /* ---------- Mode switch ---------- */
 function setMode(next){
@@ -812,14 +604,43 @@ function setMode(next){
     if (qpTopBtn){ qpTopBtn.textContent = 'Top 5 Leagues'; qpTopBtn.title = 'Select only the top 5 leagues'; }
   }
 
-  // Update show-on-wheel labels & defaults for the mode
-  applyModeShowControls();
-  // Visual outline on active tab
-  setTabSelection(MODE);
-  // Rebuild chips for the mode
-  renderChips();
+  document.getElementById('modeTeam')?.classList.toggle('mode-btn-active', MODE==='team');
+  document.getElementById('modePlayer')?.classList.toggle('mode-btn-active', MODE==='player');
 
-  track('mode_set', { mode_after: MODE });
+  applyModeShowControls();
+  renderChips();
+}
+
+/* ---------- Presets ---------- */
+function setShowOptions({logo=false,name=false,stadium=false,league=false,team=false,jersey=false,nationality=false}) {
+  optA.checked = !!logo;
+  optB.checked = !!name;
+  if (optC) optC.checked = !!(MODE === 'team' ? stadium : jersey);
+  if (optD) optD.checked = !!(MODE === 'team' ? league  : nationality);
+  if (optE) optE.checked = !!(MODE === 'player' ? team : false);
+  drawWheel();
+}
+function banner(msg){
+  if (!presetBanner) return;
+  if (!msg){ presetBanner.hidden = true; presetBanner.textContent = ''; return; }
+  presetBanner.textContent = msg; presetBanner.hidden = false;
+}
+function applyPreset(key){
+  banner(null);
+  switch (key){
+    case 'team_logo':     setMode('team');   setShowOptions({logo:true}); break;
+    case 'team_stadium':  setMode('team');   setShowOptions({stadium:true}); break;
+    case 'team_league':   setMode('team');   setShowOptions({league:true}); banner('Pure luck mode: guessing by LEAGUE only'); break;
+
+    case 'stadium_name':  setMode('team');   setShowOptions({name:true}); break;
+    case 'stadium_logo':  setMode('team');   setShowOptions({logo:true}); break;
+
+    case 'player_club':   setMode('player'); setShowOptions({team:true}); break;
+    case 'player_jersey': setMode('player'); setShowOptions({jersey:true}); break;
+    case 'player_nat':    setMode('player'); setShowOptions({nationality:true}); break;
+
+    case 'classic':       banner('Classic: your current wheel settings'); break;
+  }
 }
 
 /* ---------- Loaders ---------- */
@@ -879,26 +700,31 @@ async function loadPlayers(){
 
 /* ---------- Events ---------- */
 function wire(){
-  /* Mode tab buttons (functional switch) */
   modeTeamBtn?.addEventListener('click', ()=> setMode('team'));
   modePlayerBtn?.addEventListener('click', ()=> setMode('player'));
 
-  /* Header presets */
-  if (modeMenu){
-    modeMenu.querySelectorAll('.menu-item[data-preset]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const preset = btn.getAttribute('data-preset');
-        const forceMode = btn.getAttribute('data-mode');
-        if (forceMode) setMode(forceMode); // ensure correct mode
-        applyPreset(preset);
-        // Close dropdown if open
-        if (!modeMenu.hidden){
-          modeMenu.hidden = true;
-          modeMenuBtn && modeMenuBtn.setAttribute('aria-expanded','false');
-        }
-      });
+  // Dropdown
+  const dd = document.querySelector('.dd');
+  const btn = document.getElementById('modesBtn');
+  const ids = {
+    'modeTeamLogo':'team_logo','modeTeamStadium':'team_stadium','modeTeamLeague':'team_league',
+    'modeStName':'stadium_name','modeStLogo':'stadium_logo',
+    'modePlClub':'player_club','modePlJersey':'player_jersey','modePlNat':'player_nat',
+    'modeClassic':'classic'
+  };
+  if (btn && dd){
+    btn.addEventListener('click', ()=>{
+      dd.classList.toggle('open');
+      btn.setAttribute('aria-expanded', dd.classList.contains('open') ? 'true':'false');
+    });
+    document.addEventListener('click', (e)=>{
+      if (!dd.contains(e.target)) { dd.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
     });
   }
+  Object.entries(ids).forEach(([id,key])=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', ()=> { applyPreset(key); dd?.classList.remove('open'); btn?.setAttribute('aria-expanded','false'); });
+  });
 
   chipsWrap.addEventListener('change', ()=>{
     if (spinning) return;
@@ -916,37 +742,32 @@ function wire(){
     toggleMore.setAttribute('aria-expanded', String(!hidden));
   });
 
-  // Quick picks
   qpAll && (qpAll.onclick = () => {
     const all = visibleCodesAll();
     chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = all.includes(i.value); });
     selectedIdx=-1; updatePerfBanner(); drawWheel();
-    track('quickpick', { pick: (MODE==='player' ? 'all_pl_teams' : 'all_leagues') });
   });
   qpNone && (qpNone.onclick = () => {
     chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = false; });
     selectedIdx=-1; updatePerfBanner(); drawWheel();
-    track('quickpick', { pick: 'clear' });
   });
   qpTopBtn && (qpTopBtn.onclick = () => {
     if (MODE==='player'){
       const allow = new Set(PL_TOP6);
       chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = allow.has(i.value); });
-      track('quickpick', { pick: 'top6_pl' });
     } else {
       const allow = new Set(TOP5);
       chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = allow.has(i.value); });
-      track('quickpick', { pick: 'top5_leagues' });
     }
     selectedIdx=-1; updatePerfBanner(); drawWheel();
   });
 
   const refresh = ()=>{ if (!spinning){ selectedIdx=-1; drawWheel(); } };
-  optA.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: (MODE==='player'?'image':'logo'), enabled: !!optA.checked }); });
-  optB.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: 'name', enabled: !!optB.checked }); });
-  optC?.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: (MODE==='player'?'jersey':'stadium'), enabled: !!optC.checked }); });
-  optD?.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: (MODE==='player'?'nationality':'league'), enabled: !!optD.checked }); });
-  optE?.addEventListener('change', ()=>{ refresh(); track('show_option_toggled', { option: 'team_label', enabled: !!optE.checked }); });
+  optA.addEventListener('change', refresh);
+  optB.addEventListener('change', refresh);
+  optC?.addEventListener('change', refresh);
+  optD?.addEventListener('change', refresh);
+  optE?.addEventListener('change', refresh);
 
   spinBtn && (spinBtn.onclick = spin);
   spinFab && (spinFab.onclick = spin);
@@ -955,12 +776,11 @@ function wire(){
     history = [];
     saveHistory();
     renderHistory();
-    track('history_cleared');
   });
 
-  mClose && (mClose.onclick = ()=> { if (!spinning){ closeModal(); track('modal_close'); } });
-  backdrop && backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop){ closeModal(); track('modal_close_backdrop'); }});
-  window.addEventListener('keydown', e=> { if (e.key==='Escape' && !spinning){ closeModal(); track('modal_close_escape'); }});
+  mClose && (mClose.onclick = ()=> { if (!spinning){ closeModal(); } });
+  backdrop && backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop){ closeModal(); }});
+  window.addEventListener('keydown', e=> { if (e.key==='Escape' && !spinning){ closeModal(); }});
 
   let t; 
   window.addEventListener('resize', ()=>{
@@ -978,18 +798,10 @@ function wire(){
     console.error('Failed to load data:', e);
   }
 
-  // Apply current mode & visuals
   setMode(MODE);
   renderHistory();
 
   sizeCanvas();
   positionSpinFab();
   wire();
-
-  // If a preset was requested via URL (?preset=team-league)
-  const usp = new URLSearchParams(location.search);
-  const qsPreset = usp.get('preset');
-  if (qsPreset) {
-    applyPreset(qsPreset);
-  }
 })();
