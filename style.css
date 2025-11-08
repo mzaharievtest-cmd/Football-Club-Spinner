@@ -193,7 +193,6 @@ section[aria-labelledby="wheel-title"].card{
   box-shadow:0 14px 32px rgba(250,204,21,.55);
 }
 
-
 /* ---------- Chevron buttons (affiliate) ---------- */
 
 /* circular button next to CLAIM BONUS */
@@ -247,6 +246,9 @@ section[aria-labelledby="wheel-title"].card{
 .affiliate-chevron-icon svg{
   width:18px;
   height:18px;
+}
+
+.affiliate-chevron-icon svg path{
   stroke:#f9fafb;
   stroke-width:2.2;
   fill:none;
