@@ -49,14 +49,13 @@
   <link rel="apple-touch-icon" href="app-logo.png?v=1" />
   <link rel="shortcut icon" href="app-logo.png?v=1" />
 
-  <!-- Manifest (optional) -->
+  <!-- Manifest -->
   <link rel="manifest" href="/manifest.webmanifest" />
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css?v=1" />
-  
+
   <!-- Google Analytics 4 -->
-  <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -77,7 +76,7 @@
   <!-- AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
 
-  <!-- Enhanced Structured Data (JSON-LD) -->
+  <!-- Structured Data -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -152,7 +151,7 @@
   <!-- GTM (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-  <!-- Header -->
+  <!-- HEADER -->
   <header>
     <div class="brand">
       <img src="app-logo.png?v=1"
@@ -177,51 +176,50 @@
     </div>
   </header>
 
-  <!-- MAIN -->
-  <main class="container">
+  <!-- PARTNER BANNER (full width aligned with cards) -->
+  <div class="partner-shell" id="partnerShell">
+    <div class="partner-banner">
+      <div class="partner-main">
+        <div class="partner-eyebrow">Partner offer · Sports betting</div>
+        <span class="partner-headline">
+          Get a 50% sports bonus up to €300 at N1Bet
+        </span>
+        <p class="partner-body">
+          Sign up at N1Bet and boost your first deposit with a
+          <strong>50% sports welcome bonus up to €300</strong>.
+          Click “Claim Bonus” to visit N1Bet and check the full offer.
+        </p>
+        <div class="partner-fineprint">
+          18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.
+        </div>
+      </div>
 
-  <!-- Partner banner (N1Bet) -->
-<div class="partner-shell" id="partnerShell">
-  <div class="partner-banner">
-    <div class="partner-main">
-      <div class="partner-eyebrow">Partner offer · Sports betting</div>
-      <span class="partner-headline">
-        Get a 50% sports bonus up to €300 at N1Bet
-      </span>
-      <p class="partner-body">
-        Sign up at N1Bet and boost your first deposit with a
-        <strong>50% sports welcome bonus up to €300</strong>.
-        Click “Claim Bonus” to visit N1Bet and check the full offer.
-      </p>
-      <div class="partner-fineprint">
-        18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.
+      <div class="partner-cta">
+        <a
+          href="https://n1bet.live?ref_code=qevuxXfOKQ"
+          class="partner-btn"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Claim bonus
+        </a>
+
+        <!-- Chevron toggle -->
+        <button
+          type="button"
+          class="partner-toggle"
+          id="partnerToggle"
+          aria-label="Hide N1Bet partner offer"
+        >
+          <span class="partner-toggle-icon" id="partnerToggleIcon">▴</span>
+        </button>
       </div>
     </div>
-
-    <div class="partner-cta">
-      <a
-        href="https://n1bet.live?ref_code=qevuxXfOKQ"
-        class="partner-btn"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Claim bonus
-      </a>
-
-      <!-- Chevron toggle -->
-      <button
-        type="button"
-        class="partner-toggle"
-        id="partnerToggle"
-        aria-label="Hide N1Bet partner offer"
-      >
-        <span class="partner-toggle-icon" id="partnerToggleIcon">▴</span>
-      </button>
-    </div>
   </div>
-</div>
 
-    <!-- LEFT: filters / history -->
+  <!-- MAIN LAYOUT -->
+  <main class="container">
+    <!-- LEFT COLUMN -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
 
@@ -248,14 +246,15 @@
       <button id="resetHistoryBtn" type="button" style="margin-top:12px" title="Clear all previous results">Clear History</button>
     </section>
 
-    <!-- RIGHT: wheel -->
+    <!-- RIGHT COLUMN -->
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
       <div class="wheel-subheader">
-        <div id="perfTip" class="perf-tip" aria-live="polite"
+        <div id="perfTip" class="perf-tip"
              data-clubs-text="teams ready to spin"
-             data-players-text="players loaded">
+             data-players-text="players loaded"
+             aria-live="polite">
           <span class="meter-text">0 teams ready to spin</span>
         </div>
 
@@ -292,7 +291,7 @@
       </div>
     </section>
 
-    <!-- Full-width accordion -->
+    <!-- DETAILS / ACCORDION -->
     <section class="card" style="grid-column:1 / -1; margin-top:28px;">
       <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
         <div class="section-title" id="details-title">Details</div>
@@ -304,7 +303,7 @@
               <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-about-body" aria-labelledby="panel-about-summary">
+          <div class="ac-body" id="panel-about-body">
             <h2>About Football Spinner</h2>
             <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams from <strong>25 European leagues</strong> or get a <strong>random Premier League player</strong> for your next quiz.</p>
           </div>
@@ -317,7 +316,7 @@
               <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-how-body" aria-labelledby="panel-how-summary">
+          <div class="ac-body" id="panel-how-body">
             <h2>How it works</h2>
             <p>Choose your filters: in <strong>TEAM</strong> mode pick leagues (25 European leagues supported); in <strong>PLAYER</strong> mode pick <strong>Premier League teams</strong>. Set what to show on the wheel and hit <em>Spin</em>. The wheel lands on a random result.</p>
           </div>
@@ -330,7 +329,7 @@
               <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-why-body" aria-labelledby="panel-why-summary">
+          <div class="ac-body" id="panel-why-body">
             <h2>Why use it?</h2>
             <p>It makes football discovery fun again — ideal for trivia nights, deciding who to support, or learning about new clubs and players. Free, fast, and no login required.</p>
           </div>
@@ -339,7 +338,12 @@
     </section>
   </main>
 
-  <!-- Result modal -->
+  <!-- FOOTER -->
+  <footer class="footer">
+    © 2025 Football Spinner. All rights reserved.
+  </footer>
+
+  <!-- MODAL -->
   <div id="backdrop" style="display:none">
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
       <div id="mHead">Result</div>
@@ -375,48 +379,10 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    © 2025 Football Spinner. All rights reserved.
-  </footer>
-
-  <!-- App logic -->
+  <!-- APP JS -->
   <script src="app.js" defer></script>
 
-  <script>
-  (function () {
-    const shell  = document.getElementById('partnerShell');
-    const toggle = document.getElementById('partnerToggle');
-    const icon   = document.getElementById('partnerToggleIcon');
-
-    if (!shell || !toggle || !icon) return;
-
-    const STORAGE_KEY = 'fsPartnerCollapsed';
-
-    // Restore previous state
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === '1') {
-      shell.classList.add('partner-collapsed');
-      icon.textContent = '▾';
-      toggle.setAttribute('aria-label', 'Show N1Bet partner offer');
-    } else {
-      icon.textContent = '▴';
-      toggle.setAttribute('aria-label', 'Hide N1Bet partner offer');
-    }
-
-    toggle.addEventListener('click', () => {
-      const isCollapsed = shell.classList.toggle('partner-collapsed');
-
-      icon.textContent = isCollapsed ? '▾' : '▴';
-      toggle.setAttribute(
-        'aria-label',
-        isCollapsed ? 'Show N1Bet partner offer' : 'Hide N1Bet partner offer'
-      );
-      localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
-    });
-  })();
-</script>
-  <!-- Mode text + accordion + partner toggle -->
+  <!-- MODE TEXT + ACCORDION + PARTNER TOGGLE -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -431,7 +397,7 @@
           if (titleRight) titleRight.textContent = 'Player Wheel';
           if (meterText && perf?.dataset.playersText){
             const num = (meterText.textContent.match(/\d+/)||['0'])[0];
-            meterText.textContent = num + ' ' + perf.dataset.playersText;
+            meterText.textContent = `${num} ${perf.dataset.playersText}`;
           }
           if (filterTitle) filterTitle.textContent = 'Select Teams';
           if (qpTop){ qpTop.textContent = 'Top 6 Premier League Teams'; qpTop.title = 'Select the Big Six from the Premier League'; }
@@ -440,7 +406,7 @@
           if (titleRight) titleRight.textContent = 'Club Wheel';
           if (meterText && perf?.dataset.clubsText){
             const num = (meterText.textContent.match(/\d+/)||['0'])[0];
-            meterText.textContent = num + ' ' + perf.dataset.clubsText;
+            meterText.textContent = `${num} ${perf.dataset.clubsText}`;
           }
           if (filterTitle) filterTitle.textContent = 'Select Leagues';
           if (qpTop){ qpTop.textContent = 'Top 5 Leagues'; qpTop.title = 'Select only the top 5 leagues'; }
@@ -452,19 +418,18 @@
         const teamBtn = document.getElementById('modeTeam');
         const playerBtn = document.getElementById('modePlayer');
         const teamActive = mode !== 'player';
-        if (!teamBtn || !playerBtn) return;
-        teamBtn.setAttribute('aria-selected', String(teamActive));
-        playerBtn.setAttribute('aria-selected', String(!teamActive));
-        teamBtn.classList.toggle('mode-btn-active', teamActive);
-        playerBtn.classList.toggle('mode-btn-active', !teamActive);
+        teamBtn?.setAttribute('aria-selected', String(teamActive));
+        playerBtn?.setAttribute('aria-selected', String(!teamActive));
+        teamBtn?.classList.toggle('mode-btn-active', teamActive);
+        playerBtn?.classList.toggle('mode-btn-active', !teamActive);
       }
 
       const histEmpty = document.getElementById('historyEmpty');
       if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
 
-      const initialMode = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
-      applyModeTexts(initialMode);
-      setTabSelection(initialMode);
+      const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
+      applyModeTexts(initial);
+      setTabSelection(initial);
 
       document.getElementById('modeTeam')?.addEventListener('click', () => {
         localStorage.setItem('fsMode', 'team');
@@ -515,25 +480,31 @@
         });
       }
 
-      // Partner toggle
-      const partnerShell = document.getElementById('partnerShell');
-      const partnerToggle = document.getElementById('partnerToggle');
-      const partnerHeadline = partnerShell?.querySelector('.partner-headline');
-      const fullHeadline = 'Get a 50% sports bonus up to €300 at N1Bet';
-      const collapsedHeadline = 'Partner offer · N1Bet sports bonus';
+      // Partner banner toggle
+      const shell  = document.getElementById('partnerShell');
+      const toggle = document.getElementById('partnerToggle');
+      const icon   = document.getElementById('partnerToggleIcon');
+      const STORAGE_KEY = 'fsPartnerCollapsed';
 
-      if (partnerShell && partnerToggle && partnerHeadline){
-        partnerHeadline.textContent = fullHeadline;
+      if (shell && toggle && icon){
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved === '1') {
+          shell.classList.add('partner-collapsed');
+          icon.textContent = '▾';
+          toggle.setAttribute('aria-label', 'Show N1Bet partner offer');
+        } else {
+          icon.textContent = '▴';
+          toggle.setAttribute('aria-label', 'Hide N1Bet partner offer');
+        }
 
-        partnerToggle.addEventListener('click', ()=>{
-          const collapsed = partnerShell.classList.toggle('partner-collapsed');
-          partnerToggle.setAttribute('aria-expanded', String(!collapsed));
-          partnerToggle.setAttribute('aria-label',
-            collapsed ? 'Show N1Bet partner offer' : 'Hide N1Bet partner offer'
+        toggle.addEventListener('click', () => {
+          const isCollapsed = shell.classList.toggle('partner-collapsed');
+          icon.textContent = isCollapsed ? '▾' : '▴';
+          toggle.setAttribute(
+            'aria-label',
+            isCollapsed ? 'Show N1Bet partner offer' : 'Hide N1Bet partner offer'
           );
-          const icon = partnerToggle.querySelector('.partner-toggle-icon');
-          if (icon) icon.textContent = collapsed ? '▼' : '▲';
-          partnerHeadline.textContent = collapsed ? collapsedHeadline : fullHeadline;
+          localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
         });
       }
     })();
