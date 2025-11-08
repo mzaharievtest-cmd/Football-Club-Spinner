@@ -176,29 +176,41 @@
     </div>
   </header>
 
-  <!-- Affiliate banner (visible, just under header) -->
-  <section class="affiliate-banner" aria-label="Sports betting welcome bonus from N1Bet">
-    <div class="affiliate-inner">
-      <div class="affiliate-text">
-        <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
-        <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
-        <p class="affiliate-subtitle">
-          Sign up at N1Bet and boost your first deposit with a
-          <strong>50% sports welcome bonus up to €300</strong>.
-          Click “Claim Bonus” to visit N1Bet and check the full offer.
-        </p>
-        <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
-      </div>
-      <a class="affiliate-cta"
-         href="https://n1bet.live?ref_code=qevuxXfOKQ"
-         target="_blank"
-         rel="noopener noreferrer nofollow">
-        Claim Bonus
-      </a>
-    </div>
-  </section>
-
   <main class="container">
+    <!-- Affiliate banner INSIDE container so width matches cards -->
+    <section class="affiliate-banner" aria-label="Sports betting welcome bonus from N1Bet">
+      <div class="affiliate-inner">
+        <div class="affiliate-text">
+          <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
+          <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
+          <p class="affiliate-subtitle">
+            Sign up at N1Bet and boost your first deposit with a
+            <strong>50% sports welcome bonus up to €300</strong>.
+            Click “Claim Bonus” to visit N1Bet and check the full offer.
+          </p>
+          <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
+        </div>
+
+        <div class="affiliate-right">
+          <a class="affiliate-cta"
+             href="https://n1bet.live?ref_code=qevuxXfOKQ"
+             target="_blank"
+             rel="noopener noreferrer nofollow">
+            Claim Bonus
+          </a>
+          <button class="affiliate-toggle" type="button" aria-label="Hide partner offer">
+            <span class="chevron-up">⌃</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Collapsed strip (chevron to re-open) -->
+      <button class="affiliate-collapsed" type="button" aria-label="Show partner offer">
+        <span>Partner offer · N1Bet sports bonus</span>
+        <span class="chevron-down">⌄</span>
+      </button>
+    </section>
+
     <!-- LEFT: filters / quick actions / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
@@ -361,7 +373,7 @@
   <!-- App -->
   <script src="app.js" defer></script>
 
-  <!-- Mode text + accordion helpers -->
+  <!-- Mode text, accordion, affiliate toggle -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -421,6 +433,7 @@
         setTabSelection('player');
       });
 
+      // Accordion
       const accordion = document.getElementById('infoAccordion');
       if (accordion){
         const panels = Array.from(accordion.querySelectorAll('.ac-panel'));
@@ -455,6 +468,29 @@
 
           panel.removeAttribute('open');
           summary.setAttribute('aria-expanded','false');
+        });
+      }
+
+      // Affiliate banner collapse / expand with localStorage
+      const aff = document.querySelector('.affiliate-banner');
+      if (aff){
+        const collapsedBtn = aff.querySelector('.affiliate-collapsed');
+        const toggleBtn = aff.querySelector('.affiliate-toggle');
+
+        const applyState = (collapsed)=>{
+          aff.classList.toggle('collapsed', collapsed);
+        };
+
+        const stored = localStorage.getItem('fsAffiliateCollapsed') === '1';
+        applyState(stored);
+
+        toggleBtn?.addEventListener('click', ()=>{
+          localStorage.setItem('fsAffiliateCollapsed','1');
+          applyState(true);
+        });
+        collapsedBtn?.addEventListener('click', ()=>{
+          localStorage.setItem('fsAffiliateCollapsed','0');
+          applyState(false);
         });
       }
     })();
