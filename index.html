@@ -53,7 +53,7 @@
   <link rel="manifest" href="/manifest.webmanifest" />
 
   <!-- Styles -->
-  <link rel="stylesheet" href="style.css?v=2" />
+  <link rel="stylesheet" href="style.css?v=3" />
 
   <!-- Google Analytics 4 -->
   <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
@@ -153,25 +153,27 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <header>
-    <div class="brand">
-      <img src="app-logo.png?v=1"
-           alt="Football Spinner logo"
-           class="brand-img"
-           decoding="async"
-           width="128" height="128" />
-      <div>
-        <h1 id="main-title">Football Spinner</h1>
-        <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
-      </div>
-    </div>
-
-    <div class="header-right">
-      <div class="mode-switch-wrap">
-        <div class="mode-switch" role="tablist" aria-label="View mode">
-          <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
-          <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
+    <div class="header-inner">
+      <div class="brand">
+        <img src="app-logo.png?v=1"
+             alt="Football Spinner logo"
+             class="brand-img"
+             decoding="async"
+             width="128" height="128" />
+        <div>
+          <h1 id="main-title">Football Spinner</h1>
+          <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
         </div>
-        <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
+      </div>
+
+      <div class="header-right">
+        <div class="mode-switch-wrap">
+          <div class="mode-switch" role="tablist" aria-label="View mode">
+            <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
+            <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
+          </div>
+          <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
+        </div>
       </div>
     </div>
   </header>
