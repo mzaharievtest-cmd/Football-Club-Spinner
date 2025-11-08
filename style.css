@@ -193,7 +193,7 @@ section[aria-labelledby="wheel-title"].card{
   box-shadow:0 14px 32px rgba(250,204,21,.55);
 }
 
-/* chevron close button */
+/* ---------- Chevron close/open button (clean, clickable) ---------- */
 .affiliate-toggle{
   position:relative;
   width:44px;
@@ -202,15 +202,18 @@ section[aria-labelledby="wheel-title"].card{
   padding:0;
   flex-shrink:0;
 
-  border:1px solid rgba(248,250,252,.25);
+  border:1px solid rgba(248,250,252,.35);
   background:
-    radial-gradient(circle at 30% 20%, rgba(248,250,252,.25), rgba(15,23,42,1));
+    radial-gradient(circle at 30% 20%, rgba(248,250,252,.20), rgba(15,23,42,1));
   box-shadow:0 10px 26px rgba(0,0,0,.85);
 
   display:inline-flex;
   align-items:center;
   justify-content:center;
+
   cursor:pointer;
+  pointer-events:auto;
+  z-index:1;
 
   transition:
     transform .12s var(--ease),
@@ -221,7 +224,7 @@ section[aria-labelledby="wheel-title"].card{
 
 .affiliate-toggle:hover{
   transform:translateY(-1px);
-  border-color:rgba(248,250,252,.55);
+  border-color:rgba(248,250,252,.7);
   box-shadow:0 14px 34px rgba(0,0,0,.9);
 }
 
@@ -230,27 +233,34 @@ section[aria-labelledby="wheel-title"].card{
   box-shadow:0 8px 20px rgba(0,0,0,.85);
 }
 
-/* draw the caret with borders (up + down) */
-.chevron-up,
-.chevron-down{
-  position:relative;
-  width:14px;
-  height:14px;
-  font-size:0;           /* hide the ⌃ / ⌄ character if it’s still in HTML */
+/* caret characters inside the circle */
+.affiliate-toggle .chevron-up{
+  font-size:18px;
+  line-height:1;
+  color:#f9fafb;
+  transform:translateY(-1px);   /* nudge visually to look centered */
 }
 
-.chevron-up::before,
-.chevron-down::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  margin:auto;
-  width:9px;
-  height:9px;
-  border-width:2px 2px 0 0;
-  border-style:solid;
-  border-color:#f9fafb;
-  transform-origin:center;
+/* collapsed strip */
+.affiliate-collapsed{
+  display:none;
+  margin-top:6px;
+  width:100%;
+  border-radius:999px;
+  border:1px dashed rgba(250,204,21,.6);
+  background:rgba(15,23,42,.9);
+  color:#f9fafb;
+  font-size:12px;
+  padding:8px 14px;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+}
+
+.affiliate-collapsed .chevron-down{
+  font-size:16px;
+  line-height:1;
+  margin-left:8px;
 }
 
 /* up arrow for expanded banner */
