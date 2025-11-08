@@ -49,12 +49,12 @@
   <link rel="apple-touch-icon" href="app-logo.png?v=1" />
   <link rel="shortcut icon" href="app-logo.png?v=1" />
 
-  <!-- Manifest -->
+  <!-- Manifest (optional) -->
   <link rel="manifest" href="/manifest.webmanifest" />
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css?v=1" />
-
+  
   <!-- Google Analytics 4 -->
   <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
@@ -77,7 +77,7 @@
   <!-- AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
 
-  <!-- Structured Data (JSON-LD) -->
+  <!-- Enhanced Structured Data (JSON-LD) -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -153,86 +153,45 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <header>
-    <div class="header-inner">
-      <div class="brand">
-        <img src="app-logo.png?v=1"
-             alt="Football Spinner logo"
-             class="brand-img"
-             decoding="async"
-             width="128" height="128" />
-        <div>
-          <h1 id="main-title">Football Spinner</h1>
-          <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
-        </div>
+    <div class="brand">
+      <!-- Above-the-fold logo: keep eager load, but add explicit size -->
+      <img src="app-logo.png?v=1"
+           alt="Football Spinner logo"
+           class="brand-img"
+           decoding="async"
+           width="128" height="128" />
+      <div>
+        <h1 id="main-title">Football Spinner</h1>
+        <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
       </div>
+    </div>
 
-      <div class="header-right">
-        <div class="mode-switch-wrap">
-          <div class="mode-switch" role="tablist" aria-label="View mode">
-            <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
-            <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
-          </div>
-          <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
+    <div class="header-right">
+      <div class="mode-switch-wrap">
+        <!-- ARIA: tabs use aria-selected (not aria-pressed) -->
+        <div class="mode-switch" role="tablist" aria-label="View mode">
+          <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
+          <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
         </div>
+        <!-- Dynamic note shown only in PLAYER mode -->
+        <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <!-- Affiliate banner -->
-    <section class="affiliate-banner" aria-label="Sports betting welcome bonus from N1Bet">
-      <div class="affiliate-inner">
-        <div class="affiliate-text">
-          <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
-          <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
-          <p class="affiliate-subtitle">
-            Sign up at N1Bet and boost your first deposit with a
-            <strong>50% sports welcome bonus up to €300</strong>.
-            Click “Claim Bonus” to visit N1Bet and check the full offer.
-          </p>
-          <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
-        </div>
-
-        <div class="affiliate-right">
-          <a class="affiliate-cta"
-             href="https://n1bet.live?ref_code=qevuxXfOKQ"
-             target="_blank"
-             rel="noopener noreferrer nofollow">
-            Claim Bonus
-          </a>
-
-          <!-- UP chevron (hide banner) -->
-          <button class="affiliate-toggle" type="button" aria-label="Hide partner offer">
-            <span class="affiliate-chevron-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M6 14l6-6 6 6" />
-              </svg>
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Collapsed strip (DOWN chevron to re-open) -->
-      <button class="affiliate-collapsed" type="button" aria-label="Show partner offer">
-        <span>Partner offer · N1Bet sports bonus</span>
-        <span class="affiliate-chevron-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M6 10l6 6 6-6" />
-          </svg>
-        </span>
-      </button>
-    </section>
-
     <!-- LEFT: filters / quick actions / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
 
+      <!-- Quick picks -->
       <div class="quick-picks" role="group" aria-label="Quick selections">
         <button id="qpAll"  class="chip-btn" type="button" title="Select all leagues">All Leagues</button>
         <button id="qpNone" class="chip-btn" type="button" title="Deselect all">Clear</button>
         <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
       </div>
 
+      <!-- Chips (TEAM: leagues · PLAYER: PL teams generated from players.json) -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
         <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
@@ -254,6 +213,7 @@
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
+      <!-- Meter + SHOW ON WHEEL -->
       <div class="wheel-subheader">
         <div id="perfTip" class="perf-tip" aria-live="polite"
              data-clubs-text="teams ready to spin"
@@ -268,7 +228,7 @@
             <span id="lblA" class="chip-text">Logo</span>
           </label>
           <label class="chip" title="Show team or player names">
-            <input type="checkbox" id="optB" aria-label="Name" />
+            <input type="checkbox" id="optB" checked aria-label="Name" />
             <span id="lblB" class="chip-text">Name</span>
           </label>
           <label class="chip" title="Team mode: Stadium · Player mode: Jersey">
@@ -286,6 +246,7 @@
         </div>
       </div>
 
+      <!-- Wheel -->
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
         <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
@@ -303,9 +264,7 @@
           <div class="ac-summary" id="panel-about-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-about-body">
             <div class="ac-title">About Football Spinner</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
           <div class="ac-body" id="panel-about-body" aria-labelledby="panel-about-summary">
@@ -318,9 +277,7 @@
           <div class="ac-summary" id="panel-how-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-how-body">
             <div class="ac-title">How it works</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
           <div class="ac-body" id="panel-how-body" aria-labelledby="panel-how-summary">
@@ -333,9 +290,7 @@
           <div class="ac-summary" id="panel-why-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-why-body">
             <div class="ac-title">Why use it?</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
           <div class="ac-body" id="panel-why-body" aria-labelledby="panel-why-summary">
@@ -347,11 +302,6 @@
     </section>
   </main>
 
-  <!-- Footer with centered copyright -->
-  <footer class="footer">
-    <p>© 2025 Football Spinner. All rights reserved.</p>
-  </footer>
-
   <!-- Modal -->
   <div id="backdrop" style="display:none">
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
@@ -359,6 +309,7 @@
       <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
 
       <div class="m-body">
+        <!-- Not above-the-fold: lazy + dimensions -->
         <img id="mLogo" alt="" loading="lazy" width="256" height="256" />
 
         <div class="m-row" id="rowStadium">
@@ -388,10 +339,18 @@
     </div>
   </div>
 
+  <!-- Copyright footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>© 2025 Football Spinner.</span>
+      <span>All rights reserved.</span>
+    </div>
+  </footer>
+
   <!-- App -->
   <script src="app.js" defer></script>
 
-  <!-- Mode text, accordion, affiliate toggle -->
+  <!-- Mode text + accordion helpers (ARIA fix for tabs included) -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -423,6 +382,7 @@
         }
       }
 
+      // Update aria-selected on tabs
       function setTabSelection(mode){
         const teamBtn = document.getElementById('modeTeam');
         const playerBtn = document.getElementById('modePlayer');
@@ -484,31 +444,9 @@
             if (e.key==='ArrowUp'){ e.preventDefault(); (panels[panels.indexOf(panel)-1]||panels[panels.length-1]).querySelector('.ac-summary').focus(); }
           });
 
+          // start collapsed
           panel.removeAttribute('open');
           summary.setAttribute('aria-expanded','false');
-        });
-      }
-
-      // Affiliate banner collapse / expand with localStorage
-      const aff = document.querySelector('.affiliate-banner');
-      if (aff){
-        const collapsedBtn = aff.querySelector('.affiliate-collapsed');
-        const toggleBtn = aff.querySelector('.affiliate-toggle');
-
-        const applyState = (collapsed)=>{
-          aff.classList.toggle('collapsed', collapsed);
-        };
-
-        const stored = localStorage.getItem('fsAffiliateCollapsed') === '1';
-        applyState(stored);
-
-        toggleBtn?.addEventListener('click', ()=>{
-          localStorage.setItem('fsAffiliateCollapsed','1');
-          applyState(true);
-        });
-        collapsedBtn?.addEventListener('click', ()=>{
-          localStorage.setItem('fsAffiliateCollapsed','0');
-          applyState(false);
         });
       }
     })();
