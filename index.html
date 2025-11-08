@@ -56,6 +56,7 @@
   <link rel="stylesheet" href="style.css?v=1" />
 
   <!-- Google Analytics 4 -->
+  <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -76,7 +77,7 @@
   <!-- AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
 
-  <!-- Structured Data -->
+  <!-- Enhanced Structured Data (JSON-LD) -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -151,7 +152,6 @@
   <!-- GTM (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-  <!-- HEADER -->
   <header>
     <div class="brand">
       <img src="app-logo.png?v=1"
@@ -176,51 +176,42 @@
     </div>
   </header>
 
-  <!-- MAIN LAYOUT (everything aligned in same grid) -->
   <main class="container">
-
-    <!-- PARTNER BANNER: full-width row in grid -->
-    <section class="partner-shell" id="partnerShell">
-      <div class="partner-banner">
-        <div class="partner-main">
-          <div class="partner-eyebrow">Partner offer · Sports betting</div>
-          <span class="partner-headline">
-            Get a 50% sports bonus up to €300 at N1Bet
-          </span>
-          <p class="partner-body">
+    <!-- Affiliate banner INSIDE container so width matches cards -->
+    <section class="affiliate-banner" aria-label="Sports betting welcome bonus from N1Bet">
+      <div class="affiliate-inner">
+        <div class="affiliate-text">
+          <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
+          <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
+          <p class="affiliate-subtitle">
             Sign up at N1Bet and boost your first deposit with a
             <strong>50% sports welcome bonus up to €300</strong>.
             Click “Claim Bonus” to visit N1Bet and check the full offer.
           </p>
-          <div class="partner-fineprint">
-            18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.
-          </div>
+          <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
         </div>
 
-        <div class="partner-cta">
-          <a
-            href="https://n1bet.live?ref_code=qevuxXfOKQ"
-            class="partner-btn"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Claim bonus
+        <div class="affiliate-right">
+          <a class="affiliate-cta"
+             href="https://n1bet.live?ref_code=qevuxXfOKQ"
+             target="_blank"
+             rel="noopener noreferrer nofollow">
+            Claim Bonus
           </a>
-
-          <!-- Chevron toggle -->
-          <button
-            type="button"
-            class="partner-toggle"
-            id="partnerToggle"
-            aria-label="Hide N1Bet partner offer"
-          >
-            <span class="partner-toggle-icon" id="partnerToggleIcon">▴</span>
+          <button class="affiliate-toggle" type="button" aria-label="Hide partner offer">
+            <span class="chevron-up">⌃</span>
           </button>
         </div>
       </div>
+
+      <!-- Collapsed strip (chevron to re-open) -->
+      <button class="affiliate-collapsed" type="button" aria-label="Show partner offer">
+        <span>Partner offer · N1Bet sports bonus</span>
+        <span class="chevron-down">⌄</span>
+      </button>
     </section>
 
-    <!-- LEFT COLUMN -->
+    <!-- LEFT: filters / quick actions / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
 
@@ -247,15 +238,14 @@
       <button id="resetHistoryBtn" type="button" style="margin-top:12px" title="Clear all previous results">Clear History</button>
     </section>
 
-    <!-- RIGHT COLUMN -->
+    <!-- RIGHT: wheel -->
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
       <div class="wheel-subheader">
-        <div id="perfTip" class="perf-tip"
+        <div id="perfTip" class="perf-tip" aria-live="polite"
              data-clubs-text="teams ready to spin"
-             data-players-text="players loaded"
-             aria-live="polite">
+             data-players-text="players loaded">
           <span class="meter-text">0 teams ready to spin</span>
         </div>
 
@@ -266,7 +256,7 @@
             <span id="lblA" class="chip-text">Logo</span>
           </label>
           <label class="chip" title="Show team or player names">
-            <input type="checkbox" id="optB" checked aria-label="Name" />
+            <input type="checkbox" id="optB" aria-label="Name" />
             <span id="lblB" class="chip-text">Name</span>
           </label>
           <label class="chip" title="Team mode: Stadium · Player mode: Jersey">
@@ -292,7 +282,7 @@
       </div>
     </section>
 
-    <!-- DETAILS / ACCORDION -->
+    <!-- Full-width accordion -->
     <section class="card" style="grid-column:1 / -1; margin-top:28px;">
       <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
         <div class="section-title" id="details-title">Details</div>
@@ -304,7 +294,7 @@
               <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-about-body">
+          <div class="ac-body" id="panel-about-body" aria-labelledby="panel-about-summary">
             <h2>About Football Spinner</h2>
             <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams from <strong>25 European leagues</strong> or get a <strong>random Premier League player</strong> for your next quiz.</p>
           </div>
@@ -317,7 +307,7 @@
               <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-how-body">
+          <div class="ac-body" id="panel-how-body" aria-labelledby="panel-how-summary">
             <h2>How it works</h2>
             <p>Choose your filters: in <strong>TEAM</strong> mode pick leagues (25 European leagues supported); in <strong>PLAYER</strong> mode pick <strong>Premier League teams</strong>. Set what to show on the wheel and hit <em>Spin</em>. The wheel lands on a random result.</p>
           </div>
@@ -330,7 +320,7 @@
               <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-why-body">
+          <div class="ac-body" id="panel-why-body" aria-labelledby="panel-why-summary">
             <h2>Why use it?</h2>
             <p>It makes football discovery fun again — ideal for trivia nights, deciding who to support, or learning about new clubs and players. Free, fast, and no login required.</p>
           </div>
@@ -339,12 +329,12 @@
     </section>
   </main>
 
-  <!-- FOOTER -->
+  <!-- Footer with centered copyright -->
   <footer class="footer">
-    © 2025 Football Spinner. All rights reserved.
+    <p>© 2025 Football Spinner. All rights reserved.</p>
   </footer>
 
-  <!-- MODAL -->
+  <!-- Modal -->
   <div id="backdrop" style="display:none">
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
       <div id="mHead">Result</div>
@@ -380,10 +370,10 @@
     </div>
   </div>
 
-  <!-- APP JS -->
+  <!-- App -->
   <script src="app.js" defer></script>
 
-  <!-- MODE TEXT + ACCORDION + PARTNER TOGGLE -->
+  <!-- Mode text, accordion, affiliate toggle -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -481,31 +471,26 @@
         });
       }
 
-      // Partner banner toggle
-      const shell  = document.getElementById('partnerShell');
-      const toggle = document.getElementById('partnerToggle');
-      const icon   = document.getElementById('partnerToggleIcon');
-      const STORAGE_KEY = 'fsPartnerCollapsed';
+      // Affiliate banner collapse / expand with localStorage
+      const aff = document.querySelector('.affiliate-banner');
+      if (aff){
+        const collapsedBtn = aff.querySelector('.affiliate-collapsed');
+        const toggleBtn = aff.querySelector('.affiliate-toggle');
 
-      if (shell && toggle && icon){
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved === '1') {
-          shell.classList.add('partner-collapsed');
-          icon.textContent = '▾';
-          toggle.setAttribute('aria-label', 'Show N1Bet partner offer');
-        } else {
-          icon.textContent = '▴';
-          toggle.setAttribute('aria-label', 'Hide N1Bet partner offer');
-        }
+        const applyState = (collapsed)=>{
+          aff.classList.toggle('collapsed', collapsed);
+        };
 
-        toggle.addEventListener('click', () => {
-          const isCollapsed = shell.classList.toggle('partner-collapsed');
-          icon.textContent = isCollapsed ? '▾' : '▴';
-          toggle.setAttribute(
-            'aria-label',
-            isCollapsed ? 'Show N1Bet partner offer' : 'Hide N1Bet partner offer'
-          );
-          localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
+        const stored = localStorage.getItem('fsAffiliateCollapsed') === '1';
+        applyState(stored);
+
+        toggleBtn?.addEventListener('click', ()=>{
+          localStorage.setItem('fsAffiliateCollapsed','1');
+          applyState(true);
+        });
+        collapsedBtn?.addEventListener('click', ()=>{
+          localStorage.setItem('fsAffiliateCollapsed','0');
+          applyState(false);
         });
       }
     })();
