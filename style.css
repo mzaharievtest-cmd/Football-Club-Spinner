@@ -1,26 +1,36 @@
-/* Football Spinner — Modern UI (glass + neon) v7 */
+/* ------------------------------------------------------------------
+   Football Spinner — Modern UI (glass + neon) • v2 (consolidated)
+   ------------------------------------------------------------------ */
 
+/* =========================
+   Design Tokens
+   ========================= */
 :root{
   color-scheme: dark;
 
+  /* Base */
   --bg-0:#05070f; --bg-1:#08101e; --bg-2:#0e172c; --bg-3:#101a33;
   --text:#e8f1ff; --muted:#a6b7d6; --dim:#8ea0c3;
 
+  /* Accents */
   --accent:#6aa8ff; --accent-2:#22d3ee; --accent-3:#8b6cff;
   --good:#22c55e; --warn:#f59e0b;
 
+  /* Surfaces */
   --card-grad:linear-gradient(180deg, rgba(16,28,56,.88), rgba(10,16,30,.88));
   --chip-grad:linear-gradient(135deg, rgba(18,28,52,.96), rgba(10,16,30,.92));
 
+  /* Lines & shadow */
   --line:rgba(120,160,255,.20); --line-strong:rgba(120,160,255,.36);
   --shadow-1:0 8px 30px rgba(0,0,0,.28); --shadow-2:0 24px 72px rgba(6,14,32,.5);
 
+  /* Motion & layout */
   --ease:cubic-bezier(.2,.7,.1,1); --ease-out:cubic-bezier(.16,1,.3,1);
   --radius:18px;
 
-  --header-h: 84px;
+  /* Header spacing (JS updates --header-h live) */
+  --header-h: 84px; /* fallback until JS measures header */
 }
-
 @media (prefers-reduced-motion:reduce){
   :root{--ease:linear;--ease-out:linear}
   *{animation:none!important;transition:none!important}
@@ -28,6 +38,9 @@
 [hidden]{display:none!important}
 *,*::before,*::after{box-sizing:border-box}
 
+/* =========================
+   Global / Background
+   ========================= */
 html,body{height:100%}
 body{
   margin:0; min-height:100vh;
@@ -49,7 +62,9 @@ body::before{
 }
 @keyframes glow{to{transform:rotate(360deg)}}
 
-/* Header */
+/* =========================
+   Header (glass)
+   ========================= */
 header{
   position:sticky; top:0; z-index:30;
   display:flex; align-items:center; justify-content:space-between; gap:16px;
@@ -73,49 +88,12 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 }
 .season-tag{margin-top:2px;font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim)}
 
-.header-right{display:flex; align-items:center; gap:12px}
-
-/* Mode tabs */
-.mode-switch { display:flex; gap:10px; padding:6px; border:1px solid rgba(120,160,255,.18); border-radius:14px; background:linear-gradient(180deg, rgba(18,28,48,.6), rgba(12,18,34,.56)); }
-.mode-btn{
-  min-width:92px; padding:10px 16px; border-radius:12px; border:1px solid rgba(120,160,255,.18);
-  background:linear-gradient(180deg, rgba(18,28,48,.82), rgba(10,16,26,.82));
-  color:#cfe2ff; font-weight:900; letter-spacing:.14em;
-}
-.mode-btn-active{
-  color:#fff; border-color:#69d3ff;
-  box-shadow:0 0 0 2px rgba(105,211,255,.18), 0 10px 28px rgba(34,211,238,.14) inset;
-}
-
-/* Modes dropdown */
-.dd { position:relative; }
-.dd-btn{
-  padding:10px 16px; border-radius:12px; border:1px solid rgba(120,160,255,.18);
-  background:linear-gradient(180deg, rgba(18,28,48,.82), rgba(10,16,26,.82));
-  color:#e8f1ff; font-weight:900; letter-spacing:.12em;
-}
-.dd-menu{
-  position:absolute; right:0; top:calc(100% + 8px); width:290px; max-height:70vh; overflow:auto;
-  border-radius:14px; border:1px solid rgba(120,160,255,.22);
-  background:linear-gradient(180deg, rgba(16,24,42,.96), rgba(13,20,38,.92));
-  box-shadow:0 24px 60px rgba(2,8,20,.55);
-  padding:10px; display:none; z-index:60;
-}
-.dd.open .dd-menu{ display:block; }
-.dd-group{ padding:8px 8px 10px; }
-.dd-head{ color:#9fb5df; font-size:11px; letter-spacing:.28em; text-transform:uppercase; margin:2px 6px 8px; }
-.dd-action{
-  width:100%; text-align:left; display:block; padding:10px 12px; margin:6px 0;
-  border-radius:10px; border:1px solid rgba(120,160,255,.14);
-  background:linear-gradient(180deg, rgba(18,28,48,.86), rgba(10,14,26,.84));
-  color:#eaf2ff; font-weight:800;
-}
-.dd-action:hover{ border-color:#22d3ee; transform:translateY(-1px); }
-
-/* Grid / Cards */
+/* =========================
+   Grid / Cards
+   ========================= */
 .container{
   max-width:1240px;
-  margin:calc(var(--header-h) + 12px) auto 48px;
+  margin:calc(var(--header-h) + 12px) auto 48px;     /* sits just below sticky header */
   padding:0 clamp(12px,4vw,36px);
   display:grid; gap:22px; position:relative; z-index:1; align-items:start;
 }
@@ -131,14 +109,24 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 @keyframes card-in{to{transform:none;opacity:1}}
 .section-title{margin:0 0 10px;font-size:12px;letter-spacing:.36em;text-transform:uppercase;color:var(--muted)}
 
-/* Keep Details card safe */
-#detailsCard{ background:var(--card-grad); border:1px solid var(--line); box-shadow:var(--shadow-1); }
+/* =========================
+   Columns scrolling (both move with the page)
+   ========================= */
+.card.sidebar{               /* NO sticky sidebar */
+  position:static;
+  max-height:none;
+  overflow:visible;
+  mask-image:none;
+}
+section[aria-labelledby="wheel-title"].card{  /* right card should not clip overlays */
+  position:static;
+  overflow:visible;
+  z-index:2;
+}
 
-/* Sidebar non-sticky (your request) */
-.card.sidebar{ position:static; max-height:none; overflow:visible; mask-image:none; }
-section[aria-labelledby="wheel-title"].card{ position:static; overflow:visible; z-index:2; }
-
-/* Chips & Buttons */
+/* =========================
+   Chips & Buttons
+   ========================= */
 .quick-picks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 button,.chip-btn{
   appearance:none;width:100%;padding:12px 16px;margin-top:8px;
@@ -182,8 +170,14 @@ button:hover::after,.chip-btn:hover::after{transform:translateX(100%)}
 
 #chips .chip .chip-text,#showOnWheel .chip .chip-text,.showopts .chip .chip-text{display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:28ch}
 .showopts .chip:has(.chip-text:empty){display:none!important}
+@media (max-width:560px){
+  #chips .chip,#showOnWheel .chip,.showopts .chip{padding:10px 18px 10px 46px}
+  #chips .chip .chip-text,#showOnWheel .chip .chip-text,.showopts .chip .chip-text{max-width:24ch}
+}
 
-/* Result & History */
+/* =========================
+   Result & History
+   ========================= */
 .result{
   margin-top:12px;display:flex;align-items:center;gap:10px;
   padding:12px 14px;border-radius:14px;border:1px solid var(--line);
@@ -199,7 +193,9 @@ button:hover::after,.chip-btn:hover::after{transform:translateX(100%)}
 .item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(17,28,48,.85);border:1px solid rgba(90,161,255,.12);transition:transform .16s var(--ease)}
 .item:hover{transform:translateY(-1px)}
 
-/* Meter & Preset banner */
+/* =========================
+   Selection meter
+   ========================= */
 .perf-tip{
   position:relative;width:100%;overflow:hidden;text-align:center;
   font-size:12px;color:#cfe2ff;padding:6px 10px;margin:6px 0 10px;
@@ -211,14 +207,9 @@ button:hover::after,.chip-btn:hover::after{transform:translateX(100%)}
 }
 .perf-tip .meter-text{position:relative;z-index:1}
 
-.preset-banner{
-  margin:8px 0 0; padding:8px 12px; border-radius:10px;
-  border:1px dashed rgba(120,160,255,.35);
-  background:linear-gradient(180deg, rgba(18,28,48,.7), rgba(10,16,26,.66));
-  color:#d9ecff; font-weight:800; letter-spacing:.02em;
-}
-
-/* Wheel */
+/* =========================
+   Wheel / Pointer / SPIN FAB
+   ========================= */
 .wheel-wrap{
   position:relative; isolation:isolate;
   display:flex; align-items:center; justify-content:center;
@@ -234,7 +225,7 @@ canvas#wheel{
   filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));
   background:transparent;
   -webkit-font-smoothing:antialiased;
-  pointer-events:none;
+  pointer-events:none;                 /* canvas won’t block clicks */
   animation:wheel-pop .5s var(--ease-out);
 }
 @keyframes wheel-pop{from{transform:scale(.985);opacity:.85}to{transform:none;opacity:1}}
@@ -249,7 +240,7 @@ canvas#wheel{
 @keyframes pointer-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @media (max-width:600px){ .pointer{border-left-width:12px;border-right-width:12px;border-top-width:20px} }
 
-/* Central SPIN */
+/* Central SPIN button overlay */
 .spin-fab{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   width:clamp(86px,13vw,128px); height:clamp(86px,13vw,128px);
@@ -258,7 +249,7 @@ canvas#wheel{
   color:#f4f7ff; font-weight:900; letter-spacing:.16em; text-transform:uppercase;
   background:radial-gradient(120% 120% at 30% 20%, #2b3d72 0%, #132447 55%, #0b1530 100%);
   box-shadow:0 10px 30px rgba(0,0,0,.45), inset 0 0 30px rgba(90,161,255,.15);
-  z-index:50;
+  z-index:50;                          /* ensure above everything */
   transition:transform .12s var(--ease), box-shadow .12s var(--ease), border-color .12s var(--ease)
 }
 .spin-fab::before{
@@ -273,7 +264,76 @@ canvas#wheel{
 .spin-fab:active{transform:translate(-50%,-50%) scale(.985)}
 .spin-fab:disabled{opacity:.7;cursor:wait}
 
-/* Accordion (Details) */
+/* =========================
+   Modal
+   ========================= */
+#backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(4,10,24,.82);backdrop-filter:blur(12px);z-index:1000}
+#modal{
+  width:min(92vw,440px);border-radius:18px;overflow:hidden;
+  background:linear-gradient(180deg, rgba(16,24,42,.96), rgba(13,20,38,.92));
+  border:1px solid #4f82ff; box-shadow:var(--shadow-2);
+  display:flex;flex-direction:column;transform:translateY(6px) scale(.985);opacity:0;
+  transition:transform .22s var(--ease-out),opacity .22s var(--ease-out)
+}
+#modal.show{transform:none;opacity:1}
+#mHead{padding:22px 26px 0;font-weight:900;font-size:24px;color:#f4f7ff;text-align:center}
+#mSub{font-size:14px;color:#a3b8e7;margin:6px 0 2px;text-align:center}
+.m-body{padding:10px 22px 14px;display:flex;flex-direction:column;align-items:center;gap:10px}
+#mLogo{width:110px;height:110px;object-fit:contain;border-radius:16px;margin:10px auto 6px;background:#0b1220;border:1px solid #5aa1ff;box-shadow:0 2px 10px rgba(16,24,48,.45)}
+.m-row{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0}
+.m-sep{width:100%;height:1px;background:#234080;margin:8px 0}
+#mStadium,#mClub,#mJersey,#mNat{
+  display:inline-block;min-width:180px;max-width:260px;text-align:center;padding:8px 12px;border-radius:10px;
+  background:rgba(17,28,48,.85);border:1px solid rgba(90,161,255,.16);color:#d7e8ff;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.m-actions{padding:14px 22px 20px;background:#0f1830;border-top:1px solid #234080;display:flex;gap:10px;justify-content:center}
+.reveal-wrap{position:relative;display:inline-block}
+.reveal-overlay{position:absolute;inset:0;border-radius:inherit;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);pointer-events:none}
+.reveal-btn{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;
+  border:1px solid rgba(90,161,255,.6);background:#152036;color:#fff;font-weight:800;letter-spacing:.03em;
+  transition:transform .12s var(--ease),border-color .12s var(--ease),box-shadow .12s var(--ease)
+}
+.reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02);border-color:var(--accent-2);box-shadow:0 6px 18px rgba(34,211,238,.18)}
+
+/* Modal polish — keep reveal chips compact and center the logo area */
+#modal .reveal-btn{ width:auto !important; }
+
+#modal .m-body{ align-items:center; }
+#modal #mHead{
+  font-size:22px; font-weight:900; text-align:center; line-height:1.2;
+  margin-top:6px;
+}
+#modal #mSub{ text-align:center; }
+
+#modal #mLogo{
+  border-radius:16px; padding:10px; background:#0b1220;
+  border:1px solid rgba(100,168,255,.35);
+  box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 30px rgba(90,161,255,.08);
+}
+
+#modal .m-row .label{
+  min-width:auto; margin-right:12px; font-weight:800; color:#d7e8ff;
+}
+#modal .m-actions .chip-btn{ width:100%; } /* keep Close button full width */
+/* =========================
+   Optional #content section (kept for future)
+   ========================= */
+#content{
+  --anchor-offset: calc(var(--header-h) + 12px);
+  max-width:1240px;margin:22px auto 0;padding:18px clamp(14px,3vw,26px);
+  background:var(--card-grad);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:clip;position:relative;z-index:2
+}
+#content [id]{scroll-margin-top:var(--anchor-offset)}
+#content h2{margin:0 0 10px;font-size:clamp(24px,2.3vw,30px);font-weight:800;color:#f6f9ff}
+#content h3{margin:0;font-size:clamp(18px,2vw,22px);font-weight:800;color:#eaf2ff}
+#content p,#content li,#content dd{font-size:clamp(15px,1.6vw,17px);line-height:1.7;color:#e7eefb}
+#content dt{font-size:13px;color:var(--muted);font-weight:800;margin-top:12px}
+
+/* =========================
+   Modern Accordion (matches card styling)
+   ========================= */
 .accordion { display:flex; flex-direction:column; gap:12px; width:100%; }
 .ac-panel {
   border-radius:14px;
@@ -304,7 +364,11 @@ canvas#wheel{
 }
 .ac-panel[open] .ac-body { max-height:800px; padding:12px 18px 18px; }
 .ac-body h2 { margin:8px 0 8px; color:#f6f9ff; font-size:20px; font-weight:900; }
+@media (max-width:979.98px){ .ac-body{font-size:15px} .ac-summary{padding:12px 14px} }
 
+/* =========================
+   Misc / Focus / Scrollbars
+   ========================= */
 .small{font-size:12px;color:var(--dim)}
 .hidden{display:none!important}
 img{max-width:100%}
@@ -324,9 +388,72 @@ button:focus-visible,.chip-btn:focus-visible,
 }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* Mobile order */
-@media (max-width: 979.98px){
-  section.card[aria-labelledby="wheel-title"]{ order:1; }
-  .card.sidebar{ order:2; }
-  .container > section.card:has(#infoAccordion){ order:3; }
+/* ——— FINAL OVERRIDES: tighten header gap, disable sticky on both cards ——— */
+.container { margin-top: 12px !important; }
+.card.sidebar[aria-labelledby="filter-title"],
+section.card[aria-labelledby="wheel-title"] {
+  position: static !important; top: auto !important; max-height: none !important;
+  overflow: visible !important; mask-image: none !important;
 }
+section.card[aria-labelledby="wheel-title"] { overflow: visible !important; }
+canvas#wheel { pointer-events: none !important; }
+.spin-fab { z-index: 50 !important; }
+.pointer  { z-index: 40 !important; }
+/* Modal row alignment fix */
+#mHead { text-align:left; } /* keep title left like your screenshot */
+.m-row{
+  display:grid !important;
+  grid-template-columns: max-content 1fr;  /* Label | Value */
+  align-items:center;
+  gap:18px;
+}
+.m-row .value-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;         /* gives the button a stable center to lock onto */
+}
+.m-row .reveal-wrap{
+  width:100%;              /* the overlay/button follows the pill’s width */
+  justify-items:center;    /* center within the grid cell */
+}
+/* --- Modal layout & alignment (fixed) --- */
+#modal .m-body{ gap:20px; }
+
+.m-row{
+  display:grid !important;
+  grid-template-columns: 140px 1fr;   /* Label | Value */
+  align-items:center;
+  gap:18px;
+}
+
+.m-row .label{
+  font-weight:800;
+  color:#cfe2ff;
+}
+
+.m-row .value-pill{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:48px;                    /* stable height for center overlay */
+  padding:10px 16px;
+  border-radius:14px;
+  background:rgba(17,28,48,.85);
+  border:1px solid rgba(90,161,255,.16);
+  color:#d7e8ff;
+  font-weight:800;
+}
+
+.m-row .reveal-wrap{
+  width:auto;                         /* keep wrapper as tight as the pill */
+}
+
+@media (max-width:560px){
+  .m-row{ grid-template-columns: 1fr; gap:10px; }
+  .m-row .label{ margin-bottom:2px; }
+}
+/* ensure hidden rows in modal are really gone, even with grid */
+.m-row[hidden] { display: none !important; }
