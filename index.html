@@ -49,12 +49,12 @@
   <link rel="apple-touch-icon" href="app-logo.png?v=1" />
   <link rel="shortcut icon" href="app-logo.png?v=1" />
 
-  <!-- Manifest -->
+  <!-- Manifest (optional) -->
   <link rel="manifest" href="/manifest.webmanifest" />
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css?v=1" />
-
+  
   <!-- Google Analytics 4 -->
   <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
@@ -152,6 +152,7 @@
   <!-- GTM (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
+  <!-- Header -->
   <header>
     <div class="brand">
       <img src="app-logo.png?v=1"
@@ -176,42 +177,42 @@
     </div>
   </header>
 
-  <main class="container">
-    <!-- Affiliate banner INSIDE container so width matches cards -->
-    <section class="affiliate-banner" aria-label="Sports betting welcome bonus from N1Bet">
-      <div class="affiliate-inner">
-        <div class="affiliate-text">
-          <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
-          <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
-          <p class="affiliate-subtitle">
-            Sign up at N1Bet and boost your first deposit with a
-            <strong>50% sports welcome bonus up to €300</strong>.
-            Click “Claim Bonus” to visit N1Bet and check the full offer.
-          </p>
-          <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
-        </div>
-
-        <div class="affiliate-right">
-          <a class="affiliate-cta"
-             href="https://n1bet.live?ref_code=qevuxXfOKQ"
-             target="_blank"
-             rel="noopener noreferrer nofollow">
-            Claim Bonus
-          </a>
-          <button class="affiliate-toggle" type="button" aria-label="Hide partner offer">
-            <span class="chevron-up">⌃</span>
-          </button>
-        </div>
+  <!-- Partner banner (full width, above main cards) -->
+  <div class="partner-shell partner-open" id="partnerShell">
+    <div class="partner-banner" id="partnerBanner">
+      <div class="partner-main">
+        <div class="partner-eyebrow">Partner offer · Sports betting</div>
+        <div class="partner-headline">Get a 50% sports bonus up to €300 at N1Bet</div>
+        <p class="partner-body">
+          Sign up at N1Bet and boost your first deposit with a
+          <strong>50% sports welcome bonus up to €300</strong>. Click “Claim Bonus” to visit N1Bet and check the full offer.
+        </p>
+        <p class="partner-fineprint">
+          18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.
+        </p>
       </div>
 
-      <!-- Collapsed strip (chevron to re-open) -->
-      <button class="affiliate-collapsed" type="button" aria-label="Show partner offer">
-        <span>Partner offer · N1Bet sports bonus</span>
-        <span class="chevron-down">⌄</span>
-      </button>
-    </section>
+      <div class="partner-cta">
+        <a href="https://n1bet.live?ref_code=qevuxXfOKQ"
+           class="partner-btn"
+           target="_blank"
+           rel="sponsored noopener nofollow">
+          Claim Bonus
+        </a>
+        <button class="partner-toggle"
+                type="button"
+                id="partnerToggle"
+                aria-label="Hide N1Bet partner offer"
+                aria-expanded="true">
+          <span class="partner-toggle-icon">▲</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
-    <!-- LEFT: filters / quick actions / history -->
+  <!-- MAIN -->
+  <main class="container">
+    <!-- LEFT: filters / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
 
@@ -256,7 +257,7 @@
             <span id="lblA" class="chip-text">Logo</span>
           </label>
           <label class="chip" title="Show team or player names">
-            <input type="checkbox" id="optB" aria-label="Name" />
+            <input type="checkbox" id="optB" checked aria-label="Name" />
             <span id="lblB" class="chip-text">Name</span>
           </label>
           <label class="chip" title="Team mode: Stadium · Player mode: Jersey">
@@ -329,12 +330,7 @@
     </section>
   </main>
 
-  <!-- Footer with centered copyright -->
-  <footer class="footer">
-    <p>© 2025 Football Spinner. All rights reserved.</p>
-  </footer>
-
-  <!-- Modal -->
+  <!-- Result modal -->
   <div id="backdrop" style="display:none">
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
       <div id="mHead">Result</div>
@@ -370,10 +366,15 @@
     </div>
   </div>
 
-  <!-- App -->
+  <!-- Footer -->
+  <footer class="footer">
+    © 2025 Football Spinner. All rights reserved.
+  </footer>
+
+  <!-- App logic -->
   <script src="app.js" defer></script>
 
-  <!-- Mode text, accordion, affiliate toggle -->
+  <!-- Mode text + accordion + partner toggle -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -388,7 +389,7 @@
           if (titleRight) titleRight.textContent = 'Player Wheel';
           if (meterText && perf?.dataset.playersText){
             const num = (meterText.textContent.match(/\d+/)||['0'])[0];
-            meterText.textContent = `${num} ${perf.dataset.playersText}`;
+            meterText.textContent = num + ' ' + perf.dataset.playersText;
           }
           if (filterTitle) filterTitle.textContent = 'Select Teams';
           if (qpTop){ qpTop.textContent = 'Top 6 Premier League Teams'; qpTop.title = 'Select the Big Six from the Premier League'; }
@@ -397,7 +398,7 @@
           if (titleRight) titleRight.textContent = 'Club Wheel';
           if (meterText && perf?.dataset.clubsText){
             const num = (meterText.textContent.match(/\d+/)||['0'])[0];
-            meterText.textContent = `${num} ${perf.dataset.clubsText}`;
+            meterText.textContent = num + ' ' + perf.dataset.clubsText;
           }
           if (filterTitle) filterTitle.textContent = 'Select Leagues';
           if (qpTop){ qpTop.textContent = 'Top 5 Leagues'; qpTop.title = 'Select only the top 5 leagues'; }
@@ -409,18 +410,19 @@
         const teamBtn = document.getElementById('modeTeam');
         const playerBtn = document.getElementById('modePlayer');
         const teamActive = mode !== 'player';
-        teamBtn?.setAttribute('aria-selected', String(teamActive));
-        playerBtn?.setAttribute('aria-selected', String(!teamActive));
-        teamBtn?.classList.toggle('mode-btn-active', teamActive);
-        playerBtn?.classList.toggle('mode-btn-active', !teamActive);
+        if (!teamBtn || !playerBtn) return;
+        teamBtn.setAttribute('aria-selected', String(teamActive));
+        playerBtn.setAttribute('aria-selected', String(!teamActive));
+        teamBtn.classList.toggle('mode-btn-active', teamActive);
+        playerBtn.classList.toggle('mode-btn-active', !teamActive);
       }
 
       const histEmpty = document.getElementById('historyEmpty');
       if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
 
-      const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
-      applyModeTexts(initial);
-      setTabSelection(initial);
+      const initialMode = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
+      applyModeTexts(initialMode);
+      setTabSelection(initialMode);
 
       document.getElementById('modeTeam')?.addEventListener('click', () => {
         localStorage.setItem('fsMode', 'team');
@@ -471,26 +473,25 @@
         });
       }
 
-      // Affiliate banner collapse / expand with localStorage
-      const aff = document.querySelector('.affiliate-banner');
-      if (aff){
-        const collapsedBtn = aff.querySelector('.affiliate-collapsed');
-        const toggleBtn = aff.querySelector('.affiliate-toggle');
+      // Partner toggle
+      const partnerShell = document.getElementById('partnerShell');
+      const partnerToggle = document.getElementById('partnerToggle');
+      const partnerHeadline = partnerShell?.querySelector('.partner-headline');
+      const fullHeadline = 'Get a 50% sports bonus up to €300 at N1Bet';
+      const collapsedHeadline = 'Partner offer · N1Bet sports bonus';
 
-        const applyState = (collapsed)=>{
-          aff.classList.toggle('collapsed', collapsed);
-        };
+      if (partnerShell && partnerToggle && partnerHeadline){
+        partnerHeadline.textContent = fullHeadline;
 
-        const stored = localStorage.getItem('fsAffiliateCollapsed') === '1';
-        applyState(stored);
-
-        toggleBtn?.addEventListener('click', ()=>{
-          localStorage.setItem('fsAffiliateCollapsed','1');
-          applyState(true);
-        });
-        collapsedBtn?.addEventListener('click', ()=>{
-          localStorage.setItem('fsAffiliateCollapsed','0');
-          applyState(false);
+        partnerToggle.addEventListener('click', ()=>{
+          const collapsed = partnerShell.classList.toggle('partner-collapsed');
+          partnerToggle.setAttribute('aria-expanded', String(!collapsed));
+          partnerToggle.setAttribute('aria-label',
+            collapsed ? 'Show N1Bet partner offer' : 'Hide N1Bet partner offer'
+          );
+          const icon = partnerToggle.querySelector('.partner-toggle-icon');
+          if (icon) icon.textContent = collapsed ? '▼' : '▲';
+          partnerHeadline.textContent = collapsed ? collapsedHeadline : fullHeadline;
         });
       }
     })();
