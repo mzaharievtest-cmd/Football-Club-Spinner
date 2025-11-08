@@ -46,14 +46,21 @@ body::before{
 }
 @keyframes glow{to{transform:rotate(360deg)}}
 
-/* ========== Header ========== */
+/* ========== Header / Nav ========== */
 header{
   position:sticky; top:0; z-index:30;
-  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  background:linear-gradient(180deg, rgba(9,14,28,.92), rgba(9,14,28,.75));
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(120,160,255,.18);
+}
+.header-inner{
+  max-width:1240px;                  /* align with main container */
+  margin:0 auto;
   padding:14px clamp(14px,3vw,36px);
-  background:linear-gradient(180deg, rgba(9,14,28,.85), rgba(10,16,28,.55));
-  backdrop-filter:blur(14px);
-  border-bottom:1px solid rgba(120,160,255,.16);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
 }
 header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .brand-img{
@@ -71,32 +78,37 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .season-tag{margin-top:2px;font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim)}
 .header-right{display:flex;align-items:center;gap:14px}
 
-/* mode switch */
+/* TEAM / PLAYER pill (closer to prod) */
+.mode-switch-wrap{display:flex;align-items:center;gap:8px}
 .mode-switch{
   display:inline-flex;
   padding:4px;
-  background:rgba(5,10,24,.95);
+  background:radial-gradient(circle at 10% 0%,rgba(46,91,180,.85),rgba(7,13,32,1));
   border-radius:999px;
-  border:1px solid rgba(120,160,255,.35);
-  box-shadow:0 10px 24px rgba(0,0,0,.4);
+  border:1px solid rgba(148,191,255,.7);
+  box-shadow:
+    0 0 0 1px rgba(3,8,23,.85) inset,
+    0 16px 34px rgba(3,8,23,.9);
 }
 .mode-btn{
   appearance:none;border:none;background:transparent;
-  padding:8px 20px;border-radius:999px;
-  font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--dim);cursor:pointer;
-  transition:background .15s var(--ease),color .15s var(--ease),box-shadow .15s var(--ease),transform .12s var(--ease)
+  padding:8px 22px;border-radius:999px;
+  font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);cursor:pointer;
+  transition:background .16s var(--ease),color .16s var(--ease),box-shadow .16s var(--ease),transform .12s var(--ease);
 }
 .mode-btn-active{
-  background:radial-gradient(150% 150% at 20% 0%,rgba(90,161,255,.85),rgba(30,64,175,1));
+  background:radial-gradient(140% 140% at 20% 0%,rgba(129,178,255,1),rgba(37,99,235,1));
   color:#f9fbff;
-  box-shadow:0 0 0 1px rgba(148,191,255,.85),0 16px 30px rgba(15,23,42,.9);
+  box-shadow:
+    0 0 0 1px rgba(191,219,254,.9),
+    0 14px 26px rgba(15,23,42,.95);
 }
 .mode-btn:hover{transform:translateY(-1px)}
 
 /* ========== Layout container & cards ========== */
 .container{
-  max-width:1320px;                     /* a bit wider like prod */
+  max-width:1240px;
   margin:calc(var(--header-h) + 12px) auto 48px;
   padding:0 clamp(12px,4vw,36px);
   display:grid; gap:22px; position:relative; z-index:1; align-items:start;
@@ -126,7 +138,7 @@ section[aria-labelledby="wheel-title"].card{
   z-index:2;
 }
 
-/* ========== Affiliate banner (inside container, full width) ========== */
+/* ========== Affiliate banner ========== */
 .affiliate-banner{
   grid-column:1 / -1;
   margin:10px 0 4px;
@@ -204,7 +216,7 @@ section[aria-labelledby="wheel-title"].card{
   box-shadow:0 16px 40px rgba(250,204,21,.6);
 }
 
-/* ---------- Chevron buttons (affiliate) ---------- */
+/* Chevron buttons */
 .affiliate-toggle{
   position:relative;
   width:44px;
@@ -276,8 +288,6 @@ section[aria-labelledby="wheel-title"].card{
 .affiliate-collapsed:hover{
   border-style:solid;
 }
-
-/* show collapsed pill only when banner is collapsed */
 .affiliate-banner.collapsed .affiliate-inner{display:none;}
 .affiliate-banner.collapsed .affiliate-collapsed{display:inline-flex;}
 
@@ -329,7 +339,6 @@ button:hover::after,.chip-btn:hover::after{transform:translateX(100%)}
 .showopts .chip input[type="checkbox"]::after{content:"";width:9px;height:9px;border-radius:4px;background:var(--accent);transform:scale(.2);opacity:0;transition:.18s var(--ease)}
 #chips .chip input[type="checkbox"]:checked,
 #showOnWheel .chip input[type="checkbox"]:checked,
-.showopts .chip input[type="checkbox"]::after,
 .showopts .chip input[type="checkbox"]:checked{border-color:var(--accent)}
 #chips .chip input[type="checkbox"]:checked::after,
 #showOnWheel .chip input[type="checkbox"]:checked::after,
@@ -424,7 +433,7 @@ canvas#wheel{
 .spin-fab:active{transform:translate(-50%,-50%) scale(.985)}
 .spin-fab:disabled{opacity:.7;cursor:wait}
 
-/* ========== Modal (unchanged styling, but with fixes) ========== */
+/* ========== Modal ========== */
 #backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(4,10,24,.82);backdrop-filter:blur(12px);z-index:1000}
 #modal{
   width:min(92vw,440px);border-radius:18px;overflow:hidden;
@@ -523,7 +532,7 @@ button:focus-visible,.chip-btn:focus-visible,
 
 /* footer */
 .footer{
-  max-width:1320px;
+  max-width:1240px;
   margin:0 auto 18px;
   padding:4px 16px 10px;
   text-align:center;
