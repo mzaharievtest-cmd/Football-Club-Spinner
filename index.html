@@ -176,49 +176,50 @@
     </div>
   </header>
 
-  <!-- PARTNER BANNER (full width aligned with cards) -->
-  <div class="partner-shell" id="partnerShell">
-    <div class="partner-banner">
-      <div class="partner-main">
-        <div class="partner-eyebrow">Partner offer · Sports betting</div>
-        <span class="partner-headline">
-          Get a 50% sports bonus up to €300 at N1Bet
-        </span>
-        <p class="partner-body">
-          Sign up at N1Bet and boost your first deposit with a
-          <strong>50% sports welcome bonus up to €300</strong>.
-          Click “Claim Bonus” to visit N1Bet and check the full offer.
-        </p>
-        <div class="partner-fineprint">
-          18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.
+  <!-- MAIN LAYOUT (everything aligned in same grid) -->
+  <main class="container">
+
+    <!-- PARTNER BANNER: full-width row in grid -->
+    <section class="partner-shell" id="partnerShell">
+      <div class="partner-banner">
+        <div class="partner-main">
+          <div class="partner-eyebrow">Partner offer · Sports betting</div>
+          <span class="partner-headline">
+            Get a 50% sports bonus up to €300 at N1Bet
+          </span>
+          <p class="partner-body">
+            Sign up at N1Bet and boost your first deposit with a
+            <strong>50% sports welcome bonus up to €300</strong>.
+            Click “Claim Bonus” to visit N1Bet and check the full offer.
+          </p>
+          <div class="partner-fineprint">
+            18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.
+          </div>
+        </div>
+
+        <div class="partner-cta">
+          <a
+            href="https://n1bet.live?ref_code=qevuxXfOKQ"
+            class="partner-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Claim bonus
+          </a>
+
+          <!-- Chevron toggle -->
+          <button
+            type="button"
+            class="partner-toggle"
+            id="partnerToggle"
+            aria-label="Hide N1Bet partner offer"
+          >
+            <span class="partner-toggle-icon" id="partnerToggleIcon">▴</span>
+          </button>
         </div>
       </div>
+    </section>
 
-      <div class="partner-cta">
-        <a
-          href="https://n1bet.live?ref_code=qevuxXfOKQ"
-          class="partner-btn"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Claim bonus
-        </a>
-
-        <!-- Chevron toggle -->
-        <button
-          type="button"
-          class="partner-toggle"
-          id="partnerToggle"
-          aria-label="Hide N1Bet partner offer"
-        >
-          <span class="partner-toggle-icon" id="partnerToggleIcon">▴</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MAIN LAYOUT -->
-  <main class="container">
     <!-- LEFT COLUMN -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
