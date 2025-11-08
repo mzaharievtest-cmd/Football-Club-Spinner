@@ -193,7 +193,10 @@ section[aria-labelledby="wheel-title"].card{
   box-shadow:0 14px 32px rgba(250,204,21,.55);
 }
 
-/* ---------- Chevron close/open button (clean, clickable) ---------- */
+
+/* ---------- Chevron buttons (affiliate) ---------- */
+
+/* circular button next to CLAIM BONUS */
 .affiliate-toggle{
   position:relative;
   width:44px;
@@ -202,10 +205,12 @@ section[aria-labelledby="wheel-title"].card{
   padding:0;
   flex-shrink:0;
 
-  border:1px solid rgba(248,250,252,.35);
+  border:1px solid rgba(148,163,184,.5);
   background:
-    radial-gradient(circle at 30% 20%, rgba(248,250,252,.20), rgba(15,23,42,1));
-  box-shadow:0 10px 26px rgba(0,0,0,.85);
+    radial-gradient(circle at 30% 20%, rgba(248,250,252,.22), rgba(15,23,42,1));
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,.9) inset,
+    0 14px 32px rgba(0,0,0,.9);
 
   display:inline-flex;
   align-items:center;
@@ -224,21 +229,29 @@ section[aria-labelledby="wheel-title"].card{
 
 .affiliate-toggle:hover{
   transform:translateY(-1px);
-  border-color:rgba(248,250,252,.7);
-  box-shadow:0 14px 34px rgba(0,0,0,.9);
+  border-color:rgba(248,250,252,.8);
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,.9) inset,
+    0 18px 38px rgba(0,0,0,1);
 }
 
-.affiliate-toggle:active{
-  transform:translateY(0);
-  box-shadow:0 8px 20px rgba(0,0,0,.85);
+/* shared icon styling (up + down) */
+.affiliate-chevron-icon{
+  width:22px;
+  height:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-/* caret characters inside the circle */
-.affiliate-toggle .chevron-up{
-  font-size:18px;
-  line-height:1;
-  color:#f9fafb;
-  transform:translateY(-1px);   /* nudge visually to look centered */
+.affiliate-chevron-icon svg{
+  width:18px;
+  height:18px;
+  stroke:#f9fafb;
+  stroke-width:2.2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
 }
 
 /* collapsed strip */
@@ -247,8 +260,8 @@ section[aria-labelledby="wheel-title"].card{
   margin-top:6px;
   width:100%;
   border-radius:999px;
-  border:1px dashed rgba(250,204,21,.6);
-  background:rgba(15,23,42,.9);
+  border:1px dashed rgba(250,204,21,.7);
+  background:rgba(15,23,42,.96);
   color:#f9fafb;
   font-size:12px;
   padding:8px 14px;
@@ -257,37 +270,13 @@ section[aria-labelledby="wheel-title"].card{
   cursor:pointer;
 }
 
-.affiliate-collapsed .chevron-down{
-  font-size:16px;
-  line-height:1;
-  margin-left:8px;
+.affiliate-collapsed:hover{
+  border-style:solid;
 }
 
-/* up arrow for expanded banner */
-.chevron-up::before{
-  transform:rotate(-135deg);   /* points up */
-}
-
-/* down arrow on collapsed pill */
-.chevron-down::before{
-  transform:rotate(45deg);     /* points down */
-}
-
-/* collapsed strip */
-.affiliate-collapsed{
-  display:none;
-  margin-top:6px;
-  width:100%;
-  border-radius:999px;
-  border:1px dashed rgba(250,204,21,.6);
-  background:rgba(15,23,42,.9);
-  color:#f9fafb;
-  font-size:12px;
-  padding:8px 14px;
-  align-items:center;
-  justify-content:space-between;
-  cursor:pointer;
-}
+/* show collapsed pill only when banner is collapsed */
+.affiliate-banner.collapsed .affiliate-inner{display:none;}
+.affiliate-banner.collapsed .affiliate-collapsed{display:inline-flex;}
 
 /* ========== Chips & buttons ========== */
 .quick-picks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
