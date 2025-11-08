@@ -317,6 +317,7 @@ canvas#wheel{
   min-width:auto; margin-right:12px; font-weight:800; color:#d7e8ff;
 }
 #modal .m-actions .chip-btn{ width:100%; } /* keep Close button full width */
+
 /* =========================
    Optional #content section (kept for future)
    ========================= */
@@ -399,6 +400,7 @@ section.card[aria-labelledby="wheel-title"] { overflow: visible !important; }
 canvas#wheel { pointer-events: none !important; }
 .spin-fab { z-index: 50 !important; }
 .pointer  { z-index: 40 !important; }
+
 /* Modal row alignment fix */
 #mHead { text-align:left; } /* keep title left like your screenshot */
 .m-row{
@@ -457,3 +459,32 @@ canvas#wheel { pointer-events: none !important; }
 }
 /* ensure hidden rows in modal are really gone, even with grid */
 .m-row[hidden] { display: none !important; }
+
+/* =========================
+   Footer / Copyright
+   ========================= */
+.site-footer{
+  margin:8px 0 24px;
+  font-size:12px;
+  color:var(--dim);
+}
+.footer-inner{
+  max-width:1240px;
+  margin:0 auto;
+  padding:4px clamp(12px,4vw,36px) 0;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  align-items:center;
+  opacity:.9;
+}
+.footer-inner span{
+  white-space:nowrap;
+}
+@media (max-width:640px){
+  .footer-inner{
+    justify-content:center;
+    text-align:center;
+  }
+}
