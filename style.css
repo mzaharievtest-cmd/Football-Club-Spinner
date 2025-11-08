@@ -461,8 +461,105 @@ canvas#wheel { pointer-events: none !important; }
 .m-row[hidden] { display: none !important; }
 
 /* =========================
-   Footer / Copyright
+   Affiliate / Partner banner
    ========================= */
+.affiliate-card{
+  max-width:1240px;
+  margin:16px auto 8px;
+  padding:14px clamp(18px,4vw,26px) 18px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.affiliate-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  flex-wrap:wrap;
+}
+
+.affiliate-text{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:0;
+}
+
+.affiliate-tag{
+  display:inline-block;
+  padding:3px 10px;
+  border-radius:999px;
+  border:1px solid rgba(246,208,92,.9);
+  background:rgba(255,205,120,.08);
+  color:#f9e5a2;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.affiliate-title{
+  font-size:15px;
+  font-weight:800;
+}
+
+.affiliate-subtitle{
+  font-size:13px;
+  color:var(--muted);
+}
+
+.affiliate-cta{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 18px;
+  border-radius:999px;
+  border:1px solid rgba(246,208,92,.9);
+  background:linear-gradient(135deg,#facc6b,#f59e0b);
+  color:#111827;
+  font-weight:800;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  text-decoration:none;
+  box-shadow:0 10px 24px rgba(245,158,11,.35);
+  white-space:nowrap;
+  transition:transform .12s var(--ease), box-shadow .12s var(--ease), filter .12s var(--ease);
+}
+
+.affiliate-cta:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.05);
+  box-shadow:0 14px 30px rgba(245,158,11,.45);
+}
+
+.affiliate-cta:active{
+  transform:translateY(0);
+  box-shadow:0 6px 16px rgba(245,158,11,.3);
+}
+
+.affiliate-warning{
+  margin:0;
+  margin-top:2px;
+  font-size:11px;
+  color:var(--dim);
+  opacity:.9;
+}
+
+/* mobile: stack nicely */
+@media (max-width:640px){
+  .affiliate-inner{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .affiliate-cta{
+    width:100%;
+    justify-content:center;
+  }
+}
+
 /* =========================
    Footer / Copyright
    ========================= */
