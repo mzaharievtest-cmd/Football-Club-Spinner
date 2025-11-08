@@ -383,6 +383,39 @@
   <!-- App logic -->
   <script src="app.js" defer></script>
 
+  <script>
+  (function () {
+    const shell  = document.getElementById('partnerShell');
+    const toggle = document.getElementById('partnerToggle');
+    const icon   = document.getElementById('partnerToggleIcon');
+
+    if (!shell || !toggle || !icon) return;
+
+    const STORAGE_KEY = 'fsPartnerCollapsed';
+
+    // Restore previous state
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === '1') {
+      shell.classList.add('partner-collapsed');
+      icon.textContent = '▾';
+      toggle.setAttribute('aria-label', 'Show N1Bet partner offer');
+    } else {
+      icon.textContent = '▴';
+      toggle.setAttribute('aria-label', 'Hide N1Bet partner offer');
+    }
+
+    toggle.addEventListener('click', () => {
+      const isCollapsed = shell.classList.toggle('partner-collapsed');
+
+      icon.textContent = isCollapsed ? '▾' : '▴';
+      toggle.setAttribute(
+        'aria-label',
+        isCollapsed ? 'Show N1Bet partner offer' : 'Hide N1Bet partner offer'
+      );
+      localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
+    });
+  })();
+</script>
   <!-- Mode text + accordion + partner toggle -->
   <script>
     (function(){
