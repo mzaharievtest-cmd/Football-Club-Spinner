@@ -154,7 +154,6 @@
 
   <header>
     <div class="brand">
-      <!-- Above-the-fold logo -->
       <img src="app-logo.png?v=1"
            alt="Football Spinner logo"
            class="brand-img"
@@ -186,7 +185,7 @@
         <p class="affiliate-subtitle">
           Sign up at N1Bet and boost your first deposit with a
           <strong>50% sports welcome bonus up to €300</strong>.
-          Use code <strong>qevuxXfOKQ</strong> or click “Claim Bonus”.
+          Click “Claim Bonus” to visit N1Bet and check the full offer.
         </p>
         <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
       </div>
@@ -204,14 +203,12 @@
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
 
-      <!-- Quick picks -->
       <div class="quick-picks" role="group" aria-label="Quick selections">
         <button id="qpAll"  class="chip-btn" type="button" title="Select all leagues">All Leagues</button>
         <button id="qpNone" class="chip-btn" type="button" title="Deselect all">Clear</button>
         <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
       </div>
 
-      <!-- Chips (TEAM: leagues · PLAYER: PL teams generated from players.json) -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
         <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
@@ -233,7 +230,6 @@
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
-      <!-- Meter + SHOW ON WHEEL -->
       <div class="wheel-subheader">
         <div id="perfTip" class="perf-tip" aria-live="polite"
              data-clubs-text="teams ready to spin"
@@ -266,7 +262,6 @@
         </div>
       </div>
 
-      <!-- Wheel -->
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
         <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
@@ -324,7 +319,7 @@
 
   <!-- Footer with centered copyright -->
   <footer class="footer">
-    <p>© 2025 Football Spinner. All rights reserved. <span class="age">18+</span></p>
+    <p>© 2025 Football Spinner. All rights reserved.</p>
   </footer>
 
   <!-- Modal -->
@@ -426,7 +421,6 @@
         setTabSelection('player');
       });
 
-      // Accordion
       const accordion = document.getElementById('infoAccordion');
       if (accordion){
         const panels = Array.from(accordion.querySelectorAll('.ac-panel'));
