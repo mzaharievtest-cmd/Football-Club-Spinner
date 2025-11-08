@@ -29,7 +29,7 @@
   --radius:18px;
 
   /* Header spacing (JS updates --header-h live) */
-  --header-h: 84px; /* fallback until JS measures header */
+  --header-h: 84px;
 }
 @media (prefers-reduced-motion:reduce){
   :root{--ease:linear;--ease-out:linear}
@@ -142,8 +142,9 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  padding:9px 18px;
-  border-radius:999px;
+  padding:12px 24px;
+  min-width:180px;
+  border-radius:14px;
   font-size:12px;
   font-weight:900;
   letter-spacing:.12em;
@@ -187,7 +188,7 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .section-title{margin:0 0 10px;font-size:12px;letter-spacing:.36em;text-transform:uppercase;color:var(--muted)}
 
 /* =========================
-   Columns scrolling (both move with the page)
+   Columns scrolling
    ========================= */
 .card.sidebar{
   position:static;
@@ -374,29 +375,53 @@ canvas#wheel{
 }
 .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02);border-color:var(--accent-2);box-shadow:0 6px 18px rgba(34,211,238,.18)}
 
-/* Modal polish */
 #modal .reveal-btn{ width:auto !important; }
-
 #modal .m-body{ align-items:center; }
 #modal #mHead{
   font-size:22px; font-weight:900; text-align:center; line-height:1.2;
   margin-top:6px;
 }
 #modal #mSub{ text-align:center; }
-
 #modal #mLogo{
   border-radius:16px; padding:10px; background:#0b1220;
   border:1px solid rgba(100,168,255,.35);
   box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 30px rgba(90,161,255,.08);
 }
-
 #modal .m-row .label{
   min-width:auto; margin-right:12px; font-weight:800; color:#d7e8ff;
 }
 #modal .m-actions .chip-btn{ width:100%; }
 
+/* Modal row alignment fix */
+#mHead { text-align:left; }
+.m-row{
+  display:grid !important;
+  grid-template-columns: 140px 1fr;
+  align-items:center;
+  gap:18px;
+}
+.m-row .value-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:48px;
+  padding:10px 16px;
+  border-radius:14px;
+  background:rgba(17,28,48,.85);
+  border:1px solid rgba(90,161,255,.16);
+  color:#d7e8ff;
+  font-weight:800;
+}
+.m-row .reveal-wrap{ width:auto; }
+
+@media (max-width:560px){
+  .m-row{ grid-template-columns: 1fr; gap:10px; }
+  .m-row .label{ margin-bottom:2px; }
+}
+.m-row[hidden] { display: none !important; }
+
 /* =========================
-   Optional #content section
+   Optional content section
    ========================= */
 #content{
   --anchor-offset: calc(var(--header-h) + 12px);
@@ -466,7 +491,7 @@ button:focus-visible,.chip-btn:focus-visible,
 }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* ——— FINAL OVERRIDES: tighten header gap, disable sticky on both cards ——— */
+/* final overrides */
 .container { margin-top: 12px !important; }
 .card.sidebar[aria-labelledby="filter-title"],
 section.card[aria-labelledby="wheel-title"] {
@@ -477,34 +502,6 @@ section.card[aria-labelledby="wheel-title"] { overflow: visible !important; }
 canvas#wheel { pointer-events: none !important; }
 .spin-fab { z-index: 50 !important; }
 .pointer  { z-index: 40 !important; }
-
-/* Modal row alignment fix */
-#mHead { text-align:left; }
-.m-row{
-  display:grid !important;
-  grid-template-columns: 140px 1fr;
-  align-items:center;
-  gap:18px;
-}
-.m-row .value-pill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:48px;
-  padding:10px 16px;
-  border-radius:14px;
-  background:rgba(17,28,48,.85);
-  border:1px solid rgba(90,161,255,.16);
-  color:#d7e8ff;
-  font-weight:800;
-}
-.m-row .reveal-wrap{ width:auto; }
-
-@media (max-width:560px){
-  .m-row{ grid-template-columns: 1fr; gap:10px; }
-  .m-row .label{ margin-bottom:2px; }
-}
-.m-row[hidden] { display: none !important; }
 
 /* =========================
    Footer (centered copyright)
@@ -518,9 +515,4 @@ canvas#wheel { pointer-events: none !important; }
   color:var(--dim);
   position:relative;
   z-index:1;
-}
-.footer .age{
-  font-weight:700;
-  color:#facc15;
-  margin-left:4px;
 }
