@@ -49,12 +49,12 @@
   <link rel="apple-touch-icon" href="app-logo.png?v=1" />
   <link rel="shortcut icon" href="app-logo.png?v=1" />
 
-  <!-- Manifest (optional) -->
+  <!-- Manifest -->
   <link rel="manifest" href="/manifest.webmanifest" />
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css?v=1" />
-  
+
   <!-- Google Analytics 4 -->
   <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
@@ -154,7 +154,7 @@
 
   <header>
     <div class="brand">
-      <!-- Above-the-fold logo: keep eager load, but add explicit size -->
+      <!-- Above-the-fold logo -->
       <img src="app-logo.png?v=1"
            alt="Football Spinner logo"
            class="brand-img"
@@ -168,16 +168,36 @@
 
     <div class="header-right">
       <div class="mode-switch-wrap">
-        <!-- ARIA: tabs use aria-selected (not aria-pressed) -->
         <div class="mode-switch" role="tablist" aria-label="View mode">
           <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
           <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
         </div>
-        <!-- Dynamic note shown only in PLAYER mode -->
         <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
       </div>
     </div>
   </header>
+
+  <!-- Affiliate banner (visible, just under header) -->
+  <section class="affiliate-banner" aria-label="Sports betting welcome bonus from N1Bet">
+    <div class="affiliate-inner">
+      <div class="affiliate-text">
+        <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
+        <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
+        <p class="affiliate-subtitle">
+          Sign up at N1Bet and boost your first deposit with a
+          <strong>50% sports welcome bonus up to €300</strong>.
+          Use code <strong>qevuxXfOKQ</strong> or click “Claim Bonus”.
+        </p>
+        <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
+      </div>
+      <a class="affiliate-cta"
+         href="https://n1bet.live?ref_code=qevuxXfOKQ"
+         target="_blank"
+         rel="noopener noreferrer nofollow">
+        Claim Bonus
+      </a>
+    </div>
+  </section>
 
   <main class="container">
     <!-- LEFT: filters / quick actions / history -->
@@ -228,7 +248,7 @@
             <span id="lblA" class="chip-text">Logo</span>
           </label>
           <label class="chip" title="Show team or player names">
-            <input type="checkbox" id="optB" checked aria-label="Name" />
+            <input type="checkbox" id="optB" aria-label="Name" />
             <span id="lblB" class="chip-text">Name</span>
           </label>
           <label class="chip" title="Team mode: Stadium · Player mode: Jersey">
@@ -302,6 +322,11 @@
     </section>
   </main>
 
+  <!-- Footer with centered copyright -->
+  <footer class="footer">
+    <p>© 2025 Football Spinner. All rights reserved. <span class="age">18+</span></p>
+  </footer>
+
   <!-- Modal -->
   <div id="backdrop" style="display:none">
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
@@ -309,7 +334,6 @@
       <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
 
       <div class="m-body">
-        <!-- Not above-the-fold: lazy + dimensions -->
         <img id="mLogo" alt="" loading="lazy" width="256" height="256" />
 
         <div class="m-row" id="rowStadium">
@@ -339,40 +363,10 @@
     </div>
   </div>
 
-      <!-- Affiliate / Sponsor banner -->
-    <section class="card affiliate-card" aria-label="Partner offer">
-      <div class="affiliate-inner">
-        <div class="affiliate-text">
-          <span class="affiliate-tag">Partner</span>
-          <span class="affiliate-title">Support Football Spinner</span>
-          <span class="affiliate-subtitle">
-            Try N1Bet for live odds, football bets and more.
-          </span>
-        </div>
-        <a class="affiliate-cta"
-           href="https://n1bet.live?ref_code=qevuxXfOKQ"
-           target="_blank"
-           rel="noopener noreferrer nofollow">
-          Go to N1Bet
-        </a>
-      </div>
-      <p class="affiliate-warning">
-        18+ only. Please gamble responsibly.
-      </p>
-    </section>
-  
-  <!-- Copyright footer -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <span>© 2025 Football Spinner.</span>
-      <span>All rights reserved.</span>
-    </div>
-  </footer>
-
   <!-- App -->
   <script src="app.js" defer></script>
 
-  <!-- Mode text + accordion helpers (ARIA fix for tabs included) -->
+  <!-- Mode text + accordion helpers -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -404,7 +398,6 @@
         }
       }
 
-      // Update aria-selected on tabs
       function setTabSelection(mode){
         const teamBtn = document.getElementById('modeTeam');
         const playerBtn = document.getElementById('modePlayer');
@@ -466,7 +459,6 @@
             if (e.key==='ArrowUp'){ e.preventDefault(); (panels[panels.indexOf(panel)-1]||panels[panels.length-1]).querySelector('.ac-summary').focus(); }
           });
 
-          // start collapsed
           panel.removeAttribute('open');
           summary.setAttribute('aria-expanded','false');
         });
