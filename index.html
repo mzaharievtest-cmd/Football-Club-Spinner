@@ -153,33 +153,61 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <header>
-    <div class="brand">
-      <!-- Above-the-fold logo: keep eager load, but add explicit size -->
-      <img src="app-logo.png?v=1"
-           alt="Football Spinner logo"
-           class="brand-img"
-           decoding="async"
-           width="128" height="128" />
-      <div>
-        <h1 id="main-title">Football Spinner</h1>
-        <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
-      </div>
-    </div>
-
-    <div class="header-right">
-      <div class="mode-switch-wrap">
-        <!-- ARIA: tabs use aria-selected (not aria-pressed) -->
-        <div class="mode-switch" role="tablist" aria-label="View mode">
-          <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
-          <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
+    <div class="header-inner">
+      <div class="brand">
+        <!-- Above-the-fold logo -->
+        <img src="app-logo.png?v=1"
+             alt="Football Spinner logo"
+             class="brand-img"
+             decoding="async"
+             width="128" height="128" />
+        <div>
+          <h1 id="main-title">Football Spinner</h1>
+          <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
         </div>
-        <!-- Dynamic note shown only in PLAYER mode -->
-        <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
+      </div>
+
+      <div class="header-right">
+        <div class="mode-switch-wrap">
+          <!-- ARIA: tabs use aria-selected -->
+          <div class="mode-switch" role="tablist" aria-label="View mode">
+            <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
+            <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
+          </div>
+          <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="container">
+    <!-- Partner N1Bet banner -->
+    <section class="partner-shell" aria-label="Sports betting welcome bonus from N1Bet">
+      <div class="partner-banner">
+        <div class="partner-main">
+          <div class="partner-eyebrow">Partner offer · Sports betting</div>
+          <span class="partner-headline">Get a 50% sports bonus up to €300 at N1Bet</span>
+          <p class="partner-body">
+            Sign up at N1Bet and boost your first deposit with a
+            <strong>50% sports welcome bonus up to €300</strong>.
+            Click “Claim Bonus” to visit N1Bet and check the full offer.
+          </p>
+          <p class="partner-fineprint">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
+        </div>
+        <div class="partner-cta">
+          <a class="partner-btn"
+             href="https://n1bet.live?ref_code=qevuxXfOKQ"
+             target="_blank"
+             rel="noopener noreferrer nofollow">
+            Claim Bonus
+          </a>
+          <button class="partner-toggle" type="button" aria-label="Hide partner offer">
+            <span class="partner-toggle-icon">⌃</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <!-- LEFT: filters / quick actions / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
@@ -191,7 +219,7 @@
         <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
       </div>
 
-      <!-- Chips (TEAM: leagues · PLAYER: PL teams generated from players.json) -->
+      <!-- Chips -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
         <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
@@ -309,7 +337,6 @@
       <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
 
       <div class="m-body">
-        <!-- Not above-the-fold: lazy + dimensions -->
         <img id="mLogo" alt="" loading="lazy" width="256" height="256" />
 
         <div class="m-row" id="rowStadium">
@@ -339,7 +366,7 @@
     </div>
   </div>
 
-  <!-- Copyright footer -->
+  <!-- Footer / copyright -->
   <footer class="site-footer">
     <div class="footer-inner">
       <span>© 2025 Football Spinner.</span>
@@ -350,7 +377,7 @@
   <!-- App -->
   <script src="app.js" defer></script>
 
-  <!-- Mode text + accordion helpers (ARIA fix for tabs included) -->
+  <!-- Mode text + accordion + partner banner helpers -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -382,7 +409,6 @@
         }
       }
 
-      // Update aria-selected on tabs
       function setTabSelection(mode){
         const teamBtn = document.getElementById('modeTeam');
         const playerBtn = document.getElementById('modePlayer');
@@ -444,9 +470,27 @@
             if (e.key==='ArrowUp'){ e.preventDefault(); (panels[panels.indexOf(panel)-1]||panels[panels.length-1]).querySelector('.ac-summary').focus(); }
           });
 
-          // start collapsed
           panel.removeAttribute('open');
           summary.setAttribute('aria-expanded','false');
+        });
+      }
+
+      // Partner banner collapse / expand with localStorage
+      const partner = document.querySelector('.partner-shell');
+      if (partner){
+        const toggle = partner.querySelector('.partner-toggle');
+        const icon   = partner.querySelector('.partner-toggle-icon');
+        const storedCollapsed = localStorage.getItem('fsPartnerCollapsed') === '1';
+
+        if (storedCollapsed){
+          partner.classList.add('partner-collapsed');
+          if (icon) icon.textContent = '⌄';
+        }
+
+        toggle?.addEventListener('click', () => {
+          const isCollapsed = partner.classList.toggle('partner-collapsed');
+          localStorage.setItem('fsPartnerCollapsed', isCollapsed ? '1' : '0');
+          if (icon) icon.textContent = isCollapsed ? '⌄' : '⌃';
         });
       }
     })();
