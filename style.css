@@ -117,10 +117,61 @@ section[aria-labelledby="wheel-title"].card{
   z-index:2;
 }
 
-/* ========== Affiliate banner (inside container, full width) ========== */
-/* =========================
-   Partner banner (N1Bet)
-   ========================= */
+/* ========== Chips & buttons ========== */
+.quick-picks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+button,.chip-btn{
+  appearance:none;width:100%;padding:12px 16px;margin-top:8px;
+  border-radius:14px;border:1px solid var(--line);
+  color:#f3f7ff;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+  background:linear-gradient(180deg, rgba(22,34,64,.96), rgba(12,18,34,.92));
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .14s var(--ease),border-color .14s var(--ease),box-shadow .18s var(--ease);
+}
+button:hover,.chip-btn:hover{transform:translateY(-1px);border-color:var(--accent-2);box-shadow:0 12px 28px rgba(34,211,238,.16)}
+button:active{transform:none}
+button:disabled{opacity:.6;cursor:wait}
+button::after,.chip-btn::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(120deg,rgba(255,255,255,.08),transparent 30% 70%,rgba(255,255,255,.08));
+  transform:translateX(-100%);transition:transform .7s var(--ease-out);pointer-events:none
+}
+button:hover::after,.chip-btn:hover::after{transform:translateX(100%)}
+.chip-btn.ghost{background:linear-gradient(180deg, rgba(18,22,36,.86), rgba(10,14,26,.82));border-style:dashed}
+.chip-btn.active{border-color:var(--accent-2);box-shadow:0 0 0 2px rgba(34,211,238,.22) inset,0 12px 26px rgba(34,211,238,.12)}
+
+#chips .chips,#showOnWheel,.showopts{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 14px}
+#chips .chip,#showOnWheel .chip,.showopts .chip{
+  position:relative;display:inline-flex;align-items:center;gap:10px;
+  padding:10px 16px 10px 46px;border-radius:999px;max-width:100%;
+  border:1px solid var(--line);background:var(--chip-grad);font-size:13px;font-weight:700;color:var(--text);cursor:pointer;
+  transition:transform .16s var(--ease),border-color .16s var(--ease),box-shadow .18s var(--ease);
+}
+#chips .chip:hover,#showOnWheel .chip:hover,.showopts .chip:hover{border-color:var(--line-strong);transform:translateY(-1px) scale(1.02)}
+
+#chips .chip input[type="checkbox"],
+#showOnWheel .chip input[type="checkbox"],
+.showopts .chip input[type="checkbox"]{
+  appearance:none;position:absolute;left:16px;width:18px;height:18px;border-radius:6px;
+  border:1px solid rgba(120,150,220,.46);background:rgba(6,10,22,.85);display:grid;place-items:center;transition:.18s var(--ease);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)
+}
+#chips .chip input[type="checkbox"]::after,
+#showOnWheel .chip input[type="checkbox"]::after,
+.showopts .chip input[type="checkbox"]::after{content:"";width:9px;height:9px;border-radius:4px;background:var(--accent);transform:scale(.2);opacity:0;transition:.18s var(--ease)}
+#chips .chip input[type="checkbox"]:checked,
+#showOnWheel .chip input[type="checkbox"]:checked,
+.showopts .chip input[type="checkbox"]:checked{border-color:var(--accent)}
+#chips .chip input[type="checkbox"]:checked::after,
+#showOnWheel .chip input[type="checkbox"]:checked::after,
+.showopts .chip input[type="checkbox"]:checked::after{transform:scale(1);opacity:1}
+
+#chips .chip .chip-text,#showOnWheel .chip .chip-text,.showopts .chip .chip-text{display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:28ch}
+.showopts .chip:has(.chip-text:empty){display:none!important}
+@media (max-width:560px){
+  #chips .chip,#showOnWheel .chip,.showopts .chip{padding:10px 18px 10px 46px}
+  #chips .chip .chip-text,#showOnWheel .chip .chip-text,.showopts .chip .chip-text{max-width:24ch}
+}
+
+/* ========== Partner banner (N1Bet) ========== */
 
 /* Outer shell – aligns to the same width as the main cards */
 .partner-shell{
@@ -247,6 +298,7 @@ section[aria-labelledby="wheel-title"].card{
   cursor:pointer;
   box-shadow:0 8px 22px rgba(15,23,42,.9);
   transition:transform .12s var(--ease), box-shadow .12s var(--ease), background .12s var(--ease);
+  flex:0 0 auto;
 }
 
 .partner-toggle:hover{
@@ -259,7 +311,7 @@ section[aria-labelledby="wheel-title"].card{
   line-height:1;
 }
 
-/* Collapsed state – slim pill, no dashed border, aligned width */
+/* Collapsed state – slim pill, aligned width */
 .partner-shell.partner-collapsed .partner-banner{
   padding:10px 18px;
   border-radius:999px;
@@ -313,60 +365,6 @@ section[aria-labelledby="wheel-title"].card{
   }
   .partner-headline{ font-size:16px; }
   .partner-body{ font-size:12px; }
-}
-
-/* ========== Chips & buttons ========== */
-.quick-picks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-button,.chip-btn{
-  appearance:none;width:100%;padding:12px 16px;margin-top:8px;
-  border-radius:14px;border:1px solid var(--line);
-  color:#f3f7ff;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
-  background:linear-gradient(180deg, rgba(22,34,64,.96), rgba(12,18,34,.92));
-  cursor:pointer;position:relative;overflow:hidden;
-  transition:transform .14s var(--ease),border-color .14s var(--ease),box-shadow .18s var(--ease);
-}
-button:hover,.chip-btn:hover{transform:translateY(-1px);border-color:var(--accent-2);box-shadow:0 12px 28px rgba(34,211,238,.16)}
-button:active{transform:none}
-button:disabled{opacity:.6;cursor:wait}
-button::after,.chip-btn::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(120deg,rgba(255,255,255,.08),transparent 30% 70%,rgba(255,255,255,.08));
-  transform:translateX(-100%);transition:transform .7s var(--ease-out);pointer-events:none
-}
-button:hover::after,.chip-btn:hover::after{transform:translateX(100%)}
-.chip-btn.ghost{background:linear-gradient(180deg, rgba(18,22,36,.86), rgba(10,14,26,.82));border-style:dashed}
-.chip-btn.active{border-color:var(--accent-2);box-shadow:0 0 0 2px rgba(34,211,238,.22) inset,0 12px 26px rgba(34,211,238,.12)}
-
-#chips .chips,#showOnWheel,.showopts{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 14px}
-#chips .chip,#showOnWheel .chip,.showopts .chip{
-  position:relative;display:inline-flex;align-items:center;gap:10px;
-  padding:10px 16px 10px 46px;border-radius:999px;max-width:100%;
-  border:1px solid var(--line);background:var(--chip-grad);font-size:13px;font-weight:700;color:var(--text);cursor:pointer;
-  transition:transform .16s var(--ease),border-color .16s var(--ease),box-shadow .18s var(--ease);
-}
-#chips .chip:hover,#showOnWheel .chip:hover,.showopts .chip:hover{border-color:var(--line-strong);transform:translateY(-1px) scale(1.02)}
-
-#chips .chip input[type="checkbox"],
-#showOnWheel .chip input[type="checkbox"],
-.showopts .chip input[type="checkbox"]{
-  appearance:none;position:absolute;left:16px;width:18px;height:18px;border-radius:6px;
-  border:1px solid rgba(120,150,220,.46);background:rgba(6,10,22,.85);display:grid;place-items:center;transition:.18s var(--ease);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)
-}
-#chips .chip input[type="checkbox"]::after,
-#showOnWheel .chip input[type="checkbox"]::after,
-.showopts .chip input[type="checkbox"]::after{content:"";width:9px;height:9px;border-radius:4px;background:var(--accent);transform:scale(.2);opacity:0;transition:.18s var(--ease)}
-#chips .chip input[type="checkbox"]:checked,
-#showOnWheel .chip input[type="checkbox"]:checked,
-.showopts .chip input[type="checkbox"]:checked{border-color:var(--accent)}
-#chips .chip input[type="checkbox"]:checked::after,
-#showOnWheel .chip input[type="checkbox"]:checked::after,
-.showopts .chip input[type="checkbox"]:checked::after{transform:scale(1);opacity:1}
-
-#chips .chip .chip-text,#showOnWheel .chip .chip-text,.showopts .chip .chip-text{display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:28ch}
-.showopts .chip:has(.chip-text:empty){display:none!important}
-@media (max-width:560px){
-  #chips .chip,#showOnWheel .chip,.showopts .chip{padding:10px 18px 10px 46px}
-  #chips .chip .chip-text,#showOnWheel .chip .chip-text,.showopts .chip .chip-text{max-width:24ch}
 }
 
 /* ========== Result & history ========== */
@@ -461,39 +459,20 @@ canvas#wheel{
   transition:transform .22s var(--ease-out),opacity .22s var(--ease-out)
 }
 #modal.show{transform:none;opacity:1}
-#mHead{padding:22px 26px 0;font-weight:900;font-size:24px;color:#f4f7ff;text-align:center}
+#mHead{padding:22px 26px 0;font-weight:900;font-size:24px;color:#f4f7ff;text-align:left}
 #mSub{font-size:14px;color:#a3b8e7;margin:6px 0 2px;text-align:center}
 .m-body{padding:10px 22px 14px;display:flex;flex-direction:column;align-items:center;gap:10px}
 #mLogo{width:110px;height:110px;object-fit:contain;border-radius:16px;margin:10px auto 6px;background:#0b1220;border:1px solid #5aa1ff;box-shadow:0 2px 10px rgba(16,24,48,.45)}
-.m-row{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0}
+.m-row{width:100%;display:grid!important;grid-template-columns:140px 1fr;align-items:center;gap:18px;margin:6px 0}
 .m-sep{width:100%;height:1px;background:#234080;margin:8px 0}
 #mStadium,#mClub,#mJersey,#mNat{
-  display:inline-block;min-width:180px;max-width:260px;text-align:center;padding:8px 12px;border-radius:10px;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:180px;max-width:260px;min-height:48px;
+  padding:10px 16px;border-radius:14px;
   background:rgba(17,28,48,.85);border:1px solid rgba(90,161,255,.16);color:#d7e8ff;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
-.m-actions{padding:14px 22px 20px;background:#0f1830;border-top:1px solid #234080;display:flex;gap:10px;justify-content:center}
-
-/* modal alignment fixes (from earlier) */
-#mHead { text-align:left; }
-.m-row{
-  display:grid !important;
-  grid-template-columns: 140px 1fr;
-  align-items:center;
-  gap:18px;
-}
-.m-row .value-pill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:48px;
-  padding:10px 16px;
-  border-radius:14px;
-  background:rgba(17,28,48,.85);
-  border:1px solid rgba(90,161,255,.16);
-  color:#d7e8ff;
-  font-weight:800;
-}
 .m-row[hidden]{display:none!important}
+.m-actions{padding:14px 22px 20px;background:#0f1830;border-top:1px solid #234080;display:flex;gap:10px;justify-content:center}
 
 /* ========== Accordion ========== */
 .accordion { display:flex; flex-direction:column; gap:12px; width:100%; }
