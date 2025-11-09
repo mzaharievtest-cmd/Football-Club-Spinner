@@ -153,73 +153,84 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <header>
-    <div class="header-inner">
-      <div class="brand">
-        <!-- Above-the-fold logo -->
-        <img src="app-logo.png?v=1"
-             alt="Football Spinner logo"
-             class="brand-img"
-             decoding="async"
-             width="128" height="128" />
-        <div>
-          <h1 id="main-title">Football Spinner</h1>
-          <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
-        </div>
+    <div class="brand">
+      <img src="app-logo.png?v=1"
+           alt="Football Spinner logo"
+           class="brand-img"
+           decoding="async"
+           width="128" height="128" />
+      <div>
+        <h1 id="main-title">Football Spinner</h1>
+        <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
       </div>
+    </div>
 
-      <div class="header-right">
-        <div class="mode-switch-wrap">
-          <!-- ARIA: tabs use aria-selected -->
-          <div class="mode-switch" role="tablist" aria-label="View mode">
-            <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
-            <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
-          </div>
-          <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
+    <div class="header-right">
+      <div class="mode-switch-wrap">
+        <div class="mode-switch" role="tablist" aria-label="View mode">
+          <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
+          <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
         </div>
+        <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <!-- Partner N1Bet banner -->
-    <section class="partner-shell" aria-label="Sports betting welcome bonus from N1Bet">
-      <div class="partner-banner">
-        <div class="partner-main">
-          <div class="partner-eyebrow">Partner offer · Sports betting</div>
-          <span class="partner-headline">Get a 50% sports bonus up to €300 at N1Bet</span>
-          <p class="partner-body">
+    <!-- Affiliate banner (full-width inside container, like prod) -->
+    <section class="affiliate-banner" aria-label="Sports betting welcome bonus from N1Bet">
+      <div class="affiliate-inner">
+        <div class="affiliate-text">
+          <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
+          <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
+          <p class="affiliate-subtitle">
             Sign up at N1Bet and boost your first deposit with a
             <strong>50% sports welcome bonus up to €300</strong>.
             Click “Claim Bonus” to visit N1Bet and check the full offer.
           </p>
-          <p class="partner-fineprint">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
+          <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
         </div>
-        <div class="partner-cta">
-          <a class="partner-btn"
+
+        <div class="affiliate-right">
+          <a class="affiliate-cta"
              href="https://n1bet.live?ref_code=qevuxXfOKQ"
              target="_blank"
              rel="noopener noreferrer nofollow">
             Claim Bonus
           </a>
-          <button class="partner-toggle" type="button" aria-label="Hide partner offer">
-            <span class="partner-toggle-icon">⌃</span>
+
+          <!-- UP chevron (hide banner) -->
+          <button class="affiliate-toggle" type="button" aria-label="Hide partner offer">
+            <span class="affiliate-chevron-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 14l6-6 6 6" />
+              </svg>
+            </span>
           </button>
         </div>
       </div>
+
+      <!-- Collapsed strip (DOWN chevron to re-open) -->
+      <button class="affiliate-collapsed" type="button" aria-label="Show partner offer">
+        <span>Partner offer · N1Bet sports bonus</span>
+        <span class="affiliate-chevron-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M6 10l6 6 6-6" />
+          </svg>
+        </span>
+      </button>
     </section>
 
     <!-- LEFT: filters / quick actions / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
 
-      <!-- Quick picks -->
       <div class="quick-picks" role="group" aria-label="Quick selections">
         <button id="qpAll"  class="chip-btn" type="button" title="Select all leagues">All Leagues</button>
         <button id="qpNone" class="chip-btn" type="button" title="Deselect all">Clear</button>
         <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
       </div>
 
-      <!-- Chips -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
         <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
@@ -241,7 +252,6 @@
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
-      <!-- Meter + SHOW ON WHEEL -->
       <div class="wheel-subheader">
         <div id="perfTip" class="perf-tip" aria-live="polite"
              data-clubs-text="teams ready to spin"
@@ -274,7 +284,6 @@
         </div>
       </div>
 
-      <!-- Wheel -->
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
         <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
@@ -366,7 +375,7 @@
     </div>
   </div>
 
-  <!-- Footer / copyright -->
+  <!-- Copyright footer -->
   <footer class="site-footer">
     <div class="footer-inner">
       <span>© 2025 Football Spinner.</span>
@@ -377,7 +386,7 @@
   <!-- App -->
   <script src="app.js" defer></script>
 
-  <!-- Mode text + accordion + partner banner helpers -->
+  <!-- Mode text + accordion + affiliate toggle -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -475,22 +484,26 @@
         });
       }
 
-      // Partner banner collapse / expand with localStorage
-      const partner = document.querySelector('.partner-shell');
-      if (partner){
-        const toggle = partner.querySelector('.partner-toggle');
-        const icon   = partner.querySelector('.partner-toggle-icon');
-        const storedCollapsed = localStorage.getItem('fsPartnerCollapsed') === '1';
+      // Affiliate banner collapse / expand with localStorage
+      const aff = document.querySelector('.affiliate-banner');
+      if (aff){
+        const collapsedBtn = aff.querySelector('.affiliate-collapsed');
+        const toggleBtn = aff.querySelector('.affiliate-toggle');
 
-        if (storedCollapsed){
-          partner.classList.add('partner-collapsed');
-          if (icon) icon.textContent = '⌄';
-        }
+        const applyState = (collapsed)=>{
+          aff.classList.toggle('collapsed', collapsed);
+        };
 
-        toggle?.addEventListener('click', () => {
-          const isCollapsed = partner.classList.toggle('partner-collapsed');
-          localStorage.setItem('fsPartnerCollapsed', isCollapsed ? '1' : '0');
-          if (icon) icon.textContent = isCollapsed ? '⌄' : '⌃';
+        const stored = localStorage.getItem('fsAffiliateCollapsed') === '1';
+        applyState(stored);
+
+        toggleBtn?.addEventListener('click', ()=>{
+          localStorage.setItem('fsAffiliateCollapsed','1');
+          applyState(true);
+        });
+        collapsedBtn?.addEventListener('click', ()=>{
+          localStorage.setItem('fsAffiliateCollapsed','0');
+          applyState(false);
         });
       }
     })();
