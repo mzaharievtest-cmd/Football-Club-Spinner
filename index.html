@@ -54,7 +54,7 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css?v=1" />
-  
+
   <!-- Google Analytics 4 -->
   <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
@@ -152,6 +152,7 @@
   <!-- GTM (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
+  <!-- Header / nav (unchanged TEAM / PLAYER styling) -->
   <header>
     <div class="brand">
       <img src="app-logo.png?v=1"
@@ -177,7 +178,7 @@
   </header>
 
   <main class="container">
-    <!-- Affiliate banner (full-width inside container, like prod) -->
+    <!-- Affiliate banner (full width inside container) -->
     <section class="affiliate-banner" aria-label="Sports betting welcome bonus from N1Bet">
       <div class="affiliate-inner">
         <div class="affiliate-text">
@@ -199,25 +200,17 @@
             Claim Bonus
           </a>
 
-          <!-- UP chevron (hide banner) -->
+          <!-- UP chevron – hide banner -->
           <button class="affiliate-toggle" type="button" aria-label="Hide partner offer">
-            <span class="affiliate-chevron-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M6 14l6-6 6 6" />
-              </svg>
-            </span>
+            <span class="chevron-icon chevron-up" aria-hidden="true">⌃</span>
           </button>
         </div>
       </div>
 
-      <!-- Collapsed strip (DOWN chevron to re-open) -->
+      <!-- Collapsed pill – same round chevron, arrow down -->
       <button class="affiliate-collapsed" type="button" aria-label="Show partner offer">
         <span>Partner offer · N1Bet sports bonus</span>
-        <span class="affiliate-chevron-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M6 10l6 6 6-6" />
-          </svg>
-        </span>
+        <span class="chevron-icon chevron-down" aria-hidden="true">⌄</span>
       </button>
     </section>
 
@@ -339,6 +332,11 @@
     </section>
   </main>
 
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2025 Football Spinner. All rights reserved.</p>
+  </footer>
+
   <!-- Modal -->
   <div id="backdrop" style="display:none">
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
@@ -375,18 +373,10 @@
     </div>
   </div>
 
-  <!-- Copyright footer -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <span>© 2025 Football Spinner.</span>
-      <span>All rights reserved.</span>
-    </div>
-  </footer>
-
   <!-- App -->
   <script src="app.js" defer></script>
 
-  <!-- Mode text + accordion + affiliate toggle -->
+  <!-- Mode text, accordion, affiliate toggle -->
   <script>
     (function(){
       function applyModeTexts(mode){
