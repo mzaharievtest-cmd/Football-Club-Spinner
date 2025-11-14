@@ -178,26 +178,29 @@
   </header>
 
   <main class="container">
-    <!-- Affiliate banner (full width inside container) -->
-    <section class="affiliate-banner" aria-label="Sports betting welcome bonus from N1Bet">
+    <!-- Affiliate banner (default / brand-agnostic, full width inside container) -->
+    <section class="affiliate-banner" aria-label="Sports betting welcome bonus">
       <div class="affiliate-inner">
         <div class="affiliate-text">
           <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
-          <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
+          <h2 class="affiliate-title">Get a sports welcome bonus with our partner</h2>
           <p class="affiliate-subtitle">
-            Sign up at N1Bet and boost your first deposit with a
-            <strong>50% sports welcome bonus up to €300</strong>.
-            Click “Claim Bonus” to visit N1Bet and check the full offer.
+            This space is reserved for a country-specific sports betting partner.
+            You may see different welcome offers depending on where you visit from.
+            Click “View offer” to open the current partner promotion.
           </p>
-          <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
+          <p class="affiliate-warning">18+ · Please gamble responsibly · Offers and terms depend on your country.</p>
         </div>
 
         <div class="affiliate-right">
+          <!-- Generic CTA – href/data-attrs can be dynamically replaced based on IP -->
           <a class="affiliate-cta"
-             href="https://n1bet.live?ref_code=qevuxXfOKQ"
+             id="affiliateCta"
+             href="#"
+             data-partner="default"
              target="_blank"
              rel="noopener noreferrer nofollow">
-            Claim Bonus
+            View offer
           </a>
 
           <!-- UP chevron – hide banner -->
@@ -209,7 +212,7 @@
 
       <!-- Collapsed pill – same round chevron, arrow down -->
       <button class="affiliate-collapsed" type="button" aria-label="Show partner offer">
-        <span>Partner offer · N1Bet sports bonus</span>
+        <span>Partner offer · Sports welcome bonus</span>
         <span class="chevron-icon chevron-down" aria-hidden="true">⌄</span>
       </button>
     </section>
@@ -246,7 +249,7 @@
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
       <div class="wheel-subheader">
-        <div id="perfTip" class="perf-tip" aria-live="polite"
+        <div class="perf-tip" id="perfTip" aria-live="polite"
              data-clubs-text="teams ready to spin"
              data-players-text="players loaded">
           <span class="meter-text">0 teams ready to spin</span>
