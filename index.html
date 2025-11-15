@@ -178,44 +178,57 @@
   </header>
 
   <main class="container">
-    <!-- Affiliate banner (default / brand-agnostic, full width inside container) -->
-    <section class="affiliate-banner" aria-label="Sports betting welcome bonus">
-      <div class="affiliate-inner">
+    <!-- AFFILIATE BANNER (dev-style block you shared) -->
+    <div class="affiliate-banner" id="affiliate-banner">
+      <div class="affiliate-inner" role="region" aria-label="Partner offer banner">
         <div class="affiliate-text">
           <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
-          <h2 class="affiliate-title">Get a sports welcome bonus with our partner</h2>
+          <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
           <p class="affiliate-subtitle">
-            This space is reserved for a country-specific sports betting partner.
-            You may see different welcome offers depending on where you visit from.
-            Click “View offer” to open the current partner promotion.
+            Sign up at N1Bet and boost your first deposit with a <strong>50% sports welcome bonus up to €300</strong>.
+            Click <strong>Claim Bonus</strong> to visit N1Bet and check the full offer.
           </p>
-          <p class="affiliate-warning">18+ · Please gamble responsibly · Offers and terms depend on your country.</p>
+          <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
         </div>
 
-        <div class="affiliate-right">
-          <!-- Generic CTA – href/data-attrs can be dynamically replaced based on IP -->
-          <a class="affiliate-cta"
-             id="affiliateCta"
-             href="#"
-             data-partner="default"
-             target="_blank"
-             rel="noopener noreferrer nofollow">
-            View offer
+        <div class="affiliate-right" aria-hidden="false">
+          <a
+            class="affiliate-cta"
+            id="affiliate-cta"
+            href="https://www.n1bet.example"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Claim bonus
           </a>
-
-          <!-- UP chevron – hide banner -->
-          <button class="affiliate-toggle" type="button" aria-label="Hide partner offer">
-            <span class="chevron-icon chevron-up" aria-hidden="true">⌃</span>
+          <button
+            class="affiliate-toggle"
+            id="affiliate-toggle"
+            aria-expanded="true"
+            aria-controls="affiliate-banner"
+            title="Collapse banner"
+            type="button"
+          >
+            <span class="chevron-icon" id="affiliate-toggle-icon">▴</span>
           </button>
         </div>
       </div>
 
-      <!-- Collapsed pill – same round chevron, arrow down -->
-      <button class="affiliate-collapsed" type="button" aria-label="Show partner offer">
-        <span>Partner offer · Sports welcome bonus</span>
-        <span class="chevron-icon chevron-down" aria-hidden="true">⌄</span>
-      </button>
-    </section>
+      <!-- collapsed strip that shows when collapsed (CSS handles visibility via .collapsed class) -->
+      <div
+        class="affiliate-collapsed"
+        id="affiliate-collapsed"
+        role="button"
+        tabindex="0"
+        aria-hidden="true"
+      >
+        <span class="affiliate-title" style="margin-right:12px;">
+          Get a 50% sports bonus up to €300
+        </span>
+        <span class="chevron-down">▾</span>
+      </div>
+    </div>
+    <!-- END AFFILIATE BANNER -->
 
     <!-- LEFT: filters / quick actions / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
