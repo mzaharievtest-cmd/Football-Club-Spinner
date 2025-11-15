@@ -817,3 +817,143 @@ function wire(){
   positionSpinFab();
   wire();
 })();
+
+/* ============================================================
+   app.dev.js — dev build behavior for the affiliate banner + minimal UI wiring
+   - Handles affiliate banner expand/collapse and localStorage persistence
+   - Leaves all header/nav elements untouched
+   - Intended for dev environment; included here so dev can use same bundle
+   ============================================================ */
+
+(function () {
+  'use strict';
+
+  // Basic DOM helpers
+  var $ = function (sel, ctx) { return (ctx || document).querySelector(sel); };
+  var $$ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
+
+  // Affiliate banner elements
+  var shell = $('#affiliate-banner');
+  var inner = $('.affiliate-inner', shell);
+  var collapsedStrip = $('#affiliate-collapsed');
+  var toggleBtn = $('#affiliate-toggle');
+  var toggleIcon = $('#affiliate-toggle-icon');
+  var cta = $('#affiliate-cta');
+
+  var STORAGE_KEY = 'affiliate-banner-collapsed';
+
+  // Safe guard: if banner DOM is not present, no-op
+  if (!shell) return;
+
+  // Initialize collapsed state from localStorage
+  function readCollapsed() {
+    try {
+      return localStorage.getItem(STORAGE_KEY) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function writeCollapsed(val) {
+    try {
+      localStorage.setItem(STORAGE_KEY, val ? '1' : '0');
+    } catch (e) {
+      // ignore (e.g., private mode)
+    }
+  }
+
+  function setCollapsed(collapsed, skipFocus) {
+    if (collapsed) {
+      shell.classList.add('collapsed');
+      // show collapsed strip and hide main inner (CSS manages this); update aria
+      if (collapsedStrip) collapsedStrip.setAttribute('aria-hidden', 'false');
+      if (inner) inner.setAttribute('aria-hidden', 'true');
+      if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+      if (toggleIcon) toggleIcon.textContent = '▾';
+    } else {
+      shell.classList.remove('collapsed');
+      if (collapsedStrip) collapsedStrip.setAttribute('aria-hidden', 'true');
+      if (inner) inner.setAttribute('aria-hidden', 'false');
+      if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
+      if (toggleIcon) toggleIcon.textContent = '▴';
+    }
+    writeCollapsed(collapsed);
+    if (!skipFocus && !collapsed && cta) cta.focus(); // if expanded by user, focus CTA for keyboard users
+  }
+
+  // Toggle handler
+  function toggleHandler(e) {
+    var isCollapsed = shell.classList.contains('collapsed');
+    setCollapsed(!isCollapsed);
+  }
+
+  // Click on collapsed strip should expand
+  function collapsedStripHandler(e) {
+    setCollapsed(false);
+  }
+
+  // keyboard support for collapsed strip
+  function collapsedKeyHandler(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setCollapsed(false);
+    }
+  }
+
+  // initialize
+  (function init() {
+    var collapsed = readCollapsed();
+    setCollapsed(collapsed, true);
+
+    if (toggleBtn) toggleBtn.addEventListener('click', toggleHandler, { passive: true });
+    if (collapsedStrip) {
+      collapsedStrip.addEventListener('click', collapsedStripHandler, { passive: true });
+      collapsedStrip.addEventListener('keydown', collapsedKeyHandler, { passive: true });
+    }
+
+    // Accessibility: ensure CTA has rel/noopener and is keyboard-visible
+    if (cta) {
+      cta.setAttribute('rel', 'noopener noreferrer');
+    }
+
+    // Prevent accidental propagation from banner controls to header/higher handlers
+    if (inner) inner.addEventListener('click', function (e) { e.stopPropagation(); });
+
+    // Minimal visual/demo wheel drawing (dev only) so the canvas isn't empty in dev preview
+    try {
+      var canvas = document.getElementById('wheel');
+      if (canvas && canvas.getContext) {
+        var ctx = canvas.getContext('2d');
+        var size = Math.min(canvas.width, canvas.height);
+        var cx = canvas.width / 2;
+        var cy = canvas.height / 2;
+        var slices = 72; // lots of thin stripes per dev screenshot
+        var angle = (Math.PI * 2) / slices;
+
+        for (var i = 0; i < slices; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.fillStyle = (i % 2 === 0) ? '#ff4d4d' : '#ffd34d';
+          ctx.arc(cx, cy, size / 2 - 2, i * angle, (i + 1) * angle);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // draw center button ring
+        ctx.beginPath();
+        ctx.fillStyle = '#1b2b54';
+        ctx.arc(cx, cy, 68, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = '700 20px Inter, system-ui, -apple-system, "Segoe UI", Roboto';
+        ctx.fillStyle = '#f3f7ff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('SPIN!', cx, cy);
+      }
+    } catch (e) {
+      // ignore rendering errors in older browsers
+      console.warn('wheel demo render failed', e);
+    }
+  }());
+})();
