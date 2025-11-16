@@ -223,7 +223,9 @@
                rel="noopener noreferrer nofollow">
               CLAIM N1BET BONUS
             </a>
-            <button class="partner-mini-close" type="button" aria-label="Hide N1Bet offer">×</button>
+            <button class="partner-mini-toggle" type="button" aria-label="Hide N1Bet offer">
+              <span class="partner-mini-toggle-icon">▾</span>
+            </button>
           </div>
         </article>
 
@@ -243,7 +245,9 @@
                rel="noopener noreferrer nofollow">
               EXPLORE BC.GAME
             </a>
-            <button class="partner-mini-close" type="button" aria-label="Hide BC.GAME offer">×</button>
+            <button class="partner-mini-toggle" type="button" aria-label="Hide BC.GAME offer">
+              <span class="partner-mini-toggle-icon">▾</span>
+            </button>
           </div>
         </article>
       </div>
@@ -486,7 +490,7 @@
     })();
   </script>
 
-  <!-- Partner tiles: hide per user -->
+  <!-- Partner tiles: collapse / expand with persistence -->
   <script>
     (function(){
       const cards = document.querySelectorAll('.partner-mini');
@@ -495,18 +499,29 @@
       cards.forEach(card=>{
         const id = card.id || card.getAttribute('data-partner') || '';
         if (!id) return;
-        const key = 'fsPartnerHidden_' + id;
-        const closeBtn = card.querySelector('.partner-mini-close');
-        if (!closeBtn) return;
+        const key = 'fsPartnerCollapsed_' + id;
+        const toggle = card.querySelector('.partner-mini-toggle');
+        const icon = toggle?.querySelector('.partner-mini-toggle-icon');
 
-        let hidden = false;
-        try { hidden = localStorage.getItem(key) === '1'; } catch(e){}
+        if (!toggle) return;
 
-        if (hidden) card.style.display = 'none';
+        let collapsed = false;
+        try { collapsed = localStorage.getItem(key) === '1'; } catch(e){}
 
-        closeBtn.addEventListener('click', function(){
-          card.style.display = 'none';
-          try { localStorage.setItem(key, '1'); } catch(e){}
+        function applyState() {
+          card.setAttribute('data-collapsed', collapsed ? '1' : '0');
+          if (icon) icon.textContent = collapsed ? '▴' : '▾';
+          toggle.setAttribute('aria-label',
+            (collapsed ? 'Show ' : 'Hide ') + (id.includes('n1bet') ? 'N1Bet offer' : 'BC.GAME offer')
+          );
+        }
+
+        applyState();
+
+        toggle.addEventListener('click', function(){
+          collapsed = !collapsed;
+          applyState();
+          try { localStorage.setItem(key, collapsed ? '1' : '0'); } catch(e){}
         });
       });
     })();
