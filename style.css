@@ -513,23 +513,30 @@ canvas#wheel{
 @media (max-width:979.98px){ .ac-body{font-size:15px} .ac-summary{padding:12px 14px} }
 
 /* =========================
-   Footer
+   Footer (simple + centered)
    ========================= */
 .site-footer{
   max-width:1240px;
-  margin:0 auto 28px;
+  margin:24px auto 28px;
   padding:0 clamp(12px,4vw,36px);
 }
+
 .footer-inner{
-  border-radius:999px;
-  padding:10px 18px;
-  border:1px solid rgba(120,160,255,.28);
-  background:linear-gradient(180deg,rgba(10,18,34,.88),rgba(6,10,22,.92));
-  font-size:11px;
-  display:flex;
-  gap:10px;
-  justify-content:space-between;
+  padding:12px 0;
+  font-size:12px;
   color:var(--dim);
+  text-align:center;
+
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  justify-content:center;
+  align-items:center;
+
+  border:none;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
 }
 
 /* =========================
