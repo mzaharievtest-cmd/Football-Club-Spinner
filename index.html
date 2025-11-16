@@ -177,72 +177,6 @@
   </header>
 
   <main class="container">
-    <!-- Partner banner: N1Bet -->
-    <section class="partner-shell" id="partner-n1bet" aria-label="Partner offer: N1Bet Sports">
-      <div class="partner-banner">
-        <div class="partner-main">
-          <div class="partner-eyebrow">Partner offer · N1BET Sports</div>
-          <span class="partner-headline">Boost your first sports bet with N1Bet</span>
-          <p class="partner-body">
-            Spin a random club on Football Spinner and turn it into a real bet with N1Bet.
-            Register via our link and unlock a dedicated sports welcome bonus on your first
-            deposit. Full promo details are available directly on N1Bet.
-          </p>
-          <p class="partner-fineprint">
-            18+ only · Please gamble responsibly · Offers and availability depend on your country ·
-            Terms and conditions apply on N1Bet.
-          </p>
-        </div>
-        <div class="partner-cta">
-          <a class="partner-btn"
-             href="https://example-n1bet-affiliate-link.com"
-             target="_blank"
-             rel="noopener noreferrer nofollow">
-            Claim N1Bet bonus
-          </a>
-          <button class="partner-toggle"
-                  type="button"
-                  aria-label="Hide N1Bet offer"
-                  aria-expanded="true">
-            <span class="partner-toggle-icon">⌃</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Partner banner: BC.GAME -->
-    <section class="partner-shell" id="partner-bcgame" aria-label="Partner offer: BC.GAME Sports">
-      <div class="partner-banner">
-        <div class="partner-main">
-          <div class="partner-eyebrow">Partner offer · BC.GAME Sports</div>
-          <span class="partner-headline">Bet on football with crypto at BC.GAME</span>
-          <p class="partner-body">
-            Prefer crypto betting? BC.GAME Sportsbook lets you wager on top leagues using popular coins
-            and tokens. Sign up via Football Spinner to access their latest sports welcome package and
-            ongoing promotions.
-          </p>
-          <p class="partner-fineprint">
-            18+ only · Please gamble responsibly · Crypto values can be volatile · Offers and availability
-            depend on your country · Terms and conditions apply on BC.GAME.
-          </p>
-        </div>
-        <div class="partner-cta">
-          <a class="partner-btn"
-             href="https://example-bcgame-affiliate-link.com"
-             target="_blank"
-             rel="noopener noreferrer nofollow">
-            Explore BC.GAME
-          </a>
-          <button class="partner-toggle"
-                  type="button"
-                  aria-label="Hide BC.GAME offer"
-                  aria-expanded="true">
-            <span class="partner-toggle-icon">⌃</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
     <!-- LEFT: filters / quick actions / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
@@ -268,6 +202,51 @@
         </div>
       </div>
       <button id="resetHistoryBtn" type="button" style="margin-top:12px" title="Clear all previous results">Clear History</button>
+
+      <!-- Compact partner offers -->
+      <div class="partner-stack" aria-label="Partner offers">
+        <div class="partner-stack-title">PARTNER OFFERS</div>
+
+        <!-- N1Bet -->
+        <article class="partner-mini" id="partner-n1bet" data-partner="n1bet">
+          <div class="partner-mini-main">
+            <div class="partner-mini-eyebrow">Partner · N1BET Sports</div>
+            <div class="partner-mini-title">Boost your first sports bet with N1Bet</div>
+            <div class="partner-mini-body">
+              Register via Football Spinner and unlock a dedicated welcome bonus on your first sports bet.
+            </div>
+          </div>
+          <div class="partner-mini-cta">
+            <a class="partner-mini-btn"
+               href="https://example-n1bet-affiliate-link.com"
+               target="_blank"
+               rel="noopener noreferrer nofollow">
+              CLAIM N1BET BONUS
+            </a>
+            <button class="partner-mini-close" type="button" aria-label="Hide N1Bet offer">×</button>
+          </div>
+        </article>
+
+        <!-- BC.GAME -->
+        <article class="partner-mini" id="partner-bcgame" data-partner="bcgame">
+          <div class="partner-mini-main">
+            <div class="partner-mini-eyebrow">Partner · BC.GAME Sports</div>
+            <div class="partner-mini-title">Bet on football with crypto at BC.GAME</div>
+            <div class="partner-mini-body">
+              Wager on top leagues using popular coins and tokens with ongoing promo offers.
+            </div>
+          </div>
+          <div class="partner-mini-cta">
+            <a class="partner-mini-btn"
+               href="https://example-bcgame-affiliate-link.com"
+               target="_blank"
+               rel="noopener noreferrer nofollow">
+              EXPLORE BC.GAME
+            </a>
+            <button class="partner-mini-close" type="button" aria-label="Hide BC.GAME offer">×</button>
+          </div>
+        </article>
+      </div>
     </section>
 
     <!-- RIGHT: wheel -->
@@ -507,39 +486,28 @@
     })();
   </script>
 
-  <!-- Partner banner collapse per partner (N1Bet / BC.GAME) -->
+  <!-- Partner tiles: hide per user -->
   <script>
     (function(){
-      const shells = document.querySelectorAll('.partner-shell');
-      if (!shells.length) return;
+      const cards = document.querySelectorAll('.partner-mini');
+      if (!cards.length) return;
 
-      shells.forEach(shell => {
-        const id = shell.id || shell.getAttribute('data-partner') || '';
-        const storageKey = 'fsPartnerCollapsed_' + id;
-        const toggle = shell.querySelector('.partner-toggle');
-        const icon   = toggle ? toggle.querySelector('.partner-toggle-icon') : null;
+      cards.forEach(card=>{
+        const id = card.id || card.getAttribute('data-partner') || '';
+        if (!id) return;
+        const key = 'fsPartnerHidden_' + id;
+        const closeBtn = card.querySelector('.partner-mini-close');
+        if (!closeBtn) return;
 
-        if (!toggle) return;
+        let hidden = false;
+        try { hidden = localStorage.getItem(key) === '1'; } catch(e){}
 
-        function applyState(collapsed){
-          shell.classList.toggle('partner-collapsed', collapsed);
-          toggle.setAttribute('aria-expanded', String(!collapsed));
-          if (icon) icon.textContent = collapsed ? '⌄' : '⌃';
-        }
+        if (hidden) card.style.display = 'none';
 
-        let collapsed = false;
-        try{
-          collapsed = localStorage.getItem(storageKey) === '1';
-        }catch(e){}
-
-        applyState(collapsed);
-
-        toggle.addEventListener('click', function(){
-          const isCollapsed = shell.classList.contains('partner-collapsed');
-          const next = !isCollapsed;
-          applyState(next);
-          try{ localStorage.setItem(storageKey, next ? '1' : '0'); }catch(e){}
-        }, { passive:true });
+        closeBtn.addEventListener('click', function(){
+          card.style.display = 'none';
+          try { localStorage.setItem(key, '1'); } catch(e){}
+        });
       });
     })();
   </script>
