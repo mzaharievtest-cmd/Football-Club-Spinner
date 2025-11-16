@@ -874,6 +874,7 @@ function setMode(next){
 
   applyModeShowControls();
   renderChips();
+  renderHistory();           // ⬅️ re-render history for the new mode
 
   track('mode_set', { mode_after: MODE });
 }
