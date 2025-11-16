@@ -110,7 +110,7 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .section-title{margin:0 0 10px;font-size:12px;letter-spacing:.36em;text-transform:uppercase;color:var(--muted)}
 
 /* =========================
-   Partner banners – old full-width (disabled)
+   Partner banners – old full-width (shell)
    ========================= */
 .partner-shell{display:none}
 
@@ -134,7 +134,7 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 
 /* optional: give expanded card a bit more height + spacing */
 .partner-card.is-open {
-  min-height: 110px;          /* tweak if needed */
+  min-height: 110px;
   align-items: flex-start;
 }
 
@@ -150,7 +150,7 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 }
 
 .partner-card.is-open .offer-cta {
-  align-self: flex-start;     /* or flex-end if you want it on the right */
+  align-self: flex-start;
   margin-top: 4px;
 }
 
