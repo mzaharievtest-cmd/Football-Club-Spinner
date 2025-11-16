@@ -695,20 +695,21 @@ function showResult(idx){
     });
   }
 
-  history.unshift({ type: MODE, item });
-  if (history.length > 50) history.length = 50;
-  saveHistory();
-
-  renderHistory();
-  openModal(item);
-}
+     const bucket = getHistoryBucket(MODE);
+     bucket.unshift(item);
+     if (bucket.length > 50) bucket.length = 50;
+     saveHistory();
+   
+     renderHistory();
+     openModal(item);
+   }
 
 /* ---------- History ---------- */
 function renderHistory(){
   historyEl.innerHTML = '';
-  const visible = history.filter(h => h.type === MODE);
+  const bucket = getHistoryBucket(MODE);
 
-  if (!visible.length){
+  if (!bucket.length){
     const empty = document.createElement('div');
     empty.className = 'item';
     empty.textContent = 'Your journey starts with a spin!';
@@ -716,14 +717,24 @@ function renderHistory(){
     return;
   }
 
-  visible.forEach(({ item }) => {
-    const div = document.createElement('div'); div.className='item';
+  bucket.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'item';
+
     const img = document.createElement('img');
-    if (MODE==='player'){ img.src=item.image_url||''; img.alt=item.team_name||'Player'; }
-    else { img.src=item.logo_url||''; img.alt=`${item.team_name||'Team'} logo`; }
-    const span=document.createElement('span');
-    span.textContent = item.team_name || (MODE==='player'?'Player':'Team');
-    div.append(img,span); historyEl.append(div);
+    if (MODE === 'player') {
+      img.src = item.image_url || '';
+      img.alt = item.team_name || 'Player';
+    } else {
+      img.src = item.logo_url || '';
+      img.alt = `${item.team_name || 'Team'} logo`;
+    }
+
+    const span = document.createElement('span');
+    span.textContent = item.team_name || (MODE === 'player' ? 'Player' : 'Team');
+
+    div.append(img, span);
+    historyEl.append(div);
   });
 }
 
@@ -996,10 +1007,11 @@ function wire(){
   spinFab && (spinFab.onclick = spin);
 
   resetHistoryBtn && (resetHistoryBtn.onclick = ()=>{
-    history = [];
+    const bucket = getHistoryBucket(MODE);
+    bucket.length = 0;
     saveHistory();
     renderHistory();
-    track('history_cleared');
+    track('history_cleared', { mode: MODE });
   });
 
   mClose && (mClose.onclick = ()=> { if (!spinning){ closeModal(); track('modal_close'); } });
