@@ -311,9 +311,31 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 }
 
 /* mobile – same vertical flow, just relax spacing a bit */
+/* Mobile: stack as Wheel → Filters → Details */
 @media (max-width:979.98px){
-  .partner-mini{
-    padding:12px 14px 10px;
+  .container{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .container > section.card{
+    margin-bottom:0; /* gap on container now handles spacing */
+  }
+
+  /* 1) Wheel first */
+  .container > section.card[aria-labelledby="wheel-title"]{
+    order:1;
+  }
+
+  /* 2) Filters/sidebar second */
+  .container > section.card.sidebar[aria-labelledby="filter-title"]{
+    order:2;
+  }
+
+  /* 3) Details (accordion) third */
+  .container > section.card:last-of-type{
+    order:3;
   }
 }
 
