@@ -114,6 +114,46 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
    ========================= */
 .partner-shell{display:none}
 
+/* collapsed = preview (unchanged / keep ellipsis) */
+.partner-card .offer-title,
+.partner-card .offer-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* when expanded, let everything breathe */
+.partner-card.is-open .offer-title,
+.partner-card.is-open .offer-desc {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  display: block;
+  -webkit-line-clamp: unset;
+}
+
+/* optional: give expanded card a bit more height + spacing */
+.partner-card.is-open {
+  min-height: 110px;          /* tweak if needed */
+  align-items: flex-start;
+}
+
+.partner-card.is-open .offer-main {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* keep the CTA pill visible and not squashed */
+.partner-card .offer-cta {
+  flex-shrink: 0;
+}
+
+.partner-card.is-open .offer-cta {
+  align-self: flex-start;     /* or flex-end if you want it on the right */
+  margin-top: 4px;
+}
+
 /* =========================
    Sidebar partner tiles (compact offers)
    ========================= */
