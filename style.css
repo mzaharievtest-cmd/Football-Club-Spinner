@@ -110,187 +110,131 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .section-title{margin:0 0 10px;font-size:12px;letter-spacing:.36em;text-transform:uppercase;color:var(--muted)}
 
 /* =========================
-   Partner banners (multi – N1Bet, BC.GAME)
+   Partner banners – OLD full-width (unused now)
+   ========================= */
+/* kept in case you want to re-enable full-width banners later */
+.partner-shell{display:none}
+
+/* =========================
+   Sidebar partner tiles (compact offers)
    ========================= */
 
-/* Shell sits INSIDE .container and spans both columns */
-.partner-shell{
-  grid-column:1 / -1;
-  margin:-4px 0 6px;
+.partner-stack{
+  margin-top:18px;
+  padding-top:12px;
+  border-top:1px dashed rgba(120,160,255,.35);
 }
-.partner-shell + .partner-shell{
-  margin-top:8px;          /* spacing between multiple partner banners */
-}
-
-/* Big pill banner */
-.partner-banner{
-  width:100%;
-  display:flex;
-  align-items:stretch;
-  justify-content:space-between;
-  gap:24px;
-  padding:18px 26px;
-  border-radius:999px;
-  border:1px solid rgba(234,179,8,.8);
-  background:
-    radial-gradient(circle at 12% 0, rgba(250,204,21,.25), transparent 55%),
-    radial-gradient(circle at 80% 50%, rgba(245,158,11,.35), #050816 70%);
-  box-shadow:
-    0 20px 46px rgba(0,0,0,.55),
-    0 0 0 1px rgba(0,0,0,.5) inset;
-}
-
-/* Left side text */
-.partner-main{
-  flex:1;
-  min-width:0;
-  color:#fef9c3;
-}
-.partner-eyebrow{
+.partner-stack-title{
   font-size:11px;
-  font-weight:700;
-  letter-spacing:.30em;
+  letter-spacing:.28em;
   text-transform:uppercase;
-  color:#facc15;
-  opacity:.95;
-  margin-bottom:6px;
-}
-.partner-headline{
-  display:block;
-  font-size:18px;
-  font-weight:800;
-  letter-spacing:.02em;
-  color:#fef9c3;
-  margin-bottom:4px;
-}
-.partner-body{
-  font-size:13px;
-  color:#fefce8;
-  max-width:720px;
-}
-.partner-fineprint{
-  margin-top:4px;
-  font-size:11px;
-  color:#e5e7eb;
-  opacity:.85;
+  color:var(--dim);
+  margin-bottom:8px;
 }
 
-/* CTA + chevron */
-.partner-cta{
-  flex:0 0 auto;
+.partner-mini{
+  position:relative;
+  margin-bottom:10px;
+  padding:10px 12px 10px 14px;
+  border-radius:14px;
+  background:linear-gradient(135deg, rgba(30,26,12,.96), rgba(12,10,4,.96));
+  border:1px solid rgba(234,179,8,.55);
+  box-shadow:0 10px 26px rgba(0,0,0,.45);
   display:flex;
   align-items:center;
-  gap:14px;
+  justify-content:space-between;
+  gap:10px;
+}
+.partner-mini-main{
+  flex:1;
+  min-width:0;
+}
+.partner-mini-eyebrow{
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.25em;
+  color:#facc15;
+  margin-bottom:2px;
+}
+.partner-mini-title{
+  font-size:13px;
+  font-weight:800;
+  color:#fef9c3;
+  margin-bottom:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.partner-mini-body{
+  font-size:11px;
+  color:#fefce8;
+  opacity:.9;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
-/* Claim bonus button */
-.partner-btn{
+.partner-mini-cta{
+  flex:0 0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px;
+}
+.partner-mini-btn{
   border:none;
   outline:none;
   cursor:pointer;
-  padding:14px 32px;
+  padding:7px 14px;
   border-radius:999px;
-  font-size:13px;
+  font-size:10px;
   font-weight:900;
   letter-spacing:.18em;
   text-transform:uppercase;
   background:linear-gradient(90deg,#fbbf24,#f97316);
   color:#111827;
-  box-shadow:
-    0 0 30px rgba(245,158,11,.55),
-    0 8px 22px rgba(0,0,0,.7);
-  transition:
-    transform .14s var(--ease),
-    box-shadow .14s var(--ease),
-    filter .14s var(--ease);
+  box-shadow:0 0 18px rgba(245,158,11,.5);
+  transition:transform .12s var(--ease),box-shadow .12s var(--ease),filter .12s var(--ease);
+  white-space:nowrap;
 }
-.partner-btn:hover{
+.partner-mini-btn:hover{
   transform:translateY(-1px);
   filter:brightness(1.05);
-  box-shadow:
-    0 0 34px rgba(251,191,36,.75),
-    0 12px 28px rgba(0,0,0,.85);
+  box-shadow:0 0 20px rgba(245,158,11,.7);
 }
-.partner-btn:active{
+.partner-mini-btn:active{
   transform:translateY(0);
-  box-shadow:
-    0 0 26px rgba(251,191,36,.6),
-    0 7px 20px rgba(0,0,0,.8);
+  box-shadow:0 0 16px rgba(245,158,11,.55);
 }
 
-/* Round chevron toggle */
-.partner-toggle{
-  width:40px;
-  height:40px;
+.partner-mini-close{
+  border:none;
+  background:rgba(15,23,42,.9);
+  color:#e5e7eb;
+  width:20px;
+  height:20px;
   border-radius:999px;
-  border:1px solid rgba(248,250,252,.26);
-  background:radial-gradient(circle at 30% 20%,rgba(248,250,252,.24),rgba(15,23,42,1));
-  color:#f9fafb;
+  font-size:12px;
+  line-height:1;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  box-shadow:0 8px 22px rgba(15,23,42,.9);
-  transition:transform .12s var(--ease), box-shadow .12s var(--ease), background .12s var(--ease);
+  opacity:.6;
+  transition:opacity .14s var(--ease), transform .14s var(--ease);
 }
-.partner-toggle:hover{
+.partner-mini-close:hover{
+  opacity:1;
   transform:translateY(-1px);
-  box-shadow:0 11px 26px rgba(15,23,42,1);
-}
-.partner-toggle-icon{
-  font-size:16px;
-  line-height:1;
 }
 
-/* Collapsed pill state */
-.partner-shell.partner-collapsed .partner-banner{
-  padding:10px 18px;
-  border-radius:999px;
-  border-style:solid;
-  border-color:rgba(234,179,8,.9);
-  background:linear-gradient(180deg,#050818,#050818);
-  box-shadow:none;
-}
-.partner-shell.partner-collapsed .partner-main{
-  display:flex;
-  align-items:center;
-}
-.partner-shell.partner-collapsed .partner-headline{
-  font-size:12px;
-  margin:0;
-  text-transform:uppercase;
-  letter-spacing:.36em;
-}
-.partner-shell.partner-collapsed .partner-body,
-.partner-shell.partner-collapsed .partner-fineprint,
-.partner-shell.partner-collapsed .partner-cta .partner-btn{
-  display:none;
-}
-.partner-shell.partner-collapsed .partner-toggle{
-  width:30px;
-  height:30px;
-  box-shadow:none;
-}
-
-/* Responsive tweaks */
-@media (max-width:900px){
-  .partner-banner{
-    flex-direction:column;
+@media (max-width:979.98px){
+  .partner-mini{
     align-items:flex-start;
-    gap:14px;
   }
-  .partner-cta{
-    width:100%;
-    justify-content:space-between;
+  .partner-mini-cta{
+    align-items:flex-start;
   }
-}
-@media (max-width:640px){
-  .partner-banner{
-    padding:14px 16px;
-    border-radius:18px;
-  }
-  .partner-headline{ font-size:16px; }
-  .partner-body{ font-size:12px; }
 }
 
 /* =========================
@@ -481,9 +425,8 @@ canvas#wheel{
 }
 .reveal-btn:hover{transform:translate(-50%,-50%) scale(1.02);border-color:var(--accent-2);box-shadow:0 6px 18px rgba(34,211,238,.18)}
 
-/* Modal polish — keep reveal chips compact and center the logo area */
+/* Modal polish */
 #modal .reveal-btn{ width:auto !important; }
-
 #modal .m-body{ align-items:center; }
 #modal #mHead{
   font-size:22px; font-weight:900; text-align:center; line-height:1.2;
@@ -593,7 +536,7 @@ button:focus-visible,.chip-btn:focus-visible,
 }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* Final layout tweaks */
+/* layout tweaks + modal grid */
 .container { margin-top: 12px !important; }
 .card.sidebar[aria-labelledby="filter-title"],
 section.card[aria-labelledby="wheel-title"] {
@@ -602,7 +545,6 @@ section.card[aria-labelledby="wheel-title"] {
 }
 section.card[aria-labelledby="wheel-title"] { overflow: visible !important; }
 
-/* Modal alignment fixes */
 #mHead { text-align:left; }
 .m-row{
   display:grid !important;
