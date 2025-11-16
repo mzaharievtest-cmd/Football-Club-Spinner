@@ -110,9 +110,8 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .section-title{margin:0 0 10px;font-size:12px;letter-spacing:.36em;text-transform:uppercase;color:var(--muted)}
 
 /* =========================
-   Partner banners – OLD full-width (unused now)
+   Partner banners – old full-width (disabled)
    ========================= */
-/* kept in case you want to re-enable full-width banners later */
 .partner-shell{display:none}
 
 /* =========================
@@ -144,6 +143,7 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
   align-items:center;
   justify-content:space-between;
   gap:10px;
+  transition:padding .16s var(--ease), background .16s var(--ease), opacity .16s var(--ease);
 }
 .partner-mini-main{
   flex:1;
@@ -207,7 +207,8 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
   box-shadow:0 0 16px rgba(245,158,11,.55);
 }
 
-.partner-mini-close{
+/* toggle button (collapse/expand) */
+.partner-mini-toggle{
   border:none;
   background:rgba(15,23,42,.9);
   color:#e5e7eb;
@@ -220,12 +221,29 @@ header .brand{display:flex;align-items:center;gap:12px;min-width:0}
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  opacity:.6;
-  transition:opacity .14s var(--ease), transform .14s var(--ease);
+  opacity:.7;
+  transition:opacity .14s var(--ease), transform .14s var(--ease), background .14s var(--ease);
 }
-.partner-mini-close:hover{
+.partner-mini-toggle:hover{
   opacity:1;
   transform:translateY(-1px);
+}
+.partner-mini-toggle-icon{transition:transform .18s var(--ease);}
+
+/* collapsed state */
+.partner-mini[data-collapsed="1"]{
+  padding:6px 10px;
+  background:linear-gradient(135deg, rgba(16,14,7,.98), rgba(7,6,3,.98));
+}
+.partner-mini[data-collapsed="1"] .partner-mini-body,
+.partner-mini[data-collapsed="1"] .partner-mini-btn{
+  display:none;
+}
+.partner-mini[data-collapsed="1"] .partner-mini-title{
+  font-size:11px;
+}
+.partner-mini[data-collapsed="1"] .partner-mini-toggle-icon{
+  transform:rotate(180deg);
 }
 
 @media (max-width:979.98px){
