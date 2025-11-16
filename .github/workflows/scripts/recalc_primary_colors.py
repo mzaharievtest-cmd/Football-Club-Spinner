@@ -1,72 +1,102 @@
 #!/usr/bin/env python3
+"""
+Recalculate primary_color for all teams in teams.json based on their logo image.
+
+- teams.json je v rootu repozitorija
+- logo_url pot je relativna do public/ ali do root-a (npr. 'logos1/vendor/...')
+
+Uporaba (iz root folderja projekta):
+    python3 .github/workflows/scripts/recalc_primary_colors.py
+"""
+
 import json
-import os
+from pathlib import Path
 from collections import Counter
+
 from PIL import Image
 
-TEAMS_JSON = "teams.json"  # path to your teams.json
-LOGO_ROOT = "logos1/vendor"       # folder where "logos1/..." lives
 
-# Optional manual overrides for special clubs (like Juventus, etc.)
-OVERRIDES = {
-    ("SA", "Juventus FC"): "#000000",
-    ("EPL", "Chelsea FC"): "#034694",
-    # add more tuples: (league_code, team_name): "#RRGGBB"
-}
+# -------------------------------------------------
+# Poti
+# -------------------------------------------------
+
+# Root repozitorija: .../footballspinner
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# teams.json je v rootu
+TEAMS_JSON = REPO_ROOT / "teams.json"
+
+# glavni kandidati za statične slike
+PUBLIC_DIR = REPO_ROOT / "public"
 
 
-def hex_from_rgb(rgb):
-    r, g, b = rgb
-    return "#{:02X}{:02X}{:02X}".format(r, g, b)
+# -------------------------------------------------
+# Helperji
+# -------------------------------------------------
 
-
-def get_dominant_color(image_path):
+def resolve_logo_path(logo_url: str) -> Path | None:
     """
-    Dominant, non-white, non-gray color from the logo.
-    Returns "#RRGGBB" or None on failure.
+    Poskusi najti datoteko loga na disku na nekaj tipičnih lokacijah.
+    Vrne Path ali None, če ni najdeno.
     """
-    try:
-        img = Image.open(image_path).convert("RGBA")
-    except Exception as e:
-        print(f"[WARN] Cannot open {image_path}: {e}")
-        return None
+    candidates = [
+        PUBLIC_DIR / logo_url,        # public/logos1/...
+        REPO_ROOT / logo_url,        # logos1/... v rootu
+    ]
 
-    # Shrink image → fewer pixels to analyze
-    img = img.resize((64, 64), Image.LANCZOS)
+    for p in candidates:
+        if p.exists():
+            return p
+
+    print(f"[WARN] Logo file not found for '{logo_url}'")
+    return None
+
+
+def dominant_color(image: Image.Image) -> tuple[int, int, int] | None:
+    """
+    Zelo enostaven izračun dominantne barve:
+    - resize na 64x64
+    - ignoriramo popolnoma bele in skoraj prozorne pixle
+    - vzamemo najpogostejšo (R,G,B) kombinacijo
+    """
+    # convert to RGBA (da imamo alpha channel)
+    img = image.convert("RGBA")
+    img = img.resize((64, 64))
 
     pixels = list(img.getdata())
-    filtered = []
+    counter = Counter()
 
     for r, g, b, a in pixels:
-        if a < 20:
-            # Transparent → background, skip
+        # ignoriraj zelo prozorne pixle
+        if a < 10:
             continue
-
-        # Skip almost-white and almost-black
-        if max(r, g, b) > 245:
+        # ignoriraj skoraj bele pixle (background)
+        if r > 245 and g > 245 and b > 245:
             continue
-        if max(r, g, b) < 15:
-            continue
+        counter[(r, g, b)] += 1
 
-        # Skip “boring” grays (low saturation)
-        if abs(r - g) < 10 and abs(g - b) < 10:
-            continue
+    if not counter:
+        return None
 
-        filtered.append((r, g, b))
-
-    if not filtered:
-        # Fallback: just use all opaque pixels
-        filtered = [(r, g, b) for r, g, b, a in pixels if a >= 20]
-        if not filtered:
-            return None
-
-    counter = Counter(filtered)
     (r, g, b), _ = counter.most_common(1)[0]
-    return hex_from_rgb((r, g, b))
+    return (r, g, b)
 
+
+def rgb_to_hex(rgb: tuple[int, int, int]) -> str:
+    """(R,G,B) -> '#RRGGBB'"""
+    r, g, b = rgb
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
+# -------------------------------------------------
+# Glavni workflow
+# -------------------------------------------------
 
 def main():
-    # Load teams
+    if not TEAMS_JSON.exists():
+        raise SystemExit(f"[ERROR] teams.json not found at: {TEAMS_JSON}")
+
+    print(f"[INFO] Loading teams from {TEAMS_JSON}")
     with open(TEAMS_JSON, "r", encoding="utf-8") as f:
         teams = json.load(f)
 
@@ -74,50 +104,46 @@ def main():
     skipped = 0
 
     for team in teams:
-        league = team.get("league_code")
-        name = team.get("team_name")
-        key = (league, name)
+        name = team.get("team_name", "UNKNOWN")
+        logo_url = team.get("logo_url")
 
-        # 1) Manual override if we defined it
-        if key in OVERRIDES:
-            team["primary_color"] = OVERRIDES[key]
-            print(f"[OVERRIDE] {league} {name} → {team['primary_color']}")
-            updated += 1
-            continue
-
-        logo_rel = team.get("logo_url")
-        if not logo_rel:
-            print(f"[SKIP] No logo for {league} {name}")
+        if not logo_url:
+            print(f"[WARN] {name}: no logo_url, skipping")
             skipped += 1
             continue
 
-        logo_path = os.path.join(LOGO_ROOT, logo_rel)
-
-        if not os.path.exists(logo_path):
-            print(f"[SKIP] Logo not found: {logo_path}")
+        logo_path = resolve_logo_path(logo_url)
+        if logo_path is None:
             skipped += 1
             continue
 
-        color = get_dominant_color(logo_path)
-        if color is None:
-            print(f"[SKIP] Could not detect color for {league} {name}")
+        try:
+            with Image.open(logo_path) as img:
+                dom = dominant_color(img)
+        except Exception as e:
+            print(f"[ERROR] {name}: failed to process '{logo_path}': {e}")
             skipped += 1
             continue
 
-        old = team.get("primary_color")
-        team["primary_color"] = color
-        print(f"[OK] {league} {name}: {old} → {color}")
+        if dom is None:
+            print(f"[WARN] {name}: no dominant color found, skipping")
+            skipped += 1
+            continue
+
+        hex_color = rgb_to_hex(dom)
+        old_color = team.get("primary_color")
+        team["primary_color"] = hex_color
+
+        print(f"[OK] {name}: {old_color} -> {hex_color}")
         updated += 1
 
-    print(f"\nDone. Updated: {updated}, skipped: {skipped}")
+    # overwrite teams.json z novimi barvami
+    with open(TEAMS_JSON, "w", encoding="utf-8") as f:
+        json.dump(teams, f, ensure_ascii=False, indent=2)
 
-    # Write to a new file first (safety)
-    out_path = "teams.recolored.json"
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(teams, f, indent=2, ensure_ascii=False)
-
-    print(f"Written updated data to: {out_path}")
-    print("If everything looks fine, replace teams.json with this file.")
+    print()
+    print(f"[DONE] Updated {updated} teams, skipped {skipped}")
+    print(f"[INFO] Written back to {TEAMS_JSON}")
 
 
 if __name__ == "__main__":
