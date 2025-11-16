@@ -319,7 +319,7 @@
     "team_name": "1.FC Köln",
     "primary_color": "#EC222A",
     "logo_url": "logos1/vendor/Germany - Bundesliga/1.FC Köln.png",
-    "stadium": "RheinEnergieStadion"
+    "stadium": "RheinEnergie Stadion"
   },
   {
     "league_code": "BUN",
@@ -333,7 +333,7 @@
     "team_name": "1.FSV Mainz 05",
     "primary_color": "#C4141C",
     "logo_url": "logos1/vendor/Germany - Bundesliga/1.FSV Mainz 05.png",
-    "stadium": "MEWA Arena"
+    "stadium": "Mewa Arena"
   },
   {
     "league_code": "BUN",
@@ -347,14 +347,14 @@
     "team_name": "Bayern Munich",
     "primary_color": "#EC0A3F",
     "logo_url": "logos1/vendor/Germany - Bundesliga/Bayern Munich.png",
-    "stadium": "Allianz Arena"
+    "stadium": "Grünwalder Stadion"
   },
   {
     "league_code": "BUN",
     "team_name": "Borussia Dortmund",
     "primary_color": "#F9E004",
     "logo_url": "logos1/vendor/Germany - Bundesliga/Borussia Dortmund.png",
-    "stadium": "Signal Iduna Park"
+    "stadium": "Westfalenstadion"
   },
   {
     "league_code": "BUN",
@@ -368,7 +368,7 @@
     "team_name": "Eintracht Frankfurt",
     "primary_color": "#CC0404",
     "logo_url": "logos1/vendor/Germany - Bundesliga/Eintracht Frankfurt.png",
-    "stadium": "Deutsche Bank Park"
+    "stadium": "Waldstadion"
   },
   {
     "league_code": "BUN",
@@ -403,7 +403,7 @@
     "team_name": "SC Freiburg",
     "primary_color": "#808080",
     "logo_url": "logos1/vendor/Germany - Bundesliga/SC Freiburg.png",
-    "stadium": "Europa-Park Stadion"
+    "stadium": "Dreisamstadion"
   },
   {
     "league_code": "BUN",
@@ -417,7 +417,7 @@
     "team_name": "TSG 1899 Hoffenheim",
     "primary_color": "#145CA4",
     "logo_url": "logos1/vendor/Germany - Bundesliga/TSG 1899 Hoffenheim.png",
-    "stadium": "PreZero Arena"
+    "stadium": "PreZero-Arena"
   },
   {
     "league_code": "BUN",
@@ -702,140 +702,140 @@
   {
     "league_code": "EPL",
     "team_name": "AFC Bournemouth",
-    "primary_color": "#EC1C24",
+    "primary_color": "#DA291C",
     "logo_url": "logos1/vendor/England - Premier League/AFC Bournemouth.png",
-    "stadium": "Vitality Stadium"
+    "stadium": "Dean Court"
   },
   {
     "league_code": "EPL",
     "team_name": "Arsenal FC",
-    "primary_color": "#EC0506",
+    "primary_color": "#EF0107",
     "logo_url": "logos1/vendor/England - Premier League/Arsenal FC.png",
     "stadium": "Emirates Stadium"
   },
   {
     "league_code": "EPL",
     "team_name": "Aston Villa",
-    "primary_color": "#F9E209",
+    "primary_color": "#670E36",
     "logo_url": "logos1/vendor/England - Premier League/Aston Villa.png",
     "stadium": "Villa Park"
   },
   {
     "league_code": "EPL",
     "team_name": "Brentford FC",
-    "primary_color": "#E40B1A",
+    "primary_color": "#E30613",
     "logo_url": "logos1/vendor/England - Premier League/Brentford FC.png",
-    "stadium": "Gtech Community Stadium"
+    "stadium": "Griffin Park"
   },
   {
     "league_code": "EPL",
     "team_name": "Brighton & Hove Albion",
-    "primary_color": "#045CAC",
+    "primary_color": "#0057B8",
     "logo_url": "logos1/vendor/England - Premier League/Brighton & Hove Albion.png",
-    "stadium": "Amex Stadium"
+    "stadium": "Brighton Community Stadium"
   },
   {
     "league_code": "EPL",
     "team_name": "Burnley FC",
-    "primary_color": "#76265C",
+    "primary_color": "#6C1D45",
     "logo_url": "logos1/vendor/England - Premier League/Burnley FC.png",
     "stadium": "Turf Moor"
   },
   {
     "league_code": "EPL",
     "team_name": "Chelsea FC",
-    "primary_color": "#FC4444",
+    "primary_color": "#034694",
     "logo_url": "logos1/vendor/England - Premier League/Chelsea FC.png",
     "stadium": "Stamford Bridge"
   },
   {
     "league_code": "EPL",
     "team_name": "Crystal Palace",
-    "primary_color": "#CE4256",
+    "primary_color": "#1B458F",
     "logo_url": "logos1/vendor/England - Premier League/Crystal Palace.png",
     "stadium": "Selhurst Park"
   },
   {
     "league_code": "EPL",
     "team_name": "Everton FC",
-    "primary_color": "#24448C",
+    "primary_color": "#003399",
     "logo_url": "logos1/vendor/England - Premier League/Everton FC.png",
-    "stadium": "Goodison Park"
+    "stadium": "Hill Dickinson Stadium"
   },
   {
     "league_code": "EPL",
     "team_name": "Fulham FC",
-    "primary_color": "#CC0404",
+    "primary_color": "#000000",
     "logo_url": "logos1/vendor/England - Premier League/Fulham FC.png",
     "stadium": "Craven Cottage"
   },
   {
     "league_code": "EPL",
     "team_name": "Leeds United",
-    "primary_color": "#FCDC14",
+    "primary_color": "#FFCD00",
     "logo_url": "logos1/vendor/England - Premier League/Leeds United.png",
     "stadium": "Elland Road"
   },
   {
     "league_code": "EPL",
     "team_name": "Liverpool FC",
-    "primary_color": "#E41C24",
+    "primary_color": "#C8102E",
     "logo_url": "logos1/vendor/England - Premier League/Liverpool FC.png",
     "stadium": "Anfield"
   },
   {
     "league_code": "EPL",
     "team_name": "Manchester City",
-    "primary_color": "#EEC854",
+    "primary_color": "#6CABDD",
     "logo_url": "logos1/vendor/England - Premier League/Manchester City.png",
     "stadium": "Etihad Stadium"
   },
   {
     "league_code": "EPL",
     "team_name": "Manchester United",
-    "primary_color": "#F3A604",
+    "primary_color": "#DA291C",
     "logo_url": "logos1/vendor/England - Premier League/Manchester United.png",
     "stadium": "Old Trafford"
   },
   {
     "league_code": "EPL",
     "team_name": "Newcastle United",
-    "primary_color": "#04ACE4",
+    "primary_color": "#241F20",
     "logo_url": "logos1/vendor/England - Premier League/Newcastle United.png",
-    "stadium": "St James' Park"
+    "stadium": "St James’ Park"
   },
   {
     "league_code": "EPL",
     "team_name": "Nottingham Forest",
-    "primary_color": "#F40404",
+    "primary_color": "#E53233",
     "logo_url": "logos1/vendor/England - Premier League/Nottingham Forest.png",
     "stadium": "City Ground"
   },
   {
     "league_code": "EPL",
     "team_name": "Sunderland AFC",
-    "primary_color": "#EC3041",
+    "primary_color": "#E03A3E",
     "logo_url": "logos1/vendor/England - Premier League/Sunderland AFC.png",
     "stadium": "Stadium of Light"
   },
   {
     "league_code": "EPL",
     "team_name": "Tottenham Hotspur",
-    "primary_color": "#1031EF",
+    "primary_color": "#132257",
     "logo_url": "logos1/vendor/England - Premier League/Tottenham Hotspur.png",
     "stadium": "Tottenham Hotspur Stadium"
   },
   {
     "league_code": "EPL",
     "team_name": "West Ham United",
-    "primary_color": "#2CACE3",
+    "primary_color": "#7A263A",
     "logo_url": "logos1/vendor/England - Premier League/West Ham United.png",
     "stadium": "London Stadium"
   },
   {
     "league_code": "EPL",
     "team_name": "Wolverhampton Wanderers",
-    "primary_color": "#FBA41C",
+    "primary_color": "#FDB913",
     "logo_url": "logos1/vendor/England - Premier League/Wolverhampton Wanderers.png",
     "stadium": "Molineux Stadium"
   },
