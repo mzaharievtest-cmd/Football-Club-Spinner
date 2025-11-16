@@ -56,6 +56,29 @@
   <!-- Styles -->
   <link rel="stylesheet" href="style.css?v=1" />
 
+  <style>
+  /* Mobile: show wheel first, then leagues, then details */
+  @media (max-width: 768px) {
+    main.container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card.card-wheel {
+      order: 1;
+    }
+
+    .card.sidebar {
+      order: 2;
+    }
+
+    .card.card-details {
+      order: 3;
+    }
+  }
+</style>
+
   <!-- Google Analytics 4 -->
   <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
@@ -303,7 +326,7 @@
     </section> <!-- end sidebar section -->
 
     <!-- RIGHT: wheel -->
-    <section class="card" aria-labelledby="wheel-title">
+    <section class="card card-wheel" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
       <div class="wheel-subheader">
@@ -357,7 +380,7 @@
     </section>
 
     <!-- Full-width accordion -->
-    <section class="card" style="grid-column:1 / -1; margin-top:28px;">
+    <section class="card card-details" style="grid-column:1 / -1; margin-top:28px;">
       <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
         <div class="section-title" id="details-title">Details</div>
 
