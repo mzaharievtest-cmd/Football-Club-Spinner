@@ -21,7 +21,7 @@ from PIL import Image
 # -------------------------------------------------
 
 # Root repozitorija: .../footballspinner
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 # teams.json je v rootu
 TEAMS_JSON = REPO_ROOT / "teams.json"
