@@ -592,29 +592,27 @@ canvas#wheel{
 .ac-body h2 { margin:8px 0 8px; color:#f6f9ff; font-size:20px; font-weight:900; }
 @media (max-width:979.98px){ .ac-body{font-size:15px} .ac-summary{padding:12px 14px} }
 
-/* ==== Hard-force footer center on full width ==== */
-.site-footer{
+/* ==== FINAL FOOTER OVERRIDE – FORCE FULL CENTER ==== */
+
+.site-footer {
+  /* simple block footer spanning full width */
+  display: block !important;
   width: 100% !important;
   margin: 32px 0 24px !important;
   padding: 0 !important;
-
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
+  text-align: center !important;
 }
 
-.footer-inner{
+.footer-inner {
+  /* no flex, just inline-block centered in the page */
+  display: inline-block !important;
   margin: 0 auto !important;
   text-align: center !important;
-
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px;
   font-size: 12px;
   color: var(--dim);
 }
 
-.footer-inner span{
+.footer-inner span {
   display: block;
   line-height: 1.5;
 }
