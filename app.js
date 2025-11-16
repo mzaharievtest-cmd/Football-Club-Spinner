@@ -408,41 +408,59 @@ function drawWheel(){
   const N = data.length;
 
   const ctx = wheel.getContext('2d');
-  const DPR = Math.max(1, window.devicePixelRatio||1);
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const DPR = Math.max(1, window.devicePixelRatio || 1);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const W = wheel.width / DPR, H = wheel.height / DPR;
 
   updatePerfBanner();
 
-  if (N===0){ drawIdle(ctx,W,H); return; }
+  // NEW: if nothing is selected to be shown on the wheel, treat as idle
+  const noShowOptions =
+    !optA.checked &&
+    !optB.checked &&
+    !(optC && optC.checked) &&
+    !(optD && optD.checked) &&
+    !(optE && optE.checked);
+
+  if (N === 0 || noShowOptions) {
+    drawIdle(ctx, W, H);
+    return;
+  }
 
   const hideAll = N >= PERF.hideTextThreshold;
   ctx.imageSmoothingEnabled = !hideAll;
 
-  ctx.clearRect(0,0,W,H);
-  ctx.save(); ctx.translate(W/2,H/2);
-  ctx.rotate(mod(currentAngle,TAU));
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+  ctx.rotate(mod(currentAngle, TAU));
 
-  const r = Math.min(W,H)*0.48;
-  const slice = TAU/N;
+  const r = Math.min(W, H) * 0.48;
+  const slice = TAU / N;
 
   // wedges
-  for (let i=0;i<N;i++){
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*slice,(i+1)*slice); ctx.closePath();
+  for (let i = 0; i < N; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, r, i * slice, (i + 1) * slice);
+    ctx.closePath();
     ctx.fillStyle = getSliceColor(data[i].primary_color);
     ctx.fill();
   }
 
-  if (hideAll){
+  if (hideAll) {
     ctx.restore();
     const ctx2 = wheel.getContext('2d');
-    ctx2.save(); ctx2.translate(W/2,H/2);
-    drawTickRing(ctx2, r*0.98, Math.min(180, Math.max(100, Math.round(N/2))));
-    ctx2.lineWidth=1;
-    for(let i=1;i<=4;i++){
-      ctx2.beginPath(); ctx2.arc(0,0,r*i/5,0,TAU);
-      ctx2.strokeStyle=`rgba(140,170,220,${0.06 + i*0.02})`;
-      ctx2.setLineDash([6,22]); ctx2.lineDashOffset = (i*10 + currentAngle*36)%1000;
+    ctx2.save();
+    ctx2.translate(W / 2, H / 2);
+    drawTickRing(ctx2, r * 0.98, Math.min(180, Math.max(100, Math.round(N / 2))));
+    ctx2.lineWidth = 1;
+    for (let i = 1; i <= 4; i++) {
+      ctx2.beginPath();
+      ctx2.arc(0, 0, r * i / 5, 0, TAU);
+      ctx2.strokeStyle = `rgba(140,170,220,${0.06 + i * 0.02})`;
+      ctx2.setLineDash([6, 22]);
+      ctx2.lineDashOffset = (i * 10 + currentAngle * 36) % 1000;
       ctx2.stroke();
     }
     ctx2.restore();
@@ -450,46 +468,55 @@ function drawWheel(){
   }
 
   // contents
-  for (let i=0;i<N;i++){
+  for (let i = 0; i < N; i++) {
     const t = data[i];
-    const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
-    const arcLen = r*(a1-a0);
+    const a0 = i * slice, a1 = (i + 1) * slice, aMid = (a0 + a1) / 2;
+    const arcLen = r * (a1 - a0);
 
-    const canLogoOrImg = (MODE==='team')
+    const canLogoOrImg = (MODE === 'team')
       ? (optA.checked && !!t.logo_url)
       : (optA.checked && !!t.image_url);
 
     const canName = optB.checked && !!t.team_name;
 
     ctx.save();
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, r - 1, a0, a1);
+    ctx.closePath();
+    ctx.clip();
     ctx.rotate(aMid);
     const needFlip = Math.cos(aMid) < 0;
     if (needFlip) ctx.rotate(Math.PI);
     const sign = needFlip ? -1 : 1;
 
-    const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
-    const logoHalf = logoSize/2;
+    const logoSize = clamp(PERF.minLogoBox, 0.38 * arcLen, 62);
+    const logoHalf = logoSize / 2;
     const pad = 10;
-    const xLogo = sign * (r*0.74);
-    const xText = sign * (r*0.42);
-    const logoInner = xLogo - sign*(logoHalf+pad);
+    const xLogo = sign * (r * 0.74);
+    const xText = sign * (r * 0.42);
+    const logoInner = xLogo - sign * (logoHalf + pad);
     const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
 
-    const fg = textColorFor(t.primary_color || '#020617');
+    const fg = textColorFor(t.primary_color);
 
-    if (canName && maxWidth>=PERF.minTextWidth){
-      const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
-      ctx.textAlign='left'; ctx.textBaseline='middle';
+    if (canName && maxWidth >= PERF.minTextWidth) {
+      const fit = fitSingleLine(ctx, t.team_name, {
+        maxWidth,
+        targetPx: Math.min(22, 0.22 * arcLen)
+      });
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
       ctx.font = `800 ${fit.fontPx}px Inter, system-ui, sans-serif`;
-      ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,Math.round(fit.fontPx/10));
-      ctx.fillStyle=fg;
+      ctx.strokeStyle = 'rgba(0,0,0,.35)';
+      ctx.lineWidth = Math.max(1, Math.round(fit.fontPx / 10));
+      ctx.fillStyle = fg;
       const x = Math.min(xText, logoInner);
       ctx.strokeText(fit.text, x, 0);
-      ctx.fillText(fit.text,   x, 0);
+      ctx.fillText(fit.text, x, 0);
     }
 
-    if (canLogoOrImg){
+    if (canLogoOrImg) {
       ctx.save();
       ctx.translate(xLogo, 0);
 
@@ -502,39 +529,37 @@ function drawWheel(){
       ctx.strokeStyle = 'rgba(255,255,255,.95)';
       ctx.stroke();
 
-      // inner disc – always solid so logos never show slice color "bleed"
+      // inner disc background (light gray so mono logos stay visible)
       ctx.save();
       ctx.beginPath();
       ctx.arc(0, 0, logoHalf - 1, 0, TAU);
       ctx.clip();
-
-      // solid background behind the logo (LIGHT GRAY now)
-      ctx.fillStyle = '#e5e7eb'; // Tailwind-ish light gray
+      ctx.fillStyle = '#e5e7eb'; // light gray
       ctx.fillRect(-logoHalf, -logoHalf, logoHalf * 2, logoHalf * 2);
 
       const url = MODE === 'team' ? t.logo_url : t.image_url;
       const img = getImage(url, () => requestAnimationFrame(drawWheel));
 
-      if (img && img.complete){
+      if (img && img.complete) {
         const box = Math.max(4, 2 * (logoHalf - 1));
-        const iw = img.naturalWidth  || box;
+        const iw = img.naturalWidth || box;
         const ih = img.naturalHeight || box;
-        const s  = Math.min(box / iw, box / ih);
-        ctx.drawImage(img, -iw*s/2, -ih*s/2, iw*s, ih*s);
+        const s = Math.min(box / iw, box / ih);
+        ctx.drawImage(img, -iw * s / 2, -ih * s / 2, iw * s, ih * s);
       } else {
         ctx.fillStyle = 'rgba(148,163,184,.6)';
         const ph = (logoHalf - 3) * 2;
-        ctx.fillRect(-ph/2, -ph/2, ph, ph);
+        ctx.fillRect(-ph / 2, -ph / 2, ph, ph);
       }
 
       ctx.restore(); // inner disc
       ctx.restore(); // logo transform
     }
 
-    ctx.restore(); // slice clip
+    ctx.restore(); // slice
   }
 
-  ctx.restore(); // center translate+rotate
+  ctx.restore();
 }
 
 /* ---------- Analytics ---------- */
