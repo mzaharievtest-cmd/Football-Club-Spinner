@@ -54,7 +54,7 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css?v=1" />
-
+  
   <!-- Google Analytics 4 -->
   <!-- Stream ID: 12320499339 · Measurement ID: G-RK8RD59N8G -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
@@ -152,9 +152,9 @@
   <!-- GTM (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-  <!-- Header / nav (unchanged TEAM / PLAYER styling) -->
   <header>
     <div class="brand">
+      <!-- Above-the-fold logo: keep eager load, but add explicit size -->
       <img src="app-logo.png?v=1"
            alt="Football Spinner logo"
            class="brand-img"
@@ -168,78 +168,101 @@
 
     <div class="header-right">
       <div class="mode-switch-wrap">
+        <!-- ARIA: tabs use aria-selected (not aria-pressed) -->
         <div class="mode-switch" role="tablist" aria-label="View mode">
           <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
           <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
         </div>
+        <!-- Dynamic note shown only in PLAYER mode -->
         <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <!-- AFFILIATE BANNER (dev-style block you shared) -->
-    <div class="affiliate-banner" id="affiliate-banner">
-      <div class="affiliate-inner" role="region" aria-label="Partner offer banner">
-        <div class="affiliate-text">
-          <p class="affiliate-eyebrow">Partner offer · Sports betting</p>
-          <h2 class="affiliate-title">Get a 50% sports bonus up to €300 at N1Bet</h2>
-          <p class="affiliate-subtitle">
-            Sign up at N1Bet and boost your first deposit with a <strong>50% sports welcome bonus up to €300</strong>.
-            Click <strong>Claim Bonus</strong> to visit N1Bet and check the full offer.
+
+    <!-- Partner offers: N1Bet + BC.GAME (collapsible) -->
+    <section class="partner-shell" id="partner-shell" aria-label="Partner sports betting offers">
+      <!-- N1Bet banner -->
+      <div class="partner-banner" data-partner="n1bet">
+        <div class="partner-main">
+          <div class="partner-eyebrow">Partner offer · N1Bet Sports</div>
+          <span class="partner-headline">Boost your first sports bet with N1Bet</span>
+          <p class="partner-body">
+            Spin a random club on Football Spinner and turn it into a real bet with N1Bet.
+            Register via our link and unlock a dedicated sports welcome bonus on your first deposit.
+            Check the full promo details directly on N1Bet.
           </p>
-          <p class="affiliate-warning">18+ · Please gamble responsibly · Terms and conditions apply on N1Bet.</p>
+          <p class="partner-fineprint">
+            18+ only · Please gamble responsibly · Offers and availability depend on your country ·
+            Terms and conditions apply on N1Bet.
+          </p>
         </div>
 
-        <div class="affiliate-right" aria-hidden="false">
+        <div class="partner-cta">
           <a
-            class="affiliate-cta"
-            id="affiliate-cta"
-            href="https://www.n1bet.example"
+            href="https://n1bet.com"  <!-- TODO: replace with your affiliate URL -->
+            class="partner-btn"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer nofollow"
           >
-            Claim bonus
+            Claim N1Bet bonus
           </a>
+
+          <!-- Global collapse toggle (controls the entire partner-shell) -->
           <button
-            class="affiliate-toggle"
-            id="affiliate-toggle"
-            aria-expanded="true"
-            aria-controls="affiliate-banner"
-            title="Collapse banner"
             type="button"
+            class="partner-toggle"
+            id="partner-toggle"
+            aria-label="Hide partner offers"
+            aria-expanded="true"
           >
-            <span class="chevron-icon" id="affiliate-toggle-icon">▴</span>
+            <span class="partner-toggle-icon" id="partner-toggle-icon">▴</span>
           </button>
         </div>
       </div>
 
-      <!-- collapsed strip that shows when collapsed (CSS handles visibility via .collapsed class) -->
-      <div
-        class="affiliate-collapsed"
-        id="affiliate-collapsed"
-        role="button"
-        tabindex="0"
-        aria-hidden="true"
-      >
-        <span class="affiliate-title" style="margin-right:12px;">
-          Get a 50% sports bonus up to €300
-        </span>
-        <span class="chevron-down">▾</span>
+      <!-- BC.GAME banner -->
+      <div class="partner-banner" data-partner="bcgame">
+        <div class="partner-main">
+          <div class="partner-eyebrow">Partner offer · BC.GAME Sports</div>
+          <span class="partner-headline">Bet on football with crypto at BC.GAME</span>
+          <p class="partner-body">
+            Prefer crypto betting? BC.GAME Sportsbook lets you wager on top leagues using popular coins
+            and tokens. Sign up via Football Spinner to access their latest sports welcome package and
+            ongoing promotions.
+          </p>
+          <p class="partner-fineprint">
+            18+ only · Please gamble responsibly · Crypto values can be volatile ·
+            Offers and availability depend on your country · Terms and conditions apply on BC.GAME.
+          </p>
+        </div>
+
+        <div class="partner-cta">
+          <a
+            href="https://bc.game"  <!-- TODO: replace with your affiliate URL -->
+            class="partner-btn"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+          >
+            Explore BC.GAME
+          </a>
+        </div>
       </div>
-    </div>
-    <!-- END AFFILIATE BANNER -->
+    </section>
 
     <!-- LEFT: filters / quick actions / history -->
     <section class="card sidebar" aria-labelledby="filter-title">
       <div class="section-title" id="filter-title">Select Leagues</div>
 
+      <!-- Quick picks -->
       <div class="quick-picks" role="group" aria-label="Quick selections">
         <button id="qpAll"  class="chip-btn" type="button" title="Select all leagues">All Leagues</button>
         <button id="qpNone" class="chip-btn" type="button" title="Deselect all">Clear</button>
         <button id="qpTop"  class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
       </div>
 
+      <!-- Chips (TEAM: leagues · PLAYER: PL teams generated from players.json) -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
         <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
@@ -261,8 +284,9 @@
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
+      <!-- Meter + SHOW ON WHEEL -->
       <div class="wheel-subheader">
-        <div class="perf-tip" id="perfTip" aria-live="polite"
+        <div id="perfTip" class="perf-tip" aria-live="polite"
              data-clubs-text="teams ready to spin"
              data-players-text="players loaded">
           <span class="meter-text">0 teams ready to spin</span>
@@ -293,6 +317,7 @@
         </div>
       </div>
 
+      <!-- Wheel -->
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
         <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
@@ -348,11 +373,6 @@
     </section>
   </main>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <p>© 2025 Football Spinner. All rights reserved.</p>
-  </footer>
-
   <!-- Modal -->
   <div id="backdrop" style="display:none">
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
@@ -360,6 +380,7 @@
       <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
 
       <div class="m-body">
+        <!-- Not above-the-fold: lazy + dimensions -->
         <img id="mLogo" alt="" loading="lazy" width="256" height="256" />
 
         <div class="m-row" id="rowStadium">
@@ -389,10 +410,18 @@
     </div>
   </div>
 
+  <!-- Copyright footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>© 2025 Football Spinner.</span>
+      <span>All rights reserved.</span>
+    </div>
+  </footer>
+
   <!-- App -->
   <script src="app.js" defer></script>
 
-  <!-- Mode text, accordion, affiliate toggle -->
+  <!-- Mode text + accordion helpers (ARIA fix for tabs included) -->
   <script>
     (function(){
       function applyModeTexts(mode){
@@ -424,6 +453,7 @@
         }
       }
 
+      // Update aria-selected on tabs
       function setTabSelection(mode){
         const teamBtn = document.getElementById('modeTeam');
         const playerBtn = document.getElementById('modePlayer');
@@ -485,32 +515,59 @@
             if (e.key==='ArrowUp'){ e.preventDefault(); (panels[panels.indexOf(panel)-1]||panels[panels.length-1]).querySelector('.ac-summary').focus(); }
           });
 
+          // start collapsed
           panel.removeAttribute('open');
           summary.setAttribute('aria-expanded','false');
         });
       }
+    })();
+  </script>
 
-      // Affiliate banner collapse / expand with localStorage
-      const aff = document.querySelector('.affiliate-banner');
-      if (aff){
-        const collapsedBtn = aff.querySelector('.affiliate-collapsed');
-        const toggleBtn = aff.querySelector('.affiliate-toggle');
+  <!-- Partner banner collapse / expand (N1Bet + BC.GAME) -->
+  <script>
+    (function () {
+      var shell  = document.getElementById('partner-shell');
+      if (!shell) return;
 
-        const applyState = (collapsed)=>{
-          aff.classList.toggle('collapsed', collapsed);
-        };
+      var toggle = document.getElementById('partner-toggle');
+      var icon   = document.getElementById('partner-toggle-icon');
+      var STORAGE_KEY = 'fsPartnerCollapsed';
 
-        const stored = localStorage.getItem('fsAffiliateCollapsed') === '1';
-        applyState(stored);
+      function readCollapsed() {
+        try {
+          return localStorage.getItem(STORAGE_KEY) === '1';
+        } catch (e) {
+          return false;
+        }
+      }
 
-        toggleBtn?.addEventListener('click', ()=>{
-          localStorage.setItem('fsAffiliateCollapsed','1');
-          applyState(true);
-        });
-        collapsedBtn?.addEventListener('click', ()=>{
-          localStorage.setItem('fsAffiliateCollapsed','0');
-          applyState(false);
-        });
+      function writeCollapsed(val) {
+        try {
+          localStorage.setItem(STORAGE_KEY, val ? '1' : '0');
+        } catch (e) {
+          // ignore (private mode, quota, etc.)
+        }
+      }
+
+      function applyCollapsed(collapsed) {
+        shell.classList.toggle('partner-collapsed', collapsed);
+        if (toggle) {
+          toggle.setAttribute('aria-expanded', String(!collapsed));
+        }
+        if (icon) {
+          icon.textContent = collapsed ? '▾' : '▴';
+        }
+      }
+
+      // Init from localStorage
+      applyCollapsed(readCollapsed());
+
+      if (toggle) {
+        toggle.addEventListener('click', function () {
+          var willCollapse = !shell.classList.contains('partner-collapsed');
+          applyCollapsed(willCollapse);
+          writeCollapsed(willCollapse);
+        }, { passive: true });
       }
     })();
   </script>
