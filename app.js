@@ -237,13 +237,27 @@ function getCurrentData(){
 
 /* ---------- Perf banner ---------- */
 function updatePerfBanner(){
-  const n = getCurrentData().length;
+  const data = getCurrentData();
+  const n = data.length;
   const total = (MODE==='player') ? (TOTAL_PLAYERS || 1) : (TOTAL_TEAMS || 1);
   const pct = Math.max(0, Math.min(1, n / total));
   perfTip.style.setProperty('--pct', pct);
   perfTip.innerHTML = `<span class="meter-text">${n} ${MODE==='player'?'players loaded':'teams ready to spin'}</span>`;
-  const disabled = n===0;
-  spinBtn.disabled = disabled; spinFab.disabled = disabled;
+
+  const disabled = n === 0;
+  spinBtn.disabled = disabled;
+  spinFab.disabled = disabled;
+
+  // 🔹 če NI izbranih lig/ekip → skrij SPIN gumbe
+  const hasSelection = activeCodes().length > 0;
+  const visibility = hasSelection ? '' : 'hidden';
+
+  if (spinFab) {
+    spinFab.style.visibility = visibility;
+  }
+  if (spinBtn) {
+    spinBtn.style.visibility = visibility;
+  }
 }
 
 /* ---------- Chips helpers & render ---------- */
