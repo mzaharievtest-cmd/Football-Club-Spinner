@@ -299,22 +299,74 @@ function positionSpinFab(){
 /* ---------- Wheel ---------- */
 const PERF = { hideTextThreshold: 50, minTextWidth: 44, minLogoBox: 26 };
 
-function drawIdle(ctx,W,H){
-  ctx.clearRect(0,0,W,H);
-  ctx.save(); ctx.translate(W/2,H/2);
-  const r = Math.min(W,H)*0.48;
-  const g = ctx.createRadialGradient(0,0,r*0.1, 0,0,r);
-  g.addColorStop(0,'#1A2C5A'); g.addColorStop(0.35,'#21386F'); g.addColorStop(0.65,'#0E2A57'); g.addColorStop(1,'#0B1B38');
-  ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fillStyle=g; ctx.fill();
-  ctx.lineWidth=1;
-  for(let i=1;i<=5;i++){
-    ctx.beginPath(); ctx.arc(0,0,r*i/5,0,TAU);
-    ctx.strokeStyle=`rgba(140,170,220,${0.08 + i*0.02})`;
-    ctx.setLineDash([6,18]); ctx.lineDashOffset = (i*14 + currentAngle*40)%1000;
-    ctx.stroke();
+function drawIdle(ctx, W, H){
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+
+  const r = Math.min(W, H) * 0.48;
+
+  // Background disc gradient
+  const g = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+  g.addColorStop(0, '#1A2C5A');
+  g.addColorStop(0.35, '#21386F');
+  g.addColorStop(0.65, '#0E2A57');
+  g.addColorStop(1, '#0B1B38');
+
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, TAU);
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  // Subtle inner glow
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.68, 0, TAU);
+  ctx.fillStyle = 'rgba(15,23,42,0.85)';
+  ctx.fill();
+
+  // Small sparkle ring
+  ctx.save();
+  ctx.rotate(currentAngle);
+  const glowR = r * 0.82;
+  for (let i = 0; i < 48; i++) {
+    const a = (TAU / 48) * i;
+    const x = Math.cos(a) * glowR;
+    const y = Math.sin(a) * glowR;
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, TAU);
+    ctx.fillStyle = (i % 4 === 0)
+      ? 'rgba(96,165,250,0.65)'
+      : 'rgba(148,163,184,0.35)';
+    ctx.fill();
   }
   ctx.restore();
+
+  // Text depending on mode
+  const mainLabel = (MODE === 'player')
+    ? 'No players on the wheel'
+    : 'No teams on the wheel';
+
+  const subLabel = (MODE === 'player')
+    ? 'Select at least one team on the left to start spinning.'
+    : 'Select at least one league on the left to start spinning.';
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Main text
+  ctx.font = '700 22px Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillStyle = 'rgba(248,250,252,0.96)';
+  ctx.fillText(mainLabel, 0, -10);
+
+  // Sub text
+  ctx.font = '400 15px Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillStyle = 'rgba(148,163,184,0.9)';
+  ctx.fillText(subLabel, 0, 18);
+
+  ctx.restore();
 }
+
 function drawTickRing(ctx, R, ticks=120){
   ctx.save();
   ctx.rotate(mod(currentAngle, TAU));
