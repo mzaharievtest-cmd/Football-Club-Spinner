@@ -104,26 +104,81 @@ function getImage(url, onload){
   return img;
 }
 
-function textColorFor(hex){
-  if(!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return '#fff';
+/* --- Color helpers --- */
+function parseHexToRgb(hex){
+  if (!hex || !/^#?[0-9a-f]{6}$/i.test(hex)) return null;
   hex = hex.replace('#','');
-  const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
+  const r = parseInt(hex.slice(0,2),16);
+  const g = parseInt(hex.slice(2,4),16);
+  const b = parseInt(hex.slice(4,6),16);
+  return { r, g, b };
+}
+function rgbToHex({r,g,b}){
+  const to = v => {
+    v = Math.max(0, Math.min(255, Math.round(v)));
+    return v.toString(16).padStart(2,'0');
+  };
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+function mixRgb(a, b, weight){
+  const w = clamp(0, weight, 1);
+  const iw = 1 - w;
+  return {
+    r: a.r * iw + b.r * w,
+    g: a.g * iw + b.g * w,
+    b: a.b * iw + b.b * w
+  };
+}
+
+/* Text contrast color (unchanged behavior, uses parseHexToRgb) */
+function textColorFor(hex){
+  const rgb = parseHexToRgb(hex);
+  if (!rgb) return '#fff';
+  const { r, g, b } = rgb;
   const L = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
   return L > 0.35 ? '#0b0f17' : '#fff';
 }
 
-function fitSingleLine(ctx, text, { maxWidth, targetPx, minPx=9, maxPx=24, weight=800 }){
-  let px = clamp(minPx, Math.round(targetPx), maxPx);
-  ctx.font = `${weight} ${px}px Inter, system-ui, sans-serif`;
-  if (ctx.measureText(text).width <= maxWidth) return {text, fontPx: px};
-  while (px > minPx){
-    px--;
-    ctx.font = `${weight} ${px}px Inter, system-ui, sans-serif`;
-    if (ctx.measureText(text).width <= maxWidth) return {text, fontPx: px};
+/* Slice color: normalize per-team primary so logos stay visible */
+const SLICE_BASE_COLORS = [
+  '#2563EB', // blue
+  '#F97316', // orange
+  '#EAB308', // yellow
+  '#22C55E', // green
+  '#EC4899', // pink
+  '#0EA5E9'  // cyan
+];
+
+function getSliceColor(primary, idx){
+  const base = SLICE_BASE_COLORS[idx % SLICE_BASE_COLORS.length];
+  const rgb = parseHexToRgb(primary);
+  if (!rgb) return base;
+
+  const { r, g, b } = rgb;
+  const L = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
+
+  // Nearly grey? (logos often pure white here) → use palette color instead.
+  const greyish = Math.abs(r-g) < 10 && Math.abs(g-b) < 10;
+
+  if (greyish) {
+    return base;
   }
-  let s = String(text||'').trim();
-  while (s && ctx.measureText(s+'…').width > maxWidth) s = s.slice(0,-1);
-  return {text:(s||'')+'…', fontPx:minPx};
+
+  // Too bright (near white) → strongly darken against navy background.
+  if (L > 0.75) {
+    const darkBg = parseHexToRgb('#020617'); // very dark navy
+    return rgbToHex(mixRgb(rgb, darkBg, 0.7));
+  }
+
+  // Very dark → lift with cyan-ish accent.
+  if (L < 0.10) {
+    const lift = parseHexToRgb('#38bdf8');
+    return rgbToHex(mixRgb(rgb, lift, 0.55));
+  }
+
+  // Normal case → gently mix with dark bg so it’s not too neon/pastel
+  const bg = parseHexToRgb('#020617');
+  return rgbToHex(mixRgb(rgb, bg, 0.35));
 }
 
 /* ---------- Labels & presets ---------- */
@@ -336,7 +391,7 @@ function drawWheel(){
   // wedges
   for (let i=0;i<N;i++){
     ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*slice,(i+1)*slice); ctx.closePath();
-    ctx.fillStyle = data[i].primary_color || '#243e6b';
+    ctx.fillStyle = getSliceColor(data[i].primary_color, i);   // ★ use normalized slice color
     ctx.fill();
   }
 
@@ -517,7 +572,7 @@ function renderHistory(){
   if (!visible.length){
     const empty = document.createElement('div');
     empty.className = 'item';
-    empty.textContent = 'Your journey starts with a spin!';
+    empty.textContent = 'Your journey starts with a spin - try your luck!';
     historyEl.appendChild(empty);
     return;
   }
@@ -816,144 +871,4 @@ function wire(){
   sizeCanvas();
   positionSpinFab();
   wire();
-})();
-
-/* ============================================================
-   app.dev.js — dev build behavior for the affiliate banner + minimal UI wiring
-   - Handles affiliate banner expand/collapse and localStorage persistence
-   - Leaves all header/nav elements untouched
-   - Intended for dev environment; included here so dev can use same bundle
-   ============================================================ */
-
-(function () {
-  'use strict';
-
-  // Basic DOM helpers
-  var $ = function (sel, ctx) { return (ctx || document).querySelector(sel); };
-  var $$ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
-
-  // Affiliate banner elements
-  var shell = $('#affiliate-banner');
-  var inner = $('.affiliate-inner', shell);
-  var collapsedStrip = $('#affiliate-collapsed');
-  var toggleBtn = $('#affiliate-toggle');
-  var toggleIcon = $('#affiliate-toggle-icon');
-  var cta = $('#affiliate-cta');
-
-  var STORAGE_KEY = 'affiliate-banner-collapsed';
-
-  // Safe guard: if banner DOM is not present, no-op
-  if (!shell) return;
-
-  // Initialize collapsed state from localStorage
-  function readCollapsed() {
-    try {
-      return localStorage.getItem(STORAGE_KEY) === '1';
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function writeCollapsed(val) {
-    try {
-      localStorage.setItem(STORAGE_KEY, val ? '1' : '0');
-    } catch (e) {
-      // ignore (e.g., private mode)
-    }
-  }
-
-  function setCollapsed(collapsed, skipFocus) {
-    if (collapsed) {
-      shell.classList.add('collapsed');
-      // show collapsed strip and hide main inner (CSS manages this); update aria
-      if (collapsedStrip) collapsedStrip.setAttribute('aria-hidden', 'false');
-      if (inner) inner.setAttribute('aria-hidden', 'true');
-      if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
-      if (toggleIcon) toggleIcon.textContent = '▾';
-    } else {
-      shell.classList.remove('collapsed');
-      if (collapsedStrip) collapsedStrip.setAttribute('aria-hidden', 'true');
-      if (inner) inner.setAttribute('aria-hidden', 'false');
-      if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
-      if (toggleIcon) toggleIcon.textContent = '▴';
-    }
-    writeCollapsed(collapsed);
-    if (!skipFocus && !collapsed && cta) cta.focus(); // if expanded by user, focus CTA for keyboard users
-  }
-
-  // Toggle handler
-  function toggleHandler(e) {
-    var isCollapsed = shell.classList.contains('collapsed');
-    setCollapsed(!isCollapsed);
-  }
-
-  // Click on collapsed strip should expand
-  function collapsedStripHandler(e) {
-    setCollapsed(false);
-  }
-
-  // keyboard support for collapsed strip
-  function collapsedKeyHandler(e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      setCollapsed(false);
-    }
-  }
-
-  // initialize
-  (function init() {
-    var collapsed = readCollapsed();
-    setCollapsed(collapsed, true);
-
-    if (toggleBtn) toggleBtn.addEventListener('click', toggleHandler, { passive: true });
-    if (collapsedStrip) {
-      collapsedStrip.addEventListener('click', collapsedStripHandler, { passive: true });
-      collapsedStrip.addEventListener('keydown', collapsedKeyHandler, { passive: true });
-    }
-
-    // Accessibility: ensure CTA has rel/noopener and is keyboard-visible
-    if (cta) {
-      cta.setAttribute('rel', 'noopener noreferrer');
-    }
-
-    // Prevent accidental propagation from banner controls to header/higher handlers
-    if (inner) inner.addEventListener('click', function (e) { e.stopPropagation(); });
-
-    // Minimal visual/demo wheel drawing (dev only) so the canvas isn't empty in dev preview
-    try {
-      var canvas = document.getElementById('wheel');
-      if (canvas && canvas.getContext) {
-        var ctx = canvas.getContext('2d');
-        var size = Math.min(canvas.width, canvas.height);
-        var cx = canvas.width / 2;
-        var cy = canvas.height / 2;
-        var slices = 72; // lots of thin stripes per dev screenshot
-        var angle = (Math.PI * 2) / slices;
-
-        for (var i = 0; i < slices; i++) {
-          ctx.beginPath();
-          ctx.moveTo(cx, cy);
-          ctx.fillStyle = (i % 2 === 0) ? '#ff4d4d' : '#ffd34d';
-          ctx.arc(cx, cy, size / 2 - 2, i * angle, (i + 1) * angle);
-          ctx.closePath();
-          ctx.fill();
-        }
-
-        // draw center button ring
-        ctx.beginPath();
-        ctx.fillStyle = '#1b2b54';
-        ctx.arc(cx, cy, 68, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.font = '700 20px Inter, system-ui, -apple-system, "Segoe UI", Roboto';
-        ctx.fillStyle = '#f3f7ff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('SPIN!', cx, cy);
-      }
-    } catch (e) {
-      // ignore rendering errors in older browsers
-      console.warn('wheel demo render failed', e);
-    }
-  }());
 })();
