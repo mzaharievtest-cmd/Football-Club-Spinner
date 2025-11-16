@@ -448,6 +448,24 @@ canvas#wheel{
 @keyframes pointer-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @media (max-width:600px){ .pointer{border-left-width:12px;border-right-width:12px;border-top-width:20px} }
 
+/* === Mobile wheel clamp: stop wheel growing on scroll === */
+@media (max-width:768px){
+  .wheel-wrap{
+    width:min(360px, 100%);
+    margin:0 auto;
+    min-height:auto;
+    padding:24px 8px 16px;
+  }
+
+  canvas#wheel,
+  #fx{
+    width:100% !important;
+    height:auto !important;
+    max-width:360px;
+    max-height:360px;
+  }
+}
+
 /* Central SPIN button overlay */
 .spin-fab{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
