@@ -592,27 +592,28 @@ canvas#wheel{
 .ac-body h2 { margin:8px 0 8px; color:#f6f9ff; font-size:20px; font-weight:900; }
 @media (max-width:979.98px){ .ac-body{font-size:15px} .ac-summary{padding:12px 14px} }
 
-/* === FINAL FOOTER CENTERING === */
+/* === FINAL FOOTER CENTERING (CLEAN) === */
+
 .site-footer {
   width: 100%;
   margin: 32px 0 24px;
   padding: 0;
-  display: block;
-  text-align: center;
+  display: flex;              /* use flex */
+  justify-content: center;    /* center horizontally */
 }
 
 .footer-inner {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;                   /* small space between the two spans */
+  margin: 0;
   text-align: center;
   font-size: 12px;
   color: var(--dim);
-
-  /* hard centering, even if some parent is flex-start */
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
+/* keep spans inline so it stays on 1 line */
 .footer-inner span {
   display: inline;
   line-height: 1.5;
