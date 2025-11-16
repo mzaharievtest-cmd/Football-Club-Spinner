@@ -426,32 +426,47 @@ function drawWheel(){
       ctx.fillText(fit.text,   x, 0);
     }
 
-    if (canLogoOrImg){
-      ctx.save(); ctx.translate(xLogo,0);
-      ctx.beginPath(); ctx.arc(0,0,logoHalf,0,TAU); ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fill();
-      ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.stroke();
+if (canLogoOrImg){
+  ctx.save();
+  ctx.translate(xLogo, 0);
 
-      ctx.save(); ctx.beginPath(); ctx.arc(0,0,logoHalf-1,0,TAU); ctx.clip();
-      const url = MODE==='team' ? t.logo_url : t.image_url;
-      const img = getImage(url, ()=> requestAnimationFrame(drawWheel));
-      if (img && img.complete){
-        const box = Math.max(4, 2*(logoHalf-1));
-        const iw=img.naturalWidth||box, ih=img.naturalHeight||box;
-        const s = Math.min(box/iw, box/ih);
-        ctx.drawImage(img,-iw*s/2,-ih*s/2, iw*s, ih*s);
-      } else {
-        if (MODE==='team'){
-          ctx.fillStyle='rgba(255,255,255,.14)';
-          const ph=(logoHalf-3)*2; ctx.fillRect(-ph/2,-ph/2,ph,ph);
-        }
-      }
-      ctx.restore(); ctx.restore();
-    }
+  // outer soft ring
+  ctx.beginPath();
+  ctx.arc(0, 0, logoHalf, 0, TAU);
+  ctx.fillStyle = 'rgba(255,255,255,.10)';
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(255,255,255,.95)';
+  ctx.stroke();
 
-    ctx.restore();
+  // inner disc: this is the KEY change so the slice color never shows through
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, logoHalf - 1, 0, TAU);
+  ctx.clip();
+
+  // solid background behind the logo (dark navy)
+  ctx.fillStyle = 'rgba(15,23,42,0.96)'; // #0f172a-ish
+  ctx.fillRect(-logoHalf, -logoHalf, logoHalf * 2, logoHalf * 2);
+
+  const url = MODE === 'team' ? t.logo_url : t.image_url;
+  const img = getImage(url, () => requestAnimationFrame(drawWheel));
+
+  if (img && img.complete){
+    const box = Math.max(4, 2 * (logoHalf - 1));
+    const iw = img.naturalWidth  || box;
+    const ih = img.naturalHeight || box;
+    const s  = Math.min(box / iw, box / ih);
+    ctx.drawImage(img, -iw*s/2, -ih*s/2, iw*s, ih*s);
+  } else {
+    // simple placeholder if image not loaded
+    ctx.fillStyle = 'rgba(148,163,184,.6)';
+    const ph = (logoHalf - 3) * 2;
+    ctx.fillRect(-ph/2, -ph/2, ph, ph);
   }
 
-  ctx.restore();
+  ctx.restore(); // inner disc
+  ctx.restore(); // logo transform
 }
 
 /* ---------- Analytics ---------- */
