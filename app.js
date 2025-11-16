@@ -456,8 +456,8 @@ function drawWheel(){
       ctx.arc(0, 0, logoHalf - 1, 0, TAU);
       ctx.clip();
 
-      // solid background behind the logo (WHITE now)
-      ctx.fillStyle = '#ffffff';
+      // solid background behind the logo (LIGHT GRAY now)
+      ctx.fillStyle = '#e5e7eb'; // Tailwind-ish light gray
       ctx.fillRect(-logoHalf, -logoHalf, logoHalf * 2, logoHalf * 2);
 
       const url = MODE === 'team' ? t.logo_url : t.image_url;
