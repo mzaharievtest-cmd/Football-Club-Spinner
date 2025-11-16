@@ -414,24 +414,25 @@ function drawWheel(){
 
   updatePerfBanner();
 
-  // Only show idle graphic if there are NO items at all
+  // 0 teams/leagues selected → full idle graphic
   if (N === 0) {
     drawIdle(ctx, W, H);
     return;
   }
 
-  const hideAll = N >= PERF.hideTextThreshold;
-  ctx.imageSmoothingEnabled = !hideAll;
+  const hideAll   = N >= PERF.hideTextThreshold;
+  const noContent = !optA.checked && !optB.checked;   // nothing to render on slices
 
+  ctx.imageSmoothingEnabled = !hideAll;
   ctx.clearRect(0,0,W,H);
   ctx.save();
   ctx.translate(W/2,H/2);
   ctx.rotate(mod(currentAngle,TAU));
 
-  const r = Math.min(W,H)*0.48;
+  const r     = Math.min(W,H)*0.48;
   const slice = TAU/N;
 
-  // wedges
+  // --- wedges ---
   for (let i=0;i<N;i++){
     ctx.beginPath();
     ctx.moveTo(0,0);
@@ -441,6 +442,27 @@ function drawWheel(){
     ctx.fill();
   }
 
+  // If there is NOTHING to show (A+B off), overlay tick rings and stop.
+  if (noContent) {
+    ctx.restore();
+    const ctx2 = wheel.getContext('2d');
+    ctx2.save();
+    ctx2.translate(W/2,H/2);
+    drawTickRing(ctx2, r*0.98, 120);
+    ctx2.lineWidth = 1;
+    for (let i=1;i<=4;i++){
+      ctx2.beginPath();
+      ctx2.arc(0,0,r*i/5,0,TAU);
+      ctx2.strokeStyle = `rgba(140,170,220,${0.06 + i*0.02})`;
+      ctx2.setLineDash([6,22]);
+      ctx2.lineDashOffset = (i*10 + currentAngle*36)%1000;
+      ctx2.stroke();
+    }
+    ctx2.restore();
+    return;
+  }
+
+  // Many slices → performance mode
   if (hideAll){
     ctx.restore();
     const ctx2 = wheel.getContext('2d');
@@ -460,7 +482,7 @@ function drawWheel(){
     return;
   }
 
-  // contents
+  // --- slice contents (logos/names) ---
   for (let i=0;i<N;i++){
     const t = data[i];
     const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
@@ -469,11 +491,14 @@ function drawWheel(){
     const canLogoOrImg = (MODE==='team')
       ? (optA.checked && !!t.logo_url)
       : (optA.checked && !!t.image_url);
-
     const canName = optB.checked && !!t.team_name;
 
     ctx.save();
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r-1,a0,a1); ctx.closePath(); ctx.clip();
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.arc(0,0,r-1,a0,a1);
+    ctx.closePath();
+    ctx.clip();
     ctx.rotate(aMid);
     const needFlip = Math.cos(aMid) < 0;
     if (needFlip) ctx.rotate(Math.PI);
@@ -481,10 +506,10 @@ function drawWheel(){
 
     const logoSize = clamp(PERF.minLogoBox, 0.38*arcLen, 62);
     const logoHalf = logoSize/2;
-    const pad = 10;
-    const xLogo = sign * (r*0.74);
-    const xText = sign * (r*0.42);
-    const logoInner = xLogo - sign*(logoHalf+pad);
+    const pad      = 10;
+    const xLogo    = sign * (r*0.74);
+    const xText    = sign * (r*0.42);
+    const logoInner= xLogo - sign*(logoHalf+pad);
     const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
 
     const fg = textColorFor(t.primary_color);
@@ -518,7 +543,7 @@ function drawWheel(){
       ctx.strokeStyle = 'rgba(255,255,255,.95)';
       ctx.stroke();
 
-      // inner disc background (light gray)
+      // inner disc (light grey background for logo)
       ctx.save();
       ctx.beginPath();
       ctx.arc(0, 0, logoHalf - 1, 0, TAU);
@@ -545,7 +570,7 @@ function drawWheel(){
       ctx.restore(); // logo transform
     }
 
-    ctx.restore(); // slice
+    ctx.restore(); // slice clip
   }
 
   ctx.restore();
