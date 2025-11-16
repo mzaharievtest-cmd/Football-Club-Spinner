@@ -21,14 +21,56 @@ let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
 
-// History migrate → [{type,item}]
-let historyRaw = JSON.parse(localStorage.getItem('clubHistory')) || [];
-let history = historyRaw.map(h =>
-  (h && typeof h === 'object' && 'type' in h && 'item' in h)
-    ? h
-    : { type: (h && (h.image_url || h.club_id)) ? 'player' : 'team', item: h }
-);
-const saveHistory = () => localStorage.setItem('clubHistory', JSON.stringify(history));
+// History v2 — separate buckets for team & player
+let historyStore = { team: [], player: [] };
+
+(function initHistory(){
+  try {
+    // New format: { team: [...], player: [...] }
+    const v2 = JSON.parse(localStorage.getItem('fsHistoryV2') || 'null');
+    if (v2 && typeof v2 === 'object') {
+      historyStore.team   = Array.isArray(v2.team)   ? v2.team   : [];
+      historyStore.player = Array.isArray(v2.player) ? v2.player : [];
+      return;
+    }
+
+    // Legacy migration from clubHistory (mixed array)
+    const legacyRaw = JSON.parse(localStorage.getItem('clubHistory') || '[]');
+    const teams = [];
+    const players = [];
+
+    for (const h of legacyRaw) {
+      if (!h || typeof h !== 'object') continue;
+
+      if ('type' in h && 'item' in h) {
+        // Already wrapped
+        if (h.type === 'player') players.push(h.item);
+        else teams.push(h.item);
+      } else {
+        // Heuristic: players had image_url / club_id
+        if (h.image_url || h.club_id) players.push(h);
+        else teams.push(h);
+      }
+    }
+
+    historyStore = { team: teams, player: players };
+    localStorage.setItem('fsHistoryV2', JSON.stringify(historyStore));
+  } catch (e) {
+    console.warn('History init failed', e);
+    historyStore = { team: [], player: [] };
+  }
+})();
+
+const saveHistory = () => {
+  try {
+    localStorage.setItem('fsHistoryV2', JSON.stringify(historyStore));
+  } catch (e) {
+    console.warn('History save failed', e);
+  }
+};
+
+const getHistoryBucket = (mode = MODE) =>
+  mode === 'player' ? historyStore.player : historyStore.team;
 
 /* ---------- DOM ---------- */
 const modeTeamBtn   = document.getElementById('modeTeam');
