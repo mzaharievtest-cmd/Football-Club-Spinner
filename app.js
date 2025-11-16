@@ -130,7 +130,7 @@ function mixRgb(a, b, weight){
   };
 }
 
-/* Text contrast color (unchanged behavior, uses parseHexToRgb) */
+/* Text contrast color */
 function textColorFor(hex){
   const rgb = parseHexToRgb(hex);
   if (!rgb) return '#fff';
@@ -139,21 +139,12 @@ function textColorFor(hex){
   return L > 0.35 ? '#0b0f17' : '#fff';
 }
 
-/* Slice color: normalize per-team primary so logos stay visible */
-const SLICE_BASE_COLORS = [
-  '#2563EB', // blue
-  '#F97316', // orange
-  '#EAB308', // yellow
-  '#22C55E', // green
-  '#EC4899', // pink
-  '#0EA5E9'  // cyan
-];
-
+/* Slice color = team primary_color from teams.json; fallback dark navy */
 function getSliceColor(primary) {
-  // use team colour directly, fallback to a dark navy if invalid
-  return (primary && /^#?[0-9a-f]{6}$/i.test(primary))
-    ? (primary.startsWith('#') ? primary : '#' + primary)
-    : '#020617';
+  if (primary && /^#?[0-9a-f]{6}$/i.test(primary)) {
+    return primary.startsWith('#') ? primary : `#${primary}`;
+  }
+  return '#020617';
 }
 
 /* ---------- Labels & presets ---------- */
@@ -340,6 +331,26 @@ function drawTickRing(ctx, R, ticks=120){
   ctx.restore();
 }
 
+function fitSingleLine(ctx, text, {maxWidth, targetPx}){
+  let size = targetPx;
+  ctx.font = `800 ${size}px Inter, system-ui, sans-serif`;
+  let width = ctx.measureText(text).width;
+  if (width <= maxWidth) return { text, fontPx:size };
+  while (size > 10 && width > maxWidth){
+    size -= 1;
+    ctx.font = `800 ${size}px Inter, system-ui, sans-serif`;
+    width = ctx.measureText(text).width;
+  }
+  if (width > maxWidth){
+    while (text.length > 3 && width > maxWidth){
+      text = text.slice(0,-1);
+      width = ctx.measureText(text + '…').width;
+    }
+    text = text + '…';
+  }
+  return { text, fontPx:size };
+}
+
 function drawWheel(){
   const data = getCurrentData();
   const N = data.length;
@@ -366,7 +377,7 @@ function drawWheel(){
   // wedges
   for (let i=0;i<N;i++){
     ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*slice,(i+1)*slice); ctx.closePath();
-    ctx.fillStyle = getSliceColor(data[i].primary_color, i);   // ★ use normalized slice color
+    ctx.fillStyle = getSliceColor(data[i].primary_color);
     ctx.fill();
   }
 
@@ -413,7 +424,7 @@ function drawWheel(){
     const logoInner = xLogo - sign*(logoHalf+pad);
     const maxWidth = Math.max(PERF.minTextWidth, Math.abs(logoInner - xText));
 
-    const fg = textColorFor(t.primary_color);
+    const fg = textColorFor(t.primary_color || '#020617');
 
     if (canName && maxWidth>=PERF.minTextWidth){
       const fit = fitSingleLine(ctx, t.team_name, {maxWidth, targetPx:Math.min(22, 0.22*arcLen)});
@@ -426,47 +437,51 @@ function drawWheel(){
       ctx.fillText(fit.text,   x, 0);
     }
 
-if (canLogoOrImg){
-  ctx.save();
-  ctx.translate(xLogo, 0);
+    if (canLogoOrImg){
+      ctx.save();
+      ctx.translate(xLogo, 0);
 
-  // outer soft ring
-  ctx.beginPath();
-  ctx.arc(0, 0, logoHalf, 0, TAU);
-  ctx.fillStyle = 'rgba(255,255,255,.10)';
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(255,255,255,.95)';
-  ctx.stroke();
+      // outer soft ring
+      ctx.beginPath();
+      ctx.arc(0, 0, logoHalf, 0, TAU);
+      ctx.fillStyle = 'rgba(255,255,255,.10)';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,255,255,.95)';
+      ctx.stroke();
 
-  // inner disc: this is the KEY change so the slice color never shows through
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(0, 0, logoHalf - 1, 0, TAU);
-  ctx.clip();
+      // inner disc – always solid so logos never show slice color "bleed"
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, 0, logoHalf - 1, 0, TAU);
+      ctx.clip();
 
-  // solid background behind the logo (dark navy)
-  ctx.fillStyle = 'rgba(15,23,42,0.96)'; // #0f172a-ish
-  ctx.fillRect(-logoHalf, -logoHalf, logoHalf * 2, logoHalf * 2);
+      ctx.fillStyle = 'rgba(15,23,42,0.96)'; // dark navy
+      ctx.fillRect(-logoHalf, -logoHalf, logoHalf * 2, logoHalf * 2);
 
-  const url = MODE === 'team' ? t.logo_url : t.image_url;
-  const img = getImage(url, () => requestAnimationFrame(drawWheel));
+      const url = MODE === 'team' ? t.logo_url : t.image_url;
+      const img = getImage(url, () => requestAnimationFrame(drawWheel));
 
-  if (img && img.complete){
-    const box = Math.max(4, 2 * (logoHalf - 1));
-    const iw = img.naturalWidth  || box;
-    const ih = img.naturalHeight || box;
-    const s  = Math.min(box / iw, box / ih);
-    ctx.drawImage(img, -iw*s/2, -ih*s/2, iw*s, ih*s);
-  } else {
-    // simple placeholder if image not loaded
-    ctx.fillStyle = 'rgba(148,163,184,.6)';
-    const ph = (logoHalf - 3) * 2;
-    ctx.fillRect(-ph/2, -ph/2, ph, ph);
+      if (img && img.complete){
+        const box = Math.max(4, 2 * (logoHalf - 1));
+        const iw = img.naturalWidth  || box;
+        const ih = img.naturalHeight || box;
+        const s  = Math.min(box / iw, box / ih);
+        ctx.drawImage(img, -iw*s/2, -ih*s/2, iw*s, ih*s);
+      } else {
+        ctx.fillStyle = 'rgba(148,163,184,.6)';
+        const ph = (logoHalf - 3) * 2;
+        ctx.fillRect(-ph/2, -ph/2, ph, ph);
+      }
+
+      ctx.restore(); // inner disc
+      ctx.restore(); // logo transform
+    }
+
+    ctx.restore(); // slice clip
   }
 
-  ctx.restore(); // inner disc
-  ctx.restore(); // logo transform
+  ctx.restore(); // center translate+rotate
 }
 
 /* ---------- Analytics ---------- */
@@ -681,6 +696,7 @@ function openModal(item){
     showRow(rowJersey,  false);
     showRow(rowNat,     false);
 
+    // stadium is read directly from teams.json
     mStadium.textContent = item.stadium || '—';
 
     addReveal('a', mLogo,   !!optA.checked, 'logo');
@@ -721,10 +737,27 @@ function setMode(next){
 async function loadTeams(){
   const res = await fetch('./teams.json?v='+Date.now());
   if (!res.ok) throw new Error('teams.json not found');
-  TEAMS = await res.json();
-  TEAM_BY_ID.clear(); CLUB_BY_ID.clear();
+  const raw = await res.json();
 
-  for (const t of (TEAMS||[])){
+  // teams.json is the single source of truth for stadium + primary_color
+  TEAMS = (raw || []).map(t => {
+    let primary = t.primary_color || '#020617';
+    if (!/^#?[0-9a-f]{6}$/i.test(primary)) {
+      primary = '#020617';
+    } else if (!primary.startsWith('#')) {
+      primary = `#${primary}`;
+    }
+    return {
+      ...t,
+      stadium: t.stadium || '',
+      primary_color: primary
+    };
+  });
+
+  TEAM_BY_ID.clear();
+  CLUB_BY_ID.clear();
+
+  for (const t of TEAMS){
     const id = String(t.team_id);
     TEAM_BY_ID.set(id, t);
     CLUB_BY_ID.set(id, t.team_name);
@@ -849,8 +882,8 @@ function wire(){
 /* ---------- Boot ---------- */
 (async function init(){
   try{
-    await loadTeams();
-    await loadPlayers();
+    await loadTeams();   // stadium + primary_color from teams.json
+    await loadPlayers(); // players inherit primary_color from TEAM_BY_ID
   } catch (e){
     console.error('Failed to load data:', e);
   }
