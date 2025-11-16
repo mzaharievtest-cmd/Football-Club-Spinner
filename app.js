@@ -149,36 +149,11 @@ const SLICE_BASE_COLORS = [
   '#0EA5E9'  // cyan
 ];
 
-function getSliceColor(primary, idx){
-  const base = SLICE_BASE_COLORS[idx % SLICE_BASE_COLORS.length];
-  const rgb = parseHexToRgb(primary);
-  if (!rgb) return base;
-
-  const { r, g, b } = rgb;
-  const L = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
-
-  // Nearly grey? (logos often pure white here) → use palette color instead.
-  const greyish = Math.abs(r-g) < 10 && Math.abs(g-b) < 10;
-
-  if (greyish) {
-    return base;
-  }
-
-  // Too bright (near white) → strongly darken against navy background.
-  if (L > 0.75) {
-    const darkBg = parseHexToRgb('#020617'); // very dark navy
-    return rgbToHex(mixRgb(rgb, darkBg, 0.7));
-  }
-
-  // Very dark → lift with cyan-ish accent.
-  if (L < 0.10) {
-    const lift = parseHexToRgb('#38bdf8');
-    return rgbToHex(mixRgb(rgb, lift, 0.55));
-  }
-
-  // Normal case → gently mix with dark bg so it’s not too neon/pastel
-  const bg = parseHexToRgb('#020617');
-  return rgbToHex(mixRgb(rgb, bg, 0.35));
+function getSliceColor(primary) {
+  // use team colour directly, fallback to a dark navy if invalid
+  return (primary && /^#?[0-9a-f]{6}$/i.test(primary))
+    ? (primary.startsWith('#') ? primary : '#' + primary)
+    : '#020617';
 }
 
 /* ---------- Labels & presets ---------- */
