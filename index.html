@@ -35,10 +35,11 @@
   <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
 
   <!-- Fonts (non-blocking load) -->
-  <link rel="preload"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
-        as="style"
-        onload="this.onload=null;this.rel='stylesheet'">
+  <link
+    rel="preload"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
   </noscript>
@@ -150,28 +151,51 @@
 
 <body>
   <!-- GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript>
+    <iframe
+      src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T"
+      height="0"
+      width="0"
+      style="display:none;visibility:hidden"></iframe>
+  </noscript>
 
   <header>
     <div class="brand">
-      <img src="app-logo.png?v=1"
-           alt="Football Spinner logo"
-           class="brand-img"
-           decoding="async"
-           width="128" height="128" />
+      <img
+        src="app-logo.png?v=1"
+        alt="Football Spinner logo"
+        class="brand-img"
+        decoding="async"
+        width="128"
+        height="128" />
       <div>
         <h1 id="main-title">Football Spinner</h1>
-        <div class="season-tag">Teams from 25 European leagues · Players from the Premier League</div>
+        <div class="season-tag">
+          Teams from 25 European leagues · Players from the Premier League
+        </div>
       </div>
     </div>
 
     <div class="header-right">
       <div class="mode-switch-wrap">
         <div class="mode-switch" role="tablist" aria-label="View mode">
-          <button id="modeTeam"   role="tab" aria-selected="true"  class="mode-btn mode-btn-active" title="Spin among football clubs">TEAM</button>
-          <button id="modePlayer" role="tab" aria-selected="false" class="mode-btn" title="Spin among players">PLAYER</button>
+          <button
+            id="modeTeam"
+            role="tab"
+            aria-selected="true"
+            class="mode-btn mode-btn-active"
+            title="Spin among football clubs">TEAM</button>
+          <button
+            id="modePlayer"
+            role="tab"
+            aria-selected="false"
+            class="mode-btn"
+            title="Spin among players">PLAYER</button>
         </div>
-        <span id="modeNote" class="small" style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
+        <span
+          id="modeNote"
+          class="small"
+          style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
       </div>
     </div>
   </header>
@@ -189,7 +213,14 @@
 
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
-        <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">Show more leagues</button>
+        <button
+          id="toggleMore"
+          class="chip-btn ghost"
+          type="button"
+          aria-expanded="false"
+          aria-controls="chipsMore">
+          Show more leagues
+        </button>
         <div id="chipsMore" class="chips" hidden></div>
       </div>
 
@@ -198,74 +229,93 @@
       <div class="history-title">History</div>
       <div class="history" id="history">
         <div class="result">
-          <div id="historyEmpty" class="current-name">Your journey starts with a spin - try your luck!</div>
+          <div id="historyEmpty" class="current-name">
+            Your journey starts with a spin - try your luck!
+          </div>
         </div>
       </div>
-      <button id="resetHistoryBtn" type="button" style="margin-top:12px" title="Clear all previous results">Clear History</button>
+      <button
+        id="resetHistoryBtn"
+        type="button"
+        style="margin-top:12px"
+        title="Clear all previous results">
+        Clear History
+      </button>
 
-                    <!-- Compact partner offers -->
-        <div class="partner-stack" aria-label="Partner offers">
-          <div class="partner-stack-title">PARTNER OFFERS</div>
-  
-          <!-- N1Bet -->
-          <article class="partner-mini" id="partner-n1bet" data-partner="n1bet">
-            <div class="partner-mini-main">
-              <div class="partner-mini-eyebrow">Partner · N1BET Sports</div>
-              <div class="partner-mini-title">Get €60 in Free Bets — Exclusive</div>
-              <div class="partner-mini-body">
-                Deposit just €20 and receive 4 free bets instantly.
-                Perfect for Premier League, ACCA combos, derbies &amp; live betting.
-                Exclusive bonus only through Football Spinner.<br>
-                <span class="small">18+ · New customers only · Gamble responsibly · Terms apply</span>
-              </div>
-            </div>
-            <div class="partner-mini-cta">
-              <a class="partner-mini-btn"
-                 href="https://n1bet.live?ref_code=qevuxXfOKQ"
-                 target="_blank"
-                 rel="noopener noreferrer nofollow">
-                CLAIM N1BET BONUS
-              </a>
-              <button class="partner-mini-toggle" type="button" aria-label="Hide N1Bet offer">
-                <span class="partner-mini-toggle-icon">▾</span>
-              </button>
-            </div>
-          </article>
-  
-          <!-- BC.GAME -->
-          <article class="partner-mini" id="partner-bcgame" data-partner="bcgame">
-            <div class="partner-mini-main">
-              <div class="partner-mini-eyebrow">Partner · BC.GAME Sports</div>
-              <div class="partner-mini-title">80% Crypto Sports Bonus + 5 Free Bets</div>
-              <div class="partner-mini-body">
-                Start with just $5 and get an 80% sports bonus + 5 free bets today.
-                Fast crypto withdrawals and huge odds on Premier League &amp; Champions League.<br>
-                <span class="small">18+ · New players only · Crypto involves risk · Gamble responsibly · Terms apply</span>
-              </div>
-            </div>
-            <div class="partner-mini-cta">
-              <a class="partner-mini-btn"
-                 href="https://bc.game/i-34qxctc8x-n/"
-                 target="_blank"
-                 rel="noopener noreferrer nofollow">
-                GET CRYPTO BONUS
-              </a>
-              <button class="partner-mini-toggle" type="button" aria-label="Hide BC.GAME offer">
-                <span class="partner-mini-toggle-icon">▾</span>
-              </button>
-            </div>
-          </article>
-        </div>
+      <!-- Compact partner offers -->
+      <div class="partner-stack" aria-label="Partner offers">
+        <div class="partner-stack-title">PARTNER OFFERS</div>
 
-      
+        <!-- N1Bet -->
+        <article class="partner-mini" id="partner-n1bet" data-partner="n1bet">
+          <div class="partner-mini-main">
+            <div class="partner-mini-eyebrow">Partner · N1BET Sports</div>
+            <div class="partner-mini-title">Get €60 in Free Bets — Exclusive</div>
+            <div class="partner-mini-body">
+              Deposit just €20 and receive 4 free bets instantly.
+              Perfect for Premier League, ACCA combos, derbies &amp; live betting.
+              Exclusive bonus only through Football Spinner.<br>
+              <span class="small">18+ · New customers only · Gamble responsibly · Terms apply</span>
+            </div>
+          </div>
+          <div class="partner-mini-cta">
+            <a
+              class="partner-mini-btn"
+              href="https://n1bet.live?ref_code=qevuxXfOKQ"
+              target="_blank"
+              rel="noopener noreferrer nofollow">
+              CLAIM N1BET BONUS
+            </a>
+            <button
+              class="partner-mini-toggle"
+              type="button"
+              aria-label="Hide N1Bet offer">
+              <span class="partner-mini-toggle-icon">▾</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- BC.GAME -->
+        <article class="partner-mini" id="partner-bcgame" data-partner="bcgame">
+          <div class="partner-mini-main">
+            <div class="partner-mini-eyebrow">Partner · BC.GAME Sports</div>
+            <div class="partner-mini-title">80% Crypto Sports Bonus + 5 Free Bets</div>
+            <div class="partner-mini-body">
+              Start with just $5 and get an 80% sports bonus + 5 free bets today.
+              Fast crypto withdrawals and huge odds on Premier League &amp; Champions League.<br>
+              <span class="small">18+ · New players only · Crypto involves risk · Gamble responsibly · Terms apply</span>
+            </div>
+          </div>
+          <div class="partner-mini-cta">
+            <a
+              class="partner-mini-btn"
+              href="https://bc.game/i-34qxctc8x-n/"
+              target="_blank"
+              rel="noopener noreferrer nofollow">
+              GET CRYPTO BONUS
+            </a>
+            <button
+              class="partner-mini-toggle"
+              type="button"
+              aria-label="Hide BC.GAME offer">
+              <span class="partner-mini-toggle-icon">▾</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <!-- RIGHT: wheel -->
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
 
       <div class="wheel-subheader">
-        <div id="perfTip" class="perf-tip" aria-live="polite"
-             data-clubs-text="teams ready to spin"
-             data-players-text="players loaded">
+        <div
+          id="perfTip"
+          class="perf-tip"
+          aria-live="polite"
+          data-clubs-text="teams ready to spin"
+          data-players-text="players loaded">
           <span class="meter-text">0 teams ready to spin</span>
         </div>
 
@@ -296,7 +346,14 @@
 
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
-        <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel" title="Click to spin the wheel!">SPIN!</button>
+        <button
+          id="spinFab"
+          class="spin-fab"
+          type="button"
+          aria-label="Spin the wheel"
+          title="Click to spin the wheel!">
+          SPIN!
+        </button>
         <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
         <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
       </div>
@@ -308,41 +365,78 @@
         <div class="section-title" id="details-title">Details</div>
 
         <div class="ac-panel" id="panel-about" role="region" aria-labelledby="panel-about-summary">
-          <div class="ac-summary" id="panel-about-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-about-body">
+          <div
+            class="ac-summary"
+            id="panel-about-summary"
+            tabindex="0"
+            role="button"
+            aria-expanded="false"
+            aria-controls="panel-about-body">
             <div class="ac-title">About Football Spinner</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </span>
           </div>
           <div class="ac-body" id="panel-about-body" aria-labelledby="panel-about-summary">
             <h2>About Football Spinner</h2>
-            <p>Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way. Spin the wheel to discover new teams from <strong>25 European leagues</strong> or get a <strong>random Premier League player</strong> for your next quiz.</p>
+            <p>
+              Football Spinner is a free tool for fans to explore football clubs and players in a fun, interactive way.
+              Spin the wheel to discover new teams from <strong>25 European leagues</strong> or get a
+              <strong>random Premier League player</strong> for your next quiz.
+            </p>
           </div>
         </div>
 
         <div class="ac-panel" id="panel-how" role="region" aria-labelledby="panel-how-summary">
-          <div class="ac-summary" id="panel-how-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-how-body">
+          <div
+            class="ac-summary"
+            id="panel-how-summary"
+            tabindex="0"
+            role="button"
+            aria-expanded="false"
+            aria-controls="panel-how-body">
             <div class="ac-title">How it works</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </span>
           </div>
           <div class="ac-body" id="panel-how-body" aria-labelledby="panel-how-summary">
             <h2>How it works</h2>
-            <p>Choose your filters: in <strong>TEAM</strong> mode pick leagues (25 European leagues supported); in <strong>PLAYER</strong> mode pick <strong>Premier League teams</strong>. Set what to show on the wheel and hit <em>Spin</em>. The wheel lands on a random result.</p>
+            <p>
+              Choose your filters: in <strong>TEAM</strong> mode pick leagues
+              (25 European leagues supported); in <strong>PLAYER</strong> mode
+              pick <strong>Premier League teams</strong>. Set what to show on the
+              wheel and hit <em>Spin</em>. The wheel lands on a random result.
+            </p>
           </div>
         </div>
 
         <div class="ac-panel" id="panel-why" role="region" aria-labelledby="panel-why-summary">
-          <div class="ac-summary" id="panel-why-summary" tabindex="0" role="button" aria-expanded="false" aria-controls="panel-why-body">
+          <div
+            class="ac-summary"
+            id="panel-why-summary"
+            tabindex="0"
+            role="button"
+            aria-expanded="false"
+            aria-controls="panel-why-body">
             <div class="ac-title">Why use it?</div>
             <span class="ac-chevron" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </span>
           </div>
           <div class="ac-body" id="panel-why-body" aria-labelledby="panel-why-summary">
             <h2>Why use it?</h2>
-            <p>It makes football discovery fun again — ideal for trivia nights, deciding who to support, or learning about new clubs and players. Free, fast, and no login required.</p>
+            <p>
+              It makes football discovery fun again — ideal for trivia nights,
+              deciding who to support, or learning about new clubs and players.
+              Free, fast, and no login required.
+            </p>
           </div>
         </div>
       </div>
@@ -380,7 +474,9 @@
       </div>
 
       <div class="m-actions">
-        <button id="mClose" class="chip-btn" type="button" title="Close this window">Close Window</button>
+        <button id="mClose" class="chip-btn" type="button" title="Close this window">
+          Close Window
+        </button>
       </div>
     </div>
   </div>
@@ -414,8 +510,14 @@
             meterText.textContent = `${num} ${perf.dataset.playersText}`;
           }
           if (filterTitle) filterTitle.textContent = 'Select Teams';
-          if (qpTop){ qpTop.textContent = 'Top 6 Premier League Teams'; qpTop.title = 'Select the Big Six from the Premier League'; }
-          if (modeNote){ modeNote.style.display = 'inline'; modeNote.textContent = 'Players: Premier League only'; }
+          if (qpTop){
+            qpTop.textContent = 'Top 6 Premier League Teams';
+            qpTop.title = 'Select the Big Six from the Premier League';
+          }
+          if (modeNote){
+            modeNote.style.display = 'inline';
+            modeNote.textContent = 'Players: Premier League only';
+          }
         } else {
           if (titleRight) titleRight.textContent = 'Club Wheel';
           if (meterText && perf?.dataset.clubsText){
@@ -423,7 +525,10 @@
             meterText.textContent = `${num} ${perf.dataset.clubsText}`;
           }
           if (filterTitle) filterTitle.textContent = 'Select Leagues';
-          if (qpTop){ qpTop.textContent = 'Top 5 Leagues'; qpTop.title = 'Select only the top 5 leagues'; }
+          if (qpTop){
+            qpTop.textContent = 'Top 5 Leagues';
+            qpTop.title = 'Select only the top 5 leagues';
+          }
           if (modeNote){ modeNote.style.display = 'none'; }
         }
       }
@@ -439,7 +544,9 @@
       }
 
       const histEmpty = document.getElementById('historyEmpty');
-      if (histEmpty) histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
+      if (histEmpty){
+        histEmpty.textContent = 'Your journey starts with a spin - try your luck!';
+      }
 
       const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
       applyModeTexts(initial);
@@ -483,9 +590,18 @@
           });
 
           summary.addEventListener('keydown', (e)=>{
-            if (e.key==='Enter' || e.key===' '){ e.preventDefault(); summary.click(); }
-            if (e.key==='ArrowDown'){ e.preventDefault(); (panels[panels.indexOf(panel)+1]||panels[0]).querySelector('.ac-summary').focus(); }
-            if (e.key==='ArrowUp'){ e.preventDefault(); (panels[panels.indexOf(panel)-1]||panels[panels.length-1]).querySelector('.ac-summary').focus(); }
+            if (e.key==='Enter' || e.key===' '){
+              e.preventDefault();
+              summary.click();
+            }
+            if (e.key==='ArrowDown'){
+              e.preventDefault();
+              (panels[panels.indexOf(panel)+1]||panels[0]).querySelector('.ac-summary').focus();
+            }
+            if (e.key==='ArrowUp'){
+              e.preventDefault();
+              (panels[panels.indexOf(panel)-1]||panels[panels.length-1]).querySelector('.ac-summary').focus();
+            }
           });
 
           panel.removeAttribute('open');
@@ -516,8 +632,10 @@
         function applyState() {
           card.setAttribute('data-collapsed', collapsed ? '1' : '0');
           if (icon) icon.textContent = collapsed ? '▴' : '▾';
-          toggle.setAttribute('aria-label',
-            (collapsed ? 'Show ' : 'Hide ') + (id.includes('n1bet') ? 'N1Bet offer' : 'BC.GAME offer')
+          toggle.setAttribute(
+            'aria-label',
+            (collapsed ? 'Show ' : 'Hide ') +
+              (id.includes('n1bet') ? 'N1Bet offer' : 'BC.GAME offer')
           );
         }
 
