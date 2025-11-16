@@ -354,11 +354,12 @@
       </div>
     </section>
 
-    <!-- Full-width accordion -->
+        <!-- Full-width accordion -->
     <section class="card" style="grid-column:1 / -1; margin-top:28px;">
       <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
         <div class="section-title" id="details-title">Details</div>
 
+        <!-- About -->
         <div class="ac-panel" id="panel-about" role="region" aria-labelledby="panel-about-summary">
           <div
             class="ac-summary"
@@ -377,13 +378,14 @@
           <div class="ac-body" id="panel-about-body" aria-labelledby="panel-about-summary">
             <h2>About Football Spinner</h2>
             <p>
-              Football Spinner is a free random football team and player generator for fans, creators and quiz hosts.
+              Football Spinner is a free random football team and player generator built for fans, creators and quiz hosts.
               Spin the wheel to discover new clubs from <strong>25 European leagues</strong> or get a
-              <strong>random Premier League player</strong> for your next quiz, prediction challenge or watch party.
+              <strong>random Premier League player</strong> with their club, stadium and nationality.
             </p>
           </div>
         </div>
 
+        <!-- How it works -->
         <div class="ac-panel" id="panel-how" role="region" aria-labelledby="panel-how-summary">
           <div
             class="ac-summary"
@@ -402,15 +404,17 @@
           <div class="ac-body" id="panel-how-body" aria-labelledby="panel-how-summary">
             <h2>How it works</h2>
             <p>
-              Choose your filters: in <strong>TEAM</strong> mode you pick leagues
-              (25 European leagues supported); in <strong>PLAYER</strong> mode you
-              pick <strong>Premier League teams</strong>. Decide what to show on the
-              wheel (logo, name, stadium, league or nationality) and hit <em>Spin</em>.
-              The wheel lands on a random result every time.
+              Choose your filters: in <strong>TEAM</strong> mode pick leagues
+              (25 European leagues supported); in <strong>PLAYER</strong> mode
+              pick <strong>Premier League teams</strong>. Decide what to show on
+              the wheel (logo, name, league, stadium, nationality) and hit
+              <em>Spin</em>. The wheel lands on a random result and you can open
+              the details in a modal.
             </p>
           </div>
         </div>
 
+        <!-- Why use it -->
         <div class="ac-panel" id="panel-why" role="region" aria-labelledby="panel-why-summary">
           <div
             class="ac-summary"
@@ -429,78 +433,172 @@
           <div class="ac-body" id="panel-why-body" aria-labelledby="panel-why-summary">
             <h2>Why use it?</h2>
             <p>
-              Football Spinner makes football discovery fun again — ideal for
-              trivia nights, TikTok or YouTube content, classroom games, deciding
-              who to support, or learning about new clubs and players. It is free,
-              fast, mobile-friendly and does not require any login or account.
+              Football Spinner makes football discovery fun again. Use it for
+              pub quizzes, prediction games, TikTok or YouTube content ideas,
+              classroom activities or just to pick a random team to support on
+              match day. It is free, fast and requires no login.
             </p>
           </div>
         </div>
 
-        <!-- FAQ panel for SEO, styled like the others (single body section) -->
-        <div class="ac-panel" id="panel-faq" role="region" aria-labelledby="panel-faq-summary">
+        <!-- FAQ 1 -->
+        <div class="ac-panel" id="panel-faq-what" role="region" aria-labelledby="panel-faq-what-summary">
           <div
             class="ac-summary"
-            id="panel-faq-summary"
+            id="panel-faq-what-summary"
             tabindex="0"
             role="button"
             aria-expanded="false"
-            aria-controls="panel-faq-body">
-            <div class="ac-title">Football Spinner FAQ</div>
+            aria-controls="panel-faq-what-body">
+            <div class="ac-title">What is Football Spinner?</div>
             <span class="ac-chevron" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                 <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
           </div>
-          <div class="ac-body" id="panel-faq-body" aria-labelledby="panel-faq-summary">
-            <h2>Frequently Asked Questions</h2>
+          <div class="ac-body" id="panel-faq-what-body" aria-labelledby="panel-faq-what-summary">
+            <h2>What is Football Spinner?</h2>
             <p>
-              Here are some quick answers about the Football Spinner random team and player generator.
-              Use this section to understand what the app does and how to get the best results when
-              spinning football clubs and Premier League players.
+              Football Spinner is an online random football team and player generator.
+              It lets you spin a wheel to get a random club from 25 European leagues
+              or a random Premier League player, complete with club, stadium and nationality.
             </p>
-            <ul>
-              <li>
-                <strong>What is Football Spinner?</strong>
-                Football Spinner is an online random football team and player generator. It lets you spin
-                a wheel to get a random club from 25 European leagues or a random Premier League player
-                with their club, stadium and nationality.
-              </li>
-              <li>
-                <strong>Which leagues are included?</strong>
-                The team wheel covers 25 European leagues, including the Premier League, La Liga,
-                Bundesliga, Serie A, Ligue&nbsp;1 and others. The player wheel focuses on active
-                Premier League players.
-              </li>
-              <li>
-                <strong>Is it free and do I need an account?</strong>
-                Yes, Football Spinner is completely free and no login is required. Everything runs in
-                your browser and only local storage is used to remember your last mode and a few settings.
-              </li>
-              <li>
-                <strong>What can I use it for?</strong>
-                Fans use Football Spinner for football quizzes, prediction games, content ideas for
-                TikTok or YouTube, classroom activities and deciding which random team to support on
-                match day.
-              </li>
-              <li>
-                <strong>Does it work on mobile?</strong>
-                Yes, the app is optimised for phones, tablets and desktop so you can spin teams and
-                players anywhere.
-              </li>
-              <li>
-                <strong>Is Football Spinner officially affiliated?</strong>
-                No. Football Spinner is an independent fan project and is not officially endorsed by
-                any club, league or competition. Logos, names and images remain the property of their
-                respective owners.
-              </li>
-            </ul>
           </div>
         </div>
+
+        <!-- FAQ 2 -->
+        <div class="ac-panel" id="panel-faq-leagues" role="region" aria-labelledby="panel-faq-leagues-summary">
+          <div
+            class="ac-summary"
+            id="panel-faq-leagues-summary"
+            tabindex="0"
+            role="button"
+            aria-expanded="false"
+            aria-controls="panel-faq-leagues-body">
+            <div class="ac-title">Which leagues are included?</div>
+            <span class="ac-chevron" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </div>
+          <div class="ac-body" id="panel-faq-leagues-body" aria-labelledby="panel-faq-leagues-summary">
+            <h2>Which leagues are included?</h2>
+            <p>
+              The team wheel covers 25 European leagues, including the Premier League,
+              La Liga, Bundesliga, Serie A, Ligue 1 and many others. The player wheel
+              focuses on active Premier League players.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="ac-panel" id="panel-faq-free" role="region" aria-labelledby="panel-faq-free-summary">
+          <div
+            class="ac-summary"
+            id="panel-faq-free-summary"
+            tabindex="0"
+            role="button"
+            aria-expanded="false"
+            aria-controls="panel-faq-free-body">
+            <div class="ac-title">Is it free and do I need an account?</div>
+            <span class="ac-chevron" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </div>
+          <div class="ac-body" id="panel-faq-free-body" aria-labelledby="panel-faq-free-summary">
+            <h2>Is it free and do I need an account?</h2>
+            <p>
+              Yes. Football Spinner is completely free to use and no login or registration
+              is required. Everything runs in your browser and only local storage is used
+              to remember your last mode and a few settings.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="ac-panel" id="panel-faq-use" role="region" aria-labelledby="panel-faq-use-summary">
+          <div
+            class="ac-summary"
+            id="panel-faq-use-summary"
+            tabindex="0"
+            role="button"
+            aria-expanded="false"
+            aria-controls="panel-faq-use-body">
+            <div class="ac-title">What can I use it for?</div>
+            <span class="ac-chevron" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </div>
+          <div class="ac-body" id="panel-faq-use-body" aria-labelledby="panel-faq-use-summary">
+            <h2>What can I use Football Spinner for?</h2>
+            <p>
+              Fans use Football Spinner for football quizzes, prediction games, content ideas
+              for TikTok or YouTube, classroom activities and deciding which random team to
+              support on match day.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 5 -->
+        <div class="ac-panel" id="panel-faq-mobile" role="region" aria-labelledby="panel-faq-mobile-summary">
+          <div
+            class="ac-summary"
+            id="panel-faq-mobile-summary"
+            tabindex="0"
+            role="button"
+            aria-expanded="false"
+            aria-controls="panel-faq-mobile-body">
+            <div class="ac-title">Does it work on mobile?</div>
+            <span class="ac-chevron" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </div>
+          <div class="ac-body" id="panel-faq-mobile-body" aria-labelledby="panel-faq-mobile-summary">
+            <h2>Does Football Spinner work on mobile?</h2>
+            <p>
+              Yes. The app is optimised for phones, tablets and desktop so you can spin
+              teams and players anywhere, whether you are at home, in a bar or watching
+              with friends.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 6 -->
+        <div class="ac-panel" id="panel-faq-affiliated" role="region" aria-labelledby="panel-faq-affiliated-summary">
+          <div
+            class="ac-summary"
+            id="panel-faq-affiliated-summary"
+            tabindex="0"
+            role="button"
+            aria-expanded="false"
+            aria-controls="panel-faq-affiliated-body">
+            <div class="ac-title">Is Football Spinner officially affiliated?</div>
+            <span class="ac-chevron" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </div>
+          <div class="ac-body" id="panel-faq-affiliated-body" aria-labelledby="panel-faq-affiliated-summary">
+            <h2>Is Football Spinner officially affiliated with any club or league?</h2>
+            <p>
+              No. Football Spinner is an independent fan project and is not officially
+              endorsed by any club, league or competition. Logos, names and images remain
+              the property of their respective owners.
+            </p>
+          </div>
+        </div>
+
       </div>
     </section>
-  </main>
 
   <!-- Modal -->
   <div id="backdrop" style="display:none">
