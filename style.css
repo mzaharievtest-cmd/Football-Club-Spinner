@@ -593,24 +593,32 @@ canvas#wheel{
 @media (max-width:979.98px){ .ac-body{font-size:15px} .ac-summary{padding:12px 14px} }
 
 /* =========================
-   Footer – centered under content width
+   Footer – truly centered
    ========================= */
 .site-footer{
-  max-width:1240px;                 /* same as .container */
-  margin:32px auto 24px;            /* center the footer itself */
-  padding:0 clamp(12px,4vw,36px);   /* same side padding as .container */
+  width: 100%;
+  margin: 32px 0 24px;   /* space above/below footer */
+  padding: 0;
 }
 
 .footer-inner{
-  width:100%;
-  text-align:center;
-  font-size:12px;
-  color:var(--dim);
+  max-width: 1240px;                     /* same content width as .container */
+  margin: 0 auto;                        /* center inside viewport */
+  padding: 0 clamp(12px,4vw,36px);       /* same side padding as .container */
+  text-align: center;
+  font-size: 12px;
+  color: var(--dim);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;                   /* horizontally center text */
+  justify-content: center;
+  gap: 2px;
 }
 
 .footer-inner span{
-  display:block;
-  line-height:1.5;
+  display: block;
+  line-height: 1.5;
 }
 
 /* =========================
