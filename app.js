@@ -648,7 +648,7 @@ window.trackAffiliate = function(partner) {
     window.gtag('event', 'affiliate_click', {
       partner: partner,
       mode: localStorage.getItem('fsMode') || 'team',
-      page_location: window.location.href
+      page_location: window.location.href, // 👈 manjkal je tale comma
       debug_mode: true
     });
   }
