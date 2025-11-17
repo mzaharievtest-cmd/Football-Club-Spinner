@@ -643,6 +643,14 @@ function track(eventName, params = {}) {
   }
 }
 
+function trackAffiliate(partner, placement) {
+  track('affiliate_click', {
+    partner,
+    placement: placement || 'sidebar',
+    page_location: window.location.href,
+  });
+}
+
 /* ---------- Spin ---------- */
 function spin(){
   if (spinning) return;
