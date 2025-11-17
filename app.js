@@ -643,13 +643,15 @@ function track(eventName, params = {}) {
   }
 }
 
-function trackAffiliate(partner, placement) {
-  track('affiliate_click', {
-    partner,
-    placement: placement || 'sidebar',
-    page_location: window.location.href,
-  });
-}
+window.trackAffiliate = function(partner) {
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'affiliate_click', {
+      partner: partner,
+      mode: localStorage.getItem('fsMode') || 'team',
+      page_location: window.location.href
+    });
+  }
+};
 
 /* ---------- Spin ---------- */
 function spin(){
