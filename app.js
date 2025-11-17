@@ -649,6 +649,7 @@ window.trackAffiliate = function(partner) {
       partner: partner,
       mode: localStorage.getItem('fsMode') || 'team',
       page_location: window.location.href
+      debug_mode: true
     });
   }
 };
