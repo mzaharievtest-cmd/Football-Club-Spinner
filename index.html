@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
+  <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -37,22 +37,22 @@
   <meta name="twitter:description" content="Spin random football teams from 25 European leagues or generate a Premier League player instantly. Free, fast and no login. Perfect for quizzes, predictions, challenges and watch parties." />
   <meta name="twitter:image" content="https://footballspinner.com/app-og.png" />
 
-  <!-- Google AdSense (loader only, once per page) -->
+  <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
 
   <!-- Icons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1">
-  <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png?v=1">
-  <link rel="apple-touch-icon" href="app-logo.png?v=1">
-  <link rel="shortcut icon" href="app-logo.png?v=1">
+  <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1" />
+  <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png?v=1" />
+  <link rel="apple-touch-icon" href="app-logo.png?v=1" />
+  <link rel="shortcut icon" href="app-logo.png?v=1" />
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-  <!-- App styles -->
-  <link rel="stylesheet" href="style.css?v=2">
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css?v=2" />
 
   <!-- Google Tag Manager -->
   <script>
@@ -62,9 +62,8 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-KS5K7Z4T');
   </script>
-  <!-- End Google Tag Manager -->
 
-  <!-- Affiliate tracking helper (safe if GA/DT missing) -->
+  <!-- Affiliate tracking helper -->
   <script>
     function trackAffiliate(partner) {
       try {
@@ -219,7 +218,6 @@
             width="0"
             style="display:none;visibility:hidden"></iframe>
   </noscript>
-  <!-- End Google Tag Manager (noscript) -->
 
   <header>
     <div class="brand">
@@ -260,9 +258,9 @@
   </header>
 
   <main class="container">
-    <!-- Left: controls -->
-    <section class="card" aria-labelledby="filter-title" id="teamView">
-      <div class="section-title" id="filter-title">Leagues (filter)</div>
+    <!-- LEFT: filters / history / partners -->
+    <section class="card sidebar" aria-labelledby="filter-title" id="teamView">
+      <div class="section-title" id="filter-title">Select leagues</div>
 
       <!-- Quick picks -->
       <div class="quick-picks" role="group" aria-label="Quick league selections">
@@ -271,19 +269,20 @@
         <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
       </div>
 
-      <!-- League chips (Top 5 visible; more hidden until toggled) -->
+      <!-- League chips -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
 
-        <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">
+        <button id="toggleMore" class="chip-btn ghost" type="button"
+                aria-expanded="false" aria-controls="chipsMore">
           Show more leagues
         </button>
 
         <div id="chipsMore" class="chips" hidden></div>
       </div>
 
+      <!-- Show-on-wheel options (must match app.js: optName, optLogo, optStadium, optLeague) -->
       <div class="section-title">Show on wheel</div>
-      <!-- Show-on-wheel options -->
       <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
         <label class="chip">
           <input type="checkbox" id="optName" checked aria-label="Name" />
@@ -303,13 +302,13 @@
         </label>
       </div>
 
-      <button id="spinBtn" type="button">SPIN</button>
+      <button id="spinBtn" type="button" title="Spin the football club wheel">SPIN</button>
       <button id="resetHistoryBtn" type="button">Reset History</button>
 
       <div class="history-title">History</div>
       <div class="history" id="history"></div>
 
-      <!-- Optional partner offers block (unstyled fallback if CSS not present) -->
+      <!-- Partner offers -->
       <div class="partner-stack" aria-label="Partner offers">
         <div class="partner-stack-title">PARTNER OFFERS</div>
 
@@ -355,137 +354,184 @@
       </div>
     </section>
 
-    <!-- Right: wheel -->
+    <!-- RIGHT: wheel -->
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
-      <div id="perfTip" class="perf-tip" aria-live="polite">0 teams selected</div>
+
+      <div id="perfTip" class="perf-tip" aria-live="polite">
+        <span class="meter-text">0 teams selected</span>
+      </div>
+
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
-        <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
+        <button
+          id="spinFab"
+          class="spin-fab"
+          type="button"
+          aria-label="Spin the wheel">
+          SPIN!
+        </button>
         <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
         <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
       </div>
+
+      <!-- Optional current result text/logo for new app.js hooks -->
+      <div style="margin-top:16px;display:flex;align-items:center;gap:10px;">
+        <img id="currentLogo" alt="" width="32" height="32"
+             style="border-radius:999px;object-fit:contain;flex-shrink:0;" />
+        <div id="currentText" class="current-name">
+          Spin the wheel to start your club journey
+        </div>
+      </div>
     </section>
 
-    <!-- Player view (hidden by default, shown when PLAYER mode is active) -->
+    <!-- PLAYER VIEW (used by new app.js when MODE = 'player') -->
     <section id="playerView" class="card player-only hidden" aria-labelledby="player-title">
-      <div class="section-title" id="player-title">Players</div>
-      <div class="player-controls">
-        <p class="small">
-          Switch to PLAYER mode to spin players instead of teams. Images are loaded from /players/players.json.
-        </p>
-      </div>
-
+      <div class="section-title" id="player-title">Player Wheel</div>
+      <p class="small">
+        Switch to PLAYER mode to spin random Premier League players.  
+        Player data is loaded from the current season’s squad list.
+      </p>
       <div id="playerList" class="player-list" aria-live="polite"></div>
 
       <div class="history-title">Player history</div>
       <div class="history" id="historyPlayers"></div>
     </section>
 
-    <!-- Content / FAQ & usage text -->
-    <section id="content" style="grid-column: 1 / -1" class="scroll-smooth">
-      <nav class="anchor-nav">
-        <a href="#what-is">What is Football Spinner?</a>
-        <a href="#how-it-works">How it works</a>
-        <a href="#use-cases">Ideas & use cases</a>
-        <a href="#faq">FAQ</a>
-        <a href="#disclaimer">Disclaimer</a>
-        <a href="#ads">Ads & Cookies</a>
-      </nav>
+    <!-- SEO / FAQ content block styled by #content rules in style.css -->
+    <section id="content">
+      <h2 id="what-is">Football Spinner – spin the wheel for random football clubs and players</h2>
 
-      <h2 id="what-is">What is Football Spinner?</h2>
-      <div class="text-wrap">
-        <p>
-          Football Spinner is a free, fan-made <strong>random football team generator</strong>.
-          Instead of scrolling through endless lists of clubs, you simply
-          <strong>spin the football club wheel</strong> and let chance pick a team for you.
-        </p>
-        <p>
-          The app includes clubs from <strong>25 European leagues</strong> and a dedicated
-          <strong>Premier League player spinner</strong>. You can use it for quizzes,
-          prediction games, TikTok videos, classroom activities or just to discover new teams.
-        </p>
+      <!-- TOC chips (matches #content .toc styles) -->
+      <div class="toc">
+        <a href="#what-is">Overview</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#use-cases">Ideas &amp; use cases</a>
+        <a href="#faq-section">FAQ</a>
+        <a href="#disclaimer">Disclaimer</a>
+        <a href="#ads">Ads &amp; cookies</a>
       </div>
+
+      <p>
+        Football Spinner is a free <strong>random football team generator</strong> and
+        <strong>Premier League player spinner</strong>. Instead of scrolling through long lists,
+        you simply spin the wheel and let chance pick a club or player.
+      </p>
+      <p>
+        The app supports <strong>25 European leagues</strong> and a dedicated player mode
+        focused on the Premier League. It’s built for quizzes, prediction games, TikTok content,
+        watch parties and anyone who enjoys football and a bit of randomness.
+      </p>
 
       <h2 id="how-it-works">How the football club spin wheel works</h2>
-      <div class="text-wrap">
-        <ol>
-          <li>Select one or more leagues on the left side.</li>
-          <li>Choose what you want to show on the wheel: name, logo, stadium and league.</li>
-          <li>Press <strong>SPIN</strong> or tap the main button to start the wheel.</li>
-          <li>When the wheel stops, the selected club appears in a result window.</li>
-        </ol>
-        <p>
-          Every team currently on the wheel has the same chance of being selected.
-          If you change the leagues or display options, the wheel updates automatically.
-        </p>
-      </div>
+      <p>
+        Using the football club wheel is simple:
+      </p>
+      <ol>
+        <li>Select one or more leagues on the left.</li>
+        <li>Choose what you want to show on the wheel: name, logo, stadium and league.</li>
+        <li>Press <strong>SPIN</strong> or tap the big button in the middle.</li>
+        <li>When the wheel stops, the selected club is shown and added to your history.</li>
+      </ol>
+      <p>
+        Every club currently on the wheel has an equal chance of being selected.  
+        Changing your league filters or display options updates the wheel instantly.
+      </p>
 
-      <h2 id="use-cases">Ideas & use cases</h2>
-      <div class="text-wrap">
-        <ul>
-          <li><strong>Quizzes & trivia:</strong> spin for a random club and ask friends to name the stadium, city or star player.</li>
-          <li><strong>TikTok & Shorts:</strong> record the wheel, cover the team name and turn it into a “guess the club” challenge.</li>
-          <li><strong>Prediction games:</strong> let the wheel decide which team you “support” for tonight’s match.</li>
-          <li><strong>Classroom activities:</strong> use the wheel to talk about geography, languages and football culture.</li>
-          <li><strong>Career mode ideas:</strong> spin the wheel to pick your next club in Football Manager or EA FC.</li>
-        </ul>
-      </div>
+      <h2 id="use-cases">Ideas &amp; use cases</h2>
+      <ul>
+        <li><strong>Football quizzes &amp; trivia:</strong> spin a club and ask for the city, stadium or star player.</li>
+        <li><strong>TikTok / Shorts:</strong> record the wheel, hide the result and turn it into a “guess the club” challenge.</li>
+        <li><strong>Prediction games:</strong> let the wheel decide who you support for tonight’s match.</li>
+        <li><strong>Classroom activities:</strong> use random clubs to talk about countries, geography and football culture.</li>
+        <li><strong>Career modes:</strong> spin for a random club to manage in Football Manager or EA FC.</li>
+      </ul>
 
-      <h2 id="faq">FAQ</h2>
-      <div class="text-wrap">
-        <h3>What does Football Spinner do?</h3>
-        <p>
-          Football Spinner lets you spin a football club wheel or generate a random Premier League player.
-          It removes the decision stress and adds a bit of fun randomness to how you pick teams or players.
-        </p>
+      <h2 id="faq-section">FAQ</h2>
 
-        <h3>How does the football spin wheel choose a random team?</h3>
-        <p>
-          The wheel uses a pseudo-random algorithm. Every club that is currently active on the wheel
-          has an equal chance of being selected, and your league filters control which clubs are eligible.
-        </p>
+      <!-- FAQ accordion using details/summary (exactly what style.css expects) -->
+      <details>
+        <summary>
+          <h3>What does Football Spinner do?</h3>
+        </summary>
+        <div class="panel">
+          <p>
+            Football Spinner is a free web app that lets you spin a football club wheel or
+            generate a random Premier League player. It’s mainly used for quizzes, prediction games,
+            content ideas and choosing a random team to follow.
+          </p>
+        </div>
+      </details>
 
-        <h3>Which leagues and players are included?</h3>
-        <p>
-          The club wheel covers 25 European leagues, including the Premier League, La Liga, Serie A,
-          Bundesliga, Ligue 1 and more. The player wheel currently focuses on active Premier League players.
-        </p>
+      <details>
+        <summary>
+          <h3>How does the football spin wheel choose a random team?</h3>
+        </summary>
+        <div class="panel">
+          <p>
+            Each spin uses a pseudo-random algorithm. Every club that is active on the wheel
+            has the same chance of being selected. Your league filters and TEAM/PLAYER mode
+            control which items can appear.
+          </p>
+        </div>
+      </details>
 
-        <h3>Is Football Spinner really free?</h3>
-        <p>
-          Yes – the website is completely free to use and does not require an account or login.
-          Only anonymous analytics are collected to understand how many spins happen and from which countries.
-        </p>
+      <details>
+        <summary>
+          <h3>Which leagues and players can I spin on the wheel?</h3>
+        </summary>
+        <div class="panel">
+          <p>
+            The club wheel includes teams from 25 European leagues, such as the Premier League,
+            La Liga, Serie A, Bundesliga and Ligue 1. The player wheel currently focuses on
+            active Premier League players with images and basic details.
+          </p>
+        </div>
+      </details>
 
-        <h3>Does the football spinner work on mobile?</h3>
-        <p>
-          Yes. The site is optimised for phones, tablets and desktop so you can spin the wheel
-          comfortably on any device.
-        </p>
-      </div>
+      <details>
+        <summary>
+          <h3>Is Football Spinner really free to use?</h3>
+        </summary>
+        <div class="panel">
+          <p>
+            Yes. Football Spinner is completely free to use and does not require an account.
+            Only anonymous usage data is collected to understand how often the app is used and
+            which features are popular.
+          </p>
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          <h3>Does the football spinner wheel work on mobile?</h3>
+        </summary>
+        <div class="panel">
+          <p>
+            Yes. The site is optimised for phones, tablets and desktop. The wheel automatically
+            adapts to your screen size so you can spin teams and players smoothly on any device.
+          </p>
+        </div>
+      </details>
 
       <h2 id="disclaimer">Disclaimer</h2>
-      <div class="text-wrap">
-        <p>
-          Football Spinner is an independent fan project. Club names, crests and player photos are used
-          for information and entertainment purposes only and remain property of their respective owners.
-        </p>
-      </div>
+      <p>
+        Football Spinner is an independent fan project. Club names, crests and player photos
+        are used for informational and entertainment purposes only and remain the property
+        of their respective owners.
+      </p>
 
-      <h2 id="ads">Ads & Cookies</h2>
-      <div class="text-wrap">
-        <p>
-          This site uses Google AdSense and basic analytics to keep the project online.
-          Some outbound links are affiliate links to licensed sports betting partners.
-          Please bet responsibly and only if it is legal in your country and you are 18+.
-        </p>
-      </div>
+      <h2 id="ads">Ads &amp; cookies</h2>
+      <p>
+        This site uses Google AdSense and basic analytics to keep the project online.
+        Some outbound links are affiliate links to licensed sports betting partners.
+        Please bet responsibly, only if you are 18+ and it is legal in your country.
+      </p>
     </section>
   </main>
 
   <!-- Modal -->
-  <div id="backdrop" class="modal-backdrop">
+  <div id="backdrop" class="modal-backdrop" style="display:none">
     <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
       <div id="mHead">Result</div>
       <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
@@ -493,24 +539,9 @@
       <div class="m-body">
         <img id="mLogo" class="m-logo" alt="" loading="lazy" width="256" height="256" />
 
-        <div class="m-row" id="rowStadium">
+        <div class="m-row">
           <div class="label">Stadium</div>
           <span id="mStadium" class="value-pill"></span>
-        </div>
-
-        <div class="m-row" id="rowClub" style="display:none">
-          <div class="label">Team</div>
-          <span id="mClub" class="value-pill"></span>
-        </div>
-
-        <div class="m-row" id="rowJersey" style="display:none">
-          <div class="label">Jersey</div>
-          <span id="mJersey" class="value-pill"></span>
-        </div>
-
-        <div class="m-row" id="rowNat" style="display:none">
-          <div class="label">Nationality</div>
-          <span id="mNat" class="value-pill"></span>
         </div>
       </div>
 
@@ -529,7 +560,7 @@
     </div>
   </footer>
 
-  <!-- App script -->
+  <!-- App -->
   <script src="app.js" defer></script>
 </body>
 </html>
