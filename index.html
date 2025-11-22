@@ -63,7 +63,7 @@
     gtag('config', 'G-RK8RD59N8G');
   </script>
 
-  <!-- Small helper for affiliate tracking (avoids console errors) -->
+  <!-- Small helper for affiliate tracking -->
   <script>
     function trackAffiliate(partner) {
       try {
@@ -335,20 +335,24 @@
         <div class="section-title" style="margin-top:8px">Show on Wheel</div>
         <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
           <label class="chip" title="Display club logos or player images on the wheel">
-            <input type="checkbox" id="optLogo" checked aria-label="Logo" />
-            <span class="chip-text">Logo</span>
+            <input type="checkbox" id="optA" checked aria-label="Logo / Image" />
+            <span id="lblA" class="chip-text">Logo</span>
           </label>
           <label class="chip" title="Show team or player names">
-            <input type="checkbox" id="optName" checked aria-label="Name" />
-            <span class="chip-text">Name</span>
+            <input type="checkbox" id="optB" checked aria-label="Name" />
+            <span id="lblB" class="chip-text">Name</span>
           </label>
-          <label class="chip" title="Show stadium name for clubs">
-            <input type="checkbox" id="optStadium" aria-label="Stadium" />
-            <span class="chip-text">Stadium</span>
+          <label class="chip" title="Team mode: Stadium · Player mode: Jersey number">
+            <input type="checkbox" id="optC" aria-label="Stadium / Jersey" />
+            <span id="lblC" class="chip-text">Stadium</span>
           </label>
-          <label class="chip" title="Show league (team mode) or keep hidden for extra challenge">
-            <input type="checkbox" id="optLeague" checked aria-label="League" />
-            <span class="chip-text">League</span>
+          <label class="chip" title="Team mode: League · Player mode: Nationality">
+            <input type="checkbox" id="optD" aria-label="League / Nationality" />
+            <span id="lblD" class="chip-text">League</span>
+          </label>
+          <label class="chip" title="Extra label in player modal (e.g. club)">
+            <input type="checkbox" id="optE" aria-label="Extra label" />
+            <span id="lblE" class="chip-text">Extra</span>
           </label>
         </div>
       </div>
@@ -368,7 +372,7 @@
       </div>
     </section>
 
-    <!-- PLAYER VIEW placeholder (for app.js compatibility; can stay hidden) -->
+    <!-- PLAYER VIEW -->
     <section id="playerView" class="card player-only hidden" aria-labelledby="player-title">
       <div class="section-title" id="player-title">Players</div>
       <div class="player-controls">
