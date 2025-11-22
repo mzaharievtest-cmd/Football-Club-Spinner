@@ -281,24 +281,28 @@
         <div id="chipsMore" class="chips" hidden></div>
       </div>
 
-      <!-- Show-on-wheel options (must match app.js: optName, optLogo, optStadium, optLeague) -->
+      <!-- Show-on-wheel options (old app.js expects optA..optE + lblA..lblE) -->
       <div class="section-title">Show on wheel</div>
       <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
-        <label class="chip">
-          <input type="checkbox" id="optName" checked aria-label="Name" />
-          <span class="chip-text">Name</span>
+        <label class="chip" title="Display club logos or player images on the wheel">
+          <input type="checkbox" id="optA" checked aria-label="Logo / Image" />
+          <span id="lblA" class="chip-text">Logo</span>
         </label>
-        <label class="chip">
-          <input type="checkbox" id="optLogo" checked aria-label="Logo" />
-          <span class="chip-text">Logo</span>
+        <label class="chip" title="Show team or player names">
+          <input type="checkbox" id="optB" checked aria-label="Name" />
+          <span id="lblB" class="chip-text">Name</span>
         </label>
-        <label class="chip">
-          <input type="checkbox" id="optStadium" aria-label="Stadium" />
-          <span class="chip-text">Stadium</span>
+        <label class="chip" title="Team mode: Stadium · Player mode: Jersey number">
+          <input type="checkbox" id="optC" aria-label="Stadium / Jersey" />
+          <span id="lblC" class="chip-text">Stadium</span>
         </label>
-        <label class="chip">
-          <input type="checkbox" id="optLeague" checked aria-label="League" />
-          <span class="chip-text">League</span>
+        <label class="chip" title="Team mode: League · Player mode: Nationality">
+          <input type="checkbox" id="optD" aria-label="League / Nationality" />
+          <span id="lblD" class="chip-text">League</span>
+        </label>
+        <label class="chip" title="Extra label in player modal (e.g. club)">
+          <input type="checkbox" id="optE" aria-label="Extra label" />
+          <span id="lblE" class="chip-text">Extra</span>
         </label>
       </div>
 
@@ -375,7 +379,7 @@
         <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
       </div>
 
-      <!-- Optional current result text/logo for new app.js hooks -->
+      <!-- Optional current result line (harmless for old app.js) -->
       <div style="margin-top:16px;display:flex;align-items:center;gap:10px;">
         <img id="currentLogo" alt="" width="32" height="32"
              style="border-radius:999px;object-fit:contain;flex-shrink:0;" />
@@ -385,12 +389,11 @@
       </div>
     </section>
 
-    <!-- PLAYER VIEW (used by new app.js when MODE = 'player') -->
+    <!-- PLAYER VIEW (used by PLAYER mode; safe even if old app.js ignores parts) -->
     <section id="playerView" class="card player-only hidden" aria-labelledby="player-title">
       <div class="section-title" id="player-title">Player Wheel</div>
       <p class="small">
-        Switch to PLAYER mode to spin random Premier League players.  
-        Player data is loaded from the current season’s squad list.
+        Switch to PLAYER mode to spin random Premier League players.
       </p>
       <div id="playerList" class="player-list" aria-live="polite"></div>
 
@@ -402,7 +405,7 @@
     <section id="content">
       <h2 id="what-is">Football Spinner – spin the wheel for random football clubs and players</h2>
 
-      <!-- TOC chips (matches #content .toc styles) -->
+      <!-- TOC chips -->
       <div class="toc">
         <a href="#what-is">Overview</a>
         <a href="#how-it-works">How it works</a>
@@ -449,7 +452,7 @@
 
       <h2 id="faq-section">FAQ</h2>
 
-      <!-- FAQ accordion using details/summary (exactly what style.css expects) -->
+      <!-- FAQ accordion (details/summary) – styled by #content details rules -->
       <details>
         <summary>
           <h3>What does Football Spinner do?</h3>
@@ -539,9 +542,25 @@
       <div class="m-body">
         <img id="mLogo" class="m-logo" alt="" loading="lazy" width="256" height="256" />
 
-        <div class="m-row">
+        <div class="m-row" id="rowStadium">
           <div class="label">Stadium</div>
           <span id="mStadium" class="value-pill"></span>
+        </div>
+
+        <!-- Extra rows kept for compatibility with future/old scripts -->
+        <div class="m-row" id="rowClub" style="display:none">
+          <div class="label">Team</div>
+          <span id="mClub" class="value-pill"></span>
+        </div>
+
+        <div class="m-row" id="rowJersey" style="display:none">
+          <div class="label">Jersey</div>
+          <span id="mJersey" class="value-pill"></span>
+        </div>
+
+        <div class="m-row" id="rowNat" style="display:none">
+          <div class="label">Nationality</div>
+          <span id="mNat" class="value-pill"></span>
         </div>
       </div>
 
