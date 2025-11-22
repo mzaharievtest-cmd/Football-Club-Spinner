@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Required meta -->
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-RK8RD59N8G');
+  </script>
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -29,41 +37,34 @@
   <meta name="twitter:description" content="Spin random football teams from 25 European leagues or generate a Premier League player instantly. Free, fast and no login. Perfect for quizzes, predictions, challenges and watch parties." />
   <meta name="twitter:image" content="https://footballspinner.com/app-og.png" />
 
-  <!-- Preconnects -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
-
-  <!-- Fonts (non-blocking load) -->
-  <link
-    rel="preload"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
-    as="style"
-    onload="this.onload=null;this.rel='stylesheet'">
-  <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
-  </noscript>
+  <!-- Google AdSense (loader only, once per page) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
 
   <!-- Icons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1" />
-  <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png?v=1" />
-  <link rel="apple-touch-icon" href="app-logo.png?v=1" />
-  <link rel="shortcut icon" href="app-logo.png?v=1" />
+  <link rel="icon" type="image/png" sizes="32x32" href="app-logo.png?v=1">
+  <link rel="icon" type="image/png" sizes="192x192" href="app-logo.png?v=1">
+  <link rel="apple-touch-icon" href="app-logo.png?v=1">
+  <link rel="shortcut icon" href="app-logo.png?v=1">
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css?v=2" />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-  <!-- Google Analytics 4 -->
-  <!-- Measurement ID: G-RK8RD59N8G -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK8RD59N8G"></script>
+  <!-- App styles -->
+  <link rel="stylesheet" href="style.css?v=2">
+
+  <!-- Google Tag Manager -->
   <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-RK8RD59N8G');
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-KS5K7Z4T');
   </script>
+  <!-- End Google Tag Manager -->
 
-  <!-- Small helper for affiliate tracking -->
+  <!-- Affiliate tracking helper (safe if GA/DT missing) -->
   <script>
     function trackAffiliate(partner) {
       try {
@@ -73,28 +74,13 @@
             event_label: partner
           });
         } else if (window.dataLayer) {
-          window.dataLayer.push({
-            event: 'affiliate_click',
-            partner: partner
-          });
+          window.dataLayer.push({ event: 'affiliate_click', partner: partner });
         }
       } catch (e) {}
     }
   </script>
 
-  <!-- Google Tag Manager -->
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;
-    j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-    f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KS5K7Z4T');
-  </script>
-
-  <!-- AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7898957613682010" crossorigin="anonymous"></script>
-
-  <!-- Structured Data (JSON-LD) -->
+  <!-- Structured Data: WebSite -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -123,6 +109,7 @@
   }
   </script>
 
+  <!-- Structured Data: WebPage -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -145,6 +132,7 @@
   }
   </script>
 
+  <!-- Structured Data: WebApplication -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -163,17 +151,75 @@
     ]
   }
   </script>
+
+  <!-- Structured Data: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What does Football Spinner do?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Football Spinner is a free web app that lets you spin a football club wheel or generate a random Premier League player. It is used for quizzes, prediction games, challenges and for choosing a random team to support."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does the football spin wheel choose a random team?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Each spin uses a pseudo-random algorithm so every team or player currently on the wheel has an equal chance of being selected. Your league filters and mode, TEAM or PLAYER, control which items can appear."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which leagues and players can I spin on the football club wheel?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The team wheel includes clubs from 25 European leagues including the Premier League, La Liga, Serie A, Bundesliga and Ligue 1. The player wheel focuses on current Premier League players with images and basic details."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Football Spinner really free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Football Spinner is completely free to use with no login and no registration required. Only anonymous usage data is collected to understand how the app is used."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What can I use the football club spin wheel for?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Fans use Football Spinner for football quizzes, pub trivia, TikTok and YouTube content, prediction games with friends, classroom activities and for letting the wheel decide a random team to follow on match day."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does the football spinner wheel work on mobile?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The football spinner wheel is optimised for phones, tablets and desktop so you can spin teams and players smoothly on any device."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 
 <body>
-  <!-- GTM (noscript) -->
+  <!-- Google Tag Manager (noscript) -->
   <noscript>
-    <iframe
-      src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T"
-      height="0"
-      width="0"
-      style="display:none;visibility:hidden"></iframe>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KS5K7Z4T"
+            height="0"
+            width="0"
+            style="display:none;visibility:hidden"></iframe>
   </noscript>
+  <!-- End Google Tag Manager (noscript) -->
 
   <header>
     <div class="brand">
@@ -193,82 +239,86 @@
     </div>
 
     <div class="header-right">
-      <div class="mode-switch-wrap">
-        <div class="mode-switch" role="tablist" aria-label="View mode">
-          <button
-            id="modeTeam"
-            role="tab"
-            aria-selected="true"
-            class="mode-btn mode-btn-active"
-            title="Spin among football clubs">TEAM</button>
-          <button
-            id="modePlayer"
-            role="tab"
-            aria-selected="false"
-            class="mode-btn"
-            title="Spin among players">PLAYER</button>
-        </div>
-        <span
-          id="modeNote"
-          class="small"
-          style="display:none;opacity:.9;margin-left:8px;">Players: Premier League only</span>
+      <div class="mode-switch" role="tablist" aria-label="View mode">
+        <button
+          id="modeTeam"
+          role="tab"
+          aria-selected="true"
+          class="mode-btn mode-btn-active"
+          title="Spin among football clubs">TEAM</button>
+        <button
+          id="modePlayer"
+          role="tab"
+          aria-selected="false"
+          class="mode-btn"
+          title="Spin among players">PLAYER</button>
       </div>
+      <span class="small" style="margin-left:8px;opacity:.9;">
+        Player mode: current Premier League players
+      </span>
     </div>
   </header>
 
   <main class="container">
-    <!-- LEFT: filters / history / partners -->
-    <section class="card sidebar" aria-labelledby="filter-title" id="teamView">
-      <div class="section-title" id="filter-title">Select Leagues</div>
+    <!-- Left: controls -->
+    <section class="card" aria-labelledby="filter-title" id="teamView">
+      <div class="section-title" id="filter-title">Leagues (filter)</div>
 
-      <div class="quick-picks" role="group" aria-label="Quick selections">
-        <button id="qpAll"  class="chip-btn" type="button" title="Select all leagues">All Leagues</button>
-        <button id="qpNone" class="chip-btn" type="button" title="Deselect all">Clear</button>
-        <button id="qpTop5" class="chip-btn" type="button" title="Select only the top leagues">Top 5 Leagues</button>
+      <!-- Quick picks -->
+      <div class="quick-picks" role="group" aria-label="Quick league selections">
+        <button id="qpAll"   class="chip-btn" type="button">All</button>
+        <button id="qpNone"  class="chip-btn" type="button">None</button>
+        <button id="qpTop5"  class="chip-btn" type="button">Top 5</button>
       </div>
 
+      <!-- League chips (Top 5 visible; more hidden until toggled) -->
       <div id="chips">
         <div id="chipsTop" class="chips"></div>
-        <button
-          id="toggleMore"
-          class="chip-btn ghost"
-          type="button"
-          aria-expanded="false"
-          aria-controls="chipsMore">
+
+        <button id="toggleMore" class="chip-btn ghost" type="button" aria-expanded="false" aria-controls="chipsMore">
           Show more leagues
         </button>
+
         <div id="chipsMore" class="chips" hidden></div>
       </div>
 
-      <button id="spinBtn" type="button" title="Click to spin the wheel">Spin Wheel</button>
+      <div class="section-title">Show on wheel</div>
+      <!-- Show-on-wheel options -->
+      <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
+        <label class="chip">
+          <input type="checkbox" id="optName" checked aria-label="Name" />
+          <span class="chip-text">Name</span>
+        </label>
+        <label class="chip">
+          <input type="checkbox" id="optLogo" checked aria-label="Logo" />
+          <span class="chip-text">Logo</span>
+        </label>
+        <label class="chip">
+          <input type="checkbox" id="optStadium" aria-label="Stadium" />
+          <span class="chip-text">Stadium</span>
+        </label>
+        <label class="chip">
+          <input type="checkbox" id="optLeague" checked aria-label="League" />
+          <span class="chip-text">League</span>
+        </label>
+      </div>
+
+      <button id="spinBtn" type="button">SPIN</button>
+      <button id="resetHistoryBtn" type="button">Reset History</button>
 
       <div class="history-title">History</div>
-      <div class="history" id="history">
-        <div class="item">
-          <span id="historyEmpty" class="current-name">
-            Your journey starts with a spin – try your luck!
-          </span>
-        </div>
-      </div>
-      <button
-        id="resetHistoryBtn"
-        type="button"
-        style="margin-top:12px"
-        title="Clear all previous results">
-        Clear History
-      </button>
+      <div class="history" id="history"></div>
 
-      <!-- Compact partner offers -->
+      <!-- Optional partner offers block (unstyled fallback if CSS not present) -->
       <div class="partner-stack" aria-label="Partner offers">
         <div class="partner-stack-title">PARTNER OFFERS</div>
 
-        <!-- N1Bet -->
         <article class="partner-mini" id="partner-n1bet" data-partner="n1bet">
           <div class="partner-mini-main">
             <div class="partner-mini-eyebrow">Partner · N1BET Sports</div>
             <div class="partner-mini-title">Up to €60 Free Football Bets</div>
             <div class="partner-mini-body">
-              Deposit €20+ • Get 4 free football bets • 18+ • New players • T&amp;Cs apply
+              Deposit €20+ · Get free football bets · 18+ · New players · T&amp;Cs apply
             </div>
           </div>
           <div class="partner-mini-cta">
@@ -280,22 +330,15 @@
               onclick="trackAffiliate('n1bet')">
               CLAIM N1BET BONUS
             </a>
-            <button
-              class="partner-mini-toggle"
-              type="button"
-              aria-label="Hide N1Bet offer">
-              <span class="partner-mini-toggle-icon">▾</span>
-            </button>
           </div>
         </article>
 
-        <!-- BC.GAME -->
         <article class="partner-mini" id="partner-bcgame" data-partner="bcgame">
           <div class="partner-mini-main">
             <div class="partner-mini-eyebrow">Partner · BC.GAME Sports</div>
-            <div class="partner-mini-title">80% Crypto Bonus + 5 Free Bets</div>
+            <div class="partner-mini-title">80% Crypto Bonus + Free Bets</div>
             <div class="partner-mini-body">
-              Start from $5 • 80% football boost • 5 free bets • 18+ • New players • T&amp;Cs apply
+              Start from $5 · Football boosts · 18+ · New players · T&amp;Cs apply
             </div>
           </div>
           <div class="partner-mini-cta">
@@ -307,72 +350,24 @@
               onclick="trackAffiliate('bcgame')">
               GET CRYPTO BONUS
             </a>
-            <button
-              class="partner-mini-toggle"
-              type="button"
-              aria-label="Hide BC.GAME offer">
-              <span class="partner-mini-toggle-icon">▾</span>
-            </button>
           </div>
         </article>
       </div>
     </section>
 
-    <!-- RIGHT: wheel -->
+    <!-- Right: wheel -->
     <section class="card" aria-labelledby="wheel-title">
       <div class="section-title" id="wheel-title">Club Wheel</div>
-
-      <div class="wheel-subheader">
-        <div
-          id="perfTip"
-          class="perf-tip"
-          aria-live="polite"
-          data-clubs-text="teams ready to spin"
-          data-players-text="players loaded">
-          <span class="meter-text">0 teams ready to spin</span>
-        </div>
-
-        <div class="section-title" style="margin-top:8px">Show on Wheel</div>
-        <div class="showopts" id="showOnWheel" role="group" aria-label="Wheel display options">
-          <label class="chip" title="Display club logos or player images on the wheel">
-            <input type="checkbox" id="optA" checked aria-label="Logo / Image" />
-            <span id="lblA" class="chip-text">Logo</span>
-          </label>
-          <label class="chip" title="Show team or player names">
-            <input type="checkbox" id="optB" checked aria-label="Name" />
-            <span id="lblB" class="chip-text">Name</span>
-          </label>
-          <label class="chip" title="Team mode: Stadium · Player mode: Jersey number">
-            <input type="checkbox" id="optC" aria-label="Stadium / Jersey" />
-            <span id="lblC" class="chip-text">Stadium</span>
-          </label>
-          <label class="chip" title="Team mode: League · Player mode: Nationality">
-            <input type="checkbox" id="optD" aria-label="League / Nationality" />
-            <span id="lblD" class="chip-text">League</span>
-          </label>
-          <label class="chip" title="Extra label in player modal (e.g. club)">
-            <input type="checkbox" id="optE" aria-label="Extra label" />
-            <span id="lblE" class="chip-text">Extra</span>
-          </label>
-        </div>
-      </div>
-
+      <div id="perfTip" class="perf-tip" aria-live="polite">0 teams selected</div>
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
-        <button
-          id="spinFab"
-          class="spin-fab"
-          type="button"
-          aria-label="Spin the wheel"
-          title="Click to spin the wheel!">
-          SPIN!
-        </button>
-        <canvas id="wheel" width="640" height="640" aria-label="Wheel"></canvas>
-        <canvas id="fx"    width="640" height="640" aria-hidden="true"></canvas>
+        <button id="spinFab" class="spin-fab" type="button" aria-label="Spin the wheel">SPIN!</button>
+        <canvas id="wheel" width="640" height="640" aria-label="Club wheel"></canvas>
+        <canvas id="fx" width="640" height="640" aria-hidden="true"></canvas>
       </div>
     </section>
 
-    <!-- PLAYER VIEW -->
+    <!-- Player view (hidden by default, shown when PLAYER mode is active) -->
     <section id="playerView" class="card player-only hidden" aria-labelledby="player-title">
       <div class="section-title" id="player-title">Players</div>
       <div class="player-controls">
@@ -380,134 +375,117 @@
           Switch to PLAYER mode to spin players instead of teams. Images are loaded from /players/players.json.
         </p>
       </div>
+
       <div id="playerList" class="player-list" aria-live="polite"></div>
 
       <div class="history-title">Player history</div>
       <div class="history" id="historyPlayers"></div>
     </section>
 
-    <!-- Full-width accordion / FAQ / use cases -->
-    <section class="card" style="grid-column:1 / -1; margin-top:28px;">
-      <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
-        <div class="section-title" id="details-title">About Football Spinner</div>
+    <!-- Content / FAQ & usage text -->
+    <section id="content" style="grid-column: 1 / -1" class="scroll-smooth">
+      <nav class="anchor-nav">
+        <a href="#what-is">What is Football Spinner?</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#use-cases">Ideas & use cases</a>
+        <a href="#faq">FAQ</a>
+        <a href="#disclaimer">Disclaimer</a>
+        <a href="#ads">Ads & Cookies</a>
+      </nav>
 
-        <!-- FAQ 1 -->
-        <div class="ac-panel" id="faq-what" role="region" aria-labelledby="faq-what-summary">
-          <div class="ac-summary" id="faq-what-summary" tabindex="0" role="button" aria-expanded="false">
-            <div class="ac-title">What does Football Spinner do?</div>
-            <span class="ac-chevron"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>
-          </div>
-          <div class="ac-body">
-            <h2>What does Football Spinner do?</h2>
-            <p>
-              Football Spinner is a free web app that lets you <strong>spin a football club wheel</strong> or
-              generate a random <strong>Premier League player</strong>. It’s perfect for quizzes, content creation,
-              prediction games, TikTok challenges and fans who just can’t decide which team to support tonight.
-            </p>
-          </div>
-        </div>
+      <h2 id="what-is">What is Football Spinner?</h2>
+      <div class="text-wrap">
+        <p>
+          Football Spinner is a free, fan-made <strong>random football team generator</strong>.
+          Instead of scrolling through endless lists of clubs, you simply
+          <strong>spin the football club wheel</strong> and let chance pick a team for you.
+        </p>
+        <p>
+          The app includes clubs from <strong>25 European leagues</strong> and a dedicated
+          <strong>Premier League player spinner</strong>. You can use it for quizzes,
+          prediction games, TikTok videos, classroom activities or just to discover new teams.
+        </p>
+      </div>
 
-        <!-- FAQ 2 -->
-        <div class="ac-panel" id="faq-random" role="region" aria-labelledby="faq-random-summary">
-          <div class="ac-summary" id="faq-random-summary" tabindex="0" role="button" aria-expanded="false">
-            <div class="ac-title">How does the random selection work?</div>
-            <span class="ac-chevron"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>
-          </div>
-          <div class="ac-body">
-            <h2>How does the random selection work?</h2>
-            <p>
-              Each spin uses a pseudo-random algorithm so every team (or player) currently on the wheel
-              has an equal chance of being selected. Your league filters and mode (TEAM / PLAYER) determine
-              which items can appear.
-            </p>
-            <p>
-              Once the wheel stops, the selected club or player is shown in a modal with extra details such as
-              league and stadium (for clubs) or club and nationality (for players, where available).
-            </p>
-          </div>
-        </div>
+      <h2 id="how-it-works">How the football club spin wheel works</h2>
+      <div class="text-wrap">
+        <ol>
+          <li>Select one or more leagues on the left side.</li>
+          <li>Choose what you want to show on the wheel: name, logo, stadium and league.</li>
+          <li>Press <strong>SPIN</strong> or tap the main button to start the wheel.</li>
+          <li>When the wheel stops, the selected club appears in a result window.</li>
+        </ol>
+        <p>
+          Every team currently on the wheel has the same chance of being selected.
+          If you change the leagues or display options, the wheel updates automatically.
+        </p>
+      </div>
 
-        <!-- FAQ 3 -->
-        <div class="ac-panel" id="faq-leagues" role="region" aria-labelledby="faq-leagues-summary">
-          <div class="ac-summary" id="faq-leagues-summary" tabindex="0" role="button" aria-expanded="false">
-            <div class="ac-title">Which leagues and players are supported?</div>
-            <span class="ac-chevron"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>
-          </div>
-          <div class="ac-body">
-            <h2>Which leagues and players are supported?</h2>
-            <p>
-              The TEAM wheel includes clubs from <strong>25 European leagues</strong>, including:
-            </p>
-            <ul>
-              <li>Premier League</li>
-              <li>La Liga</li>
-              <li>Serie A</li>
-              <li>Bundesliga</li>
-              <li>Ligue 1</li>
-              <li>and many more national top leagues.</li>
-            </ul>
-            <p>
-              The PLAYER wheel focuses on <strong>current Premier League players</strong> with images and basic details.
-              Over time, more leagues and player packs can be added.
-            </p>
-          </div>
-        </div>
+      <h2 id="use-cases">Ideas & use cases</h2>
+      <div class="text-wrap">
+        <ul>
+          <li><strong>Quizzes & trivia:</strong> spin for a random club and ask friends to name the stadium, city or star player.</li>
+          <li><strong>TikTok & Shorts:</strong> record the wheel, cover the team name and turn it into a “guess the club” challenge.</li>
+          <li><strong>Prediction games:</strong> let the wheel decide which team you “support” for tonight’s match.</li>
+          <li><strong>Classroom activities:</strong> use the wheel to talk about geography, languages and football culture.</li>
+          <li><strong>Career mode ideas:</strong> spin the wheel to pick your next club in Football Manager or EA FC.</li>
+        </ul>
+      </div>
 
-        <!-- FAQ 4 -->
-        <div class="ac-panel" id="faq-free" role="region" aria-labelledby="faq-free-summary">
-          <div class="ac-summary" id="faq-free-summary" tabindex="0" role="button" aria-expanded="false">
-            <div class="ac-title">Is Football Spinner completely free?</div>
-            <span class="ac-chevron"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>
-          </div>
-          <div class="ac-body">
-            <h2>Is Football Spinner completely free?</h2>
-            <p>
-              Yes. Football Spinner is 100% free to use.  
-              There is <strong>no login, no registration and no paywall</strong>.
-              Basic usage data is collected only in aggregate via analytics to understand how the app is used.
-            </p>
-          </div>
-        </div>
+      <h2 id="faq">FAQ</h2>
+      <div class="text-wrap">
+        <h3>What does Football Spinner do?</h3>
+        <p>
+          Football Spinner lets you spin a football club wheel or generate a random Premier League player.
+          It removes the decision stress and adds a bit of fun randomness to how you pick teams or players.
+        </p>
 
-        <!-- FAQ 5 -->
-        <div class="ac-panel" id="faq-ideas" role="region" aria-labelledby="faq-ideas-summary">
-          <div class="ac-summary" id="faq-ideas-summary" tabindex="0" role="button" aria-expanded="false">
-            <div class="ac-title">What can I use Football Spinner for?</div>
-            <span class="ac-chevron"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>
-          </div>
-          <div class="ac-body">
-            <h2>What can I use Football Spinner for?</h2>
-            <p>Popular ways people use Football Spinner include:</p>
-            <ul>
-              <li>Football quizzes and pub trivia nights</li>
-              <li>TikTok, Reels and YouTube Shorts ideas</li>
-              <li>Prediction games and friendly challenges with friends</li>
-              <li>Classroom activities around geography or football culture</li>
-              <li>Letting the wheel decide a random team to support or follow</li>
-            </ul>
-          </div>
-        </div>
+        <h3>How does the football spin wheel choose a random team?</h3>
+        <p>
+          The wheel uses a pseudo-random algorithm. Every club that is currently active on the wheel
+          has an equal chance of being selected, and your league filters control which clubs are eligible.
+        </p>
 
-        <!-- FAQ 6 -->
-        <div class="ac-panel" id="faq-mobile" role="region" aria-labelledby="faq-mobile-summary">
-          <div class="ac-summary" id="faq-mobile-summary" tabindex="0" role="button" aria-expanded="false">
-            <div class="ac-title">Does Football Spinner work on mobile?</div>
-            <span class="ac-chevron"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>
-          </div>
-          <div class="ac-body">
-            <h2>Does Football Spinner work on mobile?</h2>
-            <p>
-              Yes – the app is fully optimised for phones, tablets and desktop.
-              The wheel automatically resizes to your screen, so you can spin teams and players smoothly anywhere.
-            </p>
-          </div>
-        </div>
+        <h3>Which leagues and players are included?</h3>
+        <p>
+          The club wheel covers 25 European leagues, including the Premier League, La Liga, Serie A,
+          Bundesliga, Ligue 1 and more. The player wheel currently focuses on active Premier League players.
+        </p>
+
+        <h3>Is Football Spinner really free?</h3>
+        <p>
+          Yes – the website is completely free to use and does not require an account or login.
+          Only anonymous analytics are collected to understand how many spins happen and from which countries.
+        </p>
+
+        <h3>Does the football spinner work on mobile?</h3>
+        <p>
+          Yes. The site is optimised for phones, tablets and desktop so you can spin the wheel
+          comfortably on any device.
+        </p>
+      </div>
+
+      <h2 id="disclaimer">Disclaimer</h2>
+      <div class="text-wrap">
+        <p>
+          Football Spinner is an independent fan project. Club names, crests and player photos are used
+          for information and entertainment purposes only and remain property of their respective owners.
+        </p>
+      </div>
+
+      <h2 id="ads">Ads & Cookies</h2>
+      <div class="text-wrap">
+        <p>
+          This site uses Google AdSense and basic analytics to keep the project online.
+          Some outbound links are affiliate links to licensed sports betting partners.
+          Please bet responsibly and only if it is legal in your country and you are 18+.
+        </p>
       </div>
     </section>
   </main>
 
   <!-- Modal -->
-  <div id="backdrop" class="modal-backdrop" style="display:none">
+  <div id="backdrop" class="modal-backdrop">
     <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
       <div id="mHead">Result</div>
       <div id="mSub" class="small" aria-live="polite">Click below to reveal details</div>
@@ -544,167 +522,14 @@
     </div>
   </div>
 
-  <!-- Copyright footer -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
       © 2025 Football Spinner. All rights reserved.
     </div>
   </footer>
 
-  <!-- App -->
+  <!-- App script -->
   <script src="app.js" defer></script>
-
-  <!-- Mode text + accordion + partner helpers -->
-  <script>
-    (function(){
-      function applyModeTexts(mode){
-        const titleRight = document.getElementById('wheel-title');
-        const perf = document.getElementById('perfTip');
-        const meterText = perf?.querySelector('.meter-text');
-        const filterTitle = document.getElementById('filter-title');
-        const qpTop5 = document.getElementById('qpTop5');
-        const modeNote = document.getElementById('modeNote');
-
-        if(mode === 'player'){
-          if (titleRight) titleRight.textContent = 'Player Wheel';
-          if (meterText && perf?.dataset.playersText){
-            const num = (meterText.textContent.match(/\d+/)||['0'])[0];
-            meterText.textContent = `${num} ${perf.dataset.playersText}`;
-          }
-          if (filterTitle) filterTitle.textContent = 'Select Teams';
-          if (qpTop5){
-            qpTop5.textContent = 'Top 6 PL Teams';
-            qpTop5.title = 'Select the Big Six from the Premier League';
-          }
-          if (modeNote){
-            modeNote.style.display = 'inline';
-            modeNote.textContent = 'Players: Premier League only';
-          }
-        } else {
-          if (titleRight) titleRight.textContent = 'Club Wheel';
-          if (meterText && perf?.dataset.clubsText){
-            const num = (meterText.textContent.match(/\d+/)||['0'])[0];
-            meterText.textContent = `${num} ${perf.dataset.clubsText}`;
-          }
-          if (filterTitle) filterTitle.textContent = 'Select Leagues';
-          if (qpTop5){
-            qpTop5.textContent = 'Top 5 Leagues';
-            qpTop5.title = 'Select only the top 5 leagues';
-          }
-          if (modeNote){ modeNote.style.display = 'none'; }
-        }
-      }
-
-      function setTabSelection(mode){
-        const teamBtn = document.getElementById('modeTeam');
-        const playerBtn = document.getElementById('modePlayer');
-        const teamActive = mode !== 'player';
-        teamBtn?.setAttribute('aria-selected', String(teamActive));
-        playerBtn?.setAttribute('aria-selected', String(!teamActive));
-        teamBtn?.classList.toggle('mode-btn-active', teamActive);
-        playerBtn?.classList.toggle('mode-btn-active', !teamActive);
-      }
-
-      const histEmpty = document.getElementById('historyEmpty');
-      if (histEmpty){
-        histEmpty.textContent = 'Your journey starts with a spin – try your luck!';
-      }
-
-      const initial = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
-      applyModeTexts(initial);
-      setTabSelection(initial);
-
-      document.getElementById('modeTeam')?.addEventListener('click', () => {
-        localStorage.setItem('fsMode', 'team');
-        applyModeTexts('team');
-        setTabSelection('team');
-      });
-      document.getElementById('modePlayer')?.addEventListener('click', () => {
-        localStorage.setItem('fsMode', 'player');
-        applyModeTexts('player');
-        setTabSelection('player');
-      });
-
-      // Accordion behaviour
-      const accordion = document.getElementById('infoAccordion');
-      if (accordion){
-        const panels = Array.from(accordion.querySelectorAll('.ac-panel'));
-        panels.forEach(panel=>{
-          const summary = panel.querySelector('.ac-summary');
-          const body = panel.querySelector('.ac-body');
-
-          const setOpen = (open) => {
-            panel.toggleAttribute('open', !!open);
-            summary.setAttribute('aria-expanded', !!open);
-            if (open) { body.style.maxHeight = body.scrollHeight + 40 + 'px'; }
-            else { body.style.maxHeight = null; }
-          };
-
-          summary.addEventListener('click', ()=>{
-            const willOpen = !panel.hasAttribute('open');
-            panels.forEach(p=>{
-              if (p!==panel){
-                p.removeAttribute('open');
-                p.querySelector('.ac-summary').setAttribute('aria-expanded','false');
-                p.querySelector('.ac-body').style.maxHeight=null;
-              }
-            });
-            setOpen(willOpen);
-          });
-
-          summary.addEventListener('keydown', (e)=>{
-            if (e.key==='Enter' || e.key===' '){
-              e.preventDefault();
-              summary.click();
-            }
-            if (e.key==='ArrowDown'){
-              e.preventDefault();
-              (panels[panels.indexOf(panel)+1]||panels[0]).querySelector('.ac-summary').focus();
-            }
-            if (e.key==='ArrowUp'){
-              e.preventDefault();
-              (panels[panels.indexOf(panel)-1]||panels[panels.length-1]).querySelector('.ac-summary').focus();
-            }
-          });
-
-          panel.removeAttribute('open');
-          summary.setAttribute('aria-expanded','false');
-        });
-      }
-
-      // Partner tiles collapse / expand with persistence
-      const cards = document.querySelectorAll('.partner-mini');
-      cards.forEach(card=>{
-        const id = card.id || card.getAttribute('data-partner') || '';
-        if (!id) return;
-        const key = 'fsPartnerCollapsed_' + id;
-        const toggle = card.querySelector('.partner-mini-toggle');
-        const icon = toggle?.querySelector('.partner-mini-toggle-icon');
-
-        if (!toggle) return;
-
-        let collapsed = false;
-        try { collapsed = localStorage.getItem(key) === '1'; } catch(e){}
-
-        function applyState() {
-          card.setAttribute('data-collapsed', collapsed ? '1' : '0');
-          if (icon) icon.textContent = collapsed ? '▴' : '▾';
-          toggle.setAttribute(
-            'aria-label',
-            (collapsed ? 'Show ' : 'Hide ') +
-              (id.includes('n1bet') ? 'N1Bet offer' : 'BC.GAME offer')
-          );
-        }
-
-        applyState();
-
-        toggle.addEventListener('click', function(){
-          collapsed = !collapsed;
-          applyState();
-          try { localStorage.setItem(key, collapsed ? '1' : '0'); } catch(e){}
-        });
-      });
-    })();
-  </script>
 </body>
 </html>
