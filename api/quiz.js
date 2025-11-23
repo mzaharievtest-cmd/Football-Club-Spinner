@@ -1,291 +1,255 @@
 // api/quiz.js
-// Vercel serverless function for Football Spinner AI quiz
+// Serverless function for AI Quiz (Vercel)
+//
+// - Uses club_knowledge.json as the single source of truth
+// - NEVER invents facts; questions are built from that JSON.
+// - OpenAI is only used to phrase the question text nicely.
+//
+// Expected request body (from app.js):
+// { mode: 'team' | 'player', difficulty: 'auto' | 'easy' | 'medium' | 'hard', context: {...} }
+//
+// Response:
+// { question: string, answers: string[4], correctIndex: number, explanation?: string }
 
-const fs = require('fs').promises;
+const fs = require('fs/promises');
 const path = require('path');
-const OpenAI = require('openai');
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const MODEL = 'gpt-4o-mini'; // or gpt-4.1-mini if your account supports it
 
-let CLUBS_CACHE = null;
+let KB_CACHE = null;
 
-/**
- * Load club knowledge JSON once and cache.
- * Expected structure: array of clubs with at least:
- * - team_id
- * - team_name
- * - league_code (EPL, SA, BUN, L1, LLA)
- * - plus extra fields (stadium, city, founded, trophies, rivals, legends, fun_facts, ...)
- */
-async function loadClubs() {
-  if (CLUBS_CACHE) return CLUBS_CACHE;
-
-  const filePath = path.join(__dirname, '..', 'data', 'club_knowledge.json');
+async function loadKnowledge() {
+  if (KB_CACHE) return KB_CACHE;
+  const filePath = path.join(process.cwd(), 'club_knowledge.json'); // adjust if you put it elsewhere
   const raw = await fs.readFile(filePath, 'utf8');
-  const json = JSON.parse(raw);
-
-  // Optional: normalize names and codes
-  CLUBS_CACHE = (json || []).map((c) => ({
-    ...c,
-    team_name: c.team_name || c.name || '',
-    league_code: c.league_code || c.leagueCode || '',
-  }));
-
-  return CLUBS_CACHE;
+  KB_CACHE = JSON.parse(raw);
+  return KB_CACHE;
 }
 
-/**
- * Try to find the correct club entry based on context from the client.
- * context.kind === 'club' | 'player'
- */
-function findClubEntry(clubs, context) {
-  const rawClubName =
-    (context.kind === 'club' ? context.name : context.clubName) || '';
-  const leagueCode = (context.leagueCode || context.league || '').toUpperCase();
-
-  const nameLc = rawClubName.toLowerCase().trim();
-
-  // 1) exact name match
-  let candidates = clubs.filter(
-    (c) => c.team_name && c.team_name.toLowerCase().trim() === nameLc
-  );
-
-  // 2) if leagueCode known, prefer clubs in that league
-  if (leagueCode && candidates.length > 1) {
-    const narrowed = candidates.filter(
-      (c) => c.league_code && c.league_code.toUpperCase() === leagueCode
-    );
-    if (narrowed.length) candidates = narrowed;
-  }
-
-  // 3) fallback: fuzzy contains
-  if (!candidates.length && rawClubName) {
-    candidates = clubs.filter((c) =>
-      (c.team_name || '').toLowerCase().includes(nameLc)
-    );
-  }
-
-  return candidates[0] || null;
+function norm(str = '') {
+  return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
 }
 
-/**
- * Build a small "world" around the chosen club:
- *  - the club itself
- *  - a few other clubs from same league (for distractors)
- */
-function buildClubQuizContext(allClubs, club) {
-  const leagueCode = (club.league_code || '').toUpperCase();
+function sample(arr, n) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, n);
+}
+
+function shuffleWithCorrectFirst(answers, correctLabel) {
+  // answers: plain strings where answers[0] MUST be the correct one initially
+  const arr = answers.map((text, i) => ({ text, i }));
+  // Fisher–Yates
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  const finalAnswers = arr.map(a => a.text);
+  const correctIndex = arr.findIndex(a => a.i === 0); // where original index was 0
+  return { finalAnswers, correctIndex };
+}
+
+// ---- Build question payloads from knowledge base (no AI yet) ----
+
+function buildClubQuestion(club, allClubs, difficulty = 'auto') {
+  const league = club.league || club.league_name || '';
+  const clubName = club.name || club.team_name || '';
+
   const sameLeague = allClubs.filter(
-    (c) =>
-      c.league_code &&
-      c.league_code.toUpperCase() === leagueCode &&
-      c.team_name !== club.team_name
+    c => norm(c.name) !== norm(clubName) && norm(c.league || c.league_name) === norm(league)
   );
 
-  // take a few for wrong answers
-  const shuffled = sameLeague.sort(() => Math.random() - 0.5);
-  const rivals = Array.isArray(club.rivals) ? club.rivals : [];
-  const legends = Array.isArray(club.legends) ? club.legends : [];
+  // Try stadium question first (requires at least 3 other clubs in same league)
+  if (club.stadium && sameLeague.length >= 3) {
+    const distractors = sample(sameLeague, 3).map(c => c.name);
+    const answers = [clubName, ...distractors];
+    const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers, clubName);
+
+    return {
+      type: 'club_stadium',
+      correctLabel: clubName,
+      questionTemplate: `Which of the following clubs plays its home matches at ${club.stadium}?`,
+      answers: finalAnswers,
+      correctIndex,
+      extra: { league, stadium: club.stadium }
+    };
+  }
+
+  // Fallback: league question
+  const leagues = Array.from(
+    new Set(allClubs.map(c => c.league || c.league_name).filter(Boolean))
+  ).filter(l => norm(l) !== norm(league));
+
+  const distractorLeagues = sample(leagues, 3);
+  const answers = [league, ...distractorLeagues];
+  const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers, league);
 
   return {
-    club: {
-      team_id: club.team_id,
-      team_name: club.team_name,
-      league_code: club.league_code,
-      country: club.country,
-      city: club.city,
-      founded: club.founded,
-      stadium: club.stadium,
-      capacity: club.capacity,
-      manager: club.manager,
-      nicknames: club.nicknames,
-      colours: club.colours,
-      trophies: club.trophies,
-      rivals,
-      legends,
-      fun_facts: club.fun_facts,
-    },
-    otherClubsSameLeague: shuffled.slice(0, 10).map((c) => ({
-      team_name: c.team_name,
-      stadium: c.stadium,
-      city: c.city,
-      country: c.country,
-    })),
+    type: 'club_league',
+    correctLabel: league,
+    questionTemplate: `In which league does ${clubName} currently compete?`,
+    answers: finalAnswers,
+    correctIndex,
+    extra: { clubName }
   };
 }
 
-/**
- * Build prompt for OpenAI.
- * We LIMIT the model strictly to the provided club data.
- */
-function buildPrompt({ difficulty, category, clubContext }) {
-  return [
-    {
-      role: 'system',
-      content:
-        'You are a football trivia generator. ' +
-        'You must ONLY use the facts given in the JSON below. ' +
-        'Do NOT invent seasons, stats, managers, trophies or rivals that are not present in the JSON. ' +
-        'If a specific detail is not present, you MUST NOT ask about it. ' +
-        'You output ONLY a single JSON object, nothing else.',
-    },
-    {
-      role: 'user',
-      content:
-        'Generate ONE 4-option multiple-choice trivia question about this club.\n' +
-        '- Use ONLY data from the provided JSON.\n' +
-        '- The question must be answerable from this JSON alone.\n' +
-        '- Difficulty: ' +
-        difficulty +
-        '\n' +
-        '- Topic preference (if possible): ' +
-        category +
-        ' (but ignore if not supported by the data).\n' +
-        '- Answers: exactly 4 options.\n' +
-        '- Mark correct answer with correctIndex 0–3.\n' +
-        '- You MAY use otherClubsSameLeague for plausible wrong answers (e.g. other stadiums / cities / clubs).\n' +
-        '\n' +
-        'Return STRICTLY this JSON shape:\n' +
-        '{\n' +
-        '  "question": "string",\n' +
-        '  "answers": ["a","b","c","d"],\n' +
-        '  "correctIndex": 0,\n' +
-        '  "explanation": "string (short, optional but recommended)"\n' +
-        '}\n' +
-        '\n' +
-        'Here is the data:\n' +
-        JSON.stringify(clubContext),
-    },
-  ];
-}
+function buildPlayerQuestion(playerCtx, allClubs) {
+  const { name, clubName, league = 'Premier League' } = playerCtx;
+  if (!name || !clubName) return null;
 
-/**
- * Fallback question if OpenAI fails or data is missing.
- * SUPER SAFE, only uses provided context fields.
- */
-function buildFallbackQuestion(context, clubEntry) {
-  const name =
-    (context.kind === 'club' ? context.name : context.clubName) ||
-    clubEntry?.team_name ||
-    'this club';
-
-  const league =
-    context.leagueName ||
-    context.league ||
-    clubEntry?.league_name ||
-    clubEntry?.league_code ||
-    'a top European league';
-
-  const country = clubEntry?.country || 'Europe';
-
-  const question = `In which country is ${name} based?`;
-
-  const correct = country;
-  const pool = ['England', 'Spain', 'Italy', 'Germany', 'France', 'Portugal'];
-  const others = pool.filter(
-    (c) => c.toLowerCase() !== correct.toLowerCase()
+  const sameLeagueClubs = allClubs.filter(
+    c => norm(c.name) !== norm(clubName) && norm(c.league || c.league_name) === norm(league)
   );
 
-  const shuffled = [correct, ...others.sort(() => Math.random() - 0.5).slice(0, 3)]
-    .sort(() => Math.random() - 0.5);
+  if (sameLeagueClubs.length < 3) return null;
 
-  const correctIndex = shuffled.indexOf(correct);
+  const distractors = sample(sameLeagueClubs, 3).map(c => c.name);
+  const answers = [clubName, ...distractors];
+  const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers, clubName);
 
   return {
-    question,
-    answers: shuffled,
-    correctIndex: correctIndex >= 0 ? correctIndex : 0,
-    explanation: `The correct answer is ${correct}.`,
+    type: 'player_club',
+    correctLabel: clubName,
+    questionTemplate: `For which club does ${name} currently play?`,
+    answers: finalAnswers,
+    correctIndex,
+    extra: { playerName: name, league }
   };
 }
 
-/**
- * Main handler
- */
-module.exports = async function handler(req, res) {
+// ---- OpenAI call (only to phrase the question nicely) ----
+
+async function fetchQuestionText(apiKey, baseQuestion, meta) {
+  // If OpenAI is misconfigured, just return the base question.
+  if (!apiKey) return baseQuestion;
+
+  const prompt = [
+    `You are a football trivia writer.`,
+    `Your job: take the base question and rephrase it in natural English, keeping the meaning identical.`,
+    `Do NOT mention answer options in the text; just output the final question.`,
+    `Do NOT add extra facts or numbers that weren't implied in the base question.`,
+    ``,
+    `Base question: "${baseQuestion}"`,
+    meta
+      ? `Context JSON (for flavour only, don't contradict it): ${JSON.stringify(meta)}`
+      : ''
+  ].join('\n');
+
+  try {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        temperature: 0.4,
+        max_tokens: 120,
+        messages: [
+          { role: 'system', content: 'You write short, clear football quiz questions.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+
+    if (!resp.ok) {
+      console.error('OpenAI HTTP error', resp.status, await resp.text());
+      return baseQuestion;
+    }
+
+    const json = await resp.json();
+    const text = json.choices?.[0]?.message?.content?.trim();
+    return text || baseQuestion;
+  } catch (err) {
+    console.error('OpenAI call failed', err);
+    return baseQuestion;
+  }
+}
+
+module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { mode, difficulty = 'auto', context = {}, category = 'mixed' } =
-      req.body || {};
+    const apiKey = process.env.OPENAI_API_KEY;
+    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const { mode = 'team', difficulty = 'auto', context = {} } = body;
 
-    const clubs = await loadClubs();
+    const knowledge = await loadKnowledge();
 
-    let quiz;
+    const kind = context.kind || (mode === 'player' ? 'player' : 'club');
+    const name = (context.name || '').trim();
+    const league = (context.leagueName || context.league || '').trim();
 
-    // Only club-based quiz for now; player quiz can be added later with player_knowledge.json
-    if (context.kind === 'club' || mode === 'team') {
-      const clubEntry = findClubEntry(clubs, { ...context, kind: 'club' });
+    // ---- Find matching club in KB ----
+    let clubEntry = null;
 
-      if (!clubEntry) {
-        // No match → safe fallback
-        quiz = buildFallbackQuestion(context, null);
-      } else {
-        const clubContext = buildClubQuizContext(clubs, clubEntry);
-
-        const messages = buildPrompt({
-          difficulty,
-          category,
-          clubContext,
-        });
-
-        const completion = await client.chat.completions.create({
-          model: 'gpt-4.1-mini',
-          messages,
-          temperature: 0.7,
-        });
-
-        const raw = (completion.choices[0]?.message?.content || '').trim();
-
-        // Extract JSON (in case model ever wraps it)
-        const start = raw.indexOf('{');
-        const end = raw.lastIndexOf('}');
-        let parsed;
-        if (start !== -1 && end !== -1 && end > start) {
-          const jsonText = raw.slice(start, end + 1);
-          parsed = JSON.parse(jsonText);
-        } else {
-          throw new Error('Model did not return JSON');
-        }
-
-        // Basic shape validation
-        if (
-          !parsed ||
-          typeof parsed.question !== 'string' ||
-          !Array.isArray(parsed.answers) ||
-          parsed.answers.length !== 4 ||
-          typeof parsed.correctIndex !== 'number'
-        ) {
-          throw new Error('Invalid quiz payload from model');
-        }
-
-        quiz = {
-          question: parsed.question,
-          answers: parsed.answers,
-          correctIndex: parsed.correctIndex,
-          explanation: parsed.explanation || '',
-        };
-      }
+    if (kind === 'club') {
+      const key = norm(name);
+      clubEntry =
+        knowledge.find(
+          c =>
+            norm(c.name) === key &&
+            (!league || norm(c.league || c.league_name) === norm(league))
+        ) ||
+        knowledge.find(c => norm(c.name) === key); // fallback just by name
     } else {
-      // Player mode not wired yet → generic fallback
-      quiz = buildFallbackQuestion(context, null);
+      // For players we only need their club + league for distractors
+      const clubName = (context.clubName || '').trim();
+      const clubKey = norm(clubName);
+      clubEntry =
+        knowledge.find(
+          c =>
+            norm(c.name) === clubKey &&
+            (!league || norm(c.league || c.league_name) === norm(league))
+        ) ||
+        knowledge.find(c => norm(c.name) === clubKey);
     }
 
-    return res.status(200).json(quiz);
-  } catch (err) {
-    console.error('[api/quiz] error:', err);
-    // Last resort fallback
+    if (!clubEntry) {
+      console.warn('No club entry found for context', context);
+      return res.status(400).json({ error: 'No knowledge for this team/player yet.' });
+    }
+
+    let base;
+    if (kind === 'player') {
+      base = buildPlayerQuestion(
+        {
+          name: context.name || '',
+          clubName: context.clubName || '',
+          league: league || 'Premier League'
+        },
+        knowledge
+      );
+    } else {
+      base = buildClubQuestion(clubEntry, knowledge, difficulty);
+    }
+
+    if (!base) {
+      return res.status(400).json({ error: 'Unable to build a question for this item.' });
+    }
+
+    const phrasedQuestion = await fetchQuestionText(
+      apiKey,
+      base.questionTemplate,
+      { type: base.type, extra: base.extra }
+    );
+
     return res.status(200).json({
-      question: 'Which country is this club from?',
-      answers: ['England', 'Spain', 'Germany', 'Italy'],
-      correctIndex: 0,
-      explanation:
-        'Fallback question used because AI quiz could not be generated.',
+      question: phrasedQuestion,
+      answers: base.answers,
+      correctIndex: base.correctIndex
+      // explanation: could be added later if you want
     });
+  } catch (err) {
+    console.error('Quiz API error', err);
+    return res.status(500).json({ error: 'Internal quiz error' });
   }
 };
