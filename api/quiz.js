@@ -18,22 +18,111 @@ const MODEL = 'gpt-4o-mini'; // or gpt-4.1-mini if your account supports it
 
 let KB_CACHE = null;
 
+// --- Helpers for normalization ------------------------------------------------
+
+const LEAGUE_CODE_MAP = {
+  EPL: 'Premier League',
+  BUN: 'Bundesliga',
+  SA: 'Serie A',
+  LLA: 'La Liga',
+  L1: 'Ligue 1'
+};
+
+function norm(str = '') {
+  return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
+}
+
+function normalizeLeague(rawLeague, rawLeagueCode) {
+  if (rawLeague && String(rawLeague).trim()) {
+    return String(rawLeague).trim();
+  }
+  if (rawLeagueCode && LEAGUE_CODE_MAP[rawLeagueCode]) {
+    return LEAGUE_CODE_MAP[rawLeagueCode];
+  }
+  // fallback: just return the code/string if we have nothing better
+  return (rawLeagueCode || rawLeague || '').trim();
+}
+
+/**
+ * Take the raw JSON (object or array) from club_knowledge.json and
+ * normalize it into an ARRAY of club objects with:
+ *   - name
+ *   - league & league_name
+ *   - stadium, country, city, etc. passed through
+ */
+function normalizeKnowledge(raw) {
+  const clubs = [];
+
+  // If it's already an array, just normalize each element
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      const name =
+        item.name ||
+        item.club_name ||
+        item.team_name ||
+        '';
+
+      const league = normalizeLeague(
+        item.league || item.league_name,
+        item.league_code || item.leagueCode
+      );
+
+      clubs.push({
+        ...item,
+        name: name.trim(),
+        league,
+        league_name: league,
+        league_code: item.league_code || item.leagueCode || undefined
+      });
+    }
+    return clubs;
+  }
+
+  // Otherwise it's an object with keys like "6", "29", "Bayern Munich", ...
+  for (const [key, item] of Object.entries(raw)) {
+    if (!item || typeof item !== 'object') continue;
+
+    const name =
+      item.name ||
+      item.club_name ||
+      item.team_name ||
+      key; // fallback: key itself if it looks like a name
+
+    const league = normalizeLeague(
+      item.league || item.league_name,
+      item.league_code || item.leagueCode
+    );
+
+    clubs.push({
+      ...item,
+      name: String(name).trim(),
+      league,
+      league_name: league,
+      league_code: item.league_code || item.leagueCode || undefined
+    });
+  }
+
+  return clubs;
+}
+
+// --- Load & cache club knowledge ----------------------------------------------
+
 async function loadKnowledge() {
   if (KB_CACHE) return KB_CACHE;
 
   try {
     const filePath = path.join(process.cwd(), 'data', 'club_knowledge.json');
     const raw = await fs.readFile(filePath, 'utf8');
-    KB_CACHE = JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+
+    const normalized = normalizeKnowledge(parsed);
+    KB_CACHE = normalized;
+    console.log(`Loaded club_knowledge.json with ${normalized.length} clubs.`);
     return KB_CACHE;
   } catch (err) {
     console.error('Failed to load club_knowledge.json', err);
     throw err; // bubble up so we return 500 and can see it in logs
   }
-}
-
-function norm(str = '') {
-  return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
 }
 
 function sample(arr, n) {
@@ -45,7 +134,7 @@ function sample(arr, n) {
   return copy.slice(0, n);
 }
 
-function shuffleWithCorrectFirst(answers, correctLabel) {
+function shuffleWithCorrectFirst(answers) {
   // answers: plain strings where answers[0] MUST be the correct one initially
   const arr = answers.map((text, i) => ({ text, i }));
   // Fisher–Yates
@@ -65,14 +154,16 @@ function buildClubQuestion(club, allClubs, difficulty = 'auto') {
   const clubName = club.name || club.team_name || '';
 
   const sameLeague = allClubs.filter(
-    c => norm(c.name) !== norm(clubName) && norm(c.league || c.league_name) === norm(league)
+    c =>
+      norm(c.name) !== norm(clubName) &&
+      norm(c.league || c.league_name) === norm(league)
   );
 
   // Try stadium question first (requires at least 3 other clubs in same league)
   if (club.stadium && sameLeague.length >= 3) {
     const distractors = sample(sameLeague, 3).map(c => c.name);
     const answers = [clubName, ...distractors];
-    const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers, clubName);
+    const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers);
 
     return {
       type: 'club_stadium',
@@ -89,9 +180,9 @@ function buildClubQuestion(club, allClubs, difficulty = 'auto') {
     new Set(allClubs.map(c => c.league || c.league_name).filter(Boolean))
   ).filter(l => norm(l) !== norm(league));
 
-  const distractorLeagues = sample(leagues, 3);
+  const distractorLeagues = sample(leagues, Math.min(3, leagues.length));
   const answers = [league, ...distractorLeagues];
-  const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers, league);
+  const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers);
 
   return {
     type: 'club_league',
@@ -108,14 +199,16 @@ function buildPlayerQuestion(playerCtx, allClubs) {
   if (!name || !clubName) return null;
 
   const sameLeagueClubs = allClubs.filter(
-    c => norm(c.name) !== norm(clubName) && norm(c.league || c.league_name) === norm(league)
+    c =>
+      norm(c.name) !== norm(clubName) &&
+      norm(c.league || c.league_name) === norm(league)
   );
 
   if (sameLeagueClubs.length < 3) return null;
 
   const distractors = sample(sameLeagueClubs, 3).map(c => c.name);
   const answers = [clubName, ...distractors];
-  const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers, clubName);
+  const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers);
 
   return {
     type: 'player_club',
@@ -177,6 +270,8 @@ async function fetchQuestionText(apiKey, baseQuestion, meta) {
   }
 }
 
+// ---- Main handler ------------------------------------------------------------
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -185,7 +280,11 @@ module.exports = async (req, res) => {
 
   try {
     const apiKey = process.env.OPENAI_API_KEY;
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const body =
+      typeof req.body === 'string'
+        ? JSON.parse(req.body || '{}')
+        : (req.body || {});
+
     const { mode = 'team', difficulty = 'auto', context = {} } = body;
 
     const knowledge = await loadKnowledge();
