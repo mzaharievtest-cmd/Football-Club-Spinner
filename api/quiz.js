@@ -20,10 +20,16 @@ let KB_CACHE = null;
 
 async function loadKnowledge() {
   if (KB_CACHE) return KB_CACHE;
-  const filePath = path.join(process.cwd(), 'club_knowledge.json'); // adjust if you put it elsewhere
-  const raw = await fs.readFile(filePath, 'utf8');
-  KB_CACHE = JSON.parse(raw);
-  return KB_CACHE;
+
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'club_knowledge.json');
+    const raw = await fs.readFile(filePath, 'utf8');
+    KB_CACHE = JSON.parse(raw);
+    return KB_CACHE;
+  } catch (err) {
+    console.error('Failed to load club_knowledge.json', err);
+    throw err; // bubble up so we return 500 and can see it in logs
+  }
 }
 
 function norm(str = '') {
