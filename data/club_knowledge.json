@@ -1,3 +1,4 @@
+[
 {
   "6": {
     "club_name": "Tottenham Hotspur",
@@ -2324,7 +2325,7 @@
     "style_of_play": [
       "Strong emphasis on individual quality",
       "Fast transitions and counter-attacks",
-      "Winning mentality and late comebacks in big games"
+      "Winning mentality and late comebacks in big games"]
     },
     "fan_culture": [
       "Massive worldwide fanbase and huge commercial power.",
@@ -2353,7 +2354,7 @@
       "The club’s crest originally featured a simpler design without the crown."
     ]
   },
-  "Barcelona": {
+  "Barcelona",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Barcelona",
@@ -2416,7 +2417,7 @@
       "The club is owned by its members (socios), not a private owner."
     ]
   },
-  "Atlético Madrid": {
+  "Atlético Madrid",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Madrid",
@@ -2476,7 +2477,7 @@
       "Nickname 'Los Colchoneros' comes from old mattress patterns similar to their stripes."
     ]
   },
-  "Sevilla": {
+  "Sevilla",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Seville",
@@ -2534,7 +2535,7 @@
       "The club anthem, sung a cappella by fans, is one of the most iconic in Spain."
     ]
   },
-  "Valencia": {
+  "Valencia",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Valencia",
@@ -2591,7 +2592,7 @@
       "The planned new stadium (Nou Mestalla) has been delayed for many years."
     ]
   },
-  "Villarreal": {
+  "Villarreal",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Villarreal",
@@ -2647,7 +2648,7 @@
       "The club represents a town of only around 50,000 people."
     ]
   },
-  "Athletic Club": {
+  "Athletic Club",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Bilbao",
@@ -2705,7 +2706,7 @@
       "The Basque-only policy makes their success even more remarkable."
     ]
   },
-  "Real Sociedad": {
+  "Real Sociedad",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "San Sebastián",
@@ -2761,7 +2762,7 @@
       "The 2020 Copa final vs Athletic was played a year late due to the pandemic."
     ]
   },
-  "Real Betis": {
+  "Real Betis",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Seville",
@@ -2816,7 +2817,7 @@
       "Joaquín played into his 40s and is a club legend and TV personality."
     ]
   },
-  "Celta Vigo": {
+  "Celta Vigo",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Vigo",
@@ -2870,7 +2871,7 @@
       "Galicia’s rainy, coastal climate creates unique match conditions."
     ]
   },
-  "Espanyol": {
+  "Espanyol",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Barcelona",
@@ -2922,7 +2923,7 @@
       "The club has moved between different stadiums, now settled at RCDE Stadium."
     ]
   },
-  "Osasuna": {
+  "Osasuna",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Pamplona",
@@ -2972,7 +2973,7 @@
       "Pamplona is famously known worldwide for the running of the bulls (San Fermín festival)."
     ]
   },
-  "Girona": {
+  "Girona",":", {
     "league_code": "LLA",
     "country": "Spain",
     "city": "Girona",
@@ -3025,7 +3026,7 @@
   },
 
 
-  "Paris Saint-Germain": {
+  "Paris Saint-Germain",":", {
     "league_code": "L1",
     "country": "France",
     "city": "Paris",
@@ -3098,7 +3099,7 @@
       "The Eiffel Tower has often been incorporated into PSG marketing and kit designs."
     ]
   },
-  "Olympique de Marseille": {
+  "Olympique de Marseille",":", {
     "league_code": "L1",
     "country": "France",
     "city": "Marseille",
@@ -3165,7 +3166,7 @@
       "The OM crest often features a star for the 1993 UCL title."
     ]
   },
-  "Olympique Lyonnais": {
+  "Olympique Lyonnais",":", {
     "league_code": "L1",
     "country": "France",
     "city": "Lyon",
@@ -3231,7 +3232,7 @@
       "The club’s modern stadium is a regular host for finals and big matches."
     ]
   },
-  "AS Monaco": {
+  "AS Monaco",":", {
     "league_code": "L1",
     "country": "Monaco",
     "city": "Monaco",
@@ -3296,7 +3297,7 @@
       "The club has launched the careers of many French legends."
     ]
   },
-  "Lille OSC": {
+  "Lille OSC",":", {
     "league_code": "L1",
     "country": "France",
     "city": "Lille",
@@ -3357,7 +3358,7 @@
       "The club has been a launchpad for many Premier League stars."
     ]
   },
-  "RC Lens": {
+  "RC Lens",":", {
     "league_code": "L1",
     "country": "France",
     "city": "Lens",
@@ -3416,7 +3417,7 @@
       "Bollaert can host more people than the town’s population."
     ]
   },
-  "Stade Rennais": {
+  "Stade Rennais",":", {
     "league_code": "L1",
     "country": "France",
     "city": "Rennes",
@@ -3476,7 +3477,7 @@
       "The club has become a consistent top-half/Ligue 1 European contender in recent years."
     ]
   },
-  "OGC Nice": {
+  "OGC Nice",":", {
     "league_code": "L1",
     "country": "France",
     "city": "Nice",
@@ -3533,7 +3534,7 @@
       "Nice has produced and hosted many technically gifted players over the years."
     ]
   },
-  "FC Nantes": {
+  "FC Nantes",":", {
     "league_code": "L1",
     "country": "France",
     "city": "Nantes",
@@ -3591,7 +3592,7 @@
       "Many World Cup-winning French players started at Nantes."
     ]
   },
-  "Montpellier HSC": {
+  "Montpellier HSC",":", {
     "league_code": "L1",
     "country": "France",
     "city": "Montpellier",
@@ -3646,4 +3647,5 @@
       "The club has a reputation for discovering late-blooming talents."
     ]
   }
-}
+
+]
