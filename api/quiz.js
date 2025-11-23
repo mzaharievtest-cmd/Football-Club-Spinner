@@ -18,125 +18,16 @@ const MODEL = 'gpt-4o-mini'; // or gpt-4.1-mini if your account supports it
 
 let KB_CACHE = null;
 
-// --- Helpers for normalization ------------------------------------------------
+// ---- Helpers ----
 
-const LEAGUE_CODE_MAP = {
-  EPL: 'Premier League',
-  BUN: 'Bundesliga',
-  SA: 'Serie A',
-  LLA: 'La Liga',
-  L1: 'Ligue 1',
-};
-
+// Normalise strings and also strip common suffixes like "FC" / "Football Club"
 function norm(str = '') {
-  return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
-}
-
-function normalizeLeague(rawLeague, rawLeagueCode) {
-  if (rawLeague && String(rawLeague).trim()) {
-    return String(rawLeague).trim();
-  }
-  if (rawLeagueCode && LEAGUE_CODE_MAP[rawLeagueCode]) {
-    return LEAGUE_CODE_MAP[rawLeagueCode];
-  }
-  // fallback: just return the code/string if we have nothing better
-  return (rawLeagueCode || rawLeague || '').trim();
-}
-
-function extractClubName(item, fallbackKey = '') {
-  // Try a bunch of possible keys that might contain the club name
-  const candidates = [
-    item.name,
-    item.club_name,
-    item.club,
-    item.team_name,
-    item.team,
-    item.full_name,
-    item.displayName,
-    item.display_name,
-    item.short_name,
-    item.shortName,
-  ].filter(Boolean);
-
-  if (candidates.length > 0) {
-    return String(candidates[0]).trim();
-  }
-
-  return String(fallbackKey || '').trim();
-}
-
-/**
- * Take the raw JSON (object or array) from club_knowledge.json and
- * normalize it into an ARRAY of club objects with:
- *   - name (always present)
- *   - league & league_name
- *   - stadium, country, city, etc. passed through
- */
-function normalizeKnowledge(raw) {
-  const clubs = [];
-
-  // If it's already an array, just normalize each element
-  if (Array.isArray(raw)) {
-    for (const item of raw) {
-      if (!item || typeof item !== 'object') continue;
-
-      const name = extractClubName(item, '');
-      const league = normalizeLeague(
-        item.league || item.league_name,
-        item.league_code || item.leagueCode
-      );
-
-      clubs.push({
-        ...item,
-        name,
-        league,
-        league_name: league,
-        league_code: item.league_code || item.leagueCode || undefined,
-      });
-    }
-    return clubs;
-  }
-
-  // Otherwise it's an object with keys like "6", "29", "Bayern Munich", ...
-  for (const [key, item] of Object.entries(raw)) {
-    if (!item || typeof item !== 'object') continue;
-
-    const name = extractClubName(item, key);
-    const league = normalizeLeague(
-      item.league || item.league_name,
-      item.league_code || item.leagueCode
-    );
-
-    clubs.push({
-      ...item,
-      name,
-      league,
-      league_name: league,
-      league_code: item.league_code || item.leagueCode || undefined,
-    });
-  }
-
-  return clubs;
-}
-
-// --- Load & cache club knowledge ----------------------------------------------
-
-async function loadKnowledge() {
-  if (KB_CACHE) return KB_CACHE;
-
-  try {
-    const filePath = path.join(process.cwd(), 'data', 'club_knowledge.json');
-    const raw = await fs.readFile(filePath, 'utf8');
-    const parsed = JSON.parse(raw);
-
-    const normalized = normalizeKnowledge(parsed);
-    KB_CACHE = normalized;
-    console.log(`Loaded club_knowledge.json with ${normalized.length} clubs.`);
-    return KB_CACHE;
-  } catch (err) {
-    console.error('Failed to load club_knowledge.json', err);
-    throw err; // bubble up so we return 500 and can see it in logs
-  }
+  return String(str)
+    .toLowerCase()
+    .replace(/football club/g, '')   // remove the phrase 'football club'
+    .replace(/\bfc\b/g, '')          // remove standalone 'fc'
+    .replace(/[^a-z0-9]+/g, '')      // strip non-alphanumerics
+    .trim();
 }
 
 function sample(arr, n) {
@@ -161,43 +52,98 @@ function shuffleWithCorrectFirst(answers) {
   return { finalAnswers, correctIndex };
 }
 
-// ----- Matching helpers -------------------------------------------------------
+// ---- Load / normalise club knowledge ----
 
-function clubMatchesName(club, targetName) {
-  const t = norm(targetName);
-  if (!t) return false;
+async function loadKnowledge() {
+  if (KB_CACHE) return KB_CACHE;
 
-  const candidates = [
-    club.name,
-    club.club_name,
-    club.club,
-    club.team_name,
-    club.team,
-    club.full_name,
-    club.displayName,
-    club.display_name,
-    club.short_name,
-    club.shortName,
-  ];
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'club_knowledge.json');
+    const raw = await fs.readFile(filePath, 'utf8');
+    const parsed = JSON.parse(raw);
 
-  return candidates.some(v => v && norm(v) === t);
+    let list;
+    if (Array.isArray(parsed)) {
+      list = parsed;
+    } else if (parsed && typeof parsed === 'object') {
+      // Your file is an object keyed by IDs / names → take the values
+      list = Object.values(parsed);
+    } else {
+      list = [];
+    }
+
+    // Normalise each entry so we always have: name, league, league_code, stadium, etc.
+    KB_CACHE = list.map(entry => {
+      const name =
+        entry.name ||
+        entry.club_name ||
+        entry.team_name ||
+        entry.club ||
+        '';
+
+      // league_code is often "EPL", "BUN" etc in your file
+      const league_code =
+        entry.league_code ||
+        entry.league ||
+        entry.league_name ||
+        '';
+
+      // League full name if present; otherwise fall back to code
+      const league_name =
+        entry.league_name ||
+        entry.league ||
+        league_code ||
+        '';
+
+      const stadium = entry.stadium || entry.ground || '';
+
+      return {
+        ...entry,
+        // Standardised fields
+        name,
+        club_name: entry.club_name || name,
+        league_code,
+        league: league_name || league_code,
+        league_name: league_name || league_code,
+        stadium
+      };
+    });
+
+    return KB_CACHE;
+  } catch (err) {
+    console.error('Failed to load club_knowledge.json', err);
+    throw err; // bubble up so we return 500 and can see it in logs
+  }
 }
 
 // ---- Build question payloads from knowledge base (no AI yet) ----
 
 function buildClubQuestion(club, allClubs, difficulty = 'auto') {
-  const league = club.league || club.league_name || '';
-  const clubName = club.name || club.team_name || '';
+  const league =
+    club.league ||
+    club.league_name ||
+    club.league_code ||
+    '';
+  const clubName =
+    club.name ||
+    club.club_name ||
+    club.team_name ||
+    '';
 
-  const sameLeague = allClubs.filter(
-    c =>
-      !clubMatchesName(c, clubName) &&
-      norm(c.league || c.league_name) === norm(league)
-  );
+  const sameLeague = allClubs.filter(c => {
+    const cName = c.name || c.club_name || c.team_name || '';
+    const cLeague = c.league || c.league_name || c.league_code || '';
+    return (
+      norm(cName) !== norm(clubName) &&
+      norm(cLeague) === norm(league)
+    );
+  });
 
   // Try stadium question first (requires at least 3 other clubs in same league)
   if (club.stadium && sameLeague.length >= 3) {
-    const distractors = sample(sameLeague, 3).map(c => c.name);
+    const distractors = sample(sameLeague, 3).map(
+      c => c.name || c.club_name || c.team_name || ''
+    );
     const answers = [clubName, ...distractors];
     const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers);
 
@@ -207,13 +153,17 @@ function buildClubQuestion(club, allClubs, difficulty = 'auto') {
       questionTemplate: `Which of the following clubs plays its home matches at ${club.stadium}?`,
       answers: finalAnswers,
       correctIndex,
-      extra: { league, stadium: club.stadium },
+      extra: { league, stadium: club.stadium }
     };
   }
 
   // Fallback: league question
   const leagues = Array.from(
-    new Set(allClubs.map(c => c.league || c.league_name).filter(Boolean))
+    new Set(
+      allClubs
+        .map(c => c.league || c.league_name || c.league_code)
+        .filter(Boolean)
+    )
   ).filter(l => norm(l) !== norm(league));
 
   const distractorLeagues = sample(leagues, Math.min(3, leagues.length));
@@ -226,7 +176,7 @@ function buildClubQuestion(club, allClubs, difficulty = 'auto') {
     questionTemplate: `In which league does ${clubName} currently compete?`,
     answers: finalAnswers,
     correctIndex,
-    extra: { clubName },
+    extra: { clubName }
   };
 }
 
@@ -234,15 +184,20 @@ function buildPlayerQuestion(playerCtx, allClubs) {
   const { name, clubName, league = 'Premier League' } = playerCtx;
   if (!name || !clubName) return null;
 
-  const sameLeagueClubs = allClubs.filter(
-    c =>
-      !clubMatchesName(c, clubName) &&
-      norm(c.league || c.league_name) === norm(league)
-  );
+  const sameLeagueClubs = allClubs.filter(c => {
+    const cName = c.name || c.club_name || c.team_name || '';
+    const cLeague = c.league || c.league_name || c.league_code || '';
+    return (
+      norm(cName) !== norm(clubName) &&
+      norm(cLeague) === norm(league)
+    );
+  });
 
   if (sameLeagueClubs.length < 3) return null;
 
-  const distractors = sample(sameLeagueClubs, 3).map(c => c.name);
+  const distractors = sample(sameLeagueClubs, 3).map(
+    c => c.name || c.club_name || c.team_name || ''
+  );
   const answers = [clubName, ...distractors];
   const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers);
 
@@ -252,7 +207,7 @@ function buildPlayerQuestion(playerCtx, allClubs) {
     questionTemplate: `For which club does ${name} currently play?`,
     answers: finalAnswers,
     correctIndex,
-    extra: { playerName: name, league },
+    extra: { playerName: name, league }
   };
 }
 
@@ -271,15 +226,15 @@ async function fetchQuestionText(apiKey, baseQuestion, meta) {
     `Base question: "${baseQuestion}"`,
     meta
       ? `Context JSON (for flavour only, don't contradict it): ${JSON.stringify(meta)}`
-      : '',
+      : ''
   ].join('\n');
 
   try {
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: MODEL,
@@ -287,9 +242,9 @@ async function fetchQuestionText(apiKey, baseQuestion, meta) {
         max_tokens: 120,
         messages: [
           { role: 'system', content: 'You write short, clear football quiz questions.' },
-          { role: 'user', content: prompt },
-        ],
-      }),
+          { role: 'user', content: prompt }
+        ]
+      })
     });
 
     if (!resp.ok) {
@@ -306,7 +261,7 @@ async function fetchQuestionText(apiKey, baseQuestion, meta) {
   }
 }
 
-// ---- Main handler ------------------------------------------------------------
+// ---- Main handler ----
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -327,34 +282,56 @@ module.exports = async (req, res) => {
 
     const kind = context.kind || (mode === 'player' ? 'player' : 'club');
     const name = (context.name || '').trim();
-    const league = (context.leagueName || context.league || '').trim();
+    const leagueFromContext =
+      (context.leagueName || context.league || context.leagueCode || '').trim();
 
     // ---- Find matching club in KB ----
     let clubEntry = null;
 
     if (kind === 'club') {
+      const key = norm(name);
+
       clubEntry =
-        knowledge.find(
-          c =>
-            clubMatchesName(c, name) &&
-            (!league || norm(c.league || c.league_name) === norm(league))
-        ) ||
-        knowledge.find(c => clubMatchesName(c, name)); // fallback just by name
+        knowledge.find(c => {
+          const cName = c.name || c.club_name || c.team_name || '';
+          const cLeague = c.league || c.league_name || c.league_code || '';
+          return (
+            norm(cName) === key &&
+            (!leagueFromContext ||
+              norm(cLeague) === norm(leagueFromContext))
+          );
+        }) ||
+        // fallback: just by name (no league check)
+        knowledge.find(c => {
+          const cName = c.name || c.club_name || c.team_name || '';
+          return norm(cName) === key;
+        });
     } else {
       // For players we only need their club + league for distractors
       const clubName = (context.clubName || '').trim();
+      const clubKey = norm(clubName);
+
       clubEntry =
-        knowledge.find(
-          c =>
-            clubMatchesName(c, clubName) &&
-            (!league || norm(c.league || c.league_name) === norm(league))
-        ) ||
-        knowledge.find(c => clubMatchesName(c, clubName));
+        knowledge.find(c => {
+          const cName = c.name || c.club_name || c.team_name || '';
+          const cLeague = c.league || c.league_name || c.league_code || '';
+          return (
+            norm(cName) === clubKey &&
+            (!leagueFromContext ||
+              norm(cLeague) === norm(leagueFromContext))
+          );
+        }) ||
+        knowledge.find(c => {
+          const cName = c.name || c.club_name || c.team_name || '';
+          return norm(cName) === clubKey;
+        });
     }
 
     if (!clubEntry) {
       console.warn('No club entry found for context', context);
-      return res.status(400).json({ error: 'No knowledge for this team/player yet.' });
+      return res
+        .status(400)
+        .json({ error: 'No knowledge for this team/player yet.' });
     }
 
     let base;
@@ -363,7 +340,7 @@ module.exports = async (req, res) => {
         {
           name: context.name || '',
           clubName: context.clubName || '',
-          league: league || 'Premier League',
+          league: leagueFromContext || 'Premier League'
         },
         knowledge
       );
@@ -372,7 +349,9 @@ module.exports = async (req, res) => {
     }
 
     if (!base) {
-      return res.status(400).json({ error: 'Unable to build a question for this item.' });
+      return res
+        .status(400)
+        .json({ error: 'Unable to build a question for this item.' });
     }
 
     const phrasedQuestion = await fetchQuestionText(
@@ -384,7 +363,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       question: phrasedQuestion,
       answers: base.answers,
-      correctIndex: base.correctIndex,
+      correctIndex: base.correctIndex
       // explanation: could be added later if you want
     });
   } catch (err) {
