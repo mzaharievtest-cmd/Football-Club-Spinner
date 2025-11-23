@@ -6,53 +6,63 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { mode, kind, payload, difficulty } = req.body || {};
+    const { mode, difficulty, context } = req.body || {};
 
-    if (!mode || !payload || (!payload.team && !payload.player)) {
+    if (!mode || !context || !context.kind) {
       return res.status(400).json({ error: 'Invalid payload' });
     }
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: 'Missing OPENAI_API_KEY on server' });
+      return res.status(500).json({ error: 'OPENAI_API_KEY missing on server' });
     }
 
-    const subject =
-      mode === 'player'
-        ? `a football player: ${payload.player?.name || payload.player?.team_name || 'unknown'}`
-        : `a football club: ${payload.team?.name || payload.team?.team_name || 'unknown'}`;
+    const kind = context.kind; // "player" or "club"
 
-    const extraContext =
-      mode === 'player'
-        ? `Club: ${payload.player?.clubName || ''}, Nationality: ${payload.player?.nationality || ''}, Shirt number: ${payload.player?.jersey || ''}`
-        : `League: ${payload.team?.league || payload.team?.league_code || ''}, Country: ${payload.team?.country || ''}`;
+    let subject = '';
+    let extra = '';
 
-    const diffLabel = difficulty || 'normal';
+    if (kind === 'player') {
+      subject = `a football player: ${context.name || 'unknown player'}`;
+      extra = `
+Club: ${context.clubName || ''}
+League: ${context.league || 'Premier League'}
+Nationality: ${context.nationality || ''}
+Shirt number: ${context.jersey || ''}
+      `.trim();
+    } else {
+      subject = `a football club: ${context.name || 'unknown club'}`;
+      extra = `
+League: ${context.leagueName || context.leagueCode || ''}
+Stadium: ${context.stadium || ''}
+      `.trim();
+    }
+
+    const diffLabel = difficulty === 'easy' || difficulty === 'hard'
+      ? difficulty
+      : 'normal';
 
     const prompt = `
-Generate one multiple-choice football quiz question about ${subject}.
-Use any *real* football knowledge you have (past and present, players, titles, rivalries, stadium, legends, etc.).
+Generate ONE multiple-choice football quiz question about ${subject}.
+Use real football knowledge (history, titles, rivalries, legends, managers, etc.).
 
-Context from the app:
-${extraContext}
+Extra context from the app (optional, don't repeat it literally if not needed):
+${extra}
 
-The question:
-- Must have exactly 4 options labelled A, B, C, D.
+Rules:
+- Exactly ONE question.
+- Exactly FOUR answers.
 - Only ONE correct answer.
 - Answers must be short (max ~40 characters).
-- Difficulty: ${diffLabel} (easy/normal/hard).
+- Difficulty: ${diffLabel} (easy / normal / hard).
+- Make it interesting for football fans.
 
-Respond as strict JSON, NO extra text, in this shape:
+Respond as STRICT JSON, NO extra text, in this shape:
 
 {
   "question": "...",
-  "options": [
-    {"label":"A","text":"..."},
-    {"label":"B","text":"..."},
-    {"label":"C","text":"..."},
-    {"label":"D","text":"..."}
-  ],
-  "correct": "A",
+  "answers": ["...", "...", "...", "..."],
+  "correctIndex": 0,
   "explanation": "Short one-sentence explanation."
 }
 `;
@@ -66,7 +76,7 @@ Respond as strict JSON, NO extra text, in this shape:
       body: JSON.stringify({
         model: 'gpt-4.1-mini',
         messages: [
-          { role: 'system', content: 'You are a football trivia generator.' },
+          { role: 'system', content: 'You are a precise football trivia generator that always returns valid JSON.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.9,
@@ -75,8 +85,8 @@ Respond as strict JSON, NO extra text, in this shape:
     });
 
     if (!openaiRes.ok) {
-      const errText = await openaiRes.text().catch(() => '');
-      console.error('OpenAI error:', openaiRes.status, errText);
+      const txt = await openaiRes.text().catch(() => '');
+      console.error('OpenAI error:', openaiRes.status, txt);
       return res.status(502).json({ error: 'OpenAI API error' });
     }
 
@@ -87,13 +97,32 @@ Respond as strict JSON, NO extra text, in this shape:
     try {
       parsed = JSON.parse(content);
     } catch (e) {
-      console.error('Parsing error, raw content:', content);
+      console.error('Failed to parse AI JSON. Raw content:', content);
       return res.status(500).json({ error: 'Failed to parse AI response' });
     }
 
-    return res.status(200).json(parsed);
+    // Basic sanity checks / fallback
+    if (
+      !parsed ||
+      typeof parsed.question !== 'string' ||
+      !Array.isArray(parsed.answers) ||
+      parsed.answers.length !== 4 ||
+      typeof parsed.correctIndex !== 'number'
+    ) {
+      console.error('Invalid quiz JSON from AI:', parsed);
+      return res.status(500).json({ error: 'AI returned invalid quiz format' });
+    }
+
+    const safe = {
+      question: parsed.question,
+      answers: parsed.answers.slice(0, 4).map(String),
+      correctIndex: Math.max(0, Math.min(3, parsed.correctIndex | 0)),
+      explanation: parsed.explanation || ''
+    };
+
+    return res.status(200).json(safe);
   } catch (err) {
-    console.error('Handler error:', err);
+    console.error('Quiz handler error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
