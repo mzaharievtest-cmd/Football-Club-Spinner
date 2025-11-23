@@ -1,0 +1,3407 @@
+[
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Cologne",
+    "stadium": "RheinEnergieSTADION",
+    "founded": 1948,
+    "colors": [
+      "white",
+      "red"
+    ],
+    "nicknames": [
+      "Die Geißböcke"
+    ],
+    "rivals": [
+      "Borussia Mönchengladbach",
+      "Bayer Leverkusen",
+      "Fortuna Düsseldorf"
+    ],
+    "derbies": [
+      "Rhein Derby vs Gladbach and Leverkusen"
+    ],
+    "notable_managers": [
+      "Hennes Weisweiler",
+      "Christoph Daum"
+    ],
+    "legends": [
+      "Wolfgang Overath",
+      "Toni Polster",
+      "Lukas Podolski"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 3,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 4,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "high-energy",
+      "attacking with crosses"
+    ],
+    "fan_culture": [
+      "One of the most loyal and humorous fanbases in Germany.",
+      "The live goat mascot 'Hennes' is brought to home games."
+    ],
+    "iconic_seasons": [
+      "1963-64: first champions of the new Bundesliga.",
+      "Strong Bundesliga finishes in the 1970s and 1980s."
+    ],
+    "famous_wins": [
+      "Historic wins over European clubs in UEFA competitions.",
+      "Derby wins over Mönchengladbach and Leverkusen that mean a lot to fans."
+    ],
+    "heartbreaking_moments": [
+      "Multiple relegations despite huge support.",
+      "Missing out on more titles during strong eras."
+    ],
+    "trivia": [
+      "Köln were the first official Bundesliga champions in 1964.",
+      "The goat mascot is named after former coach Hennes Weisweiler."
+    ],
+    "club": "1. FC Köln",
+    "name": "1. FC Köln"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Leverkusen",
+    "stadium": "BayArena",
+    "founded": 1904,
+    "colors": [
+      "red",
+      "black"
+    ],
+    "nicknames": [
+      "Die Werkself"
+    ],
+    "rivals": [
+      "1. FC Köln",
+      "Borussia Mönchengladbach"
+    ],
+    "derbies": [
+      "Rhein Derby vs 1. FC Köln"
+    ],
+    "notable_managers": [
+      "Christoph Daum",
+      "Klaus Toppmöller",
+      "Xabi Alonso"
+    ],
+    "legends": [
+      "Ulf Kirsten",
+      "Michael Ballack",
+      "Bernd Schneider",
+      "Rüdiger Vollborn"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 1,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 1,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": true,
+      "europa_league_titles": 1
+    },
+    "style_of_play": [
+      "attacking",
+      "possession",
+      "fluid front line"
+    ],
+    "fan_culture": [
+      "Club originally founded by Bayer pharmaceutical workers.",
+      "Often labeled as a 'company club', but has a loyal core fanbase and ultras."
+    ],
+    "iconic_seasons": [
+      "2001-02 season, finishing runners-up in the league, cup and Champions League ('Neverkusen').",
+      "Later unbeaten league campaigns under Xabi Alonso."
+    ],
+    "famous_wins": [
+      "Champions League semi-final win over Manchester United in 2001-02.",
+      "Big Bundesliga wins over Bayern and Dortmund in title-chasing seasons."
+    ],
+    "heartbreaking_moments": [
+      "Losing three major titles in 2001-02, including the Champions League final vs Real Madrid.",
+      "Multiple seasons finishing second in the Bundesliga without securing the title."
+    ],
+    "trivia": [
+      "The nickname 'Neverkusen' comes from repeatedly finishing second in big competitions.",
+      "BayArena is considered one of the more modern, compact stadiums in Germany."
+    ],
+    "club": "Bayer Leverkusen",
+    "name": "Bayer Leverkusen"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Munich",
+    "stadium": "Allianz Arena",
+    "founded": 1900,
+    "colors": [
+      "red",
+      "white"
+    ],
+    "nicknames": [
+      "FCB",
+      "Die Bayern",
+      "The Bavarians",
+      "Recordmeister"
+    ],
+    "rivals": [
+      "Borussia Dortmund",
+      "RB Leipzig",
+      "TSV 1860 Munich"
+    ],
+    "derbies": [
+      "Munich Derby vs TSV 1860 Munich"
+    ],
+    "notable_managers": [
+      "Pep Guardiola",
+      "Jupp Heynckes",
+      "Ottmar Hitzfeld",
+      "Hansi Flick",
+      "Louis van Gaal"
+    ],
+    "legends": [
+      "Franz Beckenbauer",
+      "Gerd Müller",
+      "Sepp Maier",
+      "Lothar Matthäus",
+      "Oliver Kahn",
+      "Philipp Lahm",
+      "Bastian Schweinsteiger",
+      "Arjen Robben",
+      "Franck Ribéry"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 30,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 20,
+      "has_won_champions_league": true,
+      "champions_league_titles": 6,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "attacking",
+      "possession-based",
+      "high pressing"
+    ],
+    "fan_culture": [
+      "Huge nationwide fanbase with strong ultra culture in the Südkurve.",
+      "Home matches at Allianz Arena are almost always sold out."
+    ],
+    "iconic_seasons": [
+      "2012-13 treble: Bundesliga, DFB-Pokal and Champions League under Jupp Heynckes.",
+      "2019-20 treble with Hansi Flick and a dominant Champions League campaign."
+    ],
+    "famous_wins": [
+      "7–1 aggregate win over Barcelona in the 2012-13 Champions League semi-final.",
+      "8–2 win against Barcelona in the 2019-20 Champions League quarter-final."
+    ],
+    "heartbreaking_moments": [
+      "Losing the 1999 Champions League final to Manchester United after leading until stoppage time.",
+      "Losing the 2011-12 Champions League final on home soil at Allianz Arena to Chelsea on penalties."
+    ],
+    "trivia": [
+      "Allianz Arena can light up in different colors depending on who is playing.",
+      "Bayern are known as the 'Recordmeister' for holding the record of most German league titles."
+    ],
+    "club": "Bayern Munich",
+    "name": "Bayern Munich"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Dortmund",
+    "stadium": "Signal Iduna Park",
+    "founded": 1909,
+    "colors": [
+      "yellow",
+      "black"
+    ],
+    "nicknames": [
+      "BVB",
+      "Die Schwarzgelben"
+    ],
+    "rivals": [
+      "Schalke 04",
+      "Bayern Munich",
+      "Borussia Mönchengladbach"
+    ],
+    "derbies": [
+      "Revierderby vs Schalke 04"
+    ],
+    "notable_managers": [
+      "Jürgen Klopp",
+      "Ottmar Hitzfeld",
+      "Thomas Tuchel"
+    ],
+    "legends": [
+      "Michael Zorc",
+      "Andreas Möller",
+      "Matthias Sammer",
+      "Marco Reus",
+      "Robert Lewandowski",
+      "Roman Weidenfeller"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 5,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 5,
+      "has_won_champions_league": true,
+      "champions_league_titles": 1,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "high-intensity",
+      "pressing",
+      "fast transitions"
+    ],
+    "fan_culture": [
+      "Home to the famous 'Yellow Wall', the largest standing terrace in Europe.",
+      "Known for one of the loudest and most passionate fanbases in Germany."
+    ],
+    "iconic_seasons": [
+      "2010-11 and 2011-12 back-to-back Bundesliga titles under Jürgen Klopp.",
+      "1996-97 season, winning the Champions League against Juventus."
+    ],
+    "famous_wins": [
+      "4–1 win over Real Madrid in the 2012-13 Champions League semi-final first leg.",
+      "3–1 victory over Juventus in the 1997 Champions League final."
+    ],
+    "heartbreaking_moments": [
+      "Losing the 2012-13 Champions League final to Bayern Munich at Wembley.",
+      "Missing out on the 2022-23 Bundesliga title on the last day of the season."
+    ],
+    "trivia": [
+      "Signal Iduna Park regularly exceeds 80,000 in attendance.",
+      "BVB is short for 'Ballspielverein Borussia 09 e.V. Dortmund'."
+    ],
+    "club": "Borussia Dortmund",
+    "name": "Borussia Dortmund"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Mönchengladbach",
+    "stadium": "BORUSSIA-PARK",
+    "founded": 1900,
+    "colors": [
+      "white",
+      "black",
+      "green"
+    ],
+    "nicknames": [
+      "Die Fohlen",
+      "Gladbach"
+    ],
+    "rivals": [
+      "1. FC Köln",
+      "Bayer Leverkusen",
+      "Fortuna Düsseldorf"
+    ],
+    "derbies": [
+      "Rhein Derby vs 1. FC Köln"
+    ],
+    "notable_managers": [
+      "Hennes Weisweiler",
+      "Jupp Heynckes"
+    ],
+    "legends": [
+      "Günter Netzer",
+      "Jupp Heynckes",
+      "Lothar Matthäus",
+      "Berti Vogts"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 5,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 3,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": true,
+      "europa_league_titles": 2
+    },
+    "style_of_play": [
+      "technical",
+      "counter-attacking",
+      "youth-focused historically"
+    ],
+    "fan_culture": [
+      "Strong traditional fanbase with a lot of nostalgia for the 1970s golden era.",
+      "Home atmosphere at BORUSSIA-PARK is known for choreographies and chanting."
+    ],
+    "iconic_seasons": [
+      "1970s period with multiple Bundesliga titles and deep European runs.",
+      "Champions League group stage wins against modern European giants."
+    ],
+    "famous_wins": [
+      "Big European wins in the UEFA Cup (now Europa League).",
+      "Heavy home victories over Bayern Munich in different eras."
+    ],
+    "heartbreaking_moments": [
+      "Narrowly missing out on more European titles in the 1970s.",
+      "Relegation battles in certain periods after the golden era."
+    ],
+    "trivia": [
+      "The nickname 'Die Fohlen' ('The Foals') references the young, energetic team style of the 1970s.",
+      "They share the 'Borussia' name with Dortmund, both named after a local brewery / the Latin word for Prussia."
+    ],
+    "club": "Borussia Mönchengladbach",
+    "name": "Borussia Mönchengladbach"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Frankfurt am Main",
+    "stadium": "Deutsche Bank Park",
+    "founded": 1899,
+    "colors": [
+      "black",
+      "red",
+      "white"
+    ],
+    "nicknames": [
+      "Die Adler"
+    ],
+    "rivals": [
+      "Kickers Offenbach",
+      "Mainz 05"
+    ],
+    "derbies": [
+      "Hessen Derby vs Kickers Offenbach",
+      "Rhein-Main Derby vs Mainz 05"
+    ],
+    "notable_managers": [
+      "Adi Hütter",
+      "Niko Kovač",
+      "Oliver Glasner"
+    ],
+    "legends": [
+      "Jürgen Grabowski",
+      "Karl-Heinz Körbel",
+      "Jay-Jay Okocha",
+      "Alexander Meier"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 1,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 5,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": true,
+      "europa_league_titles": 2
+    },
+    "style_of_play": [
+      "intense",
+      "transitions",
+      "strong counter-attacks"
+    ],
+    "fan_culture": [
+      "Known for incredible away support across Europe.",
+      "Historic tifos and choreographies in European nights."
+    ],
+    "iconic_seasons": [
+      "1979-80: winning the UEFA Cup.",
+      "2017-18: winning the DFB-Pokal vs Bayern Munich.",
+      "2021-22: winning the Europa League."
+    ],
+    "famous_wins": [
+      "3–1 win vs Bayern in the 2018 DFB-Pokal final.",
+      "Europa League wins over Barcelona and West Ham in 2022."
+    ],
+    "heartbreaking_moments": [
+      "Losing the 1960 European Cup final 7–3 to Real Madrid, still remembered for attacking football.",
+      "Relegation battles in the 1990s and 2000s."
+    ],
+    "trivia": [
+      "The club's eagle symbol is one of the most iconic in German football.",
+      "Frankfurt's European nights are considered among the loudest in the competition."
+    ],
+    "club": "Eintracht Frankfurt",
+    "name": "Eintracht Frankfurt"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Augsburg",
+    "stadium": "WWK Arena",
+    "founded": 1907,
+    "colors": [
+      "red",
+      "green",
+      "white"
+    ],
+    "nicknames": [
+      "FCA"
+    ],
+    "rivals": [
+      "1860 Munich",
+      "Ingolstadt"
+    ],
+    "derbies": [
+      "Bavarian derbies vs regional clubs"
+    ],
+    "notable_managers": [
+      "Markus Weinzierl"
+    ],
+    "legends": [
+      "Paul Verhaegh",
+      "Halil Altıntop"
+    ],
+    "trophies": {
+      "has_won_league": false,
+      "league_titles_estimate": 0,
+      "has_won_domestic_cup": false,
+      "domestic_cup_titles_estimate": 0,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "compact",
+      "counter-attacking",
+      "hard-working"
+    ],
+    "fan_culture": [
+      "Known for fighting spirit and overachieving compared to expectations.",
+      "Strong regional support within Bavaria."
+    ],
+    "iconic_seasons": [
+      "2014-15: finishing fifth in the Bundesliga and qualifying for the Europa League.",
+      "Successful survival seasons where they punched above their weight."
+    ],
+    "famous_wins": [
+      "Shock wins against Bayern Munich and other top clubs.",
+      "UEFA Europa League performances vs larger European teams."
+    ],
+    "heartbreaking_moments": [
+      "Close relegation battles decided in the last matchdays.",
+      "Losing key players after strong seasons."
+    ],
+    "trivia": [
+      "Despite modest resources, Augsburg established themselves as a stable Bundesliga club.",
+      "WWK Arena is one of the smaller stadiums in the league by capacity."
+    ],
+    "club": "FC Augsburg",
+    "name": "FC Augsburg"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Hamburg",
+    "stadium": "Volksparkstadion",
+    "founded": 1887,
+    "colors": [
+      "blue",
+      "white",
+      "black"
+    ],
+    "nicknames": [
+      "HSV",
+      "Die Rothosen"
+    ],
+    "rivals": [
+      "Werder Bremen",
+      "St. Pauli"
+    ],
+    "derbies": [
+      "Nordderby vs Werder Bremen",
+      "Hamburg Derby vs St. Pauli"
+    ],
+    "notable_managers": [
+      "Ernst Happel"
+    ],
+    "legends": [
+      "Uwe Seeler",
+      "Felix Magath",
+      "Manfred Kaltz",
+      "Horst Hrubesch"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 6,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 3,
+      "has_won_champions_league": true,
+      "champions_league_titles": 1,
+      "has_won_europa_league": true,
+      "europa_league_titles": 1
+    },
+    "style_of_play": [
+      "historically attacking",
+      "strong aerial game in 1980s"
+    ],
+    "fan_culture": [
+      "Large and traditional fanbase with deep roots in German football.",
+      "Known for intense derbies, especially vs St. Pauli."
+    ],
+    "iconic_seasons": [
+      "Late 1970s and early 1980s: multiple league titles and European success.",
+      "1982-83: winning the European Cup (Champions League)."
+    ],
+    "famous_wins": [
+      "European Cup final win vs Juventus in 1983.",
+      "Big domestic wins during their golden era."
+    ],
+    "heartbreaking_moments": [
+      "Relegation in 2018, ending their status as the last ever-present Bundesliga club.",
+      "Play-off failures when trying to get promoted back to the top flight."
+    ],
+    "trivia": [
+      "HSV famously had a 'Bundesliga clock' in the stadium tracking their uninterrupted time in the league — until relegation.",
+      "Their blue, white, black colors are based on the clubs that merged to form HSV."
+    ],
+    "club": "Hamburger SV",
+    "name": "Hamburger SV"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Berlin",
+    "stadium": "Olympiastadion Berlin",
+    "founded": 1892,
+    "colors": [
+      "blue",
+      "white"
+    ],
+    "nicknames": [
+      "Die Alte Dame"
+    ],
+    "rivals": [
+      "Union Berlin"
+    ],
+    "derbies": [
+      "Berlin Derby vs Union Berlin"
+    ],
+    "notable_managers": [
+      "Pal Dardai",
+      "Jürgen Röber"
+    ],
+    "legends": [
+      "Michael Preetz",
+      "Arne Friedrich"
+    ],
+    "trophies": {
+      "has_won_league": false,
+      "league_titles_estimate": 0,
+      "has_won_domestic_cup": false,
+      "domestic_cup_titles_estimate": 0,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "varied",
+      "often pragmatic"
+    ],
+    "fan_culture": [
+      "Represents the capital city Berlin in German football.",
+      "Olympiastadion atmosphere peaks during big derbies and evening games."
+    ],
+    "iconic_seasons": [
+      "Late 1990s and early 2000s European qualification runs.",
+      "Seasons challenging near the top half of the table."
+    ],
+    "famous_wins": [
+      "Historic home wins in European competitions.",
+      "Derby victories against Union Berlin."
+    ],
+    "heartbreaking_moments": [
+      "Relegations despite big-city backing.",
+      "Missed chances to establish themselves as a stable European-level club."
+    ],
+    "trivia": [
+      "The club's nickname 'Die Alte Dame' means 'The Old Lady', similar to Juventus.",
+      "Olympiastadion also hosts the DFB-Pokal final every year."
+    ],
+    "club": "Hertha BSC",
+    "name": "Hertha BSC"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Mainz",
+    "stadium": "MEWA ARENA",
+    "founded": 1905,
+    "colors": [
+      "red",
+      "white"
+    ],
+    "nicknames": [
+      "Die Nullfünfer"
+    ],
+    "rivals": [
+      "Eintracht Frankfurt"
+    ],
+    "derbies": [
+      "Rhein-Main Derby vs Eintracht Frankfurt"
+    ],
+    "notable_managers": [
+      "Jürgen Klopp",
+      "Thomas Tuchel",
+      "Bo Svensson"
+    ],
+    "legends": [
+      "Mohamed Zidan",
+      "André Schürrle (as youngster)",
+      "Manuel Friedrich"
+    ],
+    "trophies": {
+      "has_won_league": false,
+      "league_titles_estimate": 0,
+      "has_won_domestic_cup": false,
+      "domestic_cup_titles_estimate": 0,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "pressing",
+      "intense running",
+      "compact"
+    ],
+    "fan_culture": [
+      "Mainz has one of the friendliest and most humorous fan cultures in Germany.",
+      "The club is proud of being the starting point for coaches like Klopp and Tuchel."
+    ],
+    "iconic_seasons": [
+      "First-ever promotion to the Bundesliga under Jürgen Klopp.",
+      "Europa League qualifications under Tuchel and later coaches."
+    ],
+    "famous_wins": [
+      "Important wins over big clubs like Bayern and Dortmund, often with pressing masterclasses.",
+      "Decisive matches to avoid relegation on final days."
+    ],
+    "heartbreaking_moments": [
+      "Missing out on promotion in dramatic fashion before finally going up.",
+      "Inconsistent spells leading to late-season pressure."
+    ],
+    "trivia": [
+      "Both Jürgen Klopp and Thomas Tuchel started their top-flight coaching careers at Mainz.",
+      "The '05' in the name refers to the founding year 1905."
+    ],
+    "club": "Mainz 05",
+    "name": "Mainz 05"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Leipzig",
+    "stadium": "Red Bull Arena",
+    "founded": 2009,
+    "colors": [
+      "white",
+      "red"
+    ],
+    "nicknames": [
+      "Die Roten Bullen"
+    ],
+    "rivals": [
+      "Bayern Munich",
+      "Borussia Dortmund"
+    ],
+    "derbies": [],
+    "notable_managers": [
+      "Ralph Hasenhüttl",
+      "Julian Nagelsmann",
+      "Marco Rose"
+    ],
+    "legends": [
+      "Timo Werner",
+      "Emil Forsberg",
+      "Yussuf Poulsen"
+    ],
+    "trophies": {
+      "has_won_league": false,
+      "league_titles_estimate": 0,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 2,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "intense pressing",
+      "vertical",
+      "direct"
+    ],
+    "fan_culture": [
+      "Backed by Red Bull, the club is controversial among traditional German fans.",
+      "Despite being young, the club established itself quickly in European competitions."
+    ],
+    "iconic_seasons": [
+      "2016-17: finishing second in their debut Bundesliga season.",
+      "2019-20: reaching the Champions League semi-final."
+    ],
+    "famous_wins": [
+      "3–0 away win over Tottenham Hotspur on aggregate in the 2019-20 Champions League round of 16.",
+      "Bundesliga wins over Bayern Munich that announced them as serious title challengers."
+    ],
+    "heartbreaking_moments": [
+      "Losing DFB-Pokal finals before finally winning the cup.",
+      "Falling short in the Bundesliga title races to Bayern."
+    ],
+    "trivia": [
+      "The club was effectively built on the license of a fifth-division side, SSV Markranstädt.",
+      "Their rapid rise from regional football to Champions League semi-finalists happened in about a decade."
+    ],
+    "club": "RB Leipzig",
+    "name": "RB Leipzig"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Freiburg im Breisgau",
+    "stadium": "Europa-Park Stadion",
+    "founded": 1904,
+    "colors": [
+      "red",
+      "black",
+      "white"
+    ],
+    "nicknames": [
+      "Breisgau-Brasilianer"
+    ],
+    "rivals": [
+      "VfB Stuttgart",
+      "Karlsruher SC"
+    ],
+    "derbies": [
+      "Local Baden derbies vs Stuttgart and Karlsruhe"
+    ],
+    "notable_managers": [
+      "Christian Streich"
+    ],
+    "legends": [
+      "Joachim Löw (as player)",
+      "Nils Petersen"
+    ],
+    "trophies": {
+      "has_won_league": false,
+      "league_titles_estimate": 0,
+      "has_won_domestic_cup": false,
+      "domestic_cup_titles_estimate": 0,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "organized",
+      "high work rate",
+      "clever pressing"
+    ],
+    "fan_culture": [
+      "Respected as a 'smart' club that overachieves with limited resources.",
+      "Strong community connection and support in a smaller market."
+    ],
+    "iconic_seasons": [
+      "Multiple top-half finishes and European qualifications under Christian Streich.",
+      "DFB-Pokal final appearance in the 2020s."
+    ],
+    "famous_wins": [
+      "Home wins vs bigger clubs like Bayern and Dortmund.",
+      "European victories that showcased their tactical discipline."
+    ],
+    "heartbreaking_moments": [
+      "Missing out on trophies in finals and deep cup runs.",
+      "Relegations followed by immediate promotion back up."
+    ],
+    "trivia": [
+      "Christian Streich is one of the longest-serving coaches in the Bundesliga.",
+      "The club is known for developing players that later move to bigger teams."
+    ],
+    "club": "SC Freiburg",
+    "name": "SC Freiburg"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Gelsenkirchen",
+    "stadium": "Veltins-Arena",
+    "founded": 1904,
+    "colors": [
+      "blue",
+      "white"
+    ],
+    "nicknames": [
+      "Die Königsblauen",
+      "S04"
+    ],
+    "rivals": [
+      "Borussia Dortmund",
+      "Bochum"
+    ],
+    "derbies": [
+      "Revierderby vs Borussia Dortmund"
+    ],
+    "notable_managers": [
+      "Huub Stevens",
+      "Ralf Rangnick"
+    ],
+    "legends": [
+      "Klaus Fischer",
+      "Olaf Thon",
+      "Manuel Neuer",
+      "Raúl (short spell but iconic)"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 7,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 5,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": true,
+      "europa_league_titles": 1
+    },
+    "style_of_play": [
+      "physical",
+      "high-effort",
+      "fan-driven energy"
+    ],
+    "fan_culture": [
+      "One of the most passionate local fanbases in Germany.",
+      "The Revierderby vs Dortmund is one of the fiercest derbies in Europe."
+    ],
+    "iconic_seasons": [
+      "2000-01: almost winning the Bundesliga, losing the title in the last seconds to Bayern.",
+      "Champions League semi-final run in 2010-11."
+    ],
+    "famous_wins": [
+      "4–4 comeback vs Dortmund in 2017 after being 4–0 down.",
+      "Victories in European competitions against strong opposition."
+    ],
+    "heartbreaking_moments": [
+      "The 'Meister der Herzen' season (2000-01) where they lost the title in stoppage time.",
+      "Recent relegation from the Bundesliga after financial and sporting collapse."
+    ],
+    "trivia": [
+      "The club is named after the Schalke district in Gelsenkirchen.",
+      "Veltins-Arena has a retractable pitch and roof and is used for major events beyond football."
+    ],
+    "club": "Schalke 04",
+    "name": "Schalke 04"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Sinsheim (village of Hoffenheim)",
+    "stadium": "PreZero Arena",
+    "founded": 1899,
+    "colors": [
+      "blue",
+      "white"
+    ],
+    "nicknames": [
+      "Die Kraichgauer"
+    ],
+    "rivals": [
+      "Regional clubs like Freiburg and Stuttgart"
+    ],
+    "derbies": [],
+    "notable_managers": [
+      "Ralf Rangnick",
+      "Markus Gisdol",
+      "Julian Nagelsmann"
+    ],
+    "legends": [
+      "Sejad Salihović",
+      "Kevin Volland",
+      "Andrej Kramarić"
+    ],
+    "trophies": {
+      "has_won_league": false,
+      "league_titles_estimate": 0,
+      "has_won_domestic_cup": false,
+      "domestic_cup_titles_estimate": 0,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "attacking",
+      "experimental tactics",
+      "pressing"
+    ],
+    "fan_culture": [
+      "Frequently criticized as a 'plastic club' due to billionaire backing.",
+      "Still built a loyal local support in the region."
+    ],
+    "iconic_seasons": [
+      "2008-09: surprise autumn champions in their first Bundesliga season.",
+      "2017-18: qualifying directly for the Champions League under Nagelsmann."
+    ],
+    "famous_wins": [
+      "High-scoring wins vs established Bundesliga clubs.",
+      "Champions League group stage performances vs top European teams."
+    ],
+    "heartbreaking_moments": [
+      "Missing out on trophies despite strong squads.",
+      "Struggling to gain wider acceptance among traditional fans."
+    ],
+    "trivia": [
+      "The club rose from lower leagues to the Bundesliga in an extremely short time.",
+      "Julian Nagelsmann became one of the youngest head coaches in Bundesliga history at Hoffenheim."
+    ],
+    "club": "TSG Hoffenheim",
+    "name": "TSG Hoffenheim"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Berlin",
+    "stadium": "Stadion An der Alten Försterei",
+    "founded": 1966,
+    "colors": [
+      "red",
+      "white"
+    ],
+    "nicknames": [
+      "Die Eisernen"
+    ],
+    "rivals": [
+      "Hertha BSC"
+    ],
+    "derbies": [
+      "Berlin Derby vs Hertha BSC"
+    ],
+    "notable_managers": [
+      "Urs Fischer"
+    ],
+    "legends": [
+      "Torsten Mattuschka"
+    ],
+    "trophies": {
+      "has_won_league": false,
+      "league_titles_estimate": 0,
+      "has_won_domestic_cup": false,
+      "domestic_cup_titles_estimate": 0,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "defensive solidity",
+      "set pieces",
+      "counter-attacks"
+    ],
+    "fan_culture": [
+      "One of the most unique and passionate fan cultures in Germany.",
+      "Fans helped rebuild and renovate the stadium themselves."
+    ],
+    "iconic_seasons": [
+      "First promotion to the Bundesliga in club history.",
+      "Qualifying for European competitions and even the Champions League spots."
+    ],
+    "famous_wins": [
+      "Derby wins vs Hertha BSC that shocked the traditional order in Berlin.",
+      "Home victories over European contenders in the Bundesliga."
+    ],
+    "heartbreaking_moments": [
+      "Long years in lower leagues before promotion.",
+      "Close calls in relegation and promotion play-offs."
+    ],
+    "trivia": [
+      "Union fans once donated blood to help finance the club ('Bluten für Union').",
+      "The stadium is known for its forest setting and standing terraces."
+    ],
+    "club": "Union Berlin",
+    "name": "Union Berlin"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Stuttgart",
+    "stadium": "MHPArena",
+    "founded": 1893,
+    "colors": [
+      "white",
+      "red"
+    ],
+    "nicknames": [
+      "Die Schwaben"
+    ],
+    "rivals": [
+      "Karlsruher SC",
+      "SC Freiburg"
+    ],
+    "derbies": [
+      "Swabian derbies vs Freiburg and other regional clubs"
+    ],
+    "notable_managers": [
+      "Felix Magath",
+      "Armin Veh"
+    ],
+    "legends": [
+      "Jürgen Klinsmann",
+      "Guido Buchwald",
+      "Fredi Bobic",
+      "Mario Gómez"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 5,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 3,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "attacking",
+      "youth-orientated in many eras"
+    ],
+    "fan_culture": [
+      "Strong regional identity in Baden-Württemberg.",
+      "Known for producing and developing talented young players."
+    ],
+    "iconic_seasons": [
+      "2006-07: winning the Bundesliga under Armin Veh.",
+      "Early 1990s title wins in unified Bundesliga."
+    ],
+    "famous_wins": [
+      "Title-clinching wins in 2007 against direct rivals.",
+      "European nights in the Champions League and UEFA Cup."
+    ],
+    "heartbreaking_moments": [
+      "Relegations from the Bundesliga despite a big fanbase.",
+      "Narrow survival battles on the last matchday in multiple seasons."
+    ],
+    "trivia": [
+      "The club name includes the year of foundation: 1893.",
+      "Stuttgart have one of the largest stadiums in Germany when fully expanded."
+    ],
+    "club": "VfB Stuttgart",
+    "name": "VfB Stuttgart"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Wolfsburg",
+    "stadium": "Volkswagen Arena",
+    "founded": 1945,
+    "colors": [
+      "green",
+      "white"
+    ],
+    "nicknames": [
+      "Die Wölfe"
+    ],
+    "rivals": [
+      "Hannover 96",
+      "Braunschweig"
+    ],
+    "derbies": [
+      "Lower Saxony derbies vs Hannover 96 and Eintracht Braunschweig"
+    ],
+    "notable_managers": [
+      "Felix Magath",
+      "Dieter Hecking"
+    ],
+    "legends": [
+      "Edin Džeko",
+      "Grafite",
+      "Kevin De Bruyne",
+      "Diego Benaglio"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 1,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 1,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "counter-attacking",
+      "strong wide play"
+    ],
+    "fan_culture": [
+      "Club backed by Volkswagen with a relatively small but loyal fanbase.",
+      "Home to both successful men's and women's teams; the women's side is a European powerhouse."
+    ],
+    "iconic_seasons": [
+      "2008-09: winning their first ever Bundesliga title with Džeko and Grafite.",
+      "2014-15: finishing second and winning the DFB-Pokal."
+    ],
+    "famous_wins": [
+      "5–1 win over Bayern Munich in 2009 with a Grafite backheel goal.",
+      "3–2 Champions League win over Manchester United in the group stage."
+    ],
+    "heartbreaking_moments": [
+      "Struggling in relegation battles after title-winning highs.",
+      "Failing to build long-term consistency after strong seasons."
+    ],
+    "trivia": [
+      "Volkswagen Arena is located right next to the VW factory.",
+      "The club's wolf mascot fits both the city name and the nickname 'Die Wölfe'."
+    ],
+    "club": "VfL Wolfsburg",
+    "name": "VfL Wolfsburg"
+  },
+  {
+    "league_code": "BUN",
+    "country": "Germany",
+    "city": "Bremen",
+    "stadium": "Wohninvest Weserstadion",
+    "founded": 1899,
+    "colors": [
+      "green",
+      "white"
+    ],
+    "nicknames": [
+      "Die Werderaner"
+    ],
+    "rivals": [
+      "Hamburger SV",
+      "Hannover 96"
+    ],
+    "derbies": [
+      "Nordderby vs Hamburger SV"
+    ],
+    "notable_managers": [
+      "Otto Rehhagel",
+      "Thomas Schaaf"
+    ],
+    "legends": [
+      "Rudi Völler",
+      "Aílton",
+      "Claudio Pizarro",
+      "Marco Bode"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 4,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 6,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "attacking",
+      "creative midfield",
+      "wing play"
+    ],
+    "fan_culture": [
+      "Known for a very loyal and family-friendly fanbase.",
+      "Home stadium sits directly along the Weser river."
+    ],
+    "iconic_seasons": [
+      "2003-04: winning the Bundesliga and DFB-Pokal double.",
+      "Multiple Champions League appearances in the 2000s."
+    ],
+    "famous_wins": [
+      "Historic wins over Bayern Munich during title races.",
+      "UEFA Cup games with high scorelines and dramatic comebacks."
+    ],
+    "heartbreaking_moments": [
+      "Relegation from the Bundesliga after decades in the top flight.",
+      "Narrowly missing out on titles during strong eras."
+    ],
+    "trivia": [
+      "Claudio Pizarro became a cult hero and club legend over multiple spells.",
+      "The Nordderby vs Hamburg is one of Germany's classic rivalries."
+    ],
+    "club": "Werder Bremen",
+    "name": "Werder Bremen"
+  },
+  {
+    "club": "AFC Bournemouth",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Bournemouth",
+    "stadium": "Vitality Stadium",
+    "founded": 1899,
+    "colors": [
+      "red",
+      "black"
+    ],
+    "nicknames": [
+      "The Cherries"
+    ],
+    "rivals": [
+      "Southampton",
+      "Portsmouth",
+      "Brighton & Hove Albion"
+    ],
+    "derbies": [
+      "South coast rivalries vs Southampton, Portsmouth and Brighton"
+    ],
+    "notable_managers": [
+      "Eddie Howe"
+    ],
+    "legends": [
+      "Steve Fletcher",
+      "Eddie Howe (as player and manager)"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": false,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Under Eddie Howe, known for brave, attacking football even against bigger clubs.",
+    "identity_keywords": [
+      "small ground",
+      "south coast",
+      "attacking underdog"
+    ],
+    "fun_facts": [
+      "Bournemouth reached the Premier League for the first time in their history in 2015.",
+      "Vitality Stadium is one of the most compact stadiums to host Premier League football."
+    ],
+    "name": "AFC Bournemouth"
+  },
+  {
+    "club": "Arsenal",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "London",
+    "stadium": "Emirates Stadium",
+    "founded": 1886,
+    "colors": [
+      "red",
+      "white"
+    ],
+    "nicknames": [
+      "The Gunners"
+    ],
+    "rivals": [
+      "Tottenham Hotspur",
+      "Chelsea",
+      "Manchester United"
+    ],
+    "derbies": [
+      "North London Derby vs Tottenham Hotspur",
+      "London derbies vs Chelsea and West Ham"
+    ],
+    "notable_managers": [
+      "Arsène Wenger",
+      "Herbert Chapman"
+    ],
+    "legends": [
+      "Thierry Henry",
+      "Dennis Bergkamp",
+      "Patrick Vieira",
+      "Tony Adams"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": true,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Known for technical, passing football, particularly during the Wenger era.",
+    "identity_keywords": [
+      "The Invincibles",
+      "North London",
+      "passing football"
+    ],
+    "fun_facts": [
+      "Arsenal went unbeaten in the league in the 2003–04 season, earning the nickname 'The Invincibles'.",
+      "Before moving to the Emirates, Arsenal played at the iconic Highbury stadium."
+    ],
+    "name": "Arsenal"
+  },
+  {
+    "club": "Aston Villa",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Birmingham",
+    "stadium": "Villa Park",
+    "founded": 1874,
+    "colors": [
+      "claret",
+      "blue"
+    ],
+    "nicknames": [
+      "Villa",
+      "The Villans"
+    ],
+    "rivals": [
+      "Birmingham City",
+      "West Bromwich Albion",
+      "Wolverhampton Wanderers"
+    ],
+    "derbies": [
+      "Second City Derby vs Birmingham City",
+      "West Midlands derbies"
+    ],
+    "notable_managers": [
+      "Ron Saunders",
+      "Brian Little",
+      "Martin O’Neill"
+    ],
+    "legends": [
+      "Paul McGrath",
+      "Gareth Barry",
+      "Peter Withe"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": true,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Historically a traditional English club with strong home support and a mix of physical and technical play.",
+    "identity_keywords": [
+      "European champions",
+      "Villa Park",
+      "West Midlands"
+    ],
+    "fun_facts": [
+      "Aston Villa won the European Cup in 1982.",
+      "Villa Park is one of the most famous traditional football grounds in England."
+    ],
+    "name": "Aston Villa"
+  },
+  {
+    "club": "Brentford",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "London",
+    "stadium": "Gtech Community Stadium",
+    "founded": 1889,
+    "colors": [
+      "red",
+      "white"
+    ],
+    "nicknames": [
+      "The Bees"
+    ],
+    "rivals": [
+      "Fulham",
+      "Queens Park Rangers"
+    ],
+    "derbies": [
+      "West London derbies vs Fulham and QPR"
+    ],
+    "notable_managers": [
+      "Thomas Frank"
+    ],
+    "legends": [
+      "Jim Towers",
+      "Ken Coote",
+      "Ivan Toney (modern era)"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": false,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Modern, analytics-heavy club with a mix of direct play, pressing and clever set-pieces.",
+    "identity_keywords": [
+      "West London",
+      "data-driven",
+      "set-piece specialists"
+    ],
+    "fun_facts": [
+      "Brentford are widely cited as one of the most data-driven clubs in European football.",
+      "The club moved from the historic Griffin Park to their new Gtech Community Stadium in 2020."
+    ],
+    "name": "Brentford"
+  },
+  {
+    "club": "Brighton & Hove Albion",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Brighton & Hove",
+    "stadium": "Amex Stadium",
+    "founded": 1901,
+    "colors": [
+      "blue",
+      "white"
+    ],
+    "nicknames": [
+      "The Seagulls"
+    ],
+    "rivals": [
+      "Crystal Palace"
+    ],
+    "derbies": [
+      "M23 Derby vs Crystal Palace"
+    ],
+    "notable_managers": [
+      "Chris Hughton",
+      "Graham Potter",
+      "Roberto De Zerbi"
+    ],
+    "legends": [
+      "Bobby Zamora",
+      "Glenn Murray",
+      "Lewis Dunk"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": false,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Modern, brave build-up football from the back with heavy use of structured possession.",
+    "identity_keywords": [
+      "south coast",
+      "positional play",
+      "data-driven club"
+    ],
+    "fun_facts": [
+      "Brighton moved from the old Withdean Stadium to the purpose-built Amex Stadium in 2011.",
+      "In recent years Brighton became a model club for smart scouting and data-driven recruitment."
+    ],
+    "name": "Brighton & Hove Albion"
+  },
+  {
+    "club": "Burnley",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Burnley",
+    "stadium": "Turf Moor",
+    "founded": 1882,
+    "colors": [
+      "claret",
+      "blue"
+    ],
+    "nicknames": [
+      "The Clarets"
+    ],
+    "rivals": [
+      "Blackburn Rovers"
+    ],
+    "derbies": [
+      "East Lancashire Derby vs Blackburn Rovers"
+    ],
+    "notable_managers": [
+      "Sean Dyche"
+    ],
+    "legends": [
+      "Jimmy McIlroy"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Previously associated with organised, direct football and strong defensive structure.",
+    "identity_keywords": [
+      "Lancashire club",
+      "Turf Moor",
+      "underdog mentality"
+    ],
+    "fun_facts": [
+      "Burnley have been English champions in the pre-Premier League era.",
+      "Turf Moor is one of the oldest football grounds still in regular use."
+    ],
+    "name": "Burnley"
+  },
+  {
+    "club": "Chelsea",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "London",
+    "stadium": "Stamford Bridge",
+    "founded": 1905,
+    "colors": [
+      "blue",
+      "white"
+    ],
+    "nicknames": [
+      "The Blues"
+    ],
+    "rivals": [
+      "Arsenal",
+      "Tottenham Hotspur",
+      "Fulham",
+      "West Ham United"
+    ],
+    "derbies": [
+      "London derbies vs Arsenal and Tottenham",
+      "West London derbies vs Fulham and Brentford"
+    ],
+    "notable_managers": [
+      "José Mourinho",
+      "Carlo Ancelotti",
+      "Thomas Tuchel"
+    ],
+    "legends": [
+      "Frank Lampard",
+      "Didier Drogba",
+      "John Terry",
+      "Petr Čech"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": true,
+      "has_won_champions_league_or_european_cup": true,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Modern, flexible team often built around strong defence, transitions and big-game performances.",
+    "identity_keywords": [
+      "Stamford Bridge",
+      "London giants",
+      "Champions League winners"
+    ],
+    "fun_facts": [
+      "Chelsea have won the Champions League multiple times in the 21st century.",
+      "Didier Drogba scored in several major finals for Chelsea, becoming a true club icon."
+    ],
+    "name": "Chelsea"
+  },
+  {
+    "club": "Crystal Palace",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "London (Croydon)",
+    "stadium": "Selhurst Park",
+    "founded": 1905,
+    "colors": [
+      "red",
+      "blue"
+    ],
+    "nicknames": [
+      "The Eagles"
+    ],
+    "rivals": [
+      "Brighton & Hove Albion",
+      "Millwall",
+      "Charlton Athletic"
+    ],
+    "derbies": [
+      "M23 Derby vs Brighton & Hove Albion",
+      "South London derbies"
+    ],
+    "notable_managers": [
+      "Steve Coppell",
+      "Roy Hodgson",
+      "Patrick Vieira"
+    ],
+    "legends": [
+      "Ian Wright",
+      "Wilfried Zaha",
+      "Mark Bright"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": false,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Energetic, often built around quick wingers and strong home atmosphere.",
+    "identity_keywords": [
+      "South London",
+      "Selhurst Park",
+      "M23 Derby"
+    ],
+    "fun_facts": [
+      "Crystal Palace’s rivalry with Brighton is unusually intense given the distance between the clubs.",
+      "Selhurst Park is known for its loud and colourful fan section, especially the Holmesdale stand."
+    ],
+    "name": "Crystal Palace"
+  },
+  {
+    "club": "Everton",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Liverpool",
+    "stadium": "Goodison Park",
+    "founded": 1878,
+    "colors": [
+      "blue",
+      "white"
+    ],
+    "nicknames": [
+      "The Toffees"
+    ],
+    "rivals": [
+      "Liverpool"
+    ],
+    "derbies": [
+      "Merseyside Derby vs Liverpool"
+    ],
+    "notable_managers": [
+      "Howard Kendall",
+      "David Moyes"
+    ],
+    "legends": [
+      "Dixie Dean",
+      "Neville Southall",
+      "Tim Cahill"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Traditionally associated with hard work, strong defence and passionate support.",
+    "identity_keywords": [
+      "Merseyside",
+      "Goodison Park",
+      "blue half of Liverpool"
+    ],
+    "fun_facts": [
+      "Everton were founding members of the Football League in 1888.",
+      "Dixie Dean once scored 60 league goals in a single season."
+    ],
+    "name": "Everton"
+  },
+  {
+    "club": "Fulham",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "London",
+    "stadium": "Craven Cottage",
+    "founded": 1879,
+    "colors": [
+      "white",
+      "black"
+    ],
+    "nicknames": [
+      "The Cottagers"
+    ],
+    "rivals": [
+      "Chelsea",
+      "Queens Park Rangers",
+      "Brentford"
+    ],
+    "derbies": [
+      "West London derbies vs Chelsea, QPR and Brentford"
+    ],
+    "notable_managers": [
+      "Roy Hodgson",
+      "Jean Tigana"
+    ],
+    "legends": [
+      "Johnny Haynes",
+      "Clint Dempsey",
+      "Aleksandar Mitrović"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": false,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Typically a technical, possession-based side, especially at home at Craven Cottage.",
+    "identity_keywords": [
+      "riverside ground",
+      "West London",
+      "yo-yo club",
+      "possession football"
+    ],
+    "fun_facts": [
+      "Craven Cottage is a historic riverside stadium right next to the River Thames.",
+      "Fulham reached the Europa League final in 2010 after a remarkable knockout run."
+    ],
+    "name": "Fulham"
+  },
+  {
+    "club": "Leeds United",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Leeds",
+    "stadium": "Elland Road",
+    "founded": 1919,
+    "colors": [
+      "white",
+      "blue",
+      "yellow"
+    ],
+    "nicknames": [
+      "Leeds",
+      "Whites",
+      "The Peacocks"
+    ],
+    "rivals": [
+      "Manchester United",
+      "Chelsea",
+      "Sheffield Wednesday"
+    ],
+    "derbies": [
+      "Rivalry vs Manchester United",
+      "Yorkshire derbies"
+    ],
+    "notable_managers": [
+      "Don Revie",
+      "Howard Wilkinson",
+      "Marcelo Bielsa"
+    ],
+    "legends": [
+      "Billy Bremner",
+      "Jack Charlton",
+      "Lucas Radebe"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Historically tough, physical side; in the Bielsa era known for extreme high pressing and attacking football.",
+    "identity_keywords": [
+      "Yorkshire",
+      "Elland Road atmosphere",
+      "high pressing"
+    ],
+    "fun_facts": [
+      "Leeds were a dominant English side in the late 1960s and early 1970s under Don Revie.",
+      "Marcelo Bielsa became a cult hero for the club’s return to the Premier League with a unique playing style."
+    ],
+    "name": "Leeds United"
+  },
+  {
+    "club": "Leicester City",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Leicester",
+    "stadium": "King Power Stadium",
+    "founded": 1884,
+    "colors": [
+      "blue",
+      "white"
+    ],
+    "nicknames": [
+      "The Foxes"
+    ],
+    "rivals": [
+      "Nottingham Forest",
+      "Derby County"
+    ],
+    "derbies": [
+      "East Midlands derbies vs Nottingham Forest and Derby County"
+    ],
+    "notable_managers": [
+      "Claudio Ranieri",
+      "Martin O’Neill"
+    ],
+    "legends": [
+      "Jamie Vardy",
+      "Gary Lineker",
+      "Kasper Schmeichel"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": true,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Counter-attacking, high-intensity football, especially during their title-winning season.",
+    "identity_keywords": [
+      "fairytale champions",
+      "counter-attacking",
+      "East Midlands"
+    ],
+    "fun_facts": [
+      "Leicester City shocked the football world by winning the Premier League in 2015–16.",
+      "Jamie Vardy’s rise from non-league football to Premier League champion is one of the game’s best stories."
+    ],
+    "name": "Leicester City"
+  },
+  {
+    "club": "Liverpool",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Liverpool",
+    "stadium": "Anfield",
+    "founded": 1892,
+    "colors": [
+      "red",
+      "white"
+    ],
+    "nicknames": [
+      "The Reds"
+    ],
+    "rivals": [
+      "Manchester United",
+      "Everton",
+      "Manchester City"
+    ],
+    "derbies": [
+      "Merseyside Derby vs Everton",
+      "North-West rivalry vs Manchester United"
+    ],
+    "notable_managers": [
+      "Bill Shankly",
+      "Bob Paisley",
+      "Kenny Dalglish",
+      "Jürgen Klopp"
+    ],
+    "legends": [
+      "Steven Gerrard",
+      "Kenny Dalglish",
+      "Ian Rush",
+      "Robbie Fowler"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": true,
+      "has_won_champions_league_or_european_cup": true,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "High-intensity, pressing football with quick transitions and passionate home support.",
+    "identity_keywords": [
+      "Anfield",
+      "You’ll Never Walk Alone",
+      "European nights",
+      "pressing football"
+    ],
+    "fun_facts": [
+      "The anthem 'You’ll Never Walk Alone' is sung before every home match at Anfield.",
+      "Liverpool are one of Europe’s most successful clubs, with multiple European Cups/Champions League titles."
+    ],
+    "name": "Liverpool"
+  },
+  {
+    "club": "Manchester City",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Manchester",
+    "stadium": "Etihad Stadium",
+    "founded": 1880,
+    "colors": [
+      "sky blue",
+      "white"
+    ],
+    "nicknames": [
+      "City",
+      "The Citizens"
+    ],
+    "rivals": [
+      "Manchester United",
+      "Liverpool"
+    ],
+    "derbies": [
+      "Manchester Derby vs Manchester United"
+    ],
+    "notable_managers": [
+      "Joe Mercer",
+      "Roberto Mancini",
+      "Pep Guardiola"
+    ],
+    "legends": [
+      "Sergio Agüero",
+      "David Silva",
+      "Yaya Touré",
+      "Vincent Kompany"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": true,
+      "has_won_champions_league_or_european_cup": true,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Possession-dominant, positional football with intricate passing and high pressing.",
+    "identity_keywords": [
+      "possession football",
+      "dominant era",
+      "Manchester Derby",
+      "modern superclub"
+    ],
+    "fun_facts": [
+      "Manchester City won a historic treble including their first Champions League title in the early 2020s.",
+      "The club was originally founded as St. Mark’s (West Gorton) before becoming Manchester City."
+    ],
+    "name": "Manchester City"
+  },
+  {
+    "club": "Manchester United",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Manchester",
+    "stadium": "Old Trafford",
+    "founded": 1878,
+    "colors": [
+      "red",
+      "white",
+      "black"
+    ],
+    "nicknames": [
+      "Man United",
+      "Red Devils"
+    ],
+    "rivals": [
+      "Liverpool",
+      "Manchester City",
+      "Leeds United",
+      "Arsenal"
+    ],
+    "derbies": [
+      "Manchester Derby vs Manchester City",
+      "historic rivalry vs Liverpool"
+    ],
+    "notable_managers": [
+      "Sir Matt Busby",
+      "Sir Alex Ferguson"
+    ],
+    "legends": [
+      "George Best",
+      "Bobby Charlton",
+      "Eric Cantona",
+      "Ryan Giggs",
+      "Cristiano Ronaldo"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": true,
+      "has_won_champions_league_or_european_cup": true,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Traditionally attacking, wing-focused football with late comebacks and strong home form.",
+    "identity_keywords": [
+      "Old Trafford",
+      "Busby Babes",
+      "Class of 92",
+      "Fergie time"
+    ],
+    "fun_facts": [
+      "The 'Class of 92' produced several club legends including Giggs, Scholes, Beckham and the Neville brothers.",
+      "Manchester United completed a famous treble in 1999, winning the league, FA Cup and Champions League."
+    ],
+    "name": "Manchester United"
+  },
+  {
+    "club": "Newcastle United",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Newcastle upon Tyne",
+    "stadium": "St James' Park",
+    "founded": 1892,
+    "colors": [
+      "black",
+      "white"
+    ],
+    "nicknames": [
+      "The Magpies",
+      "Toon"
+    ],
+    "rivals": [
+      "Sunderland",
+      "Middlesbrough"
+    ],
+    "derbies": [
+      "Tyne–Wear Derby vs Sunderland"
+    ],
+    "notable_managers": [
+      "Kevin Keegan",
+      "Sir Bobby Robson"
+    ],
+    "legends": [
+      "Alan Shearer",
+      "Kevin Keegan",
+      "Peter Beardsley"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Massive home support, often associated with attacking football and high-energy games.",
+    "identity_keywords": [
+      "Geordies",
+      "Tyne–Wear Derby",
+      "St James' Park atmosphere"
+    ],
+    "fun_facts": [
+      "Alan Shearer, the Premier League’s all-time top scorer, is a Newcastle legend.",
+      "St James’ Park dominates the skyline of Newcastle and is located close to the city centre."
+    ],
+    "name": "Newcastle United"
+  },
+  {
+    "club": "Nottingham Forest",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Nottingham",
+    "stadium": "City Ground",
+    "founded": 1865,
+    "colors": [
+      "red",
+      "white"
+    ],
+    "nicknames": [
+      "Forest",
+      "The Reds"
+    ],
+    "rivals": [
+      "Derby County",
+      "Leicester City"
+    ],
+    "derbies": [
+      "East Midlands Derby vs Derby County",
+      "regional rivalry vs Leicester City"
+    ],
+    "notable_managers": [
+      "Brian Clough"
+    ],
+    "legends": [
+      "John Robertson",
+      "Stuart Pearce",
+      "Trevor Francis"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": true,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Historically famous for disciplined, clever football under Brian Clough.",
+    "identity_keywords": [
+      "European champions",
+      "Brian Clough",
+      "Trent-side ground"
+    ],
+    "fun_facts": [
+      "Nottingham Forest famously won the European Cup twice under Brian Clough.",
+      "The City Ground is located right by the River Trent."
+    ],
+    "name": "Nottingham Forest"
+  },
+  {
+    "club": "Sheffield United",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Sheffield",
+    "stadium": "Bramall Lane",
+    "founded": 1889,
+    "colors": [
+      "red",
+      "white",
+      "black"
+    ],
+    "nicknames": [
+      "The Blades"
+    ],
+    "rivals": [
+      "Sheffield Wednesday",
+      "Leeds United"
+    ],
+    "derbies": [
+      "Steel City Derby vs Sheffield Wednesday",
+      "Yorkshire rivalries"
+    ],
+    "notable_managers": [
+      "Chris Wilder"
+    ],
+    "legends": [
+      "Billy Sharp",
+      "Tony Currie"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Physical, direct and intense, with notable overlapping centre-backs under Chris Wilder.",
+    "identity_keywords": [
+      "Yorkshire club",
+      "Steel City Derby",
+      "overlapping centre-backs"
+    ],
+    "fun_facts": [
+      "Bramall Lane has been used for both football and cricket historically.",
+      "Sheffield United were one of the early powers of English football in the late 19th and early 20th century."
+    ],
+    "name": "Sheffield United"
+  },
+  {
+    "club": "Southampton",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Southampton",
+    "stadium": "St Mary's Stadium",
+    "founded": 1885,
+    "colors": [
+      "red",
+      "white"
+    ],
+    "nicknames": [
+      "The Saints"
+    ],
+    "rivals": [
+      "Portsmouth",
+      "Bournemouth",
+      "Brighton & Hove Albion"
+    ],
+    "derbies": [
+      "South Coast Derby vs Portsmouth"
+    ],
+    "notable_managers": [
+      "Lawrie McMenemy",
+      "Mauricio Pochettino",
+      "Ronald Koeman"
+    ],
+    "legends": [
+      "Matt Le Tissier",
+      "Alan Shearer (early career)",
+      "Rickie Lambert"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": false,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "Historically known for strong youth development and energetic, pressing football.",
+    "identity_keywords": [
+      "South Coast",
+      "youth academy",
+      "technical midfielders"
+    ],
+    "fun_facts": [
+      "Southampton’s academy produced players like Alan Shearer, Gareth Bale and Theo Walcott.",
+      "The club’s nickname 'The Saints' comes from its origins as a church football team."
+    ],
+    "name": "Southampton"
+  },
+  {
+    "club": "Tottenham Hotspur",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "London",
+    "stadium": "Tottenham Hotspur Stadium",
+    "founded": 1882,
+    "colors": [
+      "white",
+      "navy blue"
+    ],
+    "nicknames": [
+      "Spurs",
+      "Lilywhites"
+    ],
+    "rivals": [
+      "Arsenal",
+      "Chelsea",
+      "West Ham United"
+    ],
+    "derbies": [
+      "North London Derby vs Arsenal",
+      "London derbies vs Chelsea and West Ham United"
+    ],
+    "notable_managers": [
+      "Bill Nicholson",
+      "Mauricio Pochettino",
+      "Antonio Conte"
+    ],
+    "legends": [
+      "Harry Kane",
+      "Glenn Hoddle",
+      "Jimmy Greaves",
+      "Gary Lineker"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Historically strong attacking sides, with a focus on technical wingers and creative forwards.",
+    "identity_keywords": [
+      "North London",
+      "attacking football",
+      "European nights",
+      "cup specialists"
+    ],
+    "fun_facts": [
+      "Tottenham were the first British club to win a major European trophy, lifting the European Cup Winners’ Cup in 1963.",
+      "The modern Tottenham Hotspur Stadium is designed to also host NFL games and has one of the steepest stands in the Premier League."
+    ],
+    "name": "Tottenham Hotspur"
+  },
+  {
+    "club": "West Ham United",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "London",
+    "stadium": "London Stadium",
+    "founded": 1895,
+    "colors": [
+      "claret",
+      "blue"
+    ],
+    "nicknames": [
+      "The Hammers",
+      "The Irons"
+    ],
+    "rivals": [
+      "Millwall",
+      "Tottenham Hotspur",
+      "Chelsea"
+    ],
+    "derbies": [
+      "East London rivalry vs Millwall",
+      "London derbies vs Tottenham and Chelsea"
+    ],
+    "notable_managers": [
+      "Ron Greenwood",
+      "John Lyall",
+      "David Moyes"
+    ],
+    "legends": [
+      "Bobby Moore",
+      "Geoff Hurst",
+      "Paolo Di Canio",
+      "Mark Noble"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": false,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": true
+    },
+    "playing_style": "Traditionally a working-class, gritty team with strong home support and famous academy products.",
+    "identity_keywords": [
+      "East London",
+      "Academy of Football",
+      "claret and blue"
+    ],
+    "fun_facts": [
+      "West Ham’s academy produced key members of England’s 1966 World Cup winning side.",
+      "The club won a major European trophy again in the 2020s, boosting its continental pedigree."
+    ],
+    "name": "West Ham United"
+  },
+  {
+    "club": "Wolverhampton Wanderers",
+    "league_code": "EPL",
+    "country": "England",
+    "city": "Wolverhampton",
+    "stadium": "Molineux Stadium",
+    "founded": 1877,
+    "colors": [
+      "gold",
+      "black"
+    ],
+    "nicknames": [
+      "Wolves"
+    ],
+    "rivals": [
+      "West Bromwich Albion",
+      "Aston Villa",
+      "Birmingham City"
+    ],
+    "derbies": [
+      "Black Country Derby vs West Bromwich Albion",
+      "West Midlands derbies"
+    ],
+    "notable_managers": [
+      "Stan Cullis",
+      "Nuno Espírito Santo"
+    ],
+    "legends": [
+      "Billy Wright",
+      "Steve Bull",
+      "Raúl Jiménez (modern era)"
+    ],
+    "trophies": {
+      "has_won_english_top_flight": true,
+      "has_won_premier_league": false,
+      "has_won_champions_league_or_european_cup": false,
+      "has_won_major_european_trophy": false
+    },
+    "playing_style": "In modern times, known for compact defending and quick breaks through wide players.",
+    "identity_keywords": [
+      "Molineux",
+      "Black Country Derby",
+      "gold shirts"
+    ],
+    "fun_facts": [
+      "Wolves were one of the dominant English teams in the 1950s.",
+      "They were involved in high-profile floodlit friendlies that helped inspire European competitions."
+    ],
+    "name": "Wolverhampton Wanderers"
+  },
+  {
+    "league_code": "LLA",
+    "country": "Spain",
+    "city": "Madrid",
+    "stadium": "Santiago Bernabéu",
+    "founded": 1902,
+    "colors": [
+      "white"
+    ],
+    "nicknames": [
+      "Los Blancos",
+      "Los Merengues"
+    ],
+    "rivals": [
+      "Barcelona",
+      "Atlético Madrid",
+      "Sevilla",
+      "Valencia"
+    ],
+    "derbies": [
+      "El Clásico vs Barcelona",
+      "Madrid Derby vs Atlético Madrid"
+    ],
+    "notable_managers": [
+      "Miguel Muñoz",
+      "Vicente del Bosque",
+      "Carlo Ancelotti",
+      "Zinedine Zidane"
+    ],
+    "legends": [
+      "Alfredo Di Stéfano",
+      "Ferenc Puskás",
+      "Raúl",
+      "Iker Casillas",
+      "Cristiano Ronaldo",
+      "Sergio Ramos",
+      "Roberto Carlos",
+      "Zinedine Zidane",
+      "Luka Modrić",
+      "Karim Benzema"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 35,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 20,
+      "has_won_champions_league": true,
+      "champions_league_titles": 14,
+      "has_won_europa_league": true,
+      "europa_league_titles": 2
+    },
+    "style_of_play": [
+      "Strong emphasis on individual quality",
+      "Fast transitions and counter-attacks",
+      "Winning mentality and late comebacks in big games"
+    ],
+    "club": "Real Madrid",
+    "name": "Real Madrid"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Milan",
+    "stadium": "San Siro",
+    "founded": 1899,
+    "colors": [
+      "red",
+      "black"
+    ],
+    "nicknames": [
+      "Rossoneri",
+      "Il Diavolo"
+    ],
+    "rivals": [
+      "Inter Milan",
+      "Juventus",
+      "Napoli",
+      "Roma"
+    ],
+    "derbies": [
+      "Derby della Madonnina vs Inter Milan"
+    ],
+    "notable_managers": [
+      "Arrigo Sacchi",
+      "Fabio Capello",
+      "Carlo Ancelotti"
+    ],
+    "legends": [
+      "Paolo Maldini",
+      "Franco Baresi",
+      "Marco van Basten",
+      "Ruud Gullit",
+      "Andriy Shevchenko",
+      "Kaká",
+      "Andrea Pirlo",
+      "Clarence Seedorf"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 19,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 5,
+      "has_won_champions_league": true,
+      "champions_league_titles": 7,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "High tactical intelligence",
+      "Famous for elegant yet effective football",
+      "Historic use of pressing and zonal marking under Arrigo Sacchi"
+    ],
+    "fan_culture": [
+      "Curva Sud is known for its passionate choreographies at San Siro.",
+      "AC Milan has a massive international fanbase, particularly in Asia."
+    ],
+    "iconic_seasons": [
+      "Late 1980s and early 1990s dominance in Italy and Europe under Sacchi and Capello.",
+      "2002-03 and 2006-07 Champions League winning campaigns.",
+      "2021-22: Scudetto win after an 11-year drought."
+    ],
+    "famous_wins": [
+      "4–0 win vs Barcelona in the 1994 Champions League final.",
+      "Champions League final win vs Juventus in 2003.",
+      "Title-deciding derby victories vs Inter."
+    ],
+    "heartbreaking_moments": [
+      "2005 Champions League final collapse vs Liverpool in Istanbul.",
+      "Near misses in Serie A during periods of transition.",
+      "Decline after 2010 leading to fewer European appearances."
+    ],
+    "trivia": [
+      "Despite being an Italian club, AC Milan uses the English spelling 'Milan'.",
+      "Milan and Inter share the same stadium, San Siro (Stadio Giuseppe Meazza)."
+    ],
+    "club": "AC Milan",
+    "name": "AC Milan"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Rome",
+    "stadium": "Stadio Olimpico",
+    "founded": 1927,
+    "colors": [
+      "deep red",
+      "yellow"
+    ],
+    "nicknames": [
+      "Giallorossi",
+      "La Lupa"
+    ],
+    "rivals": [
+      "Lazio",
+      "Juventus",
+      "Napoli",
+      "Inter",
+      "Milan"
+    ],
+    "derbies": [
+      "Derby della Capitale vs Lazio"
+    ],
+    "notable_managers": [
+      "Fabio Capello",
+      "Luciano Spalletti",
+      "José Mourinho",
+      "Rudi Garcia"
+    ],
+    "legends": [
+      "Francesco Totti",
+      "Daniele De Rossi",
+      "Gabriel Batistuta",
+      "Aldair",
+      "Bruno Conti"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 3,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 9,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": true,
+      "europa_league_titles": 1
+    },
+    "style_of_play": [
+      "Technical attacking football",
+      "Strong wing play",
+      "Tactical flexibility"
+    ],
+    "fan_culture": [
+      "Roma fans are known for their incredible choreography and emotional support.",
+      "The Derby della Capitale vs Lazio is one of the most intense derbies in the world."
+    ],
+    "iconic_seasons": [
+      "2000-01: winning the Scudetto with Totti, Batistuta and De Rossi.",
+      "Deep Champions League runs, including a semi-final in 2017-18.",
+      "2021-22: winning the inaugural UEFA Europa Conference League under Mourinho."
+    ],
+    "famous_wins": [
+      "3–0 comeback vs Barcelona in the 2017-18 Champions League quarter-final.",
+      "Title-clinching win vs Parma in 2001.",
+      "Derby wins vs Lazio that defined entire seasons."
+    ],
+    "heartbreaking_moments": [
+      "Narrowly missing out on Serie A titles in mid-2000s vs Inter.",
+      "Losing key players in their prime due to financial constraints.",
+      "Champions League heartbreaks despite heroic comebacks."
+    ],
+    "trivia": [
+      "Francesco Totti spent his entire career at Roma and is considered 'Il Capitano'.",
+      "The club crest features a she-wolf referencing the legend of Romulus and Remus."
+    ],
+    "club": "AS Roma",
+    "name": "AS Roma"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Bergamo",
+    "stadium": "Gewiss Stadium",
+    "founded": 1907,
+    "colors": [
+      "blue",
+      "black"
+    ],
+    "nicknames": [
+      "La Dea",
+      "Nerazzurri"
+    ],
+    "rivals": [
+      "Brescia",
+      "Inter (regional tension)",
+      "Milan (regional)"
+    ],
+    "derbies": [
+      "Lombardy derbies vs Brescia, Inter, Milan and others"
+    ],
+    "notable_managers": [
+      "Gian Piero Gasperini"
+    ],
+    "legends": [
+      "Germán Denis",
+      "Papu Gómez",
+      "Josip Iličić",
+      "Alejandro 'Papu' Gómez"
+    ],
+    "trophies": {
+      "has_won_league": false,
+      "league_titles_estimate": 0,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 1,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": true,
+      "europa_league_titles": 1
+    },
+    "style_of_play": [
+      "Extremely attacking",
+      "High pressing and man-oriented marking",
+      "Overlapping center-backs and fluid shapes under Gasperini"
+    ],
+    "fan_culture": [
+      "Bergamo is a smaller city but with very passionate fans.",
+      "Atalanta's recent rise made them a neutral fan favourite in Europe."
+    ],
+    "iconic_seasons": [
+      "2019-20: reaching the Champions League quarter-finals in their debut campaign.",
+      "Multiple top-four Serie A finishes under Gasperini.",
+      "Winning European silverware in the 2020s."
+    ],
+    "famous_wins": [
+      "Champions League wins over Valencia and other big clubs.",
+      "High-scoring wins vs top Serie A sides like Milan and Napoli.",
+      "Europa League knockout victories."
+    ],
+    "heartbreaking_moments": [
+      "Late Champions League elimination vs PSG in 2020.",
+      "Losing Coppa Italia finals.",
+      "Near misses in the Scudetto and top-three races."
+    ],
+    "trivia": [
+      "Atalanta are often called 'the best-run club in Italy' for their scouting and player development.",
+      "They frequently outscore almost every other team in Serie A."
+    ],
+    "club": "Atalanta",
+    "name": "Atalanta"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Bologna",
+    "stadium": "Stadio Renato Dall'Ara",
+    "founded": 1909,
+    "colors": [
+      "red",
+      "blue"
+    ],
+    "nicknames": [
+      "Rossoblù"
+    ],
+    "rivals": [
+      "Fiorentina",
+      "Parma"
+    ],
+    "derbies": [
+      "Regional derbies in Emilia-Romagna"
+    ],
+    "notable_managers": [
+      "Sinisa Mihajlović",
+      "Thiago Motta"
+    ],
+    "legends": [
+      "Angelo Schiavio",
+      "Giuseppe Signori",
+      "Roberto Baggio (short spell)",
+      "Marco Di Vaio"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 7,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 2,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "Historically technical",
+      "Recently more modern pressing and build-up under Thiago Motta"
+    ],
+    "fan_culture": [
+      "Bologna has a proud football tradition despite fewer recent trophies.",
+      "Supporters are very attached to the club’s history."
+    ],
+    "iconic_seasons": [
+      "Pre-World War II Scudetti.",
+      "Modern-era pushes for European qualification.",
+      "Uplifting period under Mihajlović despite his illness."
+    ],
+    "famous_wins": [
+      "Historic domestic wins when they were champions of Italy.",
+      "Important home wins vs bigger sides in modern Serie A."
+    ],
+    "heartbreaking_moments": [
+      "Relegations from Serie A.",
+      "Falling short in races for European spots.",
+      "Emotional period surrounding Mihajlović's health battles."
+    ],
+    "trivia": [
+      "Bologna have more Serie A titles than many people realize (seven).",
+      "The stadium Dall'Ara is one of the classic Italian football grounds."
+    ],
+    "club": "Bologna",
+    "name": "Bologna"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Florence",
+    "stadium": "Stadio Artemio Franchi",
+    "founded": 1926,
+    "colors": [
+      "purple",
+      "white"
+    ],
+    "nicknames": [
+      "Viola"
+    ],
+    "rivals": [
+      "Juventus",
+      "Empoli"
+    ],
+    "derbies": [
+      "Tuscan derbies vs Empoli and other regional clubs"
+    ],
+    "notable_managers": [
+      "Cesare Prandelli",
+      "Claudio Ranieri",
+      "Vincenzo Italiano"
+    ],
+    "legends": [
+      "Gabriel Batistuta",
+      "Giancarlo Antognoni",
+      "Roberto Baggio",
+      "Manuel Rui Costa",
+      "Stevan Jovetić"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 2,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 6,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "Technical attacking football",
+      "Strong emphasis on creative forwards",
+      "Possession-based phases"
+    ],
+    "fan_culture": [
+      "Florence is a proud and emotional football city.",
+      "Fiorentina fans have a special rivalry and tension with Juventus."
+    ],
+    "iconic_seasons": [
+      "Late 1990s with Batistuta and Rui Costa starring.",
+      "Serie A and European campaigns where they challenged the top clubs.",
+      "Recent deep runs in European competitions and domestic cups."
+    ],
+    "famous_wins": [
+      "Big wins over Juventus, especially at home.",
+      "European nights vs top clubs.",
+      "Cup semi-final and final victories."
+    ],
+    "heartbreaking_moments": [
+      "Relegation and bankruptcy issues in early 2000s.",
+      "Losing key stars due to financial issues.",
+      "Heartbreaking cup and European final defeats."
+    ],
+    "trivia": [
+      "Batistuta is one of the most iconic one-club legends in Fiorentina history.",
+      "The purple kit is one of the most unique in European football."
+    ],
+    "club": "Fiorentina",
+    "name": "Fiorentina"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Genoa",
+    "stadium": "Stadio Luigi Ferraris",
+    "founded": 1893,
+    "colors": [
+      "red",
+      "blue"
+    ],
+    "nicknames": [
+      "Grifone",
+      "Rossoblù"
+    ],
+    "rivals": [
+      "Sampdoria"
+    ],
+    "derbies": [
+      "Derby della Lanterna vs Sampdoria"
+    ],
+    "notable_managers": [],
+    "legends": [
+      "Gianluca Signorini",
+      "Diego Milito (important spell)",
+      "Domenico Criscito"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 9,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 1,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "Historically varied",
+      "Often pragmatic in modern Serie A"
+    ],
+    "fan_culture": [
+      "Genoa is one of Italy’s oldest clubs with very traditional support.",
+      "Derby della Lanterna vs Sampdoria is extremely passionate and colourful."
+    ],
+    "iconic_seasons": [
+      "Early 1900s dominance in Italian football.",
+      "Europa League qualifications in modern times.",
+      "Promotion seasons back to Serie A."
+    ],
+    "famous_wins": [
+      "Derby wins over Sampdoria.",
+      "Upset wins vs bigger Italian clubs."
+    ],
+    "heartbreaking_moments": [
+      "Relegations and yo-yo years between Serie A and B.",
+      "Missing out on European football due to licensing issues in some seasons."
+    ],
+    "trivia": [
+      "Genoa is technically the oldest football club in Italy, founded in 1893.",
+      "They share the Luigi Ferraris stadium with Sampdoria."
+    ],
+    "club": "Genoa",
+    "name": "Genoa"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Verona",
+    "stadium": "Stadio Marc'Antonio Bentegodi",
+    "founded": 1903,
+    "colors": [
+      "yellow",
+      "blue"
+    ],
+    "nicknames": [
+      "Gialloblù"
+    ],
+    "rivals": [
+      "Chievo Verona",
+      "Vicenza"
+    ],
+    "derbies": [
+      "Derby della Scala vs Chievo Verona"
+    ],
+    "notable_managers": [],
+    "legends": [
+      "Preben Elkjær",
+      "Hans-Peter Briegel"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 1,
+      "has_won_domestic_cup": false,
+      "domestic_cup_titles_estimate": 0,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "Historically physical and direct",
+      "Modern tactical flexibility"
+    ],
+    "fan_culture": [
+      "Passionate local fanbase with strong regional identity.",
+      "Derbies vs Chievo carried a lot of meaning when both were in Serie A."
+    ],
+    "iconic_seasons": [
+      "1984-85: winning their only Serie A title against all odds."
+    ],
+    "famous_wins": [
+      "Victories over big clubs during their title-winning season.",
+      "Home upsets vs top Serie A teams."
+    ],
+    "heartbreaking_moments": [
+      "Relegations and financial issues.",
+      "Battles to stay in Serie A decided on final matchdays."
+    ],
+    "trivia": [
+      "Their 1984-85 Scudetto is considered one of the biggest surprises in Serie A history.",
+      "Verona is famous worldwide due to Shakespeare’s 'Romeo and Juliet'."
+    ],
+    "club": "Hellas Verona",
+    "name": "Hellas Verona"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Milan",
+    "stadium": "San Siro",
+    "founded": 1908,
+    "colors": [
+      "blue",
+      "black"
+    ],
+    "nicknames": [
+      "Inter",
+      "Nerazzurri",
+      "Il Biscione"
+    ],
+    "rivals": [
+      "AC Milan",
+      "Juventus",
+      "Roma",
+      "Napoli"
+    ],
+    "derbies": [
+      "Derby della Madonnina vs AC Milan",
+      "Derby d'Italia vs Juventus"
+    ],
+    "notable_managers": [
+      "Helenio Herrera",
+      "Roberto Mancini",
+      "José Mourinho",
+      "Simone Inzaghi"
+    ],
+    "legends": [
+      "Javier Zanetti",
+      "Giuseppe Meazza",
+      "Ronaldo Nazário",
+      "Giuseppe Bergomi",
+      "Diego Milito",
+      "Lothar Matthäus",
+      "Esteban Cambiasso"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 20,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 9,
+      "has_won_champions_league": true,
+      "champions_league_titles": 3,
+      "has_won_europa_league": true,
+      "europa_league_titles": 3
+    },
+    "style_of_play": [
+      "historically defensive with catenaccio",
+      "modern high-intensity pressing",
+      "strong wing-back play"
+    ],
+    "fan_culture": [
+      "Curva Nord provides intense support and choreography at San Siro.",
+      "Inter has a global fanbase and a strong presence in Asia and South America."
+    ],
+    "iconic_seasons": [
+      "1960s 'Grande Inter' era under Helenio Herrera, winning multiple European Cups.",
+      "2009-10: winning the historic treble (Serie A, Coppa Italia, Champions League) under José Mourinho.",
+      "Recent title-winning seasons breaking Juventus' domination."
+    ],
+    "famous_wins": [
+      "Champions League semi-final wins over Barcelona in 2010.",
+      "Champions League final win vs Bayern Munich in 2010.",
+      "Derby wins vs AC Milan in Scudetto-deciding races."
+    ],
+    "heartbreaking_moments": [
+      "Losing decisive title races on the final day of the season.",
+      "Ups and downs after the treble with periods of chaos and transition.",
+      "Champions League final losses in more recent years."
+    ],
+    "trivia": [
+      "Inter is the only Italian club never to have been relegated from Serie A.",
+      "The snake 'Biscione' is a historic symbol of both Inter and the city of Milan."
+    ],
+    "club": "Inter Milan",
+    "name": "Inter Milan"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Turin",
+    "stadium": "Allianz Stadium",
+    "founded": 1897,
+    "colors": [
+      "black",
+      "white"
+    ],
+    "nicknames": [
+      "Juve",
+      "La Vecchia Signora",
+      "The Old Lady"
+    ],
+    "rivals": [
+      "Torino",
+      "Inter Milan",
+      "AC Milan",
+      "Napoli",
+      "Roma",
+      "Fiorentina"
+    ],
+    "derbies": [
+      "Derby della Mole vs Torino",
+      "Derby d'Italia vs Inter Milan"
+    ],
+    "notable_managers": [
+      "Giovanni Trapattoni",
+      "Marcello Lippi",
+      "Antonio Conte",
+      "Massimiliano Allegri"
+    ],
+    "legends": [
+      "Alessandro Del Piero",
+      "Gianluigi Buffon",
+      "Michel Platini",
+      "Roberto Baggio",
+      "Pavel Nedvěd",
+      "Zinedine Zidane",
+      "Andrea Pirlo",
+      "Gaetano Scirea"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 36,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 14,
+      "has_won_champions_league": true,
+      "champions_league_titles": 2,
+      "has_won_europa_league": true,
+      "europa_league_titles": 3
+    },
+    "style_of_play": [
+      "defensive solidity",
+      "tactical discipline",
+      "clinical finishing"
+    ],
+    "fan_culture": [
+      "Juventus has one of the largest fanbases in Italy and worldwide.",
+      "Traditionally associated with winning mentality and 'result first' football."
+    ],
+    "iconic_seasons": [
+      "1984-85: winning the European Cup (Champions League) for the first time.",
+      "1995-96: winning the Champions League again vs Ajax.",
+      "2011-12 to 2019-20: era of domestic dominance with nine straight Serie A titles."
+    ],
+    "famous_wins": [
+      "Champions League final win vs Liverpool in 1985.",
+      "Champions League final win vs Ajax on penalties in 1996.",
+      "Multiple title-deciding wins against Inter and Milan."
+    ],
+    "heartbreaking_moments": [
+      "Heysel disaster (1985) overshadowing the European Cup win.",
+      "Losing several Champions League finals, including vs Barcelona and Real Madrid.",
+      "Calciopoli scandal and relegation to Serie B in 2006."
+    ],
+    "trivia": [
+      "Juventus is owned by the Agnelli family, who also control Fiat.",
+      "The club switched from pink shirts to black and white stripes in the early 1900s."
+    ],
+    "club": "Juventus",
+    "name": "Juventus"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Rome",
+    "stadium": "Stadio Olimpico",
+    "founded": 1900,
+    "colors": [
+      "sky blue",
+      "white"
+    ],
+    "nicknames": [
+      "Biancocelesti",
+      "Le Aquile"
+    ],
+    "rivals": [
+      "AS Roma",
+      "Napoli",
+      "Juventus"
+    ],
+    "derbies": [
+      "Derby della Capitale vs AS Roma"
+    ],
+    "notable_managers": [
+      "Sven-Göran Eriksson",
+      "Simone Inzaghi"
+    ],
+    "legends": [
+      "Silvio Piola",
+      "Giuseppe Signori",
+      "Alessandro Nesta",
+      "Pavel Nedvěd",
+      "Miroslav Klose",
+      "Ciro Immobile"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 2,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 7,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "Counter-attacking",
+      "Strong use of forwards and wing-backs",
+      "Often built around prolific strikers"
+    ],
+    "fan_culture": [
+      "Very passionate and vocal ultras in the Curva Nord.",
+      "The Derby della Capitale is central to the club’s identity."
+    ],
+    "iconic_seasons": [
+      "1999-2000: winning the Scudetto and Coppa Italia double.",
+      "Late 1990s: big investments and star players leading to multiple trophies.",
+      "Seasons where Immobile won the Capocannoniere (top scorer) title."
+    ],
+    "famous_wins": [
+      "Title-deciding matches in 1999-2000.",
+      "Supercoppa Italiana victories against Juventus.",
+      "Derby wins vs Roma celebrated like trophies."
+    ],
+    "heartbreaking_moments": [
+      "Missing out on titles despite big spending in late 1990s.",
+      "Financial issues and squad break-up after the success era.",
+      "Losing crucial derbies and European matches."
+    ],
+    "trivia": [
+      "Lazio is older than Roma and originally a multi-sports club.",
+      "The eagle mascot 'Olimpia' is sometimes flown inside the stadium before matches."
+    ],
+    "club": "Lazio",
+    "name": "Lazio"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Naples",
+    "stadium": "Stadio Diego Armando Maradona",
+    "founded": 1926,
+    "colors": [
+      "sky blue",
+      "white"
+    ],
+    "nicknames": [
+      "Partenopei",
+      "Gli Azzurri"
+    ],
+    "rivals": [
+      "Juventus",
+      "Roma",
+      "Inter",
+      "AC Milan"
+    ],
+    "derbies": [],
+    "notable_managers": [
+      "Diego Maradona (as leader on pitch, not manager)",
+      "Maurizio Sarri",
+      "Luciano Spalletti"
+    ],
+    "legends": [
+      "Diego Maradona",
+      "Dries Mertens",
+      "Marek Hamšík",
+      "Ciro Ferrara",
+      "Careca",
+      "Lorenzo Insigne"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 3,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 6,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": true,
+      "europa_league_titles": 1
+    },
+    "style_of_play": [
+      "Technical and attacking football",
+      "Quick passing triangles",
+      "High-intensity pressing under Sarri and Spalletti"
+    ],
+    "fan_culture": [
+      "One of the most passionate and emotional fanbases in Europe.",
+      "The city of Naples lives and breathes football, especially during title races."
+    ],
+    "iconic_seasons": [
+      "1986-87 and 1989-90: Maradona-era Scudetti.",
+      "2017-18: 91-point season under Sarri, narrowly missing the title.",
+      "2022-23: First Scudetto in over 30 years, with Osimhen and Kvaratskhelia starring."
+    ],
+    "famous_wins": [
+      "Scudetto-clinching wins during the Maradona years.",
+      "Champions League wins vs Liverpool and other top sides.",
+      "Key victories against Juventus in title races."
+    ],
+    "heartbreaking_moments": [
+      "Post-Maradona decline and financial collapse.",
+      "Near misses in Scudetto races vs Juventus.",
+      "European exits despite strong performances."
+    ],
+    "trivia": [
+      "The stadium was renamed Stadio Diego Armando Maradona in honour of their greatest legend.",
+      "Napoli is the main club of southern Italy with huge regional significance."
+    ],
+    "club": "Napoli",
+    "name": "Napoli"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Genoa",
+    "stadium": "Stadio Luigi Ferraris",
+    "founded": 1946,
+    "colors": [
+      "blue",
+      "white",
+      "red",
+      "black"
+    ],
+    "nicknames": [
+      "Blucerchiati"
+    ],
+    "rivals": [
+      "Genoa"
+    ],
+    "derbies": [
+      "Derby della Lanterna vs Genoa"
+    ],
+    "notable_managers": [
+      "Vujadin Boškov"
+    ],
+    "legends": [
+      "Roberto Mancini",
+      "Gianluca Vialli",
+      "Attilio Lombardo",
+      "Pietro Vierchowod"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 1,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 4,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "Historically attacking and technical",
+      "Strong strike partnerships"
+    ],
+    "fan_culture": [
+      "Ultra groups create spectacular displays in the stands.",
+      "Derby vs Genoa is central to their identity."
+    ],
+    "iconic_seasons": [
+      "1990-91: winning their only Serie A title.",
+      "1991-92: reaching the European Cup (Champions League) final vs Barcelona."
+    ],
+    "famous_wins": [
+      "Title-deciding wins in 1990-91.",
+      "European Cup semi-final wins.",
+      "Derby della Lanterna victories."
+    ],
+    "heartbreaking_moments": [
+      "Losing the 1992 European Cup final in extra time vs Barcelona.",
+      "Relegations and financial struggles in later decades."
+    ],
+    "trivia": [
+      "Sampdoria was formed by a merger of two older clubs, Sampierdarenese and Andrea Doria.",
+      "Their kit design is one of the most distinctive in football."
+    ],
+    "club": "Sampdoria",
+    "name": "Sampdoria"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Turin",
+    "stadium": "Stadio Olimpico Grande Torino",
+    "founded": 1906,
+    "colors": [
+      "maroon",
+      "white"
+    ],
+    "nicknames": [
+      "Granata",
+      "Il Toro"
+    ],
+    "rivals": [
+      "Juventus"
+    ],
+    "derbies": [
+      "Derby della Mole vs Juventus"
+    ],
+    "notable_managers": [
+      "Ernest Erbstein (as part of Grande Torino era)"
+    ],
+    "legends": [
+      "Valentino Mazzola",
+      "Paolo Pulici",
+      "Francesco Graziani",
+      "Giorgio Ferrini"
+    ],
+    "trophies": {
+      "has_won_league": true,
+      "league_titles_estimate": 7,
+      "has_won_domestic_cup": true,
+      "domestic_cup_titles_estimate": 5,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "Historically aggressive and physical",
+      "Strong team unity",
+      "Modern era often built on defensive solidity"
+    ],
+    "fan_culture": [
+      "Torino fans are deeply attached to the memory of the 'Grande Torino' team.",
+      "The club has a strong identity despite living in Juventus' shadow."
+    ],
+    "iconic_seasons": [
+      "1940s 'Grande Torino' era dominating Italian football.",
+      "Early 1970s Scudetto and strong league finishes.",
+      "Europa League qualification campaigns."
+    ],
+    "famous_wins": [
+      "Title-winning matches in the 1940s and 1970s.",
+      "Derby wins vs Juventus that are still celebrated decades later."
+    ],
+    "heartbreaking_moments": [
+      "Superga air disaster in 1949 that killed nearly the entire Grande Torino team.",
+      "Relegations and financial problems in later decades."
+    ],
+    "trivia": [
+      "The Superga tragedy is commemorated every year by fans and the club.",
+      "The maroon ('granata') shirt is one of the most traditional in Italy."
+    ],
+    "club": "Torino",
+    "name": "Torino"
+  },
+  {
+    "league_code": "SA",
+    "country": "Italy",
+    "city": "Udine",
+    "stadium": "Dacia Arena",
+    "founded": 1896,
+    "colors": [
+      "black",
+      "white"
+    ],
+    "nicknames": [
+      "Bianconeri",
+      "Zebrette"
+    ],
+    "rivals": [
+      "Regional rivalries with other northern clubs"
+    ],
+    "derbies": [],
+    "notable_managers": [
+      "Francesco Guidolin"
+    ],
+    "legends": [
+      "Antonio Di Natale",
+      "Zico",
+      "Oliver Bierhoff"
+    ],
+    "trophies": {
+      "has_won_league": false,
+      "league_titles_estimate": 0,
+      "has_won_domestic_cup": false,
+      "domestic_cup_titles_estimate": 0,
+      "has_won_champions_league": false,
+      "champions_league_titles": 0,
+      "has_won_europa_league": false,
+      "europa_league_titles": 0
+    },
+    "style_of_play": [
+      "Counter-attacking",
+      "Scouting-based model with frequent player trading"
+    ],
+    "fan_culture": [
+      "Smaller but loyal fanbase in the Friuli region.",
+      "Club is respected as a smart scouting team."
+    ],
+    "iconic_seasons": [
+      "Champions League qualification in mid-2000s.",
+      "Top-four finishes under Guidolin with Di Natale scoring heavily."
+    ],
+    "famous_wins": [
+      "High-scoring games vs big clubs.",
+      "European qualification deciders."
+    ],
+    "heartbreaking_moments": [
+      "Missing out on Champions League group stages in qualifiers.",
+      "Falling from top-four level back to mid-table."
+    ],
+    "trivia": [
+      "Antonio Di Natale is one of Serie A’s all-time top scorers.",
+      "Udinese is part of a multi-club ownership model including clubs like Watford in England (in some eras)."
+    ],
+    "club": "Udinese",
+    "name": "Udinese"
+  }
+]
