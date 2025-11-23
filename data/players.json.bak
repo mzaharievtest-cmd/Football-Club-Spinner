@@ -1,0 +1,1178 @@
+[
+  {
+    "name": "A. Onana",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/526.png"
+  },
+  {
+    "name": "M. de Ligt",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/532.png"
+  },
+  {
+    "name": "N. Mazraoui",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/545.png"
+  },
+  {
+    "name": "Casemiro",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/747.png"
+  },
+  {
+    "name": "L. Shaw",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/891.png"
+  },
+  {
+    "name": "Bruno Fernandes",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1485.png"
+  },
+  {
+    "name": "Lisandro Martínez",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2467.png"
+  },
+  {
+    "name": "H. Maguire",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2935.png"
+  },
+  {
+    "name": "Antony",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/9971.png"
+  },
+  {
+    "name": "M. Mount",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19220.png"
+  },
+  {
+    "name": "A. Bayındır",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/50132.png"
+  },
+  {
+    "name": "M. Ugarte",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/51494.png"
+  },
+  {
+    "name": "J. Zirkzee",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/70100.png"
+  },
+  {
+    "name": "K. Mainoo",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/284322.png"
+  },
+  {
+    "name": "A. Garnacho",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/284324.png"
+  },
+  {
+    "name": "T. Fredricson",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/328101.png"
+  },
+  {
+    "name": "L. Yoro",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/342970.png"
+  },
+  {
+    "name": "P. Dorgu",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/382452.png"
+  },
+  {
+    "name": "A. Heaven",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/402329.png"
+  },
+  {
+    "name": "H. Amass",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/403064.png"
+  },
+  {
+    "name": "Diogo Dalot",
+    "club": "Manchester United",
+    "number": "2",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/886.png"
+  },
+  {
+    "name": "M. Rashford",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/909.png"
+  },
+  {
+    "name": "Matheus Cunha",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1165.png"
+  },
+  {
+    "name": "T. Heaton",
+    "club": "Manchester United",
+    "number": "22",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2931.png"
+  },
+  {
+    "name": "B. Mbeumo",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/20589.png"
+  },
+  {
+    "name": "B. Šeško",
+    "club": "Manchester United",
+    "number": "30",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/115589.png"
+  },
+  {
+    "name": "A. Diallo",
+    "club": "Manchester United",
+    "number": "16",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/157997.png"
+  },
+  {
+    "name": "S. Lammens",
+    "club": "Manchester United",
+    "number": "31",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/162511.png"
+  },
+  {
+    "name": "Tobias Christopher Collyer",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/284400.png"
+  },
+  {
+    "name": "R. Højlund",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/288006.png"
+  },
+  {
+    "name": "E. Wheatley",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/362270.png"
+  },
+  {
+    "name": "Ethan Williams",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/365664.png"
+  },
+  {
+    "name": "J. Fletcher",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/383770.png"
+  },
+  {
+    "name": "O. Martin",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/389309.png"
+  },
+  {
+    "name": "R. Munro",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/402331.png"
+  },
+  {
+    "name": "Bendito Mantato",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/404769.png"
+  },
+  {
+    "name": "S. Koné",
+    "club": "Manchester United",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/418210.png"
+  },
+  {
+    "name": "D. León",
+    "club": "Manchester United",
+    "number": "35",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/475598.png"
+  },
+  {
+    "name": "K. Trippier",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/169.png"
+  },
+  {
+    "name": "Joelinton",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/723.png"
+  },
+  {
+    "name": "F. Schär",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2806.png"
+  },
+  {
+    "name": "E. Krafth",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2855.png"
+  },
+  {
+    "name": "Bruno Guimarães",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/10135.png"
+  },
+  {
+    "name": "J. Ruddy",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18737.png"
+  },
+  {
+    "name": "H. Barnes",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18778.png"
+  },
+  {
+    "name": "N. Pope",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18911.png"
+  },
+  {
+    "name": "M. Targett",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18941.png"
+  },
+  {
+    "name": "D. Burn",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18961.png"
+  },
+  {
+    "name": "J. Ramsey",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19192.png"
+  },
+  {
+    "name": "S. Tonali",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/31146.png"
+  },
+  {
+    "name": "S. Botman",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/38734.png"
+  },
+  {
+    "name": "M. Gillespie",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/44912.png"
+  },
+  {
+    "name": "A. Gordon",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/138787.png"
+  },
+  {
+    "name": "A. Elanga",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/153430.png"
+  },
+  {
+    "name": "T. Livramento",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/158694.png"
+  },
+  {
+    "name": "M. Thiaw",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/163189.png"
+  },
+  {
+    "name": "L. Miley",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/328105.png"
+  },
+  {
+    "name": "Park Seung-Soo",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/423714.png"
+  },
+  {
+    "name": "J. Willock",
+    "club": "Newcastle",
+    "number": "28",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1463.png"
+  },
+  {
+    "name": "J. Lascelles",
+    "club": "Newcastle",
+    "number": "6",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18894.png"
+  },
+  {
+    "name": "J. Murphy",
+    "club": "Newcastle",
+    "number": "23",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19163.png"
+  },
+  {
+    "name": "A. Ramsdale",
+    "club": "Newcastle",
+    "number": "32",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/20355.png"
+  },
+  {
+    "name": "N. Woltemade",
+    "club": "Newcastle",
+    "number": "27",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/158054.png"
+  },
+  {
+    "name": "Max Thompson",
+    "club": "Newcastle",
+    "number": "31",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/284374.png"
+  },
+  {
+    "name": "L. Hall",
+    "club": "Newcastle",
+    "number": "3",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/284492.png"
+  },
+  {
+    "name": "W. Osula",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/315237.png"
+  },
+  {
+    "name": "A. Murphy",
+    "club": "Newcastle",
+    "number": "37",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/318056.png"
+  },
+  {
+    "name": "L. Shahar",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/337934.png"
+  },
+  {
+    "name": "Alfie Harrison",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/382345.png"
+  },
+  {
+    "name": "T. Hernes",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/384585.png"
+  },
+  {
+    "name": "S. Neave",
+    "club": "Newcastle",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/394165.png"
+  },
+  {
+    "name": "Park Seung-soo",
+    "club": "Newcastle",
+    "number": "64",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/526535.png"
+  },
+  {
+    "name": "J. Kluivert",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/792.png"
+  },
+  {
+    "name": "R. Christie",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1125.png"
+  },
+  {
+    "name": "T. Adams",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1150.png"
+  },
+  {
+    "name": "M. Senesi",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/6610.png"
+  },
+  {
+    "name": "L. Cook",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18872.png"
+  },
+  {
+    "name": "M. Tavernier",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19245.png"
+  },
+  {
+    "name": "A. Semenyo",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19281.png"
+  },
+  {
+    "name": "J. Hill",
+    "club": "Bournemouth",
+    "number": "23",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/20093.png"
+  },
+  {
+    "name": "H. Traorè",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/31057.png"
+  },
+  {
+    "name": "J. Araujo",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/51051.png"
+  },
+  {
+    "name": "R. Faivre",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/84082.png"
+  },
+  {
+    "name": "Đ. Petrović",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/118307.png"
+  },
+  {
+    "name": "Evanilson",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/152856.png"
+  },
+  {
+    "name": "I. Zabarnyi",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/161671.png"
+  },
+  {
+    "name": "A. Truffert",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/162267.png"
+  },
+  {
+    "name": "D. Ouattara",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/284797.png"
+  },
+  {
+    "name": "A. Scott",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/304853.png"
+  },
+  {
+    "name": "J. Soler",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/363333.png"
+  },
+  {
+    "name": "Ben Winterburn",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/402432.png"
+  },
+  {
+    "name": "Remy Rees-Dottin",
+    "club": "Bournemouth",
+    "number": "",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/402434.png"
+  },
+  {
+    "name": "P. Billing",
+    "club": "Bournemouth",
+    "number": "29",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2734.png"
+  },
+  {
+    "name": "A. Smith",
+    "club": "Bournemouth",
+    "number": "15",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18869.png"
+  },
+  {
+    "name": "D. Brooks",
+    "club": "Bournemouth",
+    "number": "7",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18870.png"
+  },
+  {
+    "name": "B. Diakité",
+    "club": "Bournemouth",
+    "number": "18",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/22136.png"
+  },
+  {
+    "name": "A. Adli",
+    "club": "Bournemouth",
+    "number": "17",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/129682.png"
+  },
+  {
+    "name": "W. Dennis",
+    "club": "Bournemouth",
+    "number": "40",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/151756.png"
+  },
+  {
+    "name": "Álex Jiménez",
+    "club": "Bournemouth",
+    "number": "20",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/330437.png"
+  },
+  {
+    "name": "B. Doak",
+    "club": "Bournemouth",
+    "number": "11",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/343576.png"
+  },
+  {
+    "name": "E. Kroupi",
+    "club": "Bournemouth",
+    "number": "22",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/368030.png"
+  },
+  {
+    "name": "Veljko Milosavljević",
+    "club": "Bournemouth",
+    "number": "44",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/412719.png"
+  },
+  {
+    "name": "Jorge Cuenca",
+    "club": "Fulham",
+    "number": "15",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/131.png"
+  },
+  {
+    "name": "K. Tete",
+    "club": "Fulham",
+    "number": "2",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/657.png"
+  },
+  {
+    "name": "E. Smith Rowe",
+    "club": "Fulham",
+    "number": "32",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1161.png"
+  },
+  {
+    "name": "B. Leno",
+    "club": "Fulham",
+    "number": "1",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1438.png"
+  },
+  {
+    "name": "A. Iwobi",
+    "club": "Fulham",
+    "number": "17",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1455.png"
+  },
+  {
+    "name": "S. Berge",
+    "club": "Fulham",
+    "number": "16",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1934.png"
+  },
+  {
+    "name": "J. Andersen",
+    "club": "Fulham",
+    "number": "5",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2729.png"
+  },
+  {
+    "name": "S. Lukić",
+    "club": "Fulham",
+    "number": "20",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2823.png"
+  },
+  {
+    "name": "R. Jiménez",
+    "club": "Fulham",
+    "number": "7",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2887.png"
+  },
+  {
+    "name": "T. Castagne",
+    "club": "Fulham",
+    "number": "21",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2920.png"
+  },
+  {
+    "name": "Adama Traoré",
+    "club": "Fulham",
+    "number": "11",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18753.png"
+  },
+  {
+    "name": "I. Diop",
+    "club": "Fulham",
+    "number": "31",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18814.png"
+  },
+  {
+    "name": "T. Cairney",
+    "club": "Fulham",
+    "number": "10",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19025.png"
+  },
+  {
+    "name": "R. Sessegnon",
+    "club": "Fulham",
+    "number": "30",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19032.png"
+  },
+  {
+    "name": "H. Wilson",
+    "club": "Fulham",
+    "number": "8",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19221.png"
+  },
+  {
+    "name": "H. Reed",
+    "club": "Fulham",
+    "number": "6",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19480.png"
+  },
+  {
+    "name": "B. Lecomte",
+    "club": "Fulham",
+    "number": "23",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/21566.png"
+  },
+  {
+    "name": "C. Bassey",
+    "club": "Fulham",
+    "number": "3",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/152967.png"
+  },
+  {
+    "name": "Rodrigo Muniz",
+    "club": "Fulham",
+    "number": "9",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/195106.png"
+  },
+  {
+    "name": "Joshua King",
+    "club": "Fulham",
+    "number": "24",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/389315.png"
+  },
+  {
+    "name": "Andreas Pereira",
+    "club": "Fulham",
+    "number": "18",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/899.png"
+  },
+  {
+    "name": "S. Chukwueze",
+    "club": "Fulham",
+    "number": "19",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/1696.png"
+  },
+  {
+    "name": "A. Robinson",
+    "club": "Fulham",
+    "number": "33",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19549.png"
+  },
+  {
+    "name": "Kevin",
+    "club": "Fulham",
+    "number": "22",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/237819.png"
+  },
+  {
+    "name": "J. Kusi-Asare",
+    "club": "Fulham",
+    "number": "18",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/436443.png"
+  },
+  {
+    "name": "J. Strand Larsen",
+    "club": "Wolves",
+    "number": "9",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/2032.png"
+  },
+  {
+    "name": "M. Munetsi",
+    "club": "Wolves",
+    "number": "5",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/3080.png"
+  },
+  {
+    "name": "S. Kalajdzic",
+    "club": "Wolves",
+    "number": "18",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/7722.png"
+  },
+  {
+    "name": "J. Arias",
+    "club": "Wolves",
+    "number": "10",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/13708.png"
+  },
+  {
+    "name": "M. Doherty",
+    "club": "Wolves",
+    "number": "2",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/18742.png"
+  },
+  {
+    "name": "S. Johnstone",
+    "club": "Wolves",
+    "number": "31",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19143.png"
+  },
+  {
+    "name": "D. Bentley",
+    "club": "Wolves",
+    "number": "25",
+    "pos": "Goalkeeper",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/19341.png"
+  },
+  {
+    "name": "J. Bellegarde",
+    "club": "Wolves",
+    "number": "27",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/20665.png"
+  },
+  {
+    "name": "Hwang Hee-Chan",
+    "club": "Wolves",
+    "number": "11",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/24888.png"
+  },
+  {
+    "name": "E. Agbadou",
+    "club": "Wolves",
+    "number": "12",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/135068.png"
+  },
+  {
+    "name": "S. Bueno",
+    "club": "Wolves",
+    "number": "4",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/135334.png"
+  },
+  {
+    "name": "T. Chirewa",
+    "club": "Wolves",
+    "number": "23",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/171035.png"
+  },
+  {
+    "name": "João Gomes",
+    "club": "Wolves",
+    "number": "8",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/195103.png"
+  },
+  {
+    "name": "Y. Mosquera",
+    "club": "Wolves",
+    "number": "15",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/195717.png"
+  },
+  {
+    "name": "D. Møller Wolfe",
+    "club": "Wolves",
+    "number": "6",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/265782.png"
+  },
+  {
+    "name": "André",
+    "club": "Wolves",
+    "number": "7",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/265784.png"
+  },
+  {
+    "name": "Hugo Bueno",
+    "club": "Wolves",
+    "number": "3",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/280687.png"
+  },
+  {
+    "name": "Rodrigo Gomes",
+    "club": "Wolves",
+    "number": "21",
+    "pos": "Midfielder",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/282770.png"
+  },
+  {
+    "name": "J. Tchatchoua",
+    "club": "Wolves",
+    "number": "38",
+    "pos": "Defender",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/296560.png"
+  },
+  {
+    "name": "Fer López",
+    "club": "Wolves",
+    "number": "28",
+    "pos": "Attacker",
+    "season": "2025",
+    "image_url": "https://media.api-sports.io/football/players/391822.png"
+  }
+]

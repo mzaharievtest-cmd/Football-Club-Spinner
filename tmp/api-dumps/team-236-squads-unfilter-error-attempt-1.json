@@ -1,0 +1,4 @@
+{
+  "status": 404,
+  "text": "    {\"message\":\"The requested include 'team,player' does not exist\",\"link\":\"https:\\/\\/docs.sportmonks.com\\/football\\/api\\/response-codes\\/include-exceptions\",\"code\":5001}"
+}
