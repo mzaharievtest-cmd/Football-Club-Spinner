@@ -67,19 +67,45 @@ async function loadKnowledge() {
     console.log('[quiz] club_knowledge.json loaded with', rawClubs.length, 'raw entries');
 
     const normalized = rawClubs
-      .map(c => {
+      .map((entry, idx) => {
+        let c = entry;
+
+        // Auto-unwrap pattern like { "15": { ...actual club... } }
+        if (c && typeof c === 'object') {
+          const keys = Object.keys(c);
+          if (
+            keys.length === 1 &&
+            c[keys[0]] &&
+            typeof c[keys[0]] === 'object'
+          ) {
+            c = c[keys[0]];
+          }
+        }
+
         const name =
           c.name ||
           c.club_name ||
           c.team_name ||
           c.club ||
           null;
+
         const league =
           c.league ||
           c.league_name ||
           c.league_code ||
           null;
+
         const stadium = c.stadium || c.ground || null;
+
+        if (!name || !league) {
+          // Helpful debug to see what shape we actually have
+          console.warn(
+            '[quiz] Skipping entry',
+            idx,
+            'due to missing name/league. Keys:',
+            c && typeof c === 'object' ? Object.keys(c) : typeof c
+          );
+        }
 
         return {
           ...c,
