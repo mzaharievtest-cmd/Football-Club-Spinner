@@ -256,6 +256,43 @@
       </div>
       <button id="resetHistoryBtn" type="button" style="margin-top:12px" title="Clear all previous results">Clear History</button>
 
+      <!-- AI Quiz controls -->
+      <div class="quiz-panel" id="aiQuizPanel" aria-label="AI Quiz settings">
+        <div class="quiz-panel-header">
+          <div class="section-title small">AI Quiz</div>
+          <label class="chip" title="Toggle AI-powered quiz questions after spins">
+            <input type="checkbox" id="aiQuizToggle" />
+            <span class="chip-text">Enable</span>
+          </label>
+        </div>
+        <div class="quiz-panel-body">
+          <label for="aiQuizDifficulty" class="small">Difficulty</label>
+          <select id="aiQuizDifficulty">
+            <option value="auto" selected>Auto</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+
+          <label for="aiQuizCategory" class="small" style="margin-top:8px;">Question type</label>
+          <select id="aiQuizCategory">
+            <option value="mixed" selected>Mixed (best)</option>
+            <option value="club">Club facts</option>
+            <option value="player">Player facts</option>
+            <option value="manager">Managers</option>
+            <option value="history">History & trophies</option>
+            <option value="fans">Fans & rivalries</option>
+          </select>
+
+          <label for="aiQuizRounds" class="small" style="margin-top:8px;">Rounds</label>
+          <select id="aiQuizRounds">
+            <option value="endless" selected>Endless</option>
+            <option value="5">5 questions</option>
+            <option value="10">10 questions</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Compact partner offers -->
       <div class="partner-stack" aria-label="Partner offers">
         <div class="partner-stack-title">PARTNER OFFERS</div>
@@ -329,7 +366,7 @@
       </div>
     </section>
 
-         <!-- Full-width accordion -->
+    <!-- Full-width accordion -->
     <section class="card" style="grid-column:1 / -1; margin-top:28px;">
       <div class="accordion" id="infoAccordion" role="region" aria-labelledby="details-title">
         <div class="section-title" id="details-title">Details</div>
@@ -457,6 +494,7 @@
       </div>
     </section>
    </main>
+
   <!-- Modal -->
   <div id="backdrop" style="display:none">
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="mHead" aria-describedby="mSub">
@@ -484,6 +522,33 @@
         <div class="m-row" id="rowNat" style="display:none">
           <div class="label">Nationality</div>
           <span id="mNat" class="value-pill"></span>
+        </div>
+
+        <!-- AI Quiz block (inside modal) -->
+        <div id="quizContainer" class="quiz-container" hidden>
+          <div class="quiz-header-row">
+            <div class="quiz-title">AI Quiz</div>
+            <div class="quiz-meta">
+              <span id="quizProgress" class="small"></span>
+              <span id="quizScore" class="small"></span>
+            </div>
+          </div>
+
+          <div id="quizQuestion" class="quiz-question"></div>
+
+          <div id="quizAnswers" class="quiz-answers">
+            <button type="button" class="quiz-answer" data-index="0"></button>
+            <button type="button" class="quiz-answer" data-index="1"></button>
+            <button type="button" class="quiz-answer" data-index="2"></button>
+            <button type="button" class="quiz-answer" data-index="3"></button>
+          </div>
+
+          <div id="quizFeedback" class="quiz-feedback small" aria-live="polite"></div>
+
+          <div class="quiz-actions">
+            <button type="button" id="quizNextBtn" class="chip-btn">Next question</button>
+            <button type="button" id="quizEndBtn" class="chip-btn ghost">End quiz</button>
+          </div>
         </div>
       </div>
 
