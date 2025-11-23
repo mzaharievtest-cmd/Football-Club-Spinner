@@ -1,352 +1,351 @@
-// api/quiz.js
-// Serverless function for AI Quiz (Vercel)
+// quiz.js
+// Football Spinner – Club knowledge helper for quiz modes
+// Uses data/club_knowledge.normalized.json (generated from messy source)
 //
-// - Uses club_knowledge.json as the single source of truth
-// - NEVER invents facts; questions are built from that JSON.
-// - OpenAI is only used to phrase the question text nicely.
+// Public API (available as ES module exports *and* on window.FS_QUIZ):
+//   await ensureClubKnowledgeLoaded()
+//   const club = getClubEntryForContext(context)
+//   const hints = getClubHintsForContext(context)
 //
-// Expected request body (from app.js):
-// { mode: 'team' | 'player', difficulty: 'auto' | 'easy' | 'medium' | 'hard', context: {...} }
-//
-// Response:
-// { question: string, answers: string[4], correctIndex: number, explanation?: string }
+// Where `context` is e.g.:
+//   {
+//     kind: 'club',
+//     name: 'Aston Villa',
+//     leagueCode: 'EPL',        // optional but recommended
+//     leagueName: 'Premier League', // optional
+//     stadium: 'Villa Park'     // optional
+//   }
 
-const fs = require('fs/promises');
-const path = require('path');
+const CLUB_KNOWLEDGE_URL = 'data/club_knowledge.normalized.json';
 
-const MODEL = 'gpt-4o-mini'; // or gpt-4.1-mini if your account supports it
+// In–memory store
+let CLUB_KNOWLEDGE_RAW = null;      // whatever is in the JSON file (usually an array)
+let CLUB_KNOWLEDGE_INDEX = new Map(); // key -> club object
+let CLUB_KNOWLEDGE_LOADED = false;
+let CLUB_KNOWLEDGE_LOADING = null;
 
-let KB_CACHE = null;
-
-// --- Helpers ---
-
-// Normalize text for loose matching (handles "Chelsea" vs "Chelsea FC")
-function norm(str = '') {
-  return String(str)
+/**
+ * Normalise a club name for indexing / comparison.
+ */
+function normalizeName(str) {
+  return String(str || '')
+    .trim()
     .toLowerCase()
-    .replace(/footballclub/g, 'fc') // just in case
-    .replace(/[^a-z0-9]+/g, '')
-    .replace(/fc$/, '') // strip trailing "fc"
-    .trim();
+    .replace(/\s+/g, ' ')
+    .replace(/ fc$/g, '')      // drop trailing "fc"
+    .replace(/ football club$/g, '');
 }
 
-function sample(arr, n) {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
+/**
+ * Normalise a league code.
+ */
+function normalizeLeagueCode(code) {
+  if (!code) return '';
+  return String(code).trim().toUpperCase();
+}
+
+/**
+ * Build the internal index from whatever the normalized JSON contains.
+ *
+ * We are deliberately defensive here: we accept either:
+ *   - Array of clubs
+ *   - Object keyed by club name
+ *
+ * and we accept both `name` / `club` and `leagueCode` / `league_code`.
+ */
+function buildClubIndex(raw) {
+  CLUB_KNOWLEDGE_INDEX = new Map();
+
+  if (!raw) {
+    console.warn('[quiz] No raw club knowledge to index.');
+    return;
   }
-  return copy.slice(0, n);
-}
 
-function shuffleWithCorrectFirst(answers) {
-  // answers: plain strings where answers[0] MUST be the correct one initially
-  const arr = answers.map((text, i) => ({ text, i }));
-  // Fisher–Yates
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  const finalAnswers = arr.map(a => a.text);
-  const correctIndex = arr.findIndex(a => a.i === 0); // where original index was 0
-  return { finalAnswers, correctIndex };
-}
+  const entries = [];
 
-// --- Load + normalize knowledge base ---
-
-async function loadKnowledge() {
-  if (KB_CACHE) return KB_CACHE;
-
-  try {
-    const filePath = path.join(process.cwd(), 'data', 'club_knowledge.json');
-    const raw = await fs.readFile(filePath, 'utf8');
-    const json = JSON.parse(raw);
-
-    // Accept both arrays and objects keyed by id/name
-    const rawClubs = Array.isArray(json) ? json : Object.values(json || {});
-    console.log('[quiz] club_knowledge.json loaded with', rawClubs.length, 'raw entries');
-
-    const normalized = rawClubs
-      .map((entry, idx) => {
-        let c = entry;
-
-        // Auto-unwrap pattern like { "15": { ...actual club... } }
-        if (c && typeof c === 'object') {
-          const keys = Object.keys(c);
-          if (
-            keys.length === 1 &&
-            c[keys[0]] &&
-            typeof c[keys[0]] === 'object'
-          ) {
-            c = c[keys[0]];
-          }
-        }
-
-        const name =
-          c.name ||
-          c.club_name ||
-          c.team_name ||
-          c.club ||
-          null;
-
-        const league =
-          c.league ||
-          c.league_name ||
-          c.league_code ||
-          null;
-
-        const stadium = c.stadium || c.ground || null;
-
-        if (!name || !league) {
-          // Helpful debug to see what shape we actually have
-          console.warn(
-            '[quiz] Skipping entry',
-            idx,
-            'due to missing name/league. Keys:',
-            c && typeof c === 'object' ? Object.keys(c) : typeof c
-          );
-        }
-
-        return {
-          ...c,
-          name,
-          league,
-          stadium
-        };
-      })
-      .filter(c => c.name && c.league);
-
-    if (!normalized.length) {
-      console.warn('[quiz] club_knowledge.json loaded but no clubs found after normalization');
-    } else {
-      console.log('[quiz] Knowledge base normalized with', normalized.length, 'clubs');
+  if (Array.isArray(raw)) {
+    entries.push(...raw);
+  } else if (typeof raw === 'object') {
+    for (const [key, value] of Object.entries(raw)) {
+      // Skip any metadata keys accidentally left at top-level
+      if (!value || typeof value !== 'object') continue;
+      // In the messy original file we had fan_culture, trivia, etc as arrays at root.
+      // Normalizer should already have removed these for the _normalized file,
+      // but we stay defensive anyway.
+      entries.push({ _rootKey: key, ...value });
     }
-
-    KB_CACHE = normalized;
-    return KB_CACHE;
-  } catch (err) {
-    console.error('Failed to load club_knowledge.json', err);
-    throw err; // bubble up so we return 500 and can see it in logs
-  }
-}
-
-// ---- Build question payloads from knowledge base (no AI yet) ----
-
-function buildClubQuestion(club, allClubs, difficulty = 'auto') {
-  const league = club.league || club.league_name || club.league_code || '';
-  const clubName = club.name || club.club_name || club.team_name || '';
-
-  const sameLeague = allClubs.filter(
-    c => norm(c.name) !== norm(clubName) && norm(c.league) === norm(league)
-  );
-
-  // Try stadium-based question first (requires at least 3 other clubs in same league)
-  if (club.stadium && sameLeague.length >= 3) {
-    const distractors = sample(sameLeague, 3).map(c => c.name);
-    const answers = [clubName, ...distractors];
-    const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers);
-
-    return {
-      type: 'club_stadium',
-      correctLabel: clubName,
-      questionTemplate: `Which of the following clubs plays its home matches at ${club.stadium}?`,
-      answers: finalAnswers,
-      correctIndex,
-      extra: { league, stadium: club.stadium }
-    };
+  } else {
+    console.warn('[quiz] club knowledge JSON is neither array nor object:', typeof raw);
+    return;
   }
 
-  // Fallback: league question (e.g. "In which league does Aston Villa compete?")
-  const leagues = Array.from(
-    new Set(allClubs.map(c => c.league || c.league_name || c.league_code).filter(Boolean))
-  ).filter(l => norm(l) !== norm(league));
+  let inserted = 0;
 
-  const distractorLeagues = sample(leagues, Math.min(3, leagues.length));
-  const answers = [league, ...distractorLeagues];
-  const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers);
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object') continue;
 
-  return {
-    type: 'club_league',
-    correctLabel: league,
-    questionTemplate: `In which league does ${clubName} currently compete?`,
-    answers: finalAnswers,
-    correctIndex,
-    extra: { clubName }
-  };
-}
+    const name =
+      entry.name ||
+      entry.club ||
+      entry.club_name ||
+      entry._rootKey; // fallback for objects keyed by club name
 
-function buildPlayerQuestion(playerCtx, allClubs) {
-  const { name, clubName, league = 'Premier League' } = playerCtx;
-  if (!name || !clubName) return null;
+    const leagueCode =
+      entry.leagueCode ||
+      entry.league_code ||
+      entry.league ||
+      entry.leagueId ||
+      null;
 
-  const sameLeagueClubs = allClubs.filter(
-    c => norm(c.name) !== norm(clubName) && norm(c.league) === norm(league)
-  );
-
-  if (sameLeagueClubs.length < 3) return null;
-
-  const distractors = sample(sameLeagueClubs, 3).map(c => c.name);
-  const answers = [clubName, ...distractors];
-  const { finalAnswers, correctIndex } = shuffleWithCorrectFirst(answers);
-
-  return {
-    type: 'player_club',
-    correctLabel: clubName,
-    questionTemplate: `For which club does ${name} currently play?`,
-    answers: finalAnswers,
-    correctIndex,
-    extra: { playerName: name, league }
-  };
-}
-
-// ---- OpenAI call (only to phrase the question nicely) ----
-
-async function fetchQuestionText(apiKey, baseQuestion, meta) {
-  // If OpenAI is misconfigured, just return the base question.
-  if (!apiKey) return baseQuestion;
-
-  const prompt = [
-    `You are a football trivia writer.`,
-    `Your job: take the base question and rephrase it in natural English, keeping the meaning identical.`,
-    `Do NOT mention answer options in the text; just output the final question.`,
-    `Do NOT add extra facts or numbers that weren't implied in the base question.`,
-    ``,
-    `Base question: "${baseQuestion}"`,
-    meta
-      ? `Context JSON (for flavour only, don't contradict it): ${JSON.stringify(meta)}`
-      : ''
-  ].join('\n');
-
-  try {
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        temperature: 0.4,
-        max_tokens: 120,
-        messages: [
-          { role: 'system', content: 'You write short, clear football quiz questions.' },
-          { role: 'user', content: prompt }
-        ]
-      })
-    });
-
-    if (!resp.ok) {
-      console.error('OpenAI HTTP error', resp.status, await resp.text());
-      return baseQuestion;
-    }
-
-    const json = await resp.json();
-    const text = json.choices?.[0]?.message?.content?.trim();
-    return text || baseQuestion;
-  } catch (err) {
-    console.error('OpenAI call failed', err);
-    return baseQuestion;
-  }
-}
-
-// ---- Main handler ----
-
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    const body =
-      typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const { mode = 'team', difficulty = 'auto', context = {} } = body;
-
-    const knowledge = await loadKnowledge();
-
-    if (!knowledge || !knowledge.length) {
-      console.warn('[quiz] Knowledge base is empty.');
-      return res.status(500).json({ error: 'Knowledge base is empty.' });
-    }
-
-    const kind = context.kind || (mode === 'player' ? 'player' : 'club');
-    const name = (context.name || '').trim();
-    const leagueFromCtx = (context.leagueName || context.league || '').trim();
-    const stadiumFromCtx = (context.stadium || '').trim();
-
-    // ---- Find matching club in KB ----
-    let clubEntry = null;
-
-    if (kind === 'club') {
-      const key = norm(name);
-
-      // First: by normalized name and league (if league is provided & matches)
-      clubEntry =
-        knowledge.find(
-          c =>
-            norm(c.name) === key &&
-            (!leagueFromCtx || norm(c.league) === norm(leagueFromCtx))
-        ) ||
-        // Second: by normalized name only
-        knowledge.find(c => norm(c.name) === key);
-
-      // Third: fallback by stadium if still not found
-      if (!clubEntry && stadiumFromCtx) {
-        const stadKey = norm(stadiumFromCtx);
-        clubEntry = knowledge.find(c => norm(c.stadium || '') === stadKey);
+    if (!name || !leagueCode) {
+      // Log once in a while if something looks off
+      if (entry._rootKey && !['fan_culture','iconic_seasons','famous_wins','heartbreaking_moments','trivia'].includes(entry._rootKey)) {
+        console.debug('[quiz] Skipping entry due to missing name/league:', {
+          rootKey: entry._rootKey,
+          hasName: !!name,
+          hasLeague: !!leagueCode
+        });
       }
-    } else {
-      // For players we only need their club + league for distractors
-      const clubName = (context.clubName || '').trim();
-      const clubKey = norm(clubName);
-
-      clubEntry =
-        knowledge.find(
-          c =>
-            norm(c.name) === clubKey &&
-            (!leagueFromCtx || norm(c.league) === norm(leagueFromCtx))
-        ) ||
-        knowledge.find(c => norm(c.name) === clubKey);
+      continue;
     }
 
-    if (!clubEntry) {
-      console.warn('No club entry found for context', context);
-      return res.status(400).json({ error: 'No knowledge for this team/player yet.' });
-    }
+    const key = `${normalizeName(name)}|${normalizeLeagueCode(leagueCode)}`;
 
-    let base;
-    if (kind === 'player') {
-      base = buildPlayerQuestion(
-        {
-          name: context.name || '',
-          clubName: context.clubName || '',
-          league: leagueFromCtx || 'Premier League'
-        },
-        knowledge
-      );
-    } else {
-      base = buildClubQuestion(clubEntry, knowledge, difficulty);
-    }
+    // Attach canonical fields we want for quiz usage
+    const clubObj = {
+      // canonical identifiers
+      name,
+      leagueCode: normalizeLeagueCode(leagueCode),
+      // try to keep original values as well
+      country: entry.country || entry.nation || null,
+      city: entry.city || null,
+      stadium: entry.stadium || null,
+      colors: entry.colors || [],
+      nicknames: entry.nicknames || [],
+      rivals: entry.rivals || [],
+      derbies: entry.derbies || [],
+      trophies: entry.trophies || {},
+      identity_keywords: entry.identity_keywords || entry.identityKeywords || [],
+      fun_facts: entry.fun_facts || entry.funFacts || [],
+      style_of_play: entry.style_of_play || entry.playing_style || [],
+      fan_culture: entry.fan_culture || [],
+      iconic_seasons: entry.iconic_seasons || [],
+      famous_wins: entry.famous_wins || [],
+      heartbreaking_moments: entry.heartbreaking_moments || [],
+      trivia: entry.trivia || [],
+      // keep the full raw entry in case we need anything else
+      _raw: entry
+    };
 
-    if (!base) {
-      return res.status(400).json({ error: 'Unable to build a question for this item.' });
-    }
-
-    const phrasedQuestion = await fetchQuestionText(
-      apiKey,
-      base.questionTemplate,
-      { type: base.type, extra: base.extra }
-    );
-
-    return res.status(200).json({
-      question: phrasedQuestion,
-      answers: base.answers,
-      correctIndex: base.correctIndex
-      // explanation: could be added later if you want
-    });
-  } catch (err) {
-    console.error('Quiz API error', err);
-    return res.status(500).json({ error: 'Internal quiz error' });
+    CLUB_KNOWLEDGE_INDEX.set(key, clubObj);
+    inserted++;
   }
+
+  console.info(`[quiz] Indexed ${inserted} clubs from normalized knowledge.`);
+}
+
+/**
+ * Ensure club knowledge is loaded and indexed.
+ * Returns a promise that resolves when ready.
+ */
+export async function ensureClubKnowledgeLoaded() {
+  if (CLUB_KNOWLEDGE_LOADED && CLUB_KNOWLEDGE_INDEX.size > 0) {
+    return;
+  }
+  if (CLUB_KNOWLEDGE_LOADING) {
+    return CLUB_KNOWLEDGE_LOADING;
+  }
+
+  CLUB_KNOWLEDGE_LOADING = (async () => {
+    try {
+      console.info('[quiz] Loading club knowledge from', CLUB_KNOWLEDGE_URL);
+      const res = await fetch(CLUB_KNOWLEDGE_URL, { cache: 'no-cache' });
+      if (!res.ok) {
+        console.error('[quiz] Failed to fetch club knowledge:', res.status, res.statusText);
+        CLUB_KNOWLEDGE_LOADED = false;
+        return;
+      }
+
+      const json = await res.json();
+      CLUB_KNOWLEDGE_RAW = json;
+      console.info('[quiz] club_knowledge.normalized.json loaded.');
+
+      buildClubIndex(json);
+
+      if (CLUB_KNOWLEDGE_INDEX.size === 0) {
+        console.warn('[quiz] Knowledge base is empty after indexing normalized file.');
+      } else {
+        CLUB_KNOWLEDGE_LOADED = true;
+      }
+    } catch (err) {
+      console.error('[quiz] Error loading club knowledge:', err);
+      CLUB_KNOWLEDGE_LOADED = false;
+    } finally {
+      CLUB_KNOWLEDGE_LOADING = null;
+    }
+  })();
+
+  return CLUB_KNOWLEDGE_LOADING;
+}
+
+/**
+ * Try various ways to derive a lookup key from the quiz context and the index.
+ */
+function buildContextKeys(context) {
+  const keys = new Set();
+
+  const ctxName = normalizeName(context.name || context.club || context.clubName);
+  const ctxLeagueCode = normalizeLeagueCode(context.leagueCode || context.league || context.league_code);
+
+  if (ctxName) {
+    if (ctxLeagueCode) {
+      keys.add(`${ctxName}|${ctxLeagueCode}`);
+    }
+    // sometimes leagueCode might be missing – we also try a few generic combos:
+    keys.add(`${ctxName}|EPL`);
+    keys.add(`${ctxName}|LLA`);
+    keys.add(`${ctxName}|SA`);
+    keys.add(`${ctxName}|BUN`);
+    keys.add(`${ctxName}|L1`);
+  }
+
+  // Also try to guess by stadium if name is missing or weird
+  const ctxStadium = normalizeName(context.stadium);
+  if (ctxStadium) {
+    for (const [key, club] of CLUB_KNOWLEDGE_INDEX.entries()) {
+      if (normalizeName(club.stadium) === ctxStadium) {
+        keys.add(key);
+      }
+    }
+  }
+
+  return [...keys];
+}
+
+/**
+ * Get the club entry corresponding to a quiz context.
+ *
+ * Returns `null` if nothing matched.
+ */
+export function getClubEntryForContext(context) {
+  if (!context || context.kind !== 'club') return null;
+
+  if (!CLUB_KNOWLEDGE_INDEX || CLUB_KNOWLEDGE_INDEX.size === 0) {
+    console.warn('[quiz] getClubEntryForContext called but knowledge base is empty.');
+    return null;
+  }
+
+  const keys = buildContextKeys(context);
+
+  for (const key of keys) {
+    const club = CLUB_KNOWLEDGE_INDEX.get(key);
+    if (club) {
+      return club;
+    }
+  }
+
+  console.warn('[quiz] No club entry found for context', context);
+  return null;
+}
+
+/**
+ * Build a pool of nice textual hints from a club object.
+ * You can adjust this to control what appears in your hints UI.
+ */
+function buildHintsForClub(club) {
+  if (!club) return [];
+
+  const hints = [];
+
+  if (club.city && club.country) {
+    hints.push(`Based in ${club.city}, ${club.country}.`);
+  } else if (club.city) {
+    hints.push(`Based in ${club.city}.`);
+  }
+
+  if (club.stadium) {
+    hints.push(`Home matches are played at ${club.stadium}.`);
+  }
+
+  if (Array.isArray(club.nicknames) && club.nicknames.length) {
+    hints.push(`Known as: ${club.nicknames.join(', ')}.`);
+  }
+
+  if (Array.isArray(club.rivals) && club.rivals.length) {
+    hints.push(`Major rivals include ${club.rivals.join(', ')}.`);
+  }
+
+  if (Array.isArray(club.derbies) && club.derbies.length) {
+    hints.push(`Famous derbies: ${club.derbies.join('; ')}.`);
+  }
+
+  if (Array.isArray(club.identity_keywords) && club.identity_keywords.length) {
+    hints.push(`Identity keywords: ${club.identity_keywords.join(', ')}.`);
+  }
+
+  if (Array.isArray(club.fun_facts) && club.fun_facts.length) {
+    for (const fact of club.fun_facts) {
+      hints.push(fact);
+    }
+  }
+
+  // For non-EPL clubs that use fan_culture / style_of_play / trivia
+  if (Array.isArray(club.fan_culture) && club.fan_culture.length) {
+    for (const fc of club.fan_culture) {
+      hints.push(fc);
+    }
+  }
+
+  if (Array.isArray(club.style_of_play) && club.style_of_play.length) {
+    hints.push(`Style of play: ${club.style_of_play.join(', ')}.`);
+  } else if (Array.isArray(club._raw?.style_of_play) && club._raw.style_of_play.length) {
+    // in case the normalizer didn't copy it up
+    hints.push(`Style of play: ${club._raw.style_of_play.join(', ')}.`);
+  }
+
+  if (Array.isArray(club.trivia) && club.trivia.length) {
+    for (const t of club.trivia) {
+      hints.push(t);
+    }
+  }
+
+  // De-duplicate while preserving order
+  const seen = new Set();
+  const uniqueHints = [];
+  for (const h of hints) {
+    const trimmed = String(h || '').trim();
+    if (!trimmed) continue;
+    if (seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    uniqueHints.push(trimmed);
+  }
+
+  return uniqueHints;
+}
+
+/**
+ * Main helper for UI: get hints for a context.
+ *
+ * If you need N hints, just slice the array:
+ *   const hints = (await getClubHintsForContext(ctx)).slice(0, 3);
+ */
+export async function getClubHintsForContext(context) {
+  await ensureClubKnowledgeLoaded();
+  const club = getClubEntryForContext(context);
+  if (!club) return [];
+  return buildHintsForClub(club);
+}
+
+// Attach to window for non-module usage.
+if (typeof window !== 'undefined') {
+  window.FS_QUIZ = window.FS_QUIZ || {};
+  window.FS_QUIZ.ensureClubKnowledgeLoaded = ensureClubKnowledgeLoaded;
+  window.FS_QUIZ.getClubEntryForContext = getClubEntryForContext;
+  window.FS_QUIZ.getClubHintsForContext = getClubHintsForContext;
+}
+
+export default {
+  ensureClubKnowledgeLoaded,
+  getClubEntryForContext,
+  getClubHintsForContext
 };
