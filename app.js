@@ -19,6 +19,10 @@ let PLAYERS = [];
 let TOTAL_TEAMS = 0;
 let TOTAL_PLAYERS = 0;
 
+let CLUB_KNOWLEDGE = [];
+let CLUB_KNOWLEDGE_BY_NAME = new Map();
+let CLUB_KNOWLEDGE_BY_LEAGUE_AND_NAME = new Map();
+
 let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
@@ -913,167 +917,21 @@ function closeModal(){
   setTimeout(()=>backdrop.style.display='none', 150);
 }
 
-/* ---------- AI QUIZ HELPERS ---------- */
-
-function resetQuizUI() {
-  if (!quizContainer) return;
-  quizContainer.hidden = false;
-  if (quizQuestion) quizQuestion.textContent = '';
-  if (quizAnswers)  quizAnswers.innerHTML = '';
-  if (quizFeedback) quizFeedback.textContent = '';
-}
-
-function updateQuizMeta() {
-  if (!quizProgress && !quizScore) return;
-  const maxRounds = aiQuizRounds?.value || 'endless';
-  if (quizProgress) {
-    if (maxRounds === 'endless') {
-      quizProgress.textContent = `Round ${quizRoundsPlayed}`;
-    } else {
-      quizProgress.textContent = `Question ${quizRoundsPlayed} of ${maxRounds}`;
-    }
-  }
-  if (quizScore) {
-    quizScore.textContent = `Score: ${quizCorrectCount}/${quizRoundsPlayed}`;
-  }
-}
-
-function getQuizContextForItem(item) {
-  if (MODE === 'player') {
-    return {
-      kind: 'player',
-      name: item.team_name || '',
-      clubName: CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '',
-      league: 'Premier League',
-      nationality: item.nationality || '',
-      jersey: item.jersey || ''
-    };
-  } else {
-    return {
-      kind: 'club',
-      name: item.team_name || '',
-      leagueCode: item.league_code || '',
-      leagueName: leagueLabel(item.league_code) || '',
-      stadium: item.stadium || ''
-    };
-  }
-}
-
-async function loadQuizForItem(item) {
-  if (!quizContainer || !quizQuestion || !quizAnswers) return;
-
-  const ctx = getQuizContextForItem(item);
-  currentQuiz = null;
-
-  quizContainer.hidden = false;
-  quizAnswers.innerHTML = '';
-  quizQuestion.textContent = 'Loading AI question...';
-  if (quizFeedback) {
-    quizFeedback.textContent = 'Talking to AI…';
+(async function init(){
+  try{
+    await loadTeams();
+    await loadPlayers();
+  } catch (e){
+    console.error('Failed to load data:', e);
   }
 
-  const difficulty = aiQuizDifficulty?.value || 'auto';
-  const category   = aiQuizCategory?.value || 'mixed';
+  setMode(MODE);
+  renderHistory();
 
-  try {
-    track('quiz_request', {
-      difficulty,
-      kind: ctx.kind,
-      name: ctx.name || '',
-      league: ctx.leagueName || ctx.league || '',
-      category
-    });
-
-    const res = await fetch('/quiz', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        mode: MODE,
-        difficulty,
-        category,
-        context: ctx
-      })
-    });
-
-    if (!res.ok) {
-      throw new Error('HTTP ' + res.status);
-    }
-
-    const data = await res.json();
-
-    if (!data || !Array.isArray(data.answers) || typeof data.correctIndex !== 'number') {
-      throw new Error('Invalid quiz payload');
-    }
-
-    // New round
-    quizRoundsPlayed += 1;
-    updateQuizMeta();
-
-    currentQuiz = data;
-    renderQuiz(data);
-
-    if (quizFeedback) {
-      quizFeedback.textContent = 'Pick one answer to see if you’re right.';
-    }
-  } catch (err) {
-    console.error('Quiz error', err);
-    quizQuestion.textContent = 'AI could not create a question right now.';
-    quizAnswers.innerHTML = '';
-    if (quizFeedback) {
-      quizFeedback.textContent = 'Try spinning again in a moment.';
-    }
-    track('quiz_error', { message: String(err) });
-  }
-}
-
-function renderQuiz(quiz) {
-  if (!quizContainer || !quizQuestion || !quizAnswers) return;
-  quizContainer.hidden = false;
-  quizQuestion.textContent = quiz.question || '';
-
-  quizAnswers.innerHTML = '';
-  quiz.answers.forEach((answerText, i) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'chip-btn quiz-answer';
-    btn.textContent = answerText;
-    btn.addEventListener('click', () => handleQuizAnswerClick(i));
-    quizAnswers.appendChild(btn);
-  });
-}
-
-function handleQuizAnswerClick(index) {
-  if (!currentQuiz) return;
-  const correct = index === currentQuiz.correctIndex;
-  const buttons = quizAnswers?.querySelectorAll('.quiz-answer') || [];
-
-  buttons.forEach((btn, i) => {
-    btn.disabled = true;
-    btn.classList.remove('quiz-correct', 'quiz-wrong');
-    if (i === currentQuiz.correctIndex) {
-      btn.classList.add('quiz-correct');
-    } else if (i === index && !correct) {
-      btn.classList.add('quiz-wrong');
-    }
-  });
-
-  if (correct) {
-    quizCorrectCount += 1;
-  }
-  updateQuizMeta();
-
-  if (quizFeedback) {
-    quizFeedback.textContent = correct
-      ? 'Correct! Nicely done.'
-      : 'Not quite. The correct answer is highlighted.';
-  }
-
-  track('quiz_answer', {
-    correct,
-    picked_index: index,
-    correct_index: currentQuiz.correctIndex
-  });
-}
+  sizeCanvas();
+  positionSpinFab();
+  wire();
+})();
 
 /* ---------- Mode switch ---------- */
 function setMode(next){
@@ -1171,6 +1029,48 @@ async function loadPlayers(){
 
   for (const id of new Set(PLAYERS.map(p=>String(p.club_id)))){
     if (!CLUB_BY_ID.has(id)) CLUB_BY_ID.set(id, FALLBACK_TEAMS[id] || `Team #${id}`);
+  }
+}
+
+async function loadClubKnowledge() {
+  try {
+    const res = await fetch('/data/club_knowledge.normalized.json', { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error('club_knowledge.normalized.json not found');
+    }
+
+    const raw = await res.json();
+    const arr = Array.isArray(raw) ? raw : [];
+    CLUB_KNOWLEDGE = arr;
+
+    CLUB_KNOWLEDGE_BY_NAME.clear();
+    CLUB_KNOWLEDGE_BY_LEAGUE_AND_NAME.clear();
+
+    arr.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+
+      const clubName =
+        (entry.club || entry.team_name || entry.name || '').trim();
+      if (!clubName) return;
+
+      const league =
+        (entry.league_code || entry.league || '').toUpperCase();
+
+      const keyName = clubName.toLowerCase();
+      CLUB_KNOWLEDGE_BY_NAME.set(keyName, entry);
+
+      if (league) {
+        const k = league + '|' + keyName;
+        CLUB_KNOWLEDGE_BY_LEAGUE_AND_NAME.set(k, entry);
+      }
+    });
+
+    if (localStorage.debugFS === '1') {
+      console.log('[quiz] Loaded club knowledge entries:', CLUB_KNOWLEDGE.length);
+    }
+  } catch (e) {
+    console.warn('Failed to load club knowledge:', e);
+    CLUB_KNOWLEDGE = [];
   }
 }
 
