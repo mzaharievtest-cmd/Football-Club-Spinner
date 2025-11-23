@@ -5,8 +5,7 @@
    - PL Top-6 sorted first alphabetically.
    - History stored per item with type {type:'team'|'player', item:{…}} and rendered per active mode.
    - Modal: clean layout + modern “Show …” reveal buttons (centered over blurred element).
-   - AI Quiz: when enabled, builds questions client-side from data/club_knowledge.normalized.json
-     and shows them inside the result modal.
+   - AI Quiz: when enabled, calls /api/quiz on Vercel (OpenAI-backed) and shows the question in the modal.
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -19,6 +18,7 @@ let PLAYERS = [];
 let TOTAL_TEAMS = 0;
 let TOTAL_PLAYERS = 0;
 
+// These are currently unused on the client but kept for future enhancements:
 let CLUB_KNOWLEDGE = [];
 let CLUB_KNOWLEDGE_BY_NAME = new Map();
 let CLUB_KNOWLEDGE_BY_LEAGUE_AND_NAME = new Map();
@@ -32,7 +32,6 @@ let historyStore = { team: [], player: [] };
 
 (function initHistory(){
   try {
-    // New format: { team: [...], player: [...] }
     const v2 = JSON.parse(localStorage.getItem('fsHistoryV2') || 'null');
     if (v2 && typeof v2 === 'object') {
       historyStore.team   = Array.isArray(v2.team)   ? v2.team   : [];
@@ -49,11 +48,9 @@ let historyStore = { team: [], player: [] };
       if (!h || typeof h !== 'object') continue;
 
       if ('type' in h && 'item' in h) {
-        // Already wrapped
         if (h.type === 'player') players.push(h.item);
         else teams.push(h.item);
       } else {
-        // Heuristic: players had image_url / club_id
         if (h.image_url || h.club_id) players.push(h);
         else teams.push(h);
       }
@@ -127,8 +124,8 @@ const mJersey    = document.getElementById('mJersey');
 const rowNat     = document.getElementById('rowNat');
 const mNat       = document.getElementById('mNat');
 
-/* AI Quiz DOM (matches your HTML) */
-const quizContainer = document.getElementById('quizContainer');   // main quiz block in modal
+/* AI Quiz DOM */
+const quizContainer = document.getElementById('quizContainer');
 const quizQuestion  = document.getElementById('quizQuestion');
 const quizAnswers   = document.getElementById('quizAnswers');
 const quizFeedback  = document.getElementById('quizFeedback');
@@ -138,18 +135,18 @@ const quizProgress  = document.getElementById('quizProgress');
 const quizScore     = document.getElementById('quizScore');
 
 // Sidebar AI controls
-const aiQuizToggle     = document.getElementById('aiQuizToggle');      // checkbox
-const aiQuizDifficulty = document.getElementById('aiQuizDifficulty');  // select (auto/easy/medium/hard)
-const aiQuizCategory   = document.getElementById('aiQuizCategory');    // currently just a hint
-const aiQuizRounds     = document.getElementById('aiQuizRounds');      // endless / 5 / 10
+const aiQuizToggle     = document.getElementById('aiQuizToggle');
+const aiQuizDifficulty = document.getElementById('aiQuizDifficulty');
+const aiQuizCategory   = document.getElementById('aiQuizCategory');
+const aiQuizRounds     = document.getElementById('aiQuizRounds');
 
 /* Reveal state (global) */
 let modalReveal = { a:false, b:false, c:false, d:false, e:false };
 
 /* AI Quiz state */
 let AI_QUIZ_ENABLED = false;
-let currentQuiz = null;           // { question, answers:[...], correctIndex, explanation? }
-let lastQuizItem = null;          // item used for current quiz
+let currentQuiz = null;      // { question, answers:[...], correctIndex, explanation? }
+let lastQuizItem = null;     // item used for current quiz
 let quizRoundsPlayed = 0;
 let quizCorrectCount = 0;
 
@@ -196,8 +193,8 @@ function mixRgb(a, b, weight){
   const iw = 1 - w;
   return {
     r: a.r * iw + b.r * w,
-    g: a.g * iw * 1 + b.g * w,
-    b: a.b * iw * 1 + b.b * w
+    g: a.g * iw + b.g * w,
+    b: a.b * iw + b.b * w
   };
 }
 
@@ -277,7 +274,6 @@ function updatePerfBanner(){
   spinBtn.disabled = disabled;
   spinFab.disabled = disabled;
 
-  // hide SPIN if no selection
   const hasSelection = activeCodes().length > 0;
   const visibility = hasSelection ? '' : 'hidden';
 
@@ -392,7 +388,6 @@ function drawIdle(ctx, W, H){
 
   const r = Math.min(W, H) * 0.48;
 
-  // Background disc gradient
   const g = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
   g.addColorStop(0, '#1A2C5A');
   g.addColorStop(0.35, '#21386F');
@@ -404,13 +399,11 @@ function drawIdle(ctx, W, H){
   ctx.fillStyle = g;
   ctx.fill();
 
-  // Subtle inner glow
   ctx.beginPath();
   ctx.arc(0, 0, r * 0.68, 0, TAU);
   ctx.fillStyle = 'rgba(15,23,42,0.85)';
   ctx.fill();
 
-  // Small sparkle ring
   ctx.save();
   ctx.rotate(currentAngle);
   const glowR = r * 0.82;
@@ -513,7 +506,6 @@ function drawWheel(){
   const r     = Math.min(W,H)*0.48;
   const slice = TAU/N;
 
-  // wedges
   for (let i=0;i<N;i++){
     ctx.beginPath();
     ctx.moveTo(0,0);
@@ -542,7 +534,6 @@ function drawWheel(){
     return;
   }
 
-  // performance mode
   if (hideAll){
     ctx.restore();
     const ctx2 = wheel.getContext('2d');
@@ -562,7 +553,6 @@ function drawWheel(){
     return;
   }
 
-  // contents
   for (let i=0;i<N;i++){
     const t = data[i];
     const a0=i*slice, a1=(i+1)*slice, aMid=(a0+a1)/2;
@@ -750,8 +740,8 @@ function showResult(idx){
   lastQuizItem = item;
   openModal(item);
 
-  // Load quiz question (client-side) when enabled
   if (AI_QUIZ_ENABLED) {
+    resetQuizUI();
     loadQuizForItem(item);
   } else if (quizContainer) {
     quizContainer.hidden = true;
@@ -835,11 +825,11 @@ function blurEl(el){
   }
 }
 function unblurEl(el){
-  if (!el) return;
-  const w = el.parentElement;
-  el.style.filter = '';
-  const o = w && w.querySelector('.reveal-overlay'); if (o) o.remove();
-  const b = w && w.querySelector('.reveal-btn');     if (b) b.remove();
+  if(!el) return;
+  const w=el.parentElement;
+  el.style.filter='';
+  const o=w && w.querySelector('.reveal-overlay'); if(o) o.remove();
+  const b=w && w.querySelector('.reveal-btn'); if(b) b.remove();
 }
 function addReveal(key, el, enabled, label){
   ensureRevealStyles();
@@ -903,7 +893,6 @@ function openModal(item){
     if (optD) addReveal('d', mSub,     !!optD.checked, 'league');
   }
 
-  // If quiz disabled, keep block hidden
   if (quizContainer && !AI_QUIZ_ENABLED) {
     quizContainer.hidden = true;
   }
@@ -917,7 +906,7 @@ function closeModal(){
   setTimeout(()=>backdrop.style.display='none', 150);
 }
 
-/* ---------- AI QUIZ (client-side from club_knowledge) ---------- */
+/* ---------- AI QUIZ HELPERS (calls /api/quiz) ---------- */
 
 function resetQuizUI() {
   if (!quizContainer) return;
@@ -938,194 +927,101 @@ function updateQuizMeta() {
     } else {
       quizProgress.textContent = quizRoundsPlayed > 0
         ? `Question ${quizRoundsPlayed} of ${maxRounds}`
-        : `Questions: 0 of ${maxRounds}`;
+        : '';
     }
   }
   if (quizScore) {
-    if (quizRoundsPlayed === 0) {
-      quizScore.textContent = '';
-    } else {
-      quizScore.textContent = `Score: ${quizCorrectCount}/${quizRoundsPlayed}`;
-    }
+    quizScore.textContent = quizRoundsPlayed > 0
+      ? `Score: ${quizCorrectCount}/${quizRoundsPlayed}`
+      : '';
   }
 }
 
-function findClubKnowledge(clubName, leagueCode) {
-  if (!clubName) return null;
-  const keyName = clubName.toLowerCase();
-  const league = (leagueCode || '').toUpperCase();
-
-  if (league) {
-    const k = league + '|' + keyName;
-    const byLeague = CLUB_KNOWLEDGE_BY_LEAGUE_AND_NAME.get(k);
-    if (byLeague) return byLeague;
+function getQuizContextForItem(item) {
+  if (MODE === 'player') {
+    return {
+      kind: 'player',
+      name: item.team_name || '',
+      clubName: CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '',
+      league: 'Premier League',
+      nationality: item.nationality || '',
+      jersey: item.jersey || ''
+    };
+  } else {
+    return {
+      kind: 'club',
+      name: item.team_name || '',
+      leagueCode: item.league_code || '',
+      leagueName: leagueLabel(item.league_code) || '',
+      stadium: item.stadium || ''
+    };
   }
-
-  return CLUB_KNOWLEDGE_BY_NAME.get(keyName) || null;
 }
 
-function pickRandom(arr, excludeIndex = -1) {
-  const n = arr.length;
-  if (!n) return null;
-  let idx;
-  do {
-    idx = Math.floor(Math.random() * n);
-  } while (idx === excludeIndex && n > 1);
-  return arr[idx];
-}
-
-function shuffleArray(a) {
-  const arr = a.slice();
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function buildQuizFromKnowledge(clubName, leagueCode, entry) {
-  // Try trivia-based question first
-  const trivia = Array.isArray(entry.trivia) ? entry.trivia.filter(t => typeof t === 'string' && t.trim()) : [];
-  const allTrivia = [];
-
-  CLUB_KNOWLEDGE.forEach(e => {
-    const club = (e.club || e.team_name || e.name || '').trim();
-    const list = Array.isArray(e.trivia) ? e.trivia : [];
-    list.forEach(txt => {
-      if (typeof txt === 'string' && txt.trim()) {
-        allTrivia.push({ club, text: txt.trim() });
-      }
-    });
-  });
-
-  if (trivia.length && allTrivia.length > 3) {
-    const correctText = pickRandom(trivia) || trivia[0];
-    const wrongs = [];
-    const maxWrong = 3;
-    const used = new Set();
-    used.add(correctText);
-
-    while (wrongs.length < maxWrong) {
-      const candidate = pickRandom(allTrivia);
-      if (!candidate) break;
-      if (candidate.club === clubName) continue;
-      if (used.has(candidate.text)) continue;
-      used.add(candidate.text);
-      wrongs.push(candidate.text);
-    }
-
-    if (wrongs.length < maxWrong) {
-      // fallback: skip trivia mode
-    } else {
-      const rawAnswers = [
-        { text: correctText, correct: true },
-        ...wrongs.map(t => ({ text: t, correct: false }))
-      ];
-
-      const shuffled = shuffleArray(rawAnswers);
-      const answers = shuffled.map(a => a.text);
-      const correctIndex = shuffled.findIndex(a => a.correct);
-
-      return {
-        question: `Which of these facts is true for ${clubName}?`,
-        answers,
-        correctIndex,
-        explanation: ''
-      };
-    }
-  }
-
-  // Fallback: league question
-  const leagueName = leagueLabel(leagueCode) || leagueCode || 'their main league';
-
-  const leagueCodes = Object.keys(LEAGUE_LABELS);
-  const otherCodes = leagueCodes.filter(c => c !== leagueCode);
-  const wrongLeagues = shuffleArray(otherCodes).slice(0, 3);
-  const allOptionsRaw = [
-    { text: leagueName, correct: true },
-    ...wrongLeagues.map(code => ({
-      text: leagueLabel(code),
-      correct: false
-    }))
-  ];
-
-  const shuffled = shuffleArray(allOptionsRaw);
-  const answers = shuffled.map(a => a.text);
-  const correctIndex = shuffled.findIndex(a => a.correct);
-
-  return {
-    question: `${clubName} plays in which league?`,
-    answers,
-    correctIndex,
-    explanation: ''
-  };
-}
-
-function loadQuizForItem(item) {
+async function loadQuizForItem(item) {
   if (!quizContainer || !quizQuestion || !quizAnswers) return;
+
+  const ctx = getQuizContextForItem(item);
+  currentQuiz = null;
 
   quizContainer.hidden = false;
   quizAnswers.innerHTML = '';
-  quizQuestion.textContent = '';
-
-  // Determine club + league from the result
-  let clubName = '';
-  let leagueCode = '';
-
-  if (MODE === 'team') {
-    clubName = item.team_name || '';
-    leagueCode = item.league_code || '';
-  } else {
-    clubName = CLUB_BY_ID.get(String(item.club_id)) ||
-               FALLBACK_TEAMS[String(item.club_id)] || '';
-    const team = TEAM_BY_ID.get(String(item.club_id));
-    leagueCode = team?.league_code || 'EPL';
+  quizQuestion.textContent = 'Loading AI question...';
+  if (quizFeedback) {
+    quizFeedback.textContent = 'Talking to AI…';
   }
 
   const difficulty = aiQuizDifficulty?.value || 'auto';
   const category   = aiQuizCategory?.value || 'mixed';
 
-  if (!clubName) {
-    quizQuestion.textContent = 'No quiz available for this result.';
-    if (quizFeedback) quizFeedback.textContent = '';
-    return;
+  try {
+    track('quiz_request', {
+      difficulty,
+      kind: ctx.kind,
+      name: ctx.name || '',
+      league: ctx.leagueName || ctx.league || '',
+      category
+    });
+
+    const res = await fetch('/api/quiz', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        mode: MODE,
+        difficulty,
+        category,
+        context: ctx
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error('HTTP ' + res.status);
+    }
+
+    const data = await res.json();
+
+    if (!data || !Array.isArray(data.answers) || typeof data.correctIndex !== 'number') {
+      throw new Error('Invalid quiz payload');
+    }
+
+    quizRoundsPlayed += 1;
+    updateQuizMeta();
+
+    currentQuiz = data;
+    renderQuiz(data);
+
+    if (quizFeedback) {
+      quizFeedback.textContent = 'Pick one answer to see if you’re right.';
+    }
+  } catch (err) {
+    console.error('Quiz error', err);
+    quizQuestion.textContent = 'AI could not create a question right now.';
+    quizAnswers.innerHTML = '';
+    if (quizFeedback) {
+      quizFeedback.textContent = 'Try spinning again in a moment.';
+    }
+    track('quiz_error', { message: String(err) });
   }
-
-  const knowledge = findClubKnowledge(clubName, leagueCode);
-
-  if (!knowledge) {
-    quizQuestion.textContent = `No quiz data for ${clubName} yet.`;
-    if (quizFeedback) quizFeedback.textContent = '';
-    return;
-  }
-
-  const quiz = buildQuizFromKnowledge(clubName, leagueCode, knowledge);
-  if (!quiz || !Array.isArray(quiz.answers) || typeof quiz.correctIndex !== 'number') {
-    quizQuestion.textContent = 'Could not build a question from the club data.';
-    if (quizFeedback) quizFeedback.textContent = '';
-    return;
-  }
-
-  currentQuiz = quiz;
-
-  // New round
-  quizRoundsPlayed += 1;
-  updateQuizMeta();
-
-  renderQuiz(quiz);
-
-  if (quizFeedback) {
-    const difficultyLabel = difficulty === 'auto' ? 'auto' : difficulty;
-    quizFeedback.textContent = `Difficulty: ${difficultyLabel}. Pick an answer.`;
-  }
-
-  track('quiz_request', {
-    difficulty,
-    category,
-    mode: MODE,
-    club: clubName,
-    league: leagueCode
-  });
 }
 
 function renderQuiz(quiz) {
@@ -1137,7 +1033,7 @@ function renderQuiz(quiz) {
   quiz.answers.forEach((answerText, i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'quiz-answer chip-btn';
+    btn.className = 'chip-btn quiz-answer';
     btn.textContent = answerText;
     btn.addEventListener('click', () => handleQuizAnswerClick(i));
     quizAnswers.appendChild(btn);
@@ -1165,9 +1061,10 @@ function handleQuizAnswerClick(index) {
   updateQuizMeta();
 
   if (quizFeedback) {
+    const expl = currentQuiz.explanation ? ` ${currentQuiz.explanation}` : '';
     quizFeedback.textContent = correct
-      ? 'Correct! Nicely done.'
-      : 'Not quite. The correct answer is highlighted.';
+      ? `Correct!${expl}`
+      : `Not quite. The correct answer is highlighted.${expl}`;
   }
 
   track('quiz_answer', {
@@ -1197,7 +1094,6 @@ function setMode(next){
   renderChips();
   renderHistory();
 
-  // hide quiz when switching mode until next spin
   if (quizContainer) {
     quizContainer.hidden = true;
   }
@@ -1276,12 +1172,11 @@ async function loadPlayers(){
   }
 }
 
+// Optional: try to load club knowledge file (safe even if it 404s).
 async function loadClubKnowledge() {
   try {
     const res = await fetch('/data/club_knowledge.normalized.json', { cache: 'no-store' });
-    if (!res.ok) {
-      throw new Error('club_knowledge.normalized.json not found');
-    }
+    if (!res.ok) return;
 
     const raw = await res.json();
     const arr = Array.isArray(raw) ? raw : [];
@@ -1339,7 +1234,6 @@ function wire(){
     toggleMore.setAttribute('aria-expanded', String(!hidden));
   });
 
-  // Quick picks
   qpAll && (qpAll.onclick = () => {
     const all = visibleCodesAll();
     chipsWrap.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = all.includes(i.value); });
@@ -1395,11 +1289,9 @@ function wire(){
         quizContainer.hidden = true;
       }
       if (AI_QUIZ_ENABLED) {
-        // fresh session
         quizRoundsPlayed = 0;
         quizCorrectCount = 0;
-        if (quizProgress) quizProgress.textContent = '';
-        if (quizScore) quizScore.textContent = '';
+        updateQuizMeta();
       }
       track('quiz_toggle', { enabled: AI_QUIZ_ENABLED });
     });
@@ -1446,7 +1338,7 @@ function wire(){
   try{
     await loadTeams();
     await loadPlayers();
-    await loadClubKnowledge();
+    await loadClubKnowledge(); // optional, safe if file missing
   } catch (e){
     console.error('Failed to load data:', e);
   }
