@@ -5,7 +5,8 @@
    - PL Top-6 sorted first alphabetically.
    - History stored per item with type {type:'team'|'player', item:{…}} and rendered per active mode.
    - Modal: clean layout + modern “Show …” reveal buttons (centered over blurred element).
-   - AI Quiz: when enabled, fetches a real-time question for the landed team/player from /api/quiz.
+   - AI Quiz: when enabled, fetches a real-time question for the landed team/player from /api/quiz
+     and shows it inside the result modal.
 */
 
 let MODE = (localStorage.getItem('fsMode') === 'player') ? 'player' : 'team';
@@ -122,20 +123,31 @@ const mJersey    = document.getElementById('mJersey');
 const rowNat     = document.getElementById('rowNat');
 const mNat       = document.getElementById('mNat');
 
-/* AI Quiz DOM */
-const quizCard      = document.getElementById('quizCard');
+/* AI Quiz DOM (matches your HTML) */
+const quizContainer = document.getElementById('quizContainer');   // main quiz block in modal
 const quizQuestion  = document.getElementById('quizQuestion');
 const quizAnswers   = document.getElementById('quizAnswers');
-const quizStatus    = document.getElementById('quizStatus');
-const quizToggle    = document.getElementById('quizToggle');   // checkbox
-const quizDifficulty= document.getElementById('quizDifficulty'); // select (easy/med/hard/auto)
+const quizFeedback  = document.getElementById('quizFeedback');
+const quizNextBtn   = document.getElementById('quizNextBtn');
+const quizEndBtn    = document.getElementById('quizEndBtn');
+const quizProgress  = document.getElementById('quizProgress');
+const quizScore     = document.getElementById('quizScore');
+
+// Sidebar AI controls
+const aiQuizToggle     = document.getElementById('aiQuizToggle');      // checkbox
+const aiQuizDifficulty = document.getElementById('aiQuizDifficulty');  // select (auto/easy/medium/hard)
+const aiQuizCategory   = document.getElementById('aiQuizCategory');    // currently just a hint for prompt
+const aiQuizRounds     = document.getElementById('aiQuizRounds');      // endless / 5 / 10
 
 /* Reveal state (global) */
 let modalReveal = { a:false, b:false, c:false, d:false, e:false };
 
 /* AI Quiz state */
-let AI_QUIZ_ENABLED = true;
-let currentQuiz = null; // { question, answers:[...], correctIndex, explanation? }
+let AI_QUIZ_ENABLED = false;
+let currentQuiz = null;           // { question, answers:[...], correctIndex, explanation? }
+let lastQuizItem = null;          // item used for current quiz
+let quizRoundsPlayed = 0;
+let quizCorrectCount = 0;
 
 /* ---------- Utils ---------- */
 const TAU = Math.PI * 2;
@@ -731,13 +743,14 @@ function showResult(idx){
   saveHistory();
   renderHistory();
 
+  lastQuizItem = item;
   openModal(item);
 
-  // 🔹 Load AI quiz in real time (if enabled)
+  // Load AI quiz in real time (if enabled)
   if (AI_QUIZ_ENABLED) {
     loadQuizForItem(item);
-  } else if (quizCard) {
-    quizCard.style.display = 'none';
+  } else if (quizContainer) {
+    quizContainer.hidden = true;
   }
 }
 
@@ -886,13 +899,44 @@ function openModal(item){
     if (optD) addReveal('d', mSub,     !!optD.checked, 'league');
   }
 
+  // If quiz disabled, keep block hidden
+  if (quizContainer && !AI_QUIZ_ENABLED) {
+    quizContainer.hidden = true;
+  }
+
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
 
-function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
+function closeModal(){
+  modalEl.classList.remove('show');
+  setTimeout(()=>backdrop.style.display='none', 150);
+}
 
 /* ---------- AI QUIZ HELPERS ---------- */
+
+function resetQuizUI() {
+  if (!quizContainer) return;
+  quizContainer.hidden = false;
+  if (quizQuestion) quizQuestion.textContent = '';
+  if (quizAnswers)  quizAnswers.innerHTML = '';
+  if (quizFeedback) quizFeedback.textContent = '';
+}
+
+function updateQuizMeta() {
+  if (!quizProgress && !quizScore) return;
+  const maxRounds = aiQuizRounds?.value || 'endless';
+  if (quizProgress) {
+    if (maxRounds === 'endless') {
+      quizProgress.textContent = `Round ${quizRoundsPlayed}`;
+    } else {
+      quizProgress.textContent = `Question ${quizRoundsPlayed} of ${maxRounds}`;
+    }
+  }
+  if (quizScore) {
+    quizScore.textContent = `Score: ${quizCorrectCount}/${quizRoundsPlayed}`;
+  }
+}
 
 function getQuizContextForItem(item) {
   if (MODE === 'player') {
@@ -902,7 +946,7 @@ function getQuizContextForItem(item) {
       clubName: CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '',
       league: 'Premier League',
       nationality: item.nationality || '',
-      jersey: item.jersey || '',
+      jersey: item.jersey || ''
     };
   } else {
     return {
@@ -910,32 +954,34 @@ function getQuizContextForItem(item) {
       name: item.team_name || '',
       leagueCode: item.league_code || '',
       leagueName: leagueLabel(item.league_code) || '',
-      stadium: item.stadium || '',
+      stadium: item.stadium || ''
     };
   }
 }
 
 async function loadQuizForItem(item) {
-  if (!quizCard || !quizQuestion || !quizAnswers) return;
+  if (!quizContainer || !quizQuestion || !quizAnswers) return;
 
   const ctx = getQuizContextForItem(item);
   currentQuiz = null;
 
-  quizCard.style.display = 'block';
-  quizQuestion.textContent = 'Loading AI question...';
+  quizContainer.hidden = false;
   quizAnswers.innerHTML = '';
-  if (quizStatus) {
-    quizStatus.textContent = 'Talking to AI…';
+  quizQuestion.textContent = 'Loading AI question...';
+  if (quizFeedback) {
+    quizFeedback.textContent = 'Talking to AI…';
   }
 
-  const difficulty = quizDifficulty?.value || 'auto';
+  const difficulty = aiQuizDifficulty?.value || 'auto';
+  const category   = aiQuizCategory?.value || 'mixed';
 
   try {
     track('quiz_request', {
       difficulty,
       kind: ctx.kind,
       name: ctx.name || '',
-      league: ctx.leagueName || ctx.league || ''
+      league: ctx.leagueName || ctx.league || '',
+      category
     });
 
     const res = await fetch('/api/quiz', {
@@ -944,7 +990,8 @@ async function loadQuizForItem(item) {
       body: JSON.stringify({
         mode: MODE,
         difficulty,
-        context: ctx,
+        category,
+        context: ctx
       })
     });
 
@@ -953,31 +1000,35 @@ async function loadQuizForItem(item) {
     }
 
     const data = await res.json();
-    // expected: { question, answers:[...4], correctIndex, explanation? }
 
     if (!data || !Array.isArray(data.answers) || typeof data.correctIndex !== 'number') {
       throw new Error('Invalid quiz payload');
     }
 
+    // New round
+    quizRoundsPlayed += 1;
+    updateQuizMeta();
+
     currentQuiz = data;
     renderQuiz(data);
-    if (quizStatus) {
-      quizStatus.textContent = 'Pick one answer to see if you’re right.';
+
+    if (quizFeedback) {
+      quizFeedback.textContent = 'Pick one answer to see if you’re right.';
     }
   } catch (err) {
     console.error('Quiz error', err);
     quizQuestion.textContent = 'AI could not create a question right now.';
     quizAnswers.innerHTML = '';
-    if (quizStatus) {
-      quizStatus.textContent = 'Try spinning again in a moment.';
+    if (quizFeedback) {
+      quizFeedback.textContent = 'Try spinning again in a moment.';
     }
     track('quiz_error', { message: String(err) });
   }
 }
 
 function renderQuiz(quiz) {
-  if (!quizCard || !quizQuestion || !quizAnswers) return;
-  quizCard.style.display = 'block';
+  if (!quizContainer || !quizQuestion || !quizAnswers) return;
+  quizContainer.hidden = false;
   quizQuestion.textContent = quiz.question || '';
 
   quizAnswers.innerHTML = '';
@@ -1006,8 +1057,13 @@ function handleQuizAnswerClick(index) {
     }
   });
 
-  if (quizStatus) {
-    quizStatus.textContent = correct
+  if (correct) {
+    quizCorrectCount += 1;
+  }
+  updateQuizMeta();
+
+  if (quizFeedback) {
+    quizFeedback.textContent = correct
       ? 'Correct! Nicely done.'
       : 'Not quite. The correct answer is highlighted.';
   }
@@ -1015,7 +1071,7 @@ function handleQuizAnswerClick(index) {
   track('quiz_answer', {
     correct,
     picked_index: index,
-    correct_index: currentQuiz.correctIndex,
+    correct_index: currentQuiz.correctIndex
   });
 }
 
@@ -1040,8 +1096,8 @@ function setMode(next){
   renderHistory();
 
   // hide quiz when switching mode until next spin
-  if (quizCard) {
-    quizCard.style.display = 'none';
+  if (quizContainer) {
+    quizContainer.hidden = true;
   }
 
   track('mode_set', { mode_after: MODE });
@@ -1186,15 +1242,52 @@ function wire(){
   backdrop && backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop){ closeModal(); track('modal_close_backdrop'); }});
   window.addEventListener('keydown', e=> { if (e.key==='Escape' && !spinning){ closeModal(); track('modal_close_escape'); }});
 
-  // AI mode toggle
-  if (quizToggle) {
-    AI_QUIZ_ENABLED = quizToggle.checked;
-    quizToggle.addEventListener('change', () => {
-      AI_QUIZ_ENABLED = quizToggle.checked;
-      if (!AI_QUIZ_ENABLED && quizCard) {
-        quizCard.style.display = 'none';
+  // AI mode toggle (sidebar)
+  if (aiQuizToggle) {
+    AI_QUIZ_ENABLED = aiQuizToggle.checked;
+    aiQuizToggle.addEventListener('change', () => {
+      AI_QUIZ_ENABLED = aiQuizToggle.checked;
+      if (!AI_QUIZ_ENABLED && quizContainer) {
+        quizContainer.hidden = true;
+      }
+      if (AI_QUIZ_ENABLED) {
+        // fresh session
+        quizRoundsPlayed = 0;
+        quizCorrectCount = 0;
+        if (quizProgress) quizProgress.textContent = '';
+        if (quizScore) quizScore.textContent = '';
       }
       track('quiz_toggle', { enabled: AI_QUIZ_ENABLED });
+    });
+  }
+
+  // Quiz next / end
+  if (quizNextBtn) {
+    quizNextBtn.addEventListener('click', () => {
+      if (!AI_QUIZ_ENABLED || !lastQuizItem) return;
+      // Check if we reached round limit
+      const maxRounds = aiQuizRounds?.value || 'endless';
+      if (maxRounds !== 'endless' && quizRoundsPlayed >= parseInt(maxRounds, 10)) {
+        if (quizFeedback) {
+          quizFeedback.textContent = 'Quiz finished — change rounds or spin again to restart.';
+        }
+        return;
+      }
+      resetQuizUI();
+      loadQuizForItem(lastQuizItem);
+      track('quiz_next', { rounds_played: quizRoundsPlayed });
+    });
+  }
+
+  if (quizEndBtn) {
+    quizEndBtn.addEventListener('click', () => {
+      if (quizContainer) {
+        quizContainer.hidden = true;
+      }
+      track('quiz_end', {
+        rounds_played: quizRoundsPlayed,
+        correct: quizCorrectCount
+      });
     });
   }
 
