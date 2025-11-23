@@ -1,7 +1,7 @@
 [
 {
   "6": {
-    "club_name": "Tottenham Hotspur",
+    "club": "Tottenham Hotspur",
     "league_code": "EPL",
     "country": "England",
     "city": "London",
@@ -35,7 +35,7 @@
     ]
   },
   "8": {
-    "club_name": "Liverpool",
+    "club": "Liverpool",
     "league_code": "EPL",
     "country": "England",
     "city": "Liverpool",
@@ -69,7 +69,7 @@
     ]
   },
   "9": {
-    "club_name": "Manchester City",
+    "club": "Manchester City",
     "league_code": "EPL",
     "country": "England",
     "city": "Manchester",
@@ -102,7 +102,7 @@
     ]
   },
   "10": {
-    "club_name": "Southampton",
+    "club": "Southampton",
     "league_code": "EPL",
     "country": "England",
     "city": "Southampton",
@@ -134,7 +134,7 @@
     ]
   },
   "11": {
-    "club_name": "Fulham",
+    "club": "Fulham",
     "league_code": "EPL",
     "country": "England",
     "city": "London",
@@ -167,7 +167,7 @@
     ]
   },
   "13": {
-    "club_name": "Everton",
+    "club": "Everton",
     "league_code": "EPL",
     "country": "England",
     "city": "Liverpool",
@@ -199,7 +199,7 @@
     ]
   },
   "14": {
-    "club_name": "Manchester United",
+    "club": "Manchester United",
     "league_code": "EPL",
     "country": "England",
     "city": "Manchester",
@@ -233,7 +233,7 @@
     ]
   },
   "15": {
-    "club_name": "Aston Villa",
+    "club": "Aston Villa",
     "league_code": "EPL",
     "country": "England",
     "city": "Birmingham",
@@ -266,7 +266,7 @@
     ]
   },
   "18": {
-    "club_name": "Chelsea",
+    "club": "Chelsea",
     "league_code": "EPL",
     "country": "England",
     "city": "London",
@@ -299,7 +299,7 @@
     ]
   },
   "19": {
-    "club_name": "Arsenal",
+    "club": "Arsenal",
     "league_code": "EPL",
     "country": "England",
     "city": "London",
@@ -332,7 +332,7 @@
     ]
   },
   "20": {
-    "club_name": "Newcastle United",
+    "club": "Newcastle United",
     "league_code": "EPL",
     "country": "England",
     "city": "Newcastle upon Tyne",
@@ -364,7 +364,7 @@
     ]
   },
   "21": {
-    "club_name": "West Ham United",
+    "club": "West Ham United",
     "league_code": "EPL",
     "country": "England",
     "city": "London",
@@ -397,7 +397,7 @@
     ]
   },
   "26": {
-    "club_name": "Leicester City",
+    "club": "Leicester City",
     "league_code": "EPL",
     "country": "England",
     "city": "Leicester",
@@ -429,7 +429,7 @@
     ]
   },
   "27": {
-    "club_name": "Burnley",
+    "club": "Burnley",
     "league_code": "EPL",
     "country": "England",
     "city": "Burnley",
@@ -461,7 +461,7 @@
     ]
   },
   "29": {
-    "club_name": "Wolverhampton Wanderers",
+    "club": "Wolverhampton Wanderers",
     "league_code": "EPL",
     "country": "England",
     "city": "Wolverhampton",
@@ -494,7 +494,7 @@
     ]
   },
   "51": {
-    "club_name": "Crystal Palace",
+    "club": "Crystal Palace",
     "league_code": "EPL",
     "country": "England",
     "city": "London (Croydon)",
@@ -527,7 +527,7 @@
     ]
   },
   "52": {
-    "club_name": "AFC Bournemouth",
+    "club": "AFC Bournemouth",
     "league_code": "EPL",
     "country": "England",
     "city": "Bournemouth",
@@ -559,7 +559,7 @@
     ]
   },
   "62": {
-    "club_name": "Sheffield United",
+    "club": "Sheffield United",
     "league_code": "EPL",
     "country": "England",
     "city": "Sheffield",
@@ -592,7 +592,7 @@
     ]
   },
   "63": {
-    "club_name": "Nottingham Forest",
+    "club": "Nottingham Forest",
     "league_code": "EPL",
     "country": "England",
     "city": "Nottingham",
@@ -625,7 +625,7 @@
     ]
   },
   "71": {
-    "club_name": "Leeds United",
+    "club": "Leeds United",
     "league_code": "EPL",
     "country": "England",
     "city": "Leeds",
@@ -658,7 +658,7 @@
     ]
   },
   "78": {
-    "club_name": "Brighton & Hove Albion",
+    "club": "Brighton & Hove Albion",
     "league_code": "EPL",
     "country": "England",
     "city": "Brighton & Hove",
@@ -690,7 +690,7 @@
     ]
   },
   "236": {
-    "club_name": "Brentford",
+    "club": "Brentford",
     "league_code": "EPL",
     "country": "England",
     "city": "London",
