@@ -121,8 +121,53 @@ const mJersey    = document.getElementById('mJersey');
 const rowNat     = document.getElementById('rowNat');
 const mNat       = document.getElementById('mNat');
 
+/* AI Quiz DOM */
+const aiQuizToggle      = document.getElementById('aiQuizToggle');
+const aiQuizDifficulty  = document.getElementById('aiQuizDifficulty');
+const aiQuizCategory    = document.getElementById('aiQuizCategory');
+const aiQuizRounds      = document.getElementById('aiQuizRounds');
+
+const quizContainer     = document.getElementById('quizContainer');
+const quizQuestionEl    = document.getElementById('quizQuestion');
+const quizAnswersWrap   = document.getElementById('quizAnswers');
+const quizAnswerButtons = quizAnswersWrap ? Array.from(quizAnswersWrap.querySelectorAll('.quiz-answer')) : [];
+const quizFeedbackEl    = document.getElementById('quizFeedback');
+const quizProgressEl    = document.getElementById('quizProgress');
+const quizScoreEl       = document.getElementById('quizScore');
+const quizNextBtn       = document.getElementById('quizNextBtn');
+const quizEndBtn        = document.getElementById('quizEndBtn');
+
 /* Reveal state (global) */
 let modalReveal = { a:false, b:false, c:false, d:false, e:false };
+
+/* AI Quiz state */
+const aiQuizState = {
+  enabled: false,
+  difficulty: 'auto',
+  category: 'mixed',
+  roundsMode: 'endless',
+  totalAsked: 0,
+  totalCorrect: 0,
+  currentItem: null, // { item, mode }
+  locked: false
+};
+
+(function initAiQuizFromStorage(){
+  if (!aiQuizToggle) return;
+  try {
+    aiQuizState.enabled    = localStorage.getItem('fsAiQuizEnabled') === '1';
+    aiQuizState.difficulty = localStorage.getItem('fsAiQuizDifficulty') || 'auto';
+    aiQuizState.category   = localStorage.getItem('fsAiQuizCategory') || 'mixed';
+    aiQuizState.roundsMode = localStorage.getItem('fsAiQuizRounds') || 'endless';
+  } catch(e){}
+
+  aiQuizToggle.checked = aiQuizState.enabled;
+  if (aiQuizDifficulty) aiQuizDifficulty.value = aiQuizState.difficulty;
+  if (aiQuizCategory)   aiQuizCategory.value   = aiQuizState.category;
+  if (aiQuizRounds)     aiQuizRounds.value     = aiQuizState.roundsMode;
+
+  if (quizContainer) quizContainer.hidden = !aiQuizState.enabled;
+})();
 
 /* ---------- Utils ---------- */
 const TAU = Math.PI * 2;
@@ -189,6 +234,37 @@ function getSliceColor(primary) {
   return '#020617';
 }
 
+/* Small random helpers for quiz */
+function randInt(max){ return Math.floor(Math.random() * max); }
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function sampleFrom(arr, excludeSet, count){
+  const pool = arr.filter(v => !excludeSet.has(v));
+  const out = [];
+  while (pool.length && out.length < count){
+    const idx = randInt(pool.length);
+    out.push(pool.splice(idx,1)[0]);
+  }
+  return out;
+}
+
+/* Normalize quiz answers to 4 slots (hide extra buttons if empty) */
+function normalizeAnswersForUi(q){
+  const ans = Array.isArray(q.answers) ? q.answers.slice(0,4) : [];
+  while (ans.length < 4) ans.push('');
+  q.answers = ans;
+  if (q.correctIndex == null || q.correctIndex < 0 || q.correctIndex > 3){
+    q.correctIndex = 0;
+  }
+  return q;
+}
+
 /* ---------- Labels & presets ---------- */
 const LEAGUE_LABELS = {
   AUT:"Austrian Bundesliga", BEL:"Jupiler Pro League", BUL:"efbet Liga",
@@ -248,7 +324,7 @@ function updatePerfBanner(){
   spinBtn.disabled = disabled;
   spinFab.disabled = disabled;
 
-  // 🔹 če NI izbranih lig/ekip → skrij SPIN gumbe
+  // hide SPIN buttons if no leagues/teams are selected
   const hasSelection = activeCodes().length > 0;
   const visibility = hasSelection ? '' : 'hidden';
 
@@ -696,72 +772,6 @@ function spin(){
   requestAnimationFrame(step);
 }
 
-function showResult(idx){
-  const data = getCurrentData();
-  const item = data[idx];
-  if (!item) return;
-
-  if (MODE === 'team') {
-    track('spin_result', {
-      result_type: 'team',
-      team_name: item.team_name || '(unknown)',
-      league_code: item.league_code || '',
-      stadium_present: !!item.stadium
-    });
-  } else {
-    track('spin_result', {
-      result_type: 'player',
-      player_name: item.team_name || '(unknown)', // player display name is kept in team_name field
-      club_id: String(item.club_id || ''),
-      has_image: !!(item.image_url && !/placeholder\.png$/i.test(item.image_url)),
-      nationality: item.nationality || '',
-      jersey: item.jersey || ''
-    });
-  }
-
-     const bucket = getHistoryBucket(MODE);
-     bucket.unshift(item);
-     if (bucket.length > 50) bucket.length = 50;
-     saveHistory();
-   
-     renderHistory();
-     openModal(item);
-   }
-
-/* ---------- History ---------- */
-function renderHistory(){
-  historyEl.innerHTML = '';
-  const bucket = getHistoryBucket(MODE);
-
-  if (!bucket.length){
-    const empty = document.createElement('div');
-    empty.className = 'item';
-    empty.textContent = 'Your journey starts with a spin!';
-    historyEl.appendChild(empty);
-    return;
-  }
-
-  bucket.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'item';
-
-    const img = document.createElement('img');
-    if (MODE === 'player') {
-      img.src = item.image_url || '';
-      img.alt = item.team_name || 'Player';
-    } else {
-      img.src = item.logo_url || '';
-      img.alt = `${item.team_name || 'Team'} logo`;
-    }
-
-    const span = document.createElement('span');
-    span.textContent = item.team_name || (MODE === 'player' ? 'Player' : 'Team');
-
-    div.append(img, span);
-    historyEl.append(div);
-  });
-}
-
 /* ---------- Reveal helpers (Show buttons) ---------- */
 function ensureRevealStyles(){
   if (document.getElementById('reveal-style')) return;
@@ -874,11 +884,286 @@ function openModal(item){
     if (optD) addReveal('d', mSub,     !!optD.checked, 'league');
   }
 
+  // reset / keep quiz UI visibility (question will be set separately)
+  if (quizContainer && !aiQuizState.enabled) {
+    quizContainer.hidden = true;
+  }
+
   backdrop.style.display='flex';
   requestAnimationFrame(()=> modalEl.classList.add('show'));
 }
 
-function closeModal(){ modalEl.classList.remove('show'); setTimeout(()=>backdrop.style.display='none', 150); }
+function closeModal(){
+  modalEl.classList.remove('show');
+  setTimeout(()=>backdrop.style.display='none', 150);
+}
+
+/* ---------- AI Quiz: Question Generation ---------- */
+
+function makeTeamQuizQuestion(item){
+  const leagueName = leagueLabel(item.league_code);
+  const allCodes = [...new Set(TEAMS.map(t => t.league_code))];
+  const allLeagueNames = [...new Set(allCodes.map(c => leagueLabel(c)))];
+
+  const hasStadium = !!item.stadium;
+  let qType = 'league';
+
+  if (aiQuizState.category === 'club') {
+    qType = hasStadium ? 'stadium' : 'league';
+  } else if (aiQuizState.category === 'history' || aiQuizState.category === 'fans') {
+    qType = 'league';
+  } else if (aiQuizState.category === 'mixed') {
+    if (hasStadium && Math.random() < 0.5) qType = 'stadium';
+    else qType = 'league';
+  } else {
+    qType = 'league';
+  }
+
+  // Stadium question
+  if (qType === 'stadium' && hasStadium){
+    const allStadiums = [...new Set(TEAMS.map(t => t.stadium).filter(Boolean))];
+    const correct = item.stadium;
+    const wrongs = sampleFrom(allStadiums, new Set([correct]), 3);
+    const answers = shuffle([correct, ...wrongs]);
+    return normalizeAnswersForUi({
+      question: `What is ${item.team_name}'s home stadium?`,
+      answers,
+      correctIndex: answers.indexOf(correct)
+    });
+  }
+
+  // Default league question
+  const correct = leagueName;
+  const wrongs = sampleFrom(allLeagueNames, new Set([correct]), 3);
+  const answers = shuffle([correct, ...wrongs]);
+  return normalizeAnswersForUi({
+    question: `Which league do ${item.team_name} play in?`,
+    answers,
+    correctIndex: answers.indexOf(correct)
+  });
+}
+
+function makePlayerQuizQuestion(item){
+  const nat = item.nationality;
+  const jersey = item.jersey;
+  const clubName = CLUB_BY_ID.get(String(item.club_id)) || FALLBACK_TEAMS[String(item.club_id)] || '';
+
+  let qType;
+  if (aiQuizState.category === 'club') qType = 'club';
+  else if (aiQuizState.category === 'player') qType = 'nat';
+  else if (aiQuizState.category === 'manager') qType = 'club';
+  else if (aiQuizState.category === 'history' || aiQuizState.category === 'fans') qType = 'nat';
+  else qType = 'mixed';
+
+  if (qType === 'mixed'){
+    const candidates = [];
+    if (nat) candidates.push('nat');
+    if (jersey) candidates.push('jersey');
+    if (clubName) candidates.push('club');
+    qType = candidates.length ? candidates[randInt(candidates.length)] : 'nat';
+  }
+
+  // Club question
+  if (qType === 'club' && clubName){
+    const allClubs = [...new Set(Array.from(CLUB_BY_ID.values()))];
+    const correct = clubName;
+    const wrongs = sampleFrom(allClubs, new Set([correct]), 3);
+    const answers = shuffle([correct, ...wrongs]);
+    return normalizeAnswersForUi({
+      question: `Which club does ${item.team_name} currently play for?`,
+      answers,
+      correctIndex: answers.indexOf(correct)
+    });
+  }
+
+  // Jersey question
+  if (qType === 'jersey' && jersey){
+    const correct = `#${jersey}`;
+    const numbersPool = [];
+    for (let n = 1; n <= 99; n++) numbersPool.push(`#${n}`);
+    const wrongs = sampleFrom(numbersPool, new Set([correct]), 3);
+    const answers = shuffle([correct, ...wrongs]);
+    return normalizeAnswersForUi({
+      question: `What shirt number does ${item.team_name} wear?`,
+      answers,
+      correctIndex: answers.indexOf(correct)
+    });
+  }
+
+  // Default nationality question
+  const allNats = [...new Set(PLAYERS.map(p => p.nationality).filter(Boolean))];
+  const correctNat = nat || 'Unknown';
+  const wrongsNat = sampleFrom(allNats, new Set([correctNat]), 3);
+  const answersNat = shuffle([correctNat, ...wrongsNat]);
+  return normalizeAnswersForUi({
+    question: `Which country does ${item.team_name} represent?`,
+    answers: answersNat,
+    correctIndex: answersNat.indexOf(correctNat)
+  });
+}
+
+function makeQuizQuestionForItem(item, mode){
+  if (mode === 'player') return makePlayerQuizQuestion(item);
+  return makeTeamQuizQuestion(item);
+}
+
+function updateQuizScoreLabel(){
+  if (!quizScoreEl) return;
+  if (!aiQuizState.totalAsked) {
+    quizScoreEl.textContent = '';
+    return;
+  }
+  quizScoreEl.textContent = `Score: ${aiQuizState.totalCorrect}/${aiQuizState.totalAsked}`;
+}
+
+function updateQuizProgressLabel(){
+  if (!quizProgressEl) return;
+  if (!aiQuizState.enabled) {
+    quizProgressEl.textContent = '';
+    return;
+  }
+  const nextIndex = aiQuizState.totalAsked + 1;
+  const limit = (aiQuizState.roundsMode === 'endless') ? null : parseInt(aiQuizState.roundsMode, 10);
+  if (limit && !Number.isNaN(limit)){
+    quizProgressEl.textContent = `Question ${nextIndex} of ${limit}`;
+  } else {
+    quizProgressEl.textContent = `Question ${nextIndex}`;
+  }
+}
+
+function setupQuizQuestion(item, mode){
+  if (!quizContainer || !quizQuestionEl || !quizAnswerButtons.length) return;
+  const q = makeQuizQuestionForItem(item, mode);
+
+  quizContainer.hidden = false;
+  quizQuestionEl.textContent = q.question || '';
+  if (quizFeedbackEl) quizFeedbackEl.textContent = '';
+  updateQuizProgressLabel();
+
+  quizAnswerButtons.forEach((btn, idx) => {
+    const text = q.answers[idx] || '';
+    btn.textContent = text;
+    btn.dataset.correct = (idx === q.correctIndex && text) ? '1' : '0';
+    btn.disabled = !text;
+    btn.style.display = text ? '' : 'none';
+    btn.classList.remove('quiz-answer-correct','quiz-answer-wrong','quiz-answer-selected');
+  });
+
+  if (quizNextBtn) quizNextBtn.disabled = true;
+  aiQuizState.locked = false;
+}
+
+function handleQuizAfterSpin(item){
+  if (!aiQuizState.enabled || !quizContainer) return;
+  aiQuizState.currentItem = { item, mode: MODE };
+  setupQuizQuestion(item, MODE);
+}
+
+/* ---------- AI Quiz: Answer handling ---------- */
+
+function onQuizAnswerClick(e){
+  if (!aiQuizState.enabled || aiQuizState.locked) return;
+  const btn = e.currentTarget;
+  if (!btn) return;
+
+  aiQuizState.locked = true;
+  const isCorrect = btn.dataset.correct === '1';
+
+  aiQuizState.totalAsked += 1;
+  if (isCorrect) aiQuizState.totalCorrect += 1;
+  updateQuizScoreLabel();
+
+  quizAnswerButtons.forEach(b => {
+    const correct = b.dataset.correct === '1';
+    b.disabled = true;
+    b.classList.remove('quiz-answer-correct','quiz-answer-wrong','quiz-answer-selected');
+    if (correct) b.classList.add('quiz-answer-correct');
+    if (b === btn) {
+      b.classList.add('quiz-answer-selected');
+      if (!correct) b.classList.add('quiz-answer-wrong');
+    }
+  });
+
+  if (quizFeedbackEl){
+    quizFeedbackEl.textContent = isCorrect
+      ? 'Correct! Nice one.'
+      : 'Not quite – check the correct answer and try another question or spin again.';
+  }
+  if (quizNextBtn) quizNextBtn.disabled = false;
+
+  track('quiz_answered', {
+    correct: isCorrect,
+    mode: MODE
+  });
+}
+
+/* ---------- Result + History ---------- */
+function showResult(idx){
+  const data = getCurrentData();
+  const item = data[idx];
+  if (!item) return;
+
+  if (MODE === 'team') {
+    track('spin_result', {
+      result_type: 'team',
+      team_name: item.team_name || '(unknown)',
+      league_code: item.league_code || '',
+      stadium_present: !!item.stadium
+    });
+  } else {
+    track('spin_result', {
+      result_type: 'player',
+      player_name: item.team_name || '(unknown)', // player display name is kept in team_name field
+      club_id: String(item.club_id || ''),
+      has_image: !!(item.image_url && !/placeholder\.png$/i.test(item.image_url)),
+      nationality: item.nationality || '',
+      jersey: item.jersey || ''
+    });
+  }
+
+  const bucket = getHistoryBucket(MODE);
+  bucket.unshift(item);
+  if (bucket.length > 50) bucket.length = 50;
+  saveHistory();
+
+  renderHistory();
+  openModal(item);
+  handleQuizAfterSpin(item);
+}
+
+/* ---------- History ---------- */
+function renderHistory(){
+  historyEl.innerHTML = '';
+  const bucket = getHistoryBucket(MODE);
+
+  if (!bucket.length){
+    const empty = document.createElement('div');
+    empty.className = 'item';
+    empty.textContent = 'Your journey starts with a spin!';
+    historyEl.appendChild(empty);
+    return;
+  }
+
+  bucket.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'item';
+
+    const img = document.createElement('img');
+    if (MODE === 'player') {
+      img.src = item.image_url || '';
+      img.alt = item.team_name || 'Player';
+    } else {
+      img.src = item.logo_url || '';
+      img.alt = `${item.team_name || 'Team'} logo`;
+    }
+
+    const span = document.createElement('span');
+    span.textContent = item.team_name || (MODE === 'player' ? 'Player' : 'Team');
+
+    div.append(img, span);
+    historyEl.append(div);
+  });
+}
 
 /* ---------- Mode switch ---------- */
 function setMode(next){
@@ -898,7 +1183,7 @@ function setMode(next){
 
   applyModeShowControls();
   renderChips();
-  renderHistory();           // ⬅️ re-render history for the new mode
+  renderHistory();           // per-mode history
 
   track('mode_set', { mode_after: MODE });
 }
@@ -1043,11 +1328,69 @@ function wire(){
   backdrop && backdrop.addEventListener('click', e=>{ if (!spinning && e.target===backdrop){ closeModal(); track('modal_close_backdrop'); }});
   window.addEventListener('keydown', e=> { if (e.key==='Escape' && !spinning){ closeModal(); track('modal_close_escape'); }});
 
-  let t; 
+  let t;
   window.addEventListener('resize', ()=>{
     clearTimeout(t);
     t=setTimeout(()=>{ sizeCanvas(); positionSpinFab(); drawWheel(); },120);
   }, {passive:true});
+
+  /* AI Quiz wiring */
+  if (aiQuizToggle){
+    aiQuizToggle.addEventListener('change', () => {
+      aiQuizState.enabled = !!aiQuizToggle.checked;
+      try { localStorage.setItem('fsAiQuizEnabled', aiQuizState.enabled ? '1' : '0'); } catch(e){}
+      if (quizContainer) quizContainer.hidden = !aiQuizState.enabled;
+      if (!aiQuizState.enabled){
+        if (quizFeedbackEl) quizFeedbackEl.textContent = '';
+        if (quizProgressEl) quizProgressEl.textContent = '';
+      }
+      track('quiz_toggle', { enabled: aiQuizState.enabled });
+    });
+  }
+  if (aiQuizDifficulty){
+    aiQuizDifficulty.addEventListener('change', () => {
+      aiQuizState.difficulty = aiQuizDifficulty.value || 'auto';
+      try { localStorage.setItem('fsAiQuizDifficulty', aiQuizState.difficulty); } catch(e){}
+    });
+  }
+  if (aiQuizCategory){
+    aiQuizCategory.addEventListener('change', () => {
+      aiQuizState.category = aiQuizCategory.value || 'mixed';
+      try { localStorage.setItem('fsAiQuizCategory', aiQuizState.category); } catch(e){}
+    });
+  }
+  if (aiQuizRounds){
+    aiQuizRounds.addEventListener('change', () => {
+      aiQuizState.roundsMode = aiQuizRounds.value || 'endless';
+      try { localStorage.setItem('fsAiQuizRounds', aiQuizState.roundsMode); } catch(e){}
+    });
+  }
+
+  if (quizAnswerButtons.length){
+    quizAnswerButtons.forEach(btn => {
+      btn.addEventListener('click', onQuizAnswerClick);
+    });
+  }
+  if (quizNextBtn){
+    quizNextBtn.addEventListener('click', () => {
+      if (!aiQuizState.enabled || !aiQuizState.currentItem) return;
+      setupQuizQuestion(aiQuizState.currentItem.item, aiQuizState.currentItem.mode);
+      track('quiz_next_question', { mode: MODE });
+    });
+  }
+  if (quizEndBtn){
+    quizEndBtn.addEventListener('click', () => {
+      aiQuizState.totalAsked = 0;
+      aiQuizState.totalCorrect = 0;
+      aiQuizState.currentItem = null;
+      aiQuizState.locked = false;
+      if (quizContainer) quizContainer.hidden = true;
+      if (quizScoreEl) quizScoreEl.textContent = '';
+      if (quizProgressEl) quizProgressEl.textContent = '';
+      if (quizFeedbackEl) quizFeedbackEl.textContent = 'Quiz ended. Enable AI Quiz again when you want a new round.';
+      track('quiz_end', { mode: MODE });
+    });
+  }
 }
 
 /* ---------- Boot ---------- */
