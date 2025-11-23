@@ -1,98 +1,99 @@
-// /api/quiz.js
-import OpenAI from "openai";
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
+// api/quiz.js
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { mode, difficulty = "auto", context } = req.body || {};
-    const kind = context?.kind || (mode === "player" ? "player" : "club");
+    const { mode, kind, payload, difficulty } = req.body || {};
 
-    const diffText =
-      difficulty === "easy" ? "easy" :
-      difficulty === "hard" ? "hard" : "medium";
+    if (!mode || !payload || (!payload.team && !payload.player)) {
+      return res.status(400).json({ error: 'Invalid payload' });
+    }
 
-    const systemPrompt = `
-You are a football quiz generator.
-Return ONE multiple-choice question (football knowledge) about the given club or player.
-Output strictly JSON with:
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'Missing OPENAI_API_KEY on server' });
+    }
+
+    const subject =
+      mode === 'player'
+        ? `a football player: ${payload.player?.name || payload.player?.team_name || 'unknown'}`
+        : `a football club: ${payload.team?.name || payload.team?.team_name || 'unknown'}`;
+
+    const extraContext =
+      mode === 'player'
+        ? `Club: ${payload.player?.clubName || ''}, Nationality: ${payload.player?.nationality || ''}, Shirt number: ${payload.player?.jersey || ''}`
+        : `League: ${payload.team?.league || payload.team?.league_code || ''}, Country: ${payload.team?.country || ''}`;
+
+    const diffLabel = difficulty || 'normal';
+
+    const prompt = `
+Generate one multiple-choice football quiz question about ${subject}.
+Use any *real* football knowledge you have (past and present, players, titles, rivalries, stadium, legends, etc.).
+
+Context from the app:
+${extraContext}
+
+The question:
+- Must have exactly 4 options labelled A, B, C, D.
+- Only ONE correct answer.
+- Answers must be short (max ~40 characters).
+- Difficulty: ${diffLabel} (easy/normal/hard).
+
+Respond as strict JSON, NO extra text, in this shape:
+
 {
-  "question": "string",
-  "answers": ["a","b","c","d"],
-  "correctIndex": 0,
-  "explanation": "short explanation"
+  "question": "...",
+  "options": [
+    {"label":"A","text":"..."},
+    {"label":"B","text":"..."},
+    {"label":"C","text":"..."},
+    {"label":"D","text":"..."}
+  ],
+  "correct": "A",
+  "explanation": "Short one-sentence explanation."
 }
-No extra text.`;
-
-    const userContext =
-      kind === "player"
-        ? `Player: ${context.name}
-Team: ${context.clubName}
-League: ${context.league}
-Nationality: ${context.nationality || "unknown"}
-Jersey: ${context.jersey || "-"}`
-        : `Club: ${context.name}
-League: ${context.leagueName || context.leagueCode}
-Stadium: ${context.stadium || "unknown"}`;
-
-    const userPrompt = `
-Make a ${diffText} difficulty question about this ${kind}.
-
-Constraints:
-- Only one correct answer, 3 wrong options.
-- Answers should be short (max ~50 characters).
-- Do NOT mention that an AI is generating the question.
-
-Context:
-${userContext}
 `;
 
-    const completion = await client.responses.create({
-      model: "gpt-4.1-mini",
-      input: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      response_format: { type: "json_object" },
-      max_output_tokens: 250,
+    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4.1-mini',
+        messages: [
+          { role: 'system', content: 'You are a football trivia generator.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.9,
+        max_tokens: 400
+      })
     });
 
-    const raw =
-      completion.output[0]?.content[0]?.text ||
-      completion.output[0]?.content[0]?.value ||
-      "";
+    if (!openaiRes.ok) {
+      const errText = await openaiRes.text().catch(() => '');
+      console.error('OpenAI error:', openaiRes.status, errText);
+      return res.status(502).json({ error: 'OpenAI API error' });
+    }
 
-    let payload = {};
+    const data = await openaiRes.json();
+    const content = data.choices?.[0]?.message?.content || '';
+
+    let parsed;
     try {
-      payload = typeof raw === "string" ? JSON.parse(raw) : raw;
+      parsed = JSON.parse(content);
     } catch (e) {
-      console.error("JSON parse error", e, raw);
-      return res.status(500).json({ error: "Bad JSON from model" });
+      console.error('Parsing error, raw content:', content);
+      return res.status(500).json({ error: 'Failed to parse AI response' });
     }
 
-    // Minimal sanity
-    if (!Array.isArray(payload.answers) || payload.answers.length !== 4) {
-      return res.status(500).json({ error: "Invalid answer array" });
-    }
-    if (typeof payload.correctIndex !== "number") {
-      payload.correctIndex = 0;
-    }
-
-    return res.status(200).json({
-      question: payload.question,
-      answers: payload.answers.slice(0, 4),
-      correctIndex: payload.correctIndex,
-      explanation: payload.explanation || null,
-    });
+    return res.status(200).json(parsed);
   } catch (err) {
-    console.error("Quiz API error", err);
-    return res.status(500).json({ error: "Quiz generation failed" });
+    console.error('Handler error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
