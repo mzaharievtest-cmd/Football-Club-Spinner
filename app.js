@@ -5,7 +5,7 @@
    - PL Top-6 sorted first alphabetically.
    - History stored per item with type {type:'team'|'player', item:{…}} and rendered per active mode.
    - Modal: clean layout + modern “Show …” reveal buttons (centered over blurred element).
-   - AI Quiz: when enabled, fetches a real-time question for the landed team/player from /api/quiz
+   - AI Quiz: when enabled, fetches a real-time question for the landed team/player from /quiz
      and shows it inside the result modal.
 */
 
@@ -984,7 +984,7 @@ async function loadQuizForItem(item) {
       category
     });
 
-    const res = await fetch('/api/quiz', {
+    const res = await fetch('/quiz', {
       method: 'POST',
       headers: { 'Content-Type':'application/json' },
       body: JSON.stringify({
