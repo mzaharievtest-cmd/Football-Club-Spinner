@@ -18,67 +18,76 @@ const MODEL = 'gpt-4o-mini'; // or gpt-4.1-mini if your account supports it
 
 let KB_CACHE = null;
 
-// ----- Normalization helpers -----
+// ----- Helpers -----
 
-function rawNorm(str = '') {
+function norm(str = '') {
   return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
 }
 
-// Normalize club names so "Fulham" == "Fulham FC" == "Fulham F.C."
+// Normalize club names so "Chelsea" == "Chelsea FC" == "Chelsea A.F.C."
 function normClubName(str = '') {
-  let s = rawNorm(str);
-  // strip trailing "fc", "cf", "sc", "afc" etc.
-  s = s.replace(/(footballclub|futbolclub)$/g, '');
-  s = s.replace(/(afc|fc|cf|sc)$/g, '');
-  return s;
+  let n = norm(str);
+  const suffixes = ['fc', 'afc', 'cf', 'sc'];
+  for (const suf of suffixes) {
+    if (n.endsWith(suf)) {
+      n = n.slice(0, -suf.length);
+      break;
+    }
+  }
+  return n;
 }
 
-// Normalize league codes / names so "EPL" == "Premier League", etc.
-function normLeague(str = '') {
-  const s = rawNorm(str);
-  if (!s) return '';
-
-  if (s === 'epl' || s === 'premierleague' || s === 'englishpremierleague') return 'epl';
-  if (s === 'bundesliga' || s === 'germanbundesliga') return 'bun';
-  if (s === 'laliga' || s === 'primeradivision' || s === 'spanishleague') return 'lla';
-  if (s === 'seriea' || s === 'italianseriea') return 'sa';
-  if (s === 'ligue1' || s === 'franceligue1') return 'l1';
-
-  // fallback – use raw
-  return s;
+// Map league codes in your JSON to human-readable names
+function leagueCodeToName(code = '') {
+  switch ((code || '').toUpperCase()) {
+    case 'EPL': return 'Premier League';
+    case 'BUN': return 'Bundesliga';
+    case 'SA':  return 'Serie A';
+    case 'LLA': return 'La Liga';
+    case 'L1':  return 'Ligue 1';
+    default:    return code || '';
+  }
 }
 
-// Convert raw JSON entry into a normalized club object
-function normalizeClubEntry(entry, fallbackId) {
-  const clubName =
-    entry.name ||
-    entry.club_name ||
-    entry.team_name ||
-    entry.clubName ||
-    entry.team ||
-    '';
+// Turn whatever is in club_knowledge.json into a clean array of clubs
+function normalizeKnowledge(rawJson) {
+  const rawArray = Array.isArray(rawJson)
+    ? rawJson
+    : Object.entries(rawJson || {}).map(([id, value]) => ({
+        _id: id,
+        ...value
+      }));
 
-  const leagueRaw =
-    entry.league ||
-    entry.league_name ||
-    entry.league_code ||
-    entry.leagueCode ||
-    '';
+  return rawArray
+    .map(entry => {
+      const name =
+        entry.name ||
+        entry.club_name ||
+        entry.team_name ||
+        entry.club ||
+        entry._id ||
+        '';
 
-  const stadium =
-    entry.stadium ||
-    entry.ground ||
-    '';
+      const leagueCode =
+        entry.league_code ||
+        entry.leagueCode ||
+        entry.league_code_short ||
+        '';
 
-  return {
-    ...entry,
-    id: entry.id || fallbackId || null,
-    name: clubName,
-    league: leagueRaw,
-    stadium,
-    _normName: normClubName(clubName),
-    _normLeague: normLeague(leagueRaw)
-  };
+      const leagueName =
+        entry.league ||
+        entry.league_name ||
+        leagueCodeToName(leagueCode);
+
+      return {
+        ...entry,
+        name,
+        league_code: leagueCode,
+        league: leagueName,
+        stadium: entry.stadium || entry.ground || ''
+      };
+    })
+    .filter(c => c.name); // only keep clubs with a name
 }
 
 async function loadKnowledge() {
@@ -87,23 +96,8 @@ async function loadKnowledge() {
   try {
     const filePath = path.join(process.cwd(), 'data', 'club_knowledge.json');
     const raw = await fs.readFile(filePath, 'utf8');
-    const parsed = JSON.parse(raw);
-
-    let entries;
-    if (Array.isArray(parsed)) {
-      entries = parsed;
-    } else if (parsed && typeof parsed === 'object') {
-      // object like { "6": {...}, "8": {...} }
-      entries = Object.entries(parsed).map(([key, value]) => ({
-        id: key,
-        ...value
-      }));
-    } else {
-      entries = [];
-    }
-
-    const normalized = entries.map((e, idx) => normalizeClubEntry(e, idx));
-    KB_CACHE = normalized;
+    const json = JSON.parse(raw);
+    KB_CACHE = normalizeKnowledge(json);
     return KB_CACHE;
   } catch (err) {
     console.error('Failed to load club_knowledge.json', err);
@@ -140,7 +134,8 @@ function buildClubQuestion(club, allClubs, difficulty = 'auto') {
   const clubName = club.name || '';
 
   const sameLeague = allClubs.filter(
-    c => c._normName !== club._normName && c._normLeague === club._normLeague
+    c => normClubName(c.name) !== normClubName(clubName) &&
+         norm(c.league) === norm(league)
   );
 
   // Try stadium question first (requires at least 3 other clubs in same league)
@@ -162,7 +157,7 @@ function buildClubQuestion(club, allClubs, difficulty = 'auto') {
   // Fallback: league question
   const leagues = Array.from(
     new Set(allClubs.map(c => c.league).filter(Boolean))
-  ).filter(l => normLeague(l) !== club._normLeague);
+  ).filter(l => norm(l) !== norm(league));
 
   const distractorLeagues = sample(leagues, Math.min(3, leagues.length));
   const answers = [league, ...distractorLeagues];
@@ -179,14 +174,12 @@ function buildClubQuestion(club, allClubs, difficulty = 'auto') {
 }
 
 function buildPlayerQuestion(playerCtx, allClubs) {
-  const { name, clubName, league } = playerCtx;
+  const { name, clubName, league = 'Premier League' } = playerCtx;
   if (!name || !clubName) return null;
 
-  const clubKey = normClubName(clubName);
-  const leagueKey = normLeague(league);
-
   const sameLeagueClubs = allClubs.filter(
-    c => c._normName !== clubKey && c._normLeague === leagueKey
+    c => normClubName(c.name) !== normClubName(clubName) &&
+         norm(c.league) === norm(league)
   );
 
   if (sameLeagueClubs.length < 3) return null;
@@ -255,6 +248,8 @@ async function fetchQuestionText(apiKey, baseQuestion, meta) {
   }
 }
 
+// ---- Main handler ----
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -273,41 +268,63 @@ module.exports = async (req, res) => {
     const knowledge = await loadKnowledge();
 
     const kind = context.kind || (mode === 'player' ? 'player' : 'club');
-    const name = (context.name || '').trim();
 
-    // leagueName from context is usually "Premier League"; we normalize
-    const leagueFromContext =
-      (context.leagueName || context.league || context.leagueCode || '').trim();
+    const rawName = (context.name || '').trim();
+    const targetNameNorm = normClubName(rawName);
 
-    const normNameKey = normClubName(name);
-    const normLeagueKey = normLeague(leagueFromContext);
+    // league from context can be name OR code
+    const ctxLeagueCandidates = [
+      context.leagueName,
+      context.league,
+      context.leagueCode
+    ]
+      .filter(Boolean)
+      .map(x => norm(x));
 
     let clubEntry = null;
 
     if (kind === 'club') {
-      // First, try exact name match (normalized)
-      let candidates = knowledge.filter(c => c._normName === normNameKey);
+      // First: strict name + league match (using any league field)
+      clubEntry =
+        knowledge.find(c => {
+          if (normClubName(c.name) !== targetNameNorm) return false;
+          if (!ctxLeagueCandidates.length) return true;
 
-      // If multiple, narrow by league if possible
-      if (candidates.length > 1 && normLeagueKey) {
-        const filtered = candidates.filter(c => c._normLeague === normLeagueKey);
-        if (filtered.length > 0) candidates = filtered;
-      }
+          const clubLeagueNorms = [
+            c.league,
+            c.league_name,
+            c.league_code,
+            leagueCodeToName(c.league_code)
+          ]
+            .filter(Boolean)
+            .map(x => norm(x));
 
-      clubEntry = candidates[0] || null;
+          return ctxLeagueCandidates.some(l => clubLeagueNorms.includes(l));
+        }) ||
+        // Fallback: name only
+        knowledge.find(c => normClubName(c.name) === targetNameNorm);
     } else {
-      // Player context – we need their club
+      // For players we only need their club + league for distractors
       const clubName = (context.clubName || '').trim();
       const clubKey = normClubName(clubName);
-      const leagueKey = normLeague(leagueFromContext || 'Premier League');
 
-      let candidates = knowledge.filter(c => c._normName === clubKey);
-      if (candidates.length > 1 && leagueKey) {
-        const filtered = candidates.filter(c => c._normLeague === leagueKey);
-        if (filtered.length > 0) candidates = filtered;
-      }
+      clubEntry =
+        knowledge.find(c => {
+          if (normClubName(c.name) !== clubKey) return false;
+          if (!ctxLeagueCandidates.length) return true;
 
-      clubEntry = candidates[0] || null;
+          const clubLeagueNorms = [
+            c.league,
+            c.league_name,
+            c.league_code,
+            leagueCodeToName(c.league_code)
+          ]
+            .filter(Boolean)
+            .map(x => norm(x));
+
+          return ctxLeagueCandidates.some(l => clubLeagueNorms.includes(l));
+        }) ||
+        knowledge.find(c => normClubName(c.name) === clubKey);
     }
 
     if (!clubEntry) {
@@ -321,7 +338,10 @@ module.exports = async (req, res) => {
         {
           name: context.name || '',
           clubName: context.clubName || '',
-          league: leagueFromContext || 'Premier League'
+          league:
+            context.leagueName ||
+            context.league ||
+            leagueCodeToName(context.leagueCode || 'EPL')
         },
         knowledge
       );
