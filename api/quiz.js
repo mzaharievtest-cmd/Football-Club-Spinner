@@ -38,16 +38,16 @@ export default async function handler(req, res) {
 
     const categoryText =
       category === 'club'
-        ? 'Focus on facts about the CLUB itself (history, trophies, nicknames, stadium, colours, legends).'
+        ? 'Focus on facts about the CLUB itself (history, trophies, nicknames, colours, legends, rivalries). Avoid only asking about the stadium; vary the angles.'
         : category === 'player'
-        ? 'Focus on PLAYER-specific facts (position, achievements, stats, transfers, records).'
+        ? 'Focus on PLAYER-specific facts (position, achievements, stats, transfers, records, nationality, shirt numbers).'
         : category === 'manager'
-        ? 'Focus on MANAGERS and coaching history (famous managers, key seasons, tactics).'
+        ? 'Focus on MANAGERS and coaching history (famous managers, key seasons, tactics, titles under specific managers).'
         : category === 'history'
-        ? 'Focus on historical achievements (titles, iconic seasons, trophies, big matches).'
+        ? 'Focus on historical achievements (titles, iconic seasons, finals, famous matches, records).'
         : category === 'fans'
-        ? 'Focus on fans, rivalries and derbies (fan culture, rivalries, derbies, atmospheres).'
-        : 'Category is mixed; any interesting angle is fine.';
+        ? 'Focus on fans, rivalries and derbies (fan culture, rivalries, derbies, atmospheres, chants).'
+        : 'Category is MIXED. You MUST NOT ask about the home stadium or which stadium is the home ground. Use other aspects (trophies, years, nicknames, rivalries, positions, records, nationality, etc.).';
 
     const userContext = {
       mode: safeMode,
@@ -61,13 +61,24 @@ You are a football (soccer) quiz generator.
 
 You receive structured context for a club or a player and must create ONE multiple-choice question with EXACTLY 4 answer options.
 
-RULES:
+VERY IMPORTANT VARIETY RULES:
+- You MUST NOT always ask about the stadium or "Which stadium is the home ground of X".
+- If category = "mixed", you are FORBIDDEN to ask any question about stadiums or home grounds.
+- Even when a stadium is mentioned in the context, you should prefer OTHER aspects:
+  - For clubs: trophies, years, famous players, nicknames, rivalries, league performance, colours, records, European competitions, etc.
+  - For players: position, nationality, shirt number, clubs played for, awards, goals, notable seasons, records, national team, etc.
+- You should vary the wording and topic from call to call: not the same template, not always "Which of the following ... ?".
+
+GENERAL RULES:
 - The question MUST be about real-world football and be factually correct.
 - Use the provided context if it is useful, but you may also rely on your football knowledge.
 - Make sure exactly ONE correct answer exists.
-- Make the wrong answers plausible but clearly incorrect.
-- The question must be self-contained (no "this team" – use the club/player name).
-- You must respond with VALID JSON ONLY, no extra text, in this exact shape:
+- The wrong answers must be plausible but clearly incorrect.
+- The question must be self-contained (do NOT say "this team"; use the actual club/player name).
+- Return EXACTLY ONE question.
+
+OUTPUT FORMAT (STRICT JSON, NO EXTRA TEXT):
+You MUST respond with VALID JSON ONLY in this exact shape:
 
 {
   "question": "string",
@@ -77,10 +88,10 @@ RULES:
 }
 
 Where:
-- question: a single quiz question,
-- answers: array of 4 distinct answer strings,
-- correctIndex: integer 0–3, index into the answers array,
-- explanation: short explanation (1–2 sentences) why the answer is correct.
+- "question": a single quiz question about football.
+- "answers": array of 4 distinct answer strings.
+- "correctIndex": integer 0–3, index into the answers array.
+- "explanation": short explanation (1–2 sentences) why the answer is correct.
 
 DIFFICULTY:
 ${diffText}
@@ -90,6 +101,32 @@ ${categoryText}
 
 CONTEXT (JSON):
 ${JSON.stringify(userContext, null, 2)}
+
+EXAMPLES (DO NOT REUSE THESE EXACT WORDINGS, THEY ARE ONLY STYLE EXAMPLES):
+
+Example 1 (club, mixed topic):
+{
+  "question": "Which nickname is commonly associated with Arsenal Football Club?",
+  "answers": ["The Gunners", "The Magpies", "The Citizens", "The Reds"],
+  "correctIndex": 0,
+  "explanation": "Arsenal are famously known as 'The Gunners' due to the club's historical ties to the Royal Arsenal in Woolwich."
+}
+
+Example 2 (player, stats/position):
+{
+  "question": "Which of the following positions best describes Kevin De Bruyne?",
+  "answers": ["Central attacking midfielder", "Goalkeeper", "Centre-back", "Left winger"],
+  "correctIndex": 0,
+  "explanation": "Kevin De Bruyne is primarily known as a central attacking midfielder who creates chances and dictates play."
+}
+
+Example 3 (club history, trophies):
+{
+  "question": "Which competition has Liverpool won the most times?",
+  "answers": ["UEFA Champions League", "Premier League", "FA Cup", "League Cup"],
+  "correctIndex": 0,
+  "explanation": "Liverpool have a rich European history and have lifted the European Cup/Champions League multiple times."
+}
 `.trim();
 
     const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -110,7 +147,7 @@ ${JSON.stringify(userContext, null, 2)}
             content: prompt,
           },
         ],
-        temperature: 0.8,
+        temperature: 0.85,
       }),
     });
 
@@ -131,7 +168,6 @@ ${JSON.stringify(userContext, null, 2)}
       return res.status(500).json({ error: 'Invalid JSON returned from OpenAI' });
     }
 
-    // Basic validation
     if (
       !parsed ||
       typeof parsed.question !== 'string' ||
