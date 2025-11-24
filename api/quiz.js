@@ -1,191 +1,236 @@
 // api/quiz.js
-// Vercel Node serverless function: generates a football quiz question using OpenAI.
 //
-// IMPORTANT:
-// - Set OPENAI_API_KEY in your Vercel project settings (Environment Variables).
-// - Front-end calls: POST /api/quiz with JSON { mode, difficulty, category, context }.
-
-export const config = {
-  runtime: 'nodejs',
-};
+// AI-powered quiz endpoint for Football Spinner.
+//
+// Expects POST JSON body:
+// {
+//   mode: "team" | "player",
+//   difficulty: "auto" | "easy" | "medium" | "hard",
+//   category: "mixed" | "club" | "player" | "manager" | "history" | "fans",
+//   context: {
+//     kind: "club" | "player",
+//     name: string,          // club name or player name
+//     clubName?: string,     // for players
+//     league?: string,       // "Premier League" or full league name
+//     leagueCode?: string,
+//     stadium?: string,
+//     nationality?: string,
+//     jersey?: string
+//   }
+// }
+//
+// Returns JSON:
+// {
+//   question: string,
+//   answers: string[4],
+//   correctIndex: number (0..3),
+//   explanation?: string,
+//   difficulty?: string
+// }
 
 export default async function handler(req, res) {
+  // Only allow POST
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Method Not Allowed' });
+    return;
   }
 
+  // Make sure we have an API key
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'Missing OPENAI_API_KEY on server' });
+    console.error('[quiz] Missing OPENAI_API_KEY env variable');
+    res.status(500).json({ error: 'Server misconfigured: missing OpenAI API key' });
+    return;
   }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const { mode, difficulty = 'auto', category = 'mixed', context = {} } = body;
 
-    const safeMode = mode === 'player' ? 'player' : 'team';
-    const safeDifficulty = ['easy', 'medium', 'hard'].includes(difficulty) ? difficulty : 'auto';
+    const mode = body.mode === 'player' ? 'player' : 'team';
+    const difficulty = body.difficulty || 'auto';
+    const category = body.category || 'mixed';
+    const context = body.context || {};
 
-    const diffText =
-      safeDifficulty === 'easy'
-        ? 'EASY: basic facts most casual fans know.'
-        : safeDifficulty === 'medium'
-        ? 'MEDIUM: solid fan knowledge, but not super obscure.'
-        : safeDifficulty === 'hard'
-        ? 'HARD: advanced / hardcore fan knowledge, but still answerable.'
-        : 'AUTO: pick a difficulty based on how famous this club/player is.';
+    const kind = context.kind || (mode === 'player' ? 'player' : 'club');
+    const name = (context.name || '').trim();
 
-    const categoryText =
-      category === 'club'
-        ? 'Focus on facts about the CLUB itself (history, trophies, nicknames, colours, legends, rivalries). Avoid only asking about the stadium; vary the angles.'
-        : category === 'player'
-        ? 'Focus on PLAYER-specific facts (position, achievements, stats, transfers, records, nationality, shirt numbers).'
-        : category === 'manager'
-        ? 'Focus on MANAGERS and coaching history (famous managers, key seasons, tactics, titles under specific managers).'
-        : category === 'history'
-        ? 'Focus on historical achievements (titles, iconic seasons, finals, famous matches, records).'
-        : category === 'fans'
-        ? 'Focus on fans, rivalries and derbies (fan culture, rivalries, derbies, atmospheres, chants).'
-        : 'Category is MIXED. You MUST NOT ask about the home stadium or which stadium is the home ground. Use other aspects (trophies, years, nicknames, rivalries, positions, records, nationality, etc.).';
+    if (!name) {
+      return res.status(400).json({ error: 'Missing club/player name in context' });
+    }
 
-    const userContext = {
-      mode: safeMode,
-      difficulty: safeDifficulty,
-      category,
-      context,
-    };
+    const league =
+      context.league ||
+      context.leagueName ||
+      (context.leagueCode || '').toString();
 
-    const prompt = `
-You are a football (soccer) quiz generator.
+    const clubName = context.clubName || '';
+    const stadium = context.stadium || '';
+    const nationality = context.nationality || '';
+    const jersey = context.jersey || '';
 
-You receive structured context for a club or a player and must create ONE multiple-choice question with EXACTLY 4 answer options.
+    // Build a compact context string for the model
+    const contextSummary = [
+      `kind: ${kind}`,
+      `name: ${name}`,
+      league ? `league: ${league}` : null,
+      clubName ? `club: ${clubName}` : null,
+      stadium ? `stadium: ${stadium}` : null,
+      nationality ? `nationality: ${nationality}` : null,
+      jersey ? `jersey: ${jersey}` : null
+    ]
+      .filter(Boolean)
+      .join(' · ');
 
-VERY IMPORTANT VARIETY RULES:
-- You MUST NOT always ask about the stadium or "Which stadium is the home ground of X".
-- If category = "mixed", you are FORBIDDEN to ask any question about stadiums or home grounds.
-- Even when a stadium is mentioned in the context, you should prefer OTHER aspects:
-  - For clubs: trophies, years, famous players, nicknames, rivalries, league performance, colours, records, European competitions, etc.
-  - For players: position, nationality, shirt number, clubs played for, awards, goals, notable seasons, records, national team, etc.
-- You should vary the wording and topic from call to call: not the same template, not always "Which of the following ... ?".
+    // Difficulty mapping hint for the model
+    const difficultyHint = (() => {
+      switch (difficulty) {
+        case 'easy':
+          return 'Make it EASY: very well-known fact, obvious to casual fans.';
+        case 'medium':
+          return 'Make it MEDIUM: known to regular football fans but not total beginners.';
+        case 'hard':
+          return 'Make it HARD: trickier detail, but still answerable by dedicated fans.';
+        default:
+          return 'Pick a reasonable difficulty for average fans (between easy and medium).';
+      }
+    })();
 
-GENERAL RULES:
-- The question MUST be about real-world football and be factually correct.
-- Use the provided context if it is useful, but you may also rely on your football knowledge.
-- Make sure exactly ONE correct answer exists.
-- The wrong answers must be plausible but clearly incorrect.
-- The question must be self-contained (do NOT say "this team"; use the actual club/player name).
-- Return EXACTLY ONE question.
+    // Category / style hint
+    const categoryHint = (() => {
+      switch (category) {
+        case 'club':
+          return 'Ask specifically about this club (history, trophies, stadium, nicknames, rivalries, etc.).';
+        case 'player':
+          return 'Ask specifically about this player (club career, position, nationality, achievements, etc.).';
+        case 'manager':
+          return 'Ask about managers connected to this club or this player.';
+        case 'history':
+          return 'Ask about historical achievements, trophies, or famous moments.';
+        case 'fans':
+          return 'Ask about fan culture, derbies, or rivalries.';
+        case 'mixed':
+        default:
+          return 'You may ask about stadium, history, famous players, trophies, rivals, or fan culture.';
+      }
+    })();
 
-OUTPUT FORMAT (STRICT JSON, NO EXTRA TEXT):
-You MUST respond with VALID JSON ONLY in this exact shape:
+    // IMPORTANT: we explicitly tell the model NOT to always ask a stadium question
+    const varietyHint = `
+Avoid repeating the same pattern every time. DO NOT always ask:
+"Which stadium is the home ground of ${name}?"
+Vary between topics like trophies, seasons, players, managers, rivalries, city/country, and so on.
+Randomly choose a good angle for the question that fits the context.
+    `.trim();
+
+    // We ask the model to return pure JSON, no explanation outside
+    const userPrompt = `
+Generate ONE multiple-choice football quiz question based on this context:
+
+${contextSummary}
+
+${difficultyHint}
+${categoryHint}
+${varietyHint}
+
+Requirements:
+- Question must be about *this specific club/player* or something directly related to them.
+- Provide EXACTLY four answer options (A, B, C, D) as a JSON array of strings.
+- One and only one answer must be correct.
+- Make distractors plausible but clearly wrong to knowledgeable fans.
+- If you mention a number (years, trophies, goals), be consistent with football knowledge as much as possible.
+
+Return ONLY valid JSON with this shape:
 
 {
   "question": "string",
-  "answers": ["A", "B", "C", "D"],
+  "answers": ["string", "string", "string", "string"],
   "correctIndex": 0,
-  "explanation": "string"
+  "explanation": "short explanation why the correct answer is right",
+  "difficulty": "easy | medium | hard"
 }
+    `.trim();
 
-Where:
-- "question": a single quiz question about football.
-- "answers": array of 4 distinct answer strings.
-- "correctIndex": integer 0–3, index into the answers array.
-- "explanation": short explanation (1–2 sentences) why the answer is correct.
-
-DIFFICULTY:
-${diffText}
-
-CATEGORY:
-${categoryText}
-
-CONTEXT (JSON):
-${JSON.stringify(userContext, null, 2)}
-
-EXAMPLES (DO NOT REUSE THESE EXACT WORDINGS, THEY ARE ONLY STYLE EXAMPLES):
-
-Example 1 (club, mixed topic):
-{
-  "question": "Which nickname is commonly associated with Arsenal Football Club?",
-  "answers": ["The Gunners", "The Magpies", "The Citizens", "The Reds"],
-  "correctIndex": 0,
-  "explanation": "Arsenal are famously known as 'The Gunners' due to the club's historical ties to the Royal Arsenal in Woolwich."
-}
-
-Example 2 (player, stats/position):
-{
-  "question": "Which of the following positions best describes Kevin De Bruyne?",
-  "answers": ["Central attacking midfielder", "Goalkeeper", "Centre-back", "Left winger"],
-  "correctIndex": 0,
-  "explanation": "Kevin De Bruyne is primarily known as a central attacking midfielder who creates chances and dictates play."
-}
-
-Example 3 (club history, trophies):
-{
-  "question": "Which competition has Liverpool won the most times?",
-  "answers": ["UEFA Champions League", "Premier League", "FA Cup", "League Cup"],
-  "correctIndex": 0,
-  "explanation": "Liverpool have a rich European history and have lifted the European Cup/Champions League multiple times."
-}
-`.trim();
-
-    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call OpenAI (Chat Completions with JSON response)
+    const completionResp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: 'gpt-4.1-mini',
+        temperature: 0.8, // some randomness so questions vary
+        response_format: { type: 'json_object' },
         messages: [
           {
             role: 'system',
-            content: 'You are a strict JSON-only responder. Always return ONLY valid JSON with no extra text.',
+            content: 'You are an assistant that writes accurate and fun football quiz questions. Always respond with valid JSON only.'
           },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.85,
-      }),
+          { role: 'user', content: userPrompt }
+        ]
+      })
     });
 
-    if (!openaiRes.ok) {
-      const text = await openaiRes.text().catch(() => '');
-      console.error('OpenAI error:', openaiRes.status, text);
-      return res.status(500).json({ error: 'OpenAI request failed', status: openaiRes.status });
+    if (!completionResp.ok) {
+      const text = await completionResp.text().catch(() => '');
+      console.error('[quiz] OpenAI error:', completionResp.status, text);
+      return res.status(502).json({ error: 'OpenAI API error', details: text.slice(0, 300) });
     }
 
-    const data = await openaiRes.json();
-    const content = data?.choices?.[0]?.message?.content?.trim();
+    const completion = await completionResp.json();
+    const content = completion?.choices?.[0]?.message?.content;
 
-    let parsed;
+    if (!content || typeof content !== 'string') {
+      console.error('[quiz] Missing content from OpenAI response');
+      return res.status(502).json({ error: 'Invalid response from OpenAI' });
+    }
+
+    let quiz;
     try {
-      parsed = JSON.parse(content);
-    } catch (err) {
-      console.error('Failed to parse JSON from OpenAI:', err, content);
-      return res.status(500).json({ error: 'Invalid JSON returned from OpenAI' });
+      quiz = JSON.parse(content);
+    } catch (e) {
+      console.error('[quiz] Failed to parse JSON from OpenAI content:', e, content);
+      return res.status(502).json({ error: 'Failed to parse quiz JSON from OpenAI' });
     }
 
-    if (
-      !parsed ||
-      typeof parsed.question !== 'string' ||
-      !Array.isArray(parsed.answers) ||
-      parsed.answers.length !== 4 ||
-      typeof parsed.correctIndex !== 'number'
-    ) {
-      return res.status(500).json({ error: 'Malformed quiz JSON from OpenAI' });
+    // Basic validation / normalization
+    if (!quiz || typeof quiz !== 'object') {
+      return res.status(502).json({ error: 'Quiz JSON malformed' });
     }
 
-    return res.status(200).json({
-      question: parsed.question,
-      answers: parsed.answers,
-      correctIndex: parsed.correctIndex,
-      explanation: parsed.explanation || '',
-    });
+    const question = String(quiz.question || '').trim();
+    let answers = Array.isArray(quiz.answers) ? quiz.answers : [];
+    let correctIndex = Number.isInteger(quiz.correctIndex) ? quiz.correctIndex : 0;
+
+    if (!question || answers.length !== 4) {
+      return res.status(502).json({ error: 'Quiz missing question or answers' });
+    }
+
+    answers = answers.map(a => String(a || ''));
+
+    if (correctIndex < 0 || correctIndex > 3) {
+      correctIndex = 0;
+    }
+
+    const explanation = quiz.explanation ? String(quiz.explanation) : '';
+    const outDifficulty = quiz.difficulty || difficulty;
+
+    const payload = {
+      question,
+      answers,
+      correctIndex,
+      explanation,
+      difficulty: outDifficulty
+    };
+
+    // Debug log (optional)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[quiz] Generated question:', JSON.stringify(payload, null, 2));
+    }
+
+    res.status(200).json(payload);
   } catch (err) {
-    console.error('Server /api/quiz error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('[quiz] Handler error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
   }
 }
