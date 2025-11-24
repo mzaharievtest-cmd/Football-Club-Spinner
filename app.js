@@ -744,7 +744,7 @@ function showResult(idx){
 
   if (AI_QUIZ_ENABLED) {
     resetQuizUI();
-    (item);
+    loadQuizForItem(item);   // FIX: actually load a question for this result
   } else if (quizContainer) {
     quizContainer.hidden = true;
   }
@@ -1308,6 +1308,8 @@ function wire(){
         quizContainer.hidden = true;
       }
       if (AI_QUIZ_ENABLED) {
+        // Fresh quiz session
+        QUIZ_SESSION_QUESTIONS = [];
         quizRoundsPlayed = 0;
         quizCorrectCount = 0;
         updateQuizMeta();
