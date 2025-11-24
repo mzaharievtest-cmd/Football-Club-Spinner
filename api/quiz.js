@@ -16,7 +16,8 @@
 //     stadium?: string,
 //     nationality?: string,
 //     jersey?: string
-//   }
+//   },
+//   previousQuestions?: string[]   // all questions asked in this session so far
 // }
 //
 // Returns JSON:
@@ -35,7 +36,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Make sure we have an API key
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     console.error('[quiz] Missing OPENAI_API_KEY env variable');
@@ -44,12 +44,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const body =
+      typeof req.body === 'string'
+        ? JSON.parse(req.body || '{}')
+        : (req.body || {});
 
-    const mode = body.mode === 'player' ? 'player' : 'team';
+    const mode       = body.mode === 'player' ? 'player' : 'team';
     const difficulty = body.difficulty || 'auto';
-    const category = body.category || 'mixed';
-    const context = body.context || {};
+    const category   = body.category || 'mixed';
+    const context    = body.context || {};
+    const prevQs     = Array.isArray(body.previousQuestions)
+      ? body.previousQuestions
+          .map(q => (q || '').toString().trim())
+          .filter(q => q.length > 0)
+      : [];
 
     const kind = context.kind || (mode === 'player' ? 'player' : 'club');
     const name = (context.name || '').trim();
@@ -63,10 +71,10 @@ export default async function handler(req, res) {
       context.leagueName ||
       (context.leagueCode || '').toString();
 
-    const clubName = context.clubName || '';
-    const stadium = context.stadium || '';
+    const clubName    = context.clubName || '';
+    const stadium     = context.stadium || '';
     const nationality = context.nationality || '';
-    const jersey = context.jersey || '';
+    const jersey      = context.jersey || '';
 
     // Build a compact context string for the model
     const contextSummary = [
@@ -81,7 +89,7 @@ export default async function handler(req, res) {
       .filter(Boolean)
       .join(' · ');
 
-    // Difficulty mapping hint for the model
+    // Difficulty hint
     const difficultyHint = (() => {
       switch (difficulty) {
         case 'easy':
@@ -114,15 +122,23 @@ export default async function handler(req, res) {
       }
     })();
 
-    // IMPORTANT: we explicitly tell the model NOT to always ask a stadium question
+    // Previous questions block (to avoid repetition in this session)
+    let avoidBlock = '';
+    if (prevQs.length) {
+      const trimmed = prevQs.slice(-10).map(q => q.slice(0, 140));
+      avoidBlock =
+        'These questions have ALREADY been used in this session. DO NOT repeat them or very close paraphrases:\n' +
+        trimmed.map(q => `- ${q}`).join('\n') +
+        '\n\n';
+    }
+
     const varietyHint = `
-Avoid repeating the same pattern every time. DO NOT always ask:
-"Which stadium is the home ground of ${name}?"
-Vary between topics like trophies, seasons, players, managers, rivalries, city/country, and so on.
-Randomly choose a good angle for the question that fits the context.
+Avoid repeating the same pattern every time. Do NOT always ask about the same fact
+(e.g. always stadium, always same trophy question).
+Vary topics: trophies, famous matches, rivals, players, managers, seasons, city/country, etc.
+If a previous question in this session was about the same fact, choose a different fact.
     `.trim();
 
-    // We ask the model to return pure JSON, no explanation outside
     const userPrompt = `
 Generate ONE multiple-choice football quiz question based on this context:
 
@@ -130,10 +146,11 @@ ${contextSummary}
 
 ${difficultyHint}
 ${categoryHint}
-${varietyHint}
+
+${avoidBlock}${varietyHint}
 
 Requirements:
-- Question must be about *this specific club/player* or something directly related to them.
+- Question must be about THIS specific club/player or something directly related to them.
 - Provide EXACTLY four answer options (A, B, C, D) as a JSON array of strings.
 - One and only one answer must be correct.
 - Make distractors plausible but clearly wrong to knowledgeable fans.
@@ -150,7 +167,6 @@ Return ONLY valid JSON with this shape:
 }
     `.trim();
 
-    // Call OpenAI (Chat Completions with JSON response)
     const completionResp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -159,12 +175,13 @@ Return ONLY valid JSON with this shape:
       },
       body: JSON.stringify({
         model: 'gpt-4.1-mini',
-        temperature: 0.8, // some randomness so questions vary
+        temperature: 0.8,
         response_format: { type: 'json_object' },
         messages: [
           {
             role: 'system',
-            content: 'You are an assistant that writes accurate and fun football quiz questions. Always respond with valid JSON only.'
+            content:
+              'You are an assistant that writes accurate and fun football quiz questions. Always respond with valid JSON only.'
           },
           { role: 'user', content: userPrompt }
         ]
@@ -193,7 +210,6 @@ Return ONLY valid JSON with this shape:
       return res.status(502).json({ error: 'Failed to parse quiz JSON from OpenAI' });
     }
 
-    // Basic validation / normalization
     if (!quiz || typeof quiz !== 'object') {
       return res.status(502).json({ error: 'Quiz JSON malformed' });
     }
@@ -223,7 +239,6 @@ Return ONLY valid JSON with this shape:
       difficulty: outDifficulty
     };
 
-    // Debug log (optional)
     if (process.env.NODE_ENV !== 'production') {
       console.log('[quiz] Generated question:', JSON.stringify(payload, null, 2));
     }
