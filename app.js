@@ -23,6 +23,8 @@ let CLUB_KNOWLEDGE = [];
 let CLUB_KNOWLEDGE_BY_NAME = new Map();
 let CLUB_KNOWLEDGE_BY_LEAGUE_AND_NAME = new Map();
 
+let QUIZ_SESSION_QUESTIONS = [];
+
 let currentAngle = 0;
 let spinning = false;
 let selectedIdx = -1;
@@ -742,7 +744,7 @@ function showResult(idx){
 
   if (AI_QUIZ_ENABLED) {
     resetQuizUI();
-    loadQuizForItem(item);
+    (item);
   } else if (quizContainer) {
     quizContainer.hidden = true;
   }
@@ -958,7 +960,7 @@ function getQuizContextForItem(item) {
   }
 }
 
-async function loadQuizForItem(item) {
+async function loadQuizForItem(item, retryCount = 0) {
   if (!quizContainer || !quizQuestion || !quizAnswers) return;
 
   const ctx = getQuizContextForItem(item);
@@ -990,7 +992,9 @@ async function loadQuizForItem(item) {
         mode: MODE,
         difficulty,
         category,
-        context: ctx
+        context: ctx,
+        // NEW: tell the server which questions we already asked in this session
+        previousQuestions: QUIZ_SESSION_QUESTIONS
       })
     });
 
@@ -1000,10 +1004,25 @@ async function loadQuizForItem(item) {
 
     const data = await res.json();
 
+    // Basic validation
     if (!data || !Array.isArray(data.answers) || typeof data.correctIndex !== 'number') {
       throw new Error('Invalid quiz payload');
     }
 
+    const qText = String(data.question || '').trim();
+
+    // Client-side guard: if for some reason server still returns a duplicate, retry a couple of times
+    if (qText && QUIZ_SESSION_QUESTIONS.includes(qText) && retryCount < 2) {
+      console.warn('[quiz] Received duplicate question, retrying...', qText);
+      return loadQuizForItem(item, retryCount + 1);
+    }
+
+    // New unique question: record it for this session
+    if (qText) {
+      QUIZ_SESSION_QUESTIONS.push(qText);
+    }
+
+    // New round
     quizRoundsPlayed += 1;
     updateQuizMeta();
 
